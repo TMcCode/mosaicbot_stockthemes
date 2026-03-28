@@ -1,3 +1,5 @@
+import type { ThemeChart1yV0 } from "@/types/chart.v0";
+
 /**
  * Mirrors docs/stockthemes/schemas/group.detail.v0.schema.json in MosaicBot.
  */
@@ -19,4 +21,6 @@ export type GroupDetailV0 = {
   theme_slugs?: string[];
   seo_intro?: string;
   themes: GroupDetailChildThemeV0[];
+  /** Group aggregate line; ETL omits `composition_indexed`. */
+  chart_1y?: ThemeChart1yV0;
 };

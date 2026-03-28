@@ -1,0 +1,80 @@
+.section {
+  width: 100%;
+  margin-top: 1.5rem;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.toolbarLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+}
+
+.toggle {
+  display: inline-flex;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border, #ebebeb);
+  overflow: hidden;
+}
+
+.toggle button {
+  font-size: 13px;
+  padding: 8px 14px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #666);
+  cursor: pointer;
+}
+
+.toggle button.active {
+  background: var(--text-primary, #000);
+  color: var(--background, #fff);
+}
+
+.chartBox {
+  width: 100%;
+  min-height: 420px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--text-secondary, #666);
+}
+
+.legendItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+@media (prefers-color-scheme: dark) {
+  .toggle {
+    border-color: #1a1a1a;
+  }
+
+  .toggle button.active {
+    background: #ededed;
+    color: #0a0a0a;
+  }
+}

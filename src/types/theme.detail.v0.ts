@@ -1,3 +1,5 @@
+import type { ThemeChart1yV0 } from "@/types/chart.v0";
+
 /**
  * Mirrors docs/stockthemes/schemas/theme.detail.v0.schema.json in MosaicBot.
  */
@@ -17,4 +19,5 @@ export type ThemeDetailV0 = {
   ticker_count?: number;
   seo_intro?: string;
   constituents: ThemeDetailConstituentV0[];
+  chart_1y?: ThemeChart1yV0;
 };

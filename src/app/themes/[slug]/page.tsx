@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Chart1yPanel } from "@/components/Chart1yPanel";
 import styles from "../../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -107,6 +108,7 @@ export default async function ThemeDetailPage({ params }: Props) {
               <code className={styles.code}>public/fixtures/themes/</code> for offline builds.
             </p>
           ) : null}
+          {detail ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">
               <h2 id="constituents-heading">Constituents</h2>

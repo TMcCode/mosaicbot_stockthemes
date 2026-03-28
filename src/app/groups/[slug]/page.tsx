@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { Chart1yPanel } from "@/components/Chart1yPanel";
 import styles from "../../page.module.css";
 
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
@@ -108,6 +109,7 @@ export default async function GroupDetailPage({ params }: Props) {
               <code className={styles.code}>public/fixtures/groups/&lt;slug&gt;.json</code> for offline builds.
             </p>
           ) : null}
+          {detail ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">
             <h2 id="group-themes-heading">Themes in this group</h2>
             {detail?.as_of ? (
