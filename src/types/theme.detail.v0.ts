@@ -1,0 +1,20 @@
+/**
+ * Mirrors docs/stockthemes/schemas/theme.detail.v0.schema.json in MosaicBot.
+ */
+export type ThemeDetailConstituentV0 = {
+  ticker: string;
+  name?: string;
+  weight?: number;
+};
+
+export type ThemeDetailV0 = {
+  schema_version: 0;
+  slug: string;
+  name: string;
+  group_slug?: string | null;
+  as_of: string;
+  build_id?: string;
+  ticker_count?: number;
+  seo_intro?: string;
+  constituents: ThemeDetailConstituentV0[];
+};

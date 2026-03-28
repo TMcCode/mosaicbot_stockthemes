@@ -1,0 +1,14 @@
+{
+  "schema_version": 0,
+  "slug": "data-centers",
+  "name": "Data Centers",
+  "group_slug": "artificial-intelligence",
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "ticker_count": 2,
+  "seo_intro": "Data Centers tracks stocks tied to data center build-out and hosting. This fixture lists sample tickers for local development.",
+  "constituents": [
+    { "ticker": "DLR", "name": "Digital Realty Trust Inc." },
+    { "ticker": "EQIX", "name": "Equinix Inc." }
+  ]
+}

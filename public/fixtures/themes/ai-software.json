@@ -1,0 +1,15 @@
+{
+  "schema_version": 0,
+  "slug": "ai-software",
+  "name": "AI Software",
+  "group_slug": "artificial-intelligence",
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "ticker_count": 3,
+  "seo_intro": "AI Software tracks application and platform vendors positioned around AI workflows. This fixture lists a few representative tickers for local development.",
+  "constituents": [
+    { "ticker": "CRM", "name": "Salesforce Inc." },
+    { "ticker": "MSFT", "name": "Microsoft Corporation" },
+    { "ticker": "NOW", "name": "ServiceNow Inc." }
+  ]
+}

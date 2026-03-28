@@ -1,0 +1,16 @@
+{
+  "schema_version": 0,
+  "slug": "ai-chips",
+  "name": "AI Chips",
+  "group_slug": "artificial-intelligence",
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "ticker_count": 4,
+  "seo_intro": "AI Chips tracks semiconductor and accelerator names tied to AI compute. Sample tickers: AMD, ARM, INTC, NVDA — see the table for the full fixture list.",
+  "constituents": [
+    { "ticker": "AMD", "name": "Advanced Micro Devices Inc." },
+    { "ticker": "ARM", "name": "Arm Holdings plc" },
+    { "ticker": "INTC", "name": "Intel Corporation" },
+    { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 0.25 }
+  ]
+}

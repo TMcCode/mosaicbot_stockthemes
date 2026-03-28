@@ -1,0 +1,44 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "stats": {
+    "total_tickers": 2140,
+    "total_groups": 42,
+    "total_themes": 380,
+    "total_market_cap_usd": 12500000000000
+  },
+  "groups": [
+    {
+      "slug": "artificial-intelligence",
+      "name": "Artificial Intelligence",
+      "industry_id": null,
+      "theme_count": 12,
+      "ticker_count": 180,
+      "theme_slugs": ["ai-chips", "ai-software", "data-centers"]
+    }
+  ],
+  "themes": [
+    {
+      "slug": "ai-chips",
+      "name": "AI Chips",
+      "group_slug": "artificial-intelligence",
+      "industry_id": null,
+      "ticker_count": 24
+    },
+    {
+      "slug": "ai-software",
+      "name": "AI Software",
+      "group_slug": "artificial-intelligence",
+      "industry_id": null,
+      "ticker_count": 55
+    },
+    {
+      "slug": "data-centers",
+      "name": "Data Centers",
+      "group_slug": "artificial-intelligence",
+      "industry_id": null,
+      "ticker_count": 101
+    }
+  ]
+}

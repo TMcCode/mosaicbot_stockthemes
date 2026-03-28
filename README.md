@@ -1,3 +1,12 @@
+## stockthemes.ai (frontend)
+
+Next.js app for **stockthemes.ai**. **Data, ETL, and the full product spec live in the MosaicBot repo** — this repo only renders UI and reads **public JSON from GCS** (once wired).
+
+- **Canonical spec & step-by-step plan:** `docs/STOCKTHEMES_AI_SPEC.md` in **MosaicBot** (e.g. `MosaicBotMain_Local_Dev` on your machine). Open that folder in the same Cursor workspace as this project when building features.
+- **Data owner:** MosaicBot `FetchEODData/` + admin dashboard → GCS; do not duplicate Python/Parquet logic here.
+
+---
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -16,7 +25,41 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Live manifest from GCS
+
+Copy `.env.local.example` to `.env.local` and set:
+
+`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=https://storage.googleapis.com/stockthemes-public/manifest.json`
+
+Restart `npm run dev`. The home page shows **manifest v0 (live)** and your real group/theme counts. Without this file, it uses `public/fixtures/manifest.json`.
+
+**Theme detail JSON:** `/themes/[slug]` loads **`themes/<slug>.json`** from the same public origin as the manifest. **Group detail JSON:** `/groups/[slug]` loads **`groups/<slug>.json`**. MosaicBot **`stockthemes_manifest.py`** uploads both when **`STOCKTHEMES_PUBLIC_BUCKET`** is set. For fixture-only dev, add files under **`public/fixtures/themes/`** and **`public/fixtures/groups/`** (see `artificial-intelligence` + theme examples).
+
+For **GitHub Pages** builds, set the same variable in the Action (or Pages env) so `next build` can fetch the manifest at build time and pre-render every group/theme route (`generateStaticParams`). Without a URL, the build uses `public/fixtures/manifest.json` (smaller set of paths). Theme pages will embed constituent tables when `themes/<slug>.json` exists at build time.
+
+This project uses **`output: 'export'`**. After `npm run build`, static files are in **`out/`** (upload that folder to Pages, or use an Action that deploys `out`). A branded **`404`** page is included as **`out/404.html`**. **`out/sitemap.xml`** and **`out/robots.txt`** are generated from the manifest at build time; set **`NEXT_PUBLIC_SITE_URL`** (e.g. `https://stockthemes.ai`) in CI so URLs match your deployed domain (defaults to `https://stockthemes.ai` if unset).
+
+**Local smoke test of the static bundle:** `npm run build` then `npx --yes serve out` and open the printed URL (client-side navigation needs a static server, not `file://`).
+
+## CI/CD (GitHub Pages)
+
+Workflow: **`.github/workflows/deploy-pages.yml`**. On every push to **`main`** (and manual **Run workflow**), it runs **`npm ci`**, **`npm run build`**, and deploys **`out/`** via [GitHub Actions for Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
+
+### One-time repo setup
+
+1. **GitHub → Settings → Pages → Build and deployment:** set **Source** to **GitHub Actions** (not “Deploy from a branch”).
+2. **Actions variables** (Settings → Secrets and variables → Actions → **Variables**), add:
+   - **`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL`** — your public manifest URL (same as local `.env.local`). Needed for a full static prerender of all group/theme routes.
+   - **`NEXT_PUBLIC_SITE_URL`** — live site origin with no trailing slash, e.g. `https://stockthemes.ai`, or your **`*.github.io`** URL until the custom domain is attached. Drives **`sitemap.xml`** and **`robots.txt`**.
+3. Push to **`main`**; check the **Actions** tab. First run may ask you to approve the **`github-pages`** environment.
+
+### Custom domain
+
+After the site is live on Pages, add your domain under **Pages → Custom domain** and point DNS per GitHub’s docs. Then set **`NEXT_PUBLIC_SITE_URL`** to that domain and redeploy so sitemap/robots use the correct host.
+
+### Project site (`/repo-name` on github.io)
+
+If you publish as **`https://<user>.github.io/<repo>/`** instead of a custom domain, you must set Next.js **`basePath`** / **`assetPrefix`** to **`/<repo>`** in `next.config.ts` and adjust **`NEXT_PUBLIC_SITE_URL`** accordingly. The default workflow assumes the site is served at the **root** of the Pages hostname.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 

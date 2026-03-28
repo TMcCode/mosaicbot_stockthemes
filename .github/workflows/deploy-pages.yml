@@ -1,0 +1,65 @@
+# Build Next.js static export (out/) and deploy to GitHub Pages.
+#
+# Prereqs (repo Settings → Pages): Source = "GitHub Actions".
+# Prereqs (repo Settings → Environments → github-pages): allow deployment from this workflow if prompted.
+#
+# Optional repo Variables (Settings → Secrets and variables → Actions → Variables):
+#   NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL — e.g. https://storage.googleapis.com/stockthemes-public/manifest.json
+#     (if unset, build uses public/fixtures/manifest.json — small route set)
+#   NEXT_PUBLIC_SITE_URL — canonical origin for sitemap/robots/metadata, e.g. https://stockthemes.ai
+#     (if unset, defaults to https://stockthemes.ai in app code)
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build static export
+        run: npm run build
+        env:
+          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
+          NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
