@@ -3,11 +3,12 @@
 # Prereqs (repo Settings → Pages): Source = "GitHub Actions".
 # Prereqs (repo Settings → Environments → github-pages): allow deployment from this workflow if prompted.
 #
-# Optional repo Variables (Settings → Secrets and variables → Actions → Variables):
-#   NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL — e.g. https://storage.googleapis.com/stockthemes-public/manifest.json
-#     (if unset, build uses public/fixtures/manifest.json — small route set)
-#   NEXT_PUBLIC_SITE_URL — canonical origin for sitemap/robots/metadata, e.g. https://stockthemes.ai
-#     (if unset, defaults to https://stockthemes.ai in app code)
+# Repository Variables (Settings → Secrets and variables → Actions → Variables):
+#   NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL — public manifest URL (full site at build time)
+#   NEXT_PUBLIC_SITE_URL — no trailing slash, e.g. https://tmccode.github.io/mosaicbot_stockthemes
+#     until you use a custom domain (then https://stockthemes.ai)
+#   NEXT_PUBLIC_BASE_PATH — for project Pages only: /mosaicbot_stockthemes (same as repo name).
+#     Leave unset when the site is served at domain root (custom domain apex).
 
 name: Deploy to GitHub Pages
 
@@ -47,6 +48,7 @@ jobs:
         env:
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
+          NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

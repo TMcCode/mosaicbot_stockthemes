@@ -48,9 +48,16 @@ Workflow: **`.github/workflows/deploy-pages.yml`**. On every push to **`main`** 
 ### One-time repo setup
 
 1. **GitHub → Settings → Pages → Build and deployment:** set **Source** to **GitHub Actions** (not “Deploy from a branch”).
-2. **Actions variables** (Settings → Secrets and variables → Actions → **Variables**), add:
-   - **`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL`** — your public manifest URL (same as local `.env.local`). Needed for a full static prerender of all group/theme routes.
-   - **`NEXT_PUBLIC_SITE_URL`** — live site origin with no trailing slash, e.g. `https://stockthemes.ai`, or your **`*.github.io`** URL until the custom domain is attached. Drives **`sitemap.xml`** and **`robots.txt`**.
+2. **Actions variables** (Settings → Secrets and variables → Actions → **Variables** → **New repository variable**). For a **project** site at **`https://<user>.github.io/<repo>/`** (no custom domain yet), use:
+
+   | Name | Example value | Notes |
+   |------|----------------|--------|
+   | `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` | `https://storage.googleapis.com/stockthemes-public/manifest.json` | Same as local; full prerender of all routes. |
+   | `NEXT_PUBLIC_SITE_URL` | `https://tmccode.github.io/mosaicbot_stockthemes` | Your real **GitHub username** + **repo name**; **no** trailing slash. |
+   | `NEXT_PUBLIC_BASE_PATH` | `/mosaicbot_stockthemes` | **Must** match the repo name segment in the URL (leading `/`). |
+
+   When you later use a **custom domain at the apex** (e.g. `https://stockthemes.ai`), set **`NEXT_PUBLIC_SITE_URL`** to that origin and **delete** **`NEXT_PUBLIC_BASE_PATH`** (or leave it empty) so the build serves from `/`.
+
 3. Push to **`main`**; check the **Actions** tab. First run may ask you to approve the **`github-pages`** environment.
 
 ### Custom domain
@@ -59,7 +66,7 @@ After the site is live on Pages, add your domain under **Pages → Custom domain
 
 ### Project site (`/repo-name` on github.io)
 
-If you publish as **`https://<user>.github.io/<repo>/`** instead of a custom domain, you must set Next.js **`basePath`** / **`assetPrefix`** to **`/<repo>`** in `next.config.ts` and adjust **`NEXT_PUBLIC_SITE_URL`** accordingly. The default workflow assumes the site is served at the **root** of the Pages hostname.
+`next.config.ts` reads **`NEXT_PUBLIC_BASE_PATH`** at build time (set in Actions variables). Without it, CSS/JS and client routes 404 under **`/<repo>/`**. Custom domain at apex: omit **`NEXT_PUBLIC_BASE_PATH`**.
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
