@@ -1,13 +1,21 @@
 import { readFile } from "fs/promises";
 import path from "path";
 
+import { STOCKTHEMES_DEFAULT_MANIFEST_URL } from "@/lib/stockthemesDefaultManifestUrl";
 import type { ManifestV0 } from "@/types/manifest.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "manifest.json");
 
 /** Full URL to manifest.json (e.g. public GCS). Inlined for server + optional client use. */
 function manifestUrl(): string | undefined {
-  return process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim() || undefined;
+  const fromEnv = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim();
+  if (fromEnv) {
+    return fromEnv;
+  }
+  if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
+    return undefined;
+  }
+  return STOCKTHEMES_DEFAULT_MANIFEST_URL;
 }
 
 function parseManifest(raw: string): ManifestV0 {
@@ -25,8 +33,8 @@ export type ManifestLoadResult = {
 };
 
 /**
- * Loads manifest v0: remote URL if NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL is set, else local fixture.
- * Server-side fetch does not require GCS CORS (only browsers do).
+ * Loads manifest v0: remote URL (env, else default public bucket), unless STOCKTHEMES_USE_FIXTURES=1
+ * for local fixture-only builds. Server-side fetch does not require GCS CORS (only browsers do).
  */
 export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
