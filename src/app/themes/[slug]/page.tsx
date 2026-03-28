@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import styles from "../../page.module.css";
 
@@ -106,7 +107,14 @@ export default async function ThemeDetailPage({ params }: Props) {
               add <code className={styles.code}>public/fixtures/themes/{slug}.json</code> for offline builds.
             </p>
           ) : null}
-          {detail ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
+          {detail && dataBaseUrl ? (
+            <ThemeChartLiveHydrate
+              slug={slug}
+              dataBaseUrl={dataBaseUrl}
+              serverChart={detail.chart_1y}
+            />
+          ) : null}
+          {detail && !dataBaseUrl ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">
               <h2 id="constituents-heading">Constituents</h2>
