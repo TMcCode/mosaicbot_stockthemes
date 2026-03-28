@@ -11,6 +11,9 @@ export function SiteNav() {
         </Link>
         <div className={styles.links}>
           <Link href="/groups">All groups</Link>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
           <Link href="/themes">All themes</Link>
         </div>
       </nav>

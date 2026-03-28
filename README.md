@@ -45,6 +45,8 @@ This project uses **`output: 'export'`**. After `npm run build`, static files ar
 
 Workflow: **`.github/workflows/deploy-pages.yml`**. On every push to **`main`** (and manual **Run workflow**), it runs **`npm ci`**, **`npm run build`**, and deploys **`out/`** via [GitHub Actions for Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow).
 
+**Important:** **`public/.nojekyll`** is required so GitHub Pages does not run Jekyll, which otherwise skips **`_next/`** (CSS/JS) and leaves the site unstyled.
+
 ### One-time repo setup
 
 1. **GitHub → Settings → Pages → Build and deployment:** set **Source** to **GitHub Actions** (not “Deploy from a branch”).

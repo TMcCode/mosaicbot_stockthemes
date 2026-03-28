@@ -70,13 +70,15 @@ export default async function Home() {
             <ul className={styles.list}>
               {manifest.groups.map((g) => (
                 <li key={g.slug}>
-                  <span className={styles.name}>{g.name}</span>
-                  <span className={styles.meta}>
-                    {" "}
-                    <code>{g.slug}</code>
-                    {g.theme_count != null ? ` · ${g.theme_count} themes` : ""}
-                    {g.ticker_count != null ? ` · ${g.ticker_count} tickers` : ""}
-                  </span>
+                  <Link href={`/groups/${g.slug}`} className={styles.listLink}>
+                    <span className={styles.name}>{g.name}</span>
+                    <span className={styles.meta}>
+                      {" "}
+                      <code>{g.slug}</code>
+                      {g.theme_count != null ? ` · ${g.theme_count} themes` : ""}
+                      {g.ticker_count != null ? ` · ${g.ticker_count} tickers` : ""}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>
@@ -86,18 +88,20 @@ export default async function Home() {
             <ul className={styles.list}>
               {manifest.themes.map((t) => (
                 <li key={t.slug}>
-                  <span className={styles.name}>{t.name}</span>
-                  <span className={styles.meta}>
-                    {" "}
-                    <code>{t.slug}</code>
-                    {t.group_slug ? (
-                      <>
-                        {" "}
-                        · group <code>{t.group_slug}</code>
-                      </>
-                    ) : null}
-                    {t.ticker_count != null ? ` · ${t.ticker_count} tickers` : ""}
-                  </span>
+                  <Link href={`/themes/${t.slug}`} className={styles.listLink}>
+                    <span className={styles.name}>{t.name}</span>
+                    <span className={styles.meta}>
+                      {" "}
+                      <code>{t.slug}</code>
+                      {t.group_slug ? (
+                        <>
+                          {" "}
+                          · group <code>{t.group_slug}</code>
+                        </>
+                      ) : null}
+                      {t.ticker_count != null ? ` · ${t.ticker_count} tickers` : ""}
+                    </span>
+                  </Link>
                 </li>
               ))}
             </ul>

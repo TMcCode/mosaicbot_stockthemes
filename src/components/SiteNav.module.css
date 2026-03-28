@@ -43,6 +43,12 @@
   text-decoration: underline;
 }
 
+.sep {
+  color: var(--nav-muted, #666);
+  user-select: none;
+  padding: 0 2px;
+}
+
 @media (max-width: 600px) {
   .wrap {
     padding: 12px 24px 0;

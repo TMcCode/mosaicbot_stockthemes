@@ -122,6 +122,23 @@
   color: var(--text-secondary);
 }
 
+.listLink {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 6px;
+  margin: 0 -6px;
+  padding: 4px 6px;
+}
+
+.listLink:hover {
+  background: var(--button-secondary-hover);
+}
+
+.listLink:hover .name {
+  text-decoration: underline;
+}
+
 .intro {
   display: flex;
   flex-direction: column;
