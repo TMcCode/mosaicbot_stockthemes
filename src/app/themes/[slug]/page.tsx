@@ -3,11 +3,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import styles from "../../page.module.css";
 
+import { formatWeight } from "@/lib/formatWeight";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -45,16 +48,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-function formatWeight(w: number): string {
-  if (!Number.isFinite(w)) {
-    return "—";
-  }
-  if (w >= 0 && w <= 1) {
-    return `${(w * 100).toFixed(1)}%`;
-  }
-  return w.toFixed(4);
-}
-
 export default async function ThemeDetailPage({ params }: Props) {
   const { slug } = await params;
   const { manifest, source } = await getManifestCached();
@@ -71,6 +64,8 @@ export default async function ThemeDetailPage({ params }: Props) {
   const detail = loaded?.detail;
   const detailLabel =
     loaded?.source === "live" ? "live theme JSON" : loaded?.source === "fixture" ? "local fixture" : null;
+
+  const dataBaseUrl = stockthemesPublicDataBase() ?? null;
 
   const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
 
@@ -100,12 +95,15 @@ export default async function ThemeDetailPage({ params }: Props) {
               {detail.seo_intro}
             </p>
           ) : null}
-          {!detail ? (
+          {!detail && dataBaseUrl ? (
+            <ThemeDetailRuntimeLoader slug={slug} dataBaseUrl={dataBaseUrl} />
+          ) : null}
+          {!detail && !dataBaseUrl ? (
             <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-              No theme detail JSON found at <code className={styles.code}>themes/{slug}.json</code>. Run
-              MosaicBot <code className={styles.code}>stockthemes_manifest.py</code> with{" "}
-              <code className={styles.code}>STOCKTHEMES_PUBLIC_BUCKET</code>, or add a file under{" "}
-              <code className={styles.code}>public/fixtures/themes/</code> for offline builds.
+              No theme detail JSON at build time and no{" "}
+              <code className={styles.code}>NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL</code> — set it in CI so
+              the app can load <code className={styles.code}>themes/{slug}.json</code> from the bucket, or
+              add <code className={styles.code}>public/fixtures/themes/{slug}.json</code> for offline builds.
             </p>
           ) : null}
           {detail ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
