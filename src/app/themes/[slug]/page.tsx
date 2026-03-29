@@ -109,6 +109,7 @@ export default async function ThemeDetailPage({ params }: Props) {
           ) : null}
           {detail && dataBaseUrl ? (
             <ThemeChartLiveHydrate
+              key={slug}
               slug={slug}
               dataBaseUrl={dataBaseUrl}
               serverChart={detail.chart_1y}

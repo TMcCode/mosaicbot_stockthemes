@@ -27,22 +27,17 @@ type Props = {
  * (requires GCS CORS for this site's origin) so charts appear without redeploying the site.
  */
 export function ThemeChartLiveHydrate({ slug, dataBaseUrl, serverChart }: Props) {
-  const [chart, setChart] = useState<ThemeChart1yV0 | undefined>(() =>
-    chartHasRenderableData(serverChart) ? serverChart : undefined,
-  );
+  const [fetched, setFetched] = useState<ThemeChart1yV0 | undefined>(undefined);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [noChartInPayload, setNoChartInPayload] = useState(false);
 
+  const chart1y = chartHasRenderableData(serverChart) ? serverChart : fetched;
+
   useEffect(() => {
     if (chartHasRenderableData(serverChart)) {
-      setChart(serverChart);
-      setFetchError(null);
-      setNoChartInPayload(false);
       return;
     }
     let cancelled = false;
-    setFetchError(null);
-    setNoChartInPayload(false);
     const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json`;
     fetch(url, { credentials: "omit" })
       .then((res) => {
@@ -54,7 +49,7 @@ export function ThemeChartLiveHydrate({ slug, dataBaseUrl, serverChart }: Props)
       .then((data) => {
         if (cancelled) return;
         if (chartHasRenderableData(data.chart_1y)) {
-          setChart(data.chart_1y);
+          setFetched(data.chart_1y);
         } else {
           setNoChartInPayload(true);
         }
@@ -71,8 +66,8 @@ export function ThemeChartLiveHydrate({ slug, dataBaseUrl, serverChart }: Props)
 
   return (
     <>
-      <Chart1yPanel chart1y={chart} />
-      {!chart && fetchError ? (
+      <Chart1yPanel chart1y={chart1y} />
+      {!chart1y && fetchError ? (
         <p
           style={{
             fontSize: 14,
@@ -88,7 +83,7 @@ export function ThemeChartLiveHydrate({ slug, dataBaseUrl, serverChart }: Props)
           ), then apply with <code className={styles.code}>gsutil cors set …</code>.
         </p>
       ) : null}
-      {!chart && !fetchError && noChartInPayload ? (
+      {!chart1y && !fetchError && noChartInPayload ? (
         <p style={{ fontSize: 14, color: "var(--text-secondary, #888)", maxWidth: 560, marginTop: 8 }}>
           Live theme JSON loaded but <code className={styles.code}>chart_1y</code> is missing or empty —
           republish from <code className={styles.code}>stockthemes_manifest.py</code> after intraday chart
