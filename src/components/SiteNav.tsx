@@ -15,6 +15,10 @@ export function SiteNav() {
             ·
           </span>
           <Link href="/themes">All themes</Link>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          <Link href="/about">About</Link>
         </div>
       </nav>
     </header>

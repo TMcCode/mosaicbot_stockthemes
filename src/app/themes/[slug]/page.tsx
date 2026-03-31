@@ -8,6 +8,7 @@ import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader"
 import styles from "../../page.module.css";
 
 import { formatWeight } from "@/lib/formatWeight";
+import { buildCompositionMetaMap, formatUsdMarketCap, inferMarketCapUsd } from "@/lib/constituentMeta";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
@@ -67,8 +68,10 @@ export default async function ThemeDetailPage({ params }: Props) {
     loaded?.source === "live" ? "live theme JSON" : loaded?.source === "fixture" ? "local fixture" : null;
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
+  const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
 
   const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
+  const hasMcap = Boolean(detail?.constituents?.some((c) => inferMarketCapUsd(c) != null));
 
   return (
     <div className={styles.page}>
@@ -79,15 +82,14 @@ export default async function ThemeDetailPage({ params }: Props) {
             {detailLabel ? ` · ${detailLabel}` : ""}
           </p>
           <h1>{theme.name}</h1>
-          <p>
-            <code className={styles.code}>{theme.slug}</code>
-            {theme.ticker_count != null ? ` · ${theme.ticker_count} tickers (manifest)` : ""}
-          </p>
+          {theme.ticker_count != null ? (
+            <p>{theme.ticker_count} tickers (manifest)</p>
+          ) : null}
           {theme.group_slug ? (
             <p>
               Group:{" "}
               <Link href={`/groups/${theme.group_slug}`} style={{ fontWeight: 600 }}>
-                {group?.name ?? theme.group_slug}
+                {group?.name ?? "Group"}
               </Link>
             </p>
           ) : null}
@@ -96,6 +98,7 @@ export default async function ThemeDetailPage({ params }: Props) {
               {detail.seo_intro}
             </p>
           ) : null}
+          <aside className={styles.adSlot}>Ad Slot · Theme detail</aside>
           {!detail && dataBaseUrl ? (
             <ThemeDetailRuntimeLoader slug={slug} dataBaseUrl={dataBaseUrl} />
           ) : null}
@@ -113,9 +116,12 @@ export default async function ThemeDetailPage({ params }: Props) {
               slug={slug}
               dataBaseUrl={dataBaseUrl}
               serverChart={detail.chart_1y}
+              compositionMetaByTicker={compositionMetaByTicker}
             />
           ) : null}
-          {detail && !dataBaseUrl ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
+          {detail && !dataBaseUrl ? (
+            <Chart1yPanel chart1y={detail.chart_1y} compositionMetaByTicker={compositionMetaByTicker} />
+          ) : null}
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">
               <h2 id="constituents-heading">Constituents</h2>
@@ -135,6 +141,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                     <tr>
                       <th scope="col">Ticker</th>
                       <th scope="col">Name</th>
+                      {hasMcap ? <th scope="col">Market cap</th> : null}
                       {hasWeight ? <th scope="col">Weight</th> : null}
                     </tr>
                   </thead>
@@ -145,6 +152,9 @@ export default async function ThemeDetailPage({ params }: Props) {
                           <code className={styles.code}>{c.ticker}</code>
                         </td>
                         <td>{c.name ?? "—"}</td>
+                        {hasMcap ? (
+                          <td>{formatUsdMarketCap(inferMarketCapUsd(c))}</td>
+                        ) : null}
                         {hasWeight ? (
                           <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
                         ) : null}

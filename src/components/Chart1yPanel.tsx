@@ -1,28 +1,20 @@
 "use client";
 
-import dynamic from "next/dynamic";
-
-import { ChartLoadingBar } from "@/components/ChartLoadingBar";
+import { Chart1yLightweight } from "@/components/Chart1yLightweight";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
-
-// --- Active: Plotly (lazy chunk + loading bar) ---
-const ChartPlotlyInner = dynamic(
-  () => import("./ChartPlotlyInner").then((m) => m.ChartPlotlyInner),
-  { ssr: false, loading: () => <ChartLoadingBar /> },
-);
-
-// --- Revert to TradingView Lightweight Charts: uncomment below and remove the Plotly block above + ChartPlotlyInner usage in Chart1yPanel. ---
-// import { Chart1yPanelLightweightChartsLegacy } from "./Chart1yPanel.lightweight-charts.legacy";
-
-export type Chart1yPanelProps = {
-  chart1y: ThemeChart1yV0 | undefined;
-};
+import type { CompositionMeta } from "@/lib/constituentMeta";
 
 /**
- * Plotly charts load in a separate chunk after the page shell; a loading bar shows until ready.
- * Legacy TradingView implementation: `Chart1yPanel.lightweight-charts.legacy.tsx`.
+ * ~1Y chart uses TradingView Lightweight Charts (same family as TradingView), bundled in the main JS
+ * bundle — reliable for `output: "export"` / static hosting. Plotly was removed (heavy lazy chunk,
+ * easy to mis-path with basePath / static servers).
  */
-export function Chart1yPanel({ chart1y }: Chart1yPanelProps) {
+export type Chart1yPanelProps = {
+  chart1y: ThemeChart1yV0 | undefined;
+  compositionMetaByTicker?: Record<string, CompositionMeta>;
+};
+
+export function Chart1yPanel({ chart1y, compositionMetaByTicker }: Chart1yPanelProps) {
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -32,8 +24,5 @@ export function Chart1yPanel({ chart1y }: Chart1yPanelProps) {
   if (!hasPerf && !hasComp) {
     return null;
   }
-  return <ChartPlotlyInner chart1y={chart1y} />;
-
-  // Revert (no lazy load for lightweight-charts):
-  // return <Chart1yPanelLightweightChartsLegacy chart1y={chart1y} />;
+  return <Chart1yLightweight chart1y={chart1y} compositionMetaByTicker={compositionMetaByTicker} />;
 }

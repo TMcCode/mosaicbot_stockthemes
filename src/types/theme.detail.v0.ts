@@ -7,6 +7,13 @@ export type ThemeDetailConstituentV0 = {
   ticker: string;
   name?: string;
   weight?: number;
+  market_cap_usd?: number;
+  market_cap?: number;
+  current_market_cap_usd?: number;
+  current_market_cap?: number;
+  marketCapUsd?: number;
+  marketCap?: number;
+  [key: string]: unknown;
 };
 
 export type ThemeDetailV0 = {

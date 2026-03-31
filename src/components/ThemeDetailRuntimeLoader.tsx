@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { buildCompositionMetaMap } from "@/lib/constituentMeta";
 import { formatWeight } from "@/lib/formatWeight";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
@@ -84,6 +85,7 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
 
   const detail = state.detail;
   const hasWeight = Boolean(detail.constituents?.some((c) => c.weight != null));
+  const compositionMetaByTicker = buildCompositionMetaMap(detail.constituents);
 
   return (
     <>
@@ -95,7 +97,7 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
           {detail.seo_intro}
         </p>
       ) : null}
-      <Chart1yPanel chart1y={detail.chart_1y} />
+      <Chart1yPanel chart1y={detail.chart_1y} compositionMetaByTicker={compositionMetaByTicker} />
       {detail.constituents?.length ? (
         <section className={styles.section} aria-labelledby="constituents-heading-runtime">
           <h2 id="constituents-heading-runtime">Constituents</h2>

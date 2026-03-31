@@ -3,14 +3,19 @@ import { STOCKTHEMES_DEFAULT_MANIFEST_URL } from "@/lib/stockthemesDefaultManife
 /**
  * Derive public data base URL from the manifest URL, e.g.
  * https://storage.googleapis.com/stockthemes-public/manifest.json → .../stockthemes-public
+ *
+ * Set `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=` (empty) in `.env.local` to skip the public bucket
+ * during static preview — avoids browser fetches to GCS when CORS is not configured for localhost.
  */
 export function stockthemesPublicDataBase(): string | undefined {
   if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
     return undefined;
   }
-  const raw =
-    process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim() ||
-    STOCKTHEMES_DEFAULT_MANIFEST_URL;
+  const explicit = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL;
+  if (explicit !== undefined && explicit.trim() === "") {
+    return undefined;
+  }
+  const raw = explicit?.trim() || STOCKTHEMES_DEFAULT_MANIFEST_URL;
   try {
     const u = new URL(raw);
     const parts = u.pathname.split("/").filter(Boolean);

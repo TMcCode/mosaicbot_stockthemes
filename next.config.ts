@@ -13,6 +13,8 @@ if (basePath && !basePath.startsWith("/")) {
 
 const nextConfig: NextConfig = {
   output: "export",
+  // Allow LAN-origin browser access to dev-only assets (e.g. HMR) while testing from another device.
+  allowedDevOrigins: ["192.168.1.218"],
   ...(basePath ? { basePath } : {}),
   // Documents/ has a stray package-lock.json; without this, Turbopack uses the wrong root.
   turbopack: {

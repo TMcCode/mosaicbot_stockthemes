@@ -1,13 +1,10 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --background: #040506;
+  --foreground: #eaf2f0;
+  --nav-fg: #eaf2f0;
+  --nav-muted: #a6b4b2;
+  --nav-accent: #26fcd6;
+  --nav-border: rgba(255, 255, 255, 0.14);
 }
 
 html {
@@ -42,8 +39,6 @@ a {
   text-decoration: none;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+html {
+  color-scheme: dark;
 }
