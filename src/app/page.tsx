@@ -59,7 +59,7 @@ export default async function Home() {
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>{eyebrow}</p>
-              <h1>Thematic equity intelligence, organized by momentum and narrative</h1>
+              <h1>Thematic equity intelligence, organized for discovery</h1>
               <div className={styles.introCopyWrap}>
                 <p className={styles.introPunchline}>
                   Discover and track stock market narratives better than ever before
