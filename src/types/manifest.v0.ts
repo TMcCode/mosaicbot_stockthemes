@@ -50,4 +50,8 @@ export type ManifestThemeSummaryV0 = {
   group_slug?: string | null;
   industry_id?: string | null;
   ticker_count?: number;
+  /** ISO 8601 UTC from sym_theme_df theme_created_at (optional until backfilled) */
+  created_at?: string;
+  /** ISO 8601 UTC from sym_theme_df theme_updated_at */
+  updated_at?: string;
 };

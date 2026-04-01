@@ -24,6 +24,8 @@ export type ThemeDetailV0 = {
   as_of: string;
   build_id?: string;
   ticker_count?: number;
+  created_at?: string;
+  updated_at?: string;
   seo_intro?: string;
   constituents: ThemeDetailConstituentV0[];
   chart_1y?: ThemeChart1yV0;
