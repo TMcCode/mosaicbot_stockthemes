@@ -19,7 +19,7 @@ export default async function ThemesPage() {
   );
 
   return (
-    <div className={styles.page}>
+    <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>

@@ -67,7 +67,7 @@
 
 .legendItemButton {
   display: grid;
-  grid-template-columns: 10px minmax(78px, auto) minmax(150px, 1fr) auto;
+  grid-template-columns: 10px minmax(0, 1fr) minmax(0, min(320px, 46vw));
   align-items: center;
   gap: 8px;
   margin: 0;
@@ -107,21 +107,60 @@
   flex-shrink: 0;
 }
 
-.legendTicker {
+.legendNameCell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.legendLabel {
   color: var(--text-primary, #eaf2f0);
   font-weight: 600;
   letter-spacing: 0.01em;
-}
-
-.legendCompany {
-  color: var(--text-secondary, #9aa8a6);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  flex: 1 1 0;
+  min-width: 0;
 }
 
 .legendMcap {
   color: var(--text-primary, #eaf2f0);
   font-variant-numeric: tabular-nums;
+  justify-self: end;
+  text-align: right;
+}
+
+.legendTickers {
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.35;
+  justify-self: end;
+  text-align: right;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+:global(.st-theme[data-theme="light"]) .toggle {
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:global(.st-theme[data-theme="light"]) .toggle button.active {
+  background: rgba(10, 155, 134, 0.18);
+  color: #064032;
+}
+
+:global(.st-theme[data-theme="light"]) .legendItemButton {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .legendItemButton:hover {
+  background: rgba(0, 0, 0, 0.07);
 }
 

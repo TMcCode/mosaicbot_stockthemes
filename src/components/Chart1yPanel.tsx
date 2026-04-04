@@ -1,28 +1,37 @@
 "use client";
 
-import { Chart1yLightweight } from "@/components/Chart1yLightweight";
-import type { ThemeChart1yV0 } from "@/types/chart.v0";
-import type { CompositionMeta } from "@/lib/constituentMeta";
+import dynamic from "next/dynamic";
+
+import { chart1yHasRenderableSeries } from "@/lib/chart1yRenderable";
+import type { Chart1yPanelProps } from "@/components/Chart1yPanelContent";
+
+import styles from "./Chart1yPanel.module.css";
+
+function Chart1yPanelSkeleton() {
+  return (
+    <section className={styles.section} aria-busy="true" aria-label="Loading chart">
+      <div className={styles.toolbar}>
+        <span className={styles.toolbarLabel}>Chart (~1Y)</span>
+      </div>
+      <div className={styles.chartBox} />
+    </section>
+  );
+}
+
+const Chart1yPanelLoaded = dynamic(
+  () => import("@/components/Chart1yPanelContent").then((m) => m.Chart1yPanel),
+  { ssr: false, loading: () => <Chart1yPanelSkeleton /> },
+);
+
+export type { Chart1yPanelProps };
 
 /**
- * ~1Y chart uses TradingView Lightweight Charts (same family as TradingView), bundled in the main JS
- * bundle — reliable for `output: "export"` / static hosting. Plotly was removed (heavy lazy chunk,
- * easy to mis-path with basePath / static servers).
+ * Lazy-loads Lightweight Charts in a separate chunk (`ssr: false` for static export).
+ * Skips loading that chunk when `chart_1y` has nothing drawable.
  */
-export type Chart1yPanelProps = {
-  chart1y: ThemeChart1yV0 | undefined;
-  compositionMetaByTicker?: Record<string, CompositionMeta>;
-};
-
-export function Chart1yPanel({ chart1y, compositionMetaByTicker }: Chart1yPanelProps) {
-  const perf = chart1y?.performance;
-  const comp = chart1y?.composition_indexed;
-  const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
-  const hasComp = Boolean(
-    comp?.series?.some((s) => s.dates?.length && s.values?.length),
-  );
-  if (!hasPerf && !hasComp) {
+export function Chart1yPanel(props: Chart1yPanelProps) {
+  if (!chart1yHasRenderableSeries(props.chart1y)) {
     return null;
   }
-  return <Chart1yLightweight chart1y={chart1y} compositionMetaByTicker={compositionMetaByTicker} />;
+  return <Chart1yPanelLoaded {...props} />;
 }

@@ -313,7 +313,7 @@
   text-align: left;
   padding: 10px 12px;
   border-bottom: 1px solid var(--button-secondary-border);
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .dataTable th {
@@ -323,6 +323,22 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.companyCell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.companyName {
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
 }
 
 .list {
@@ -580,4 +596,46 @@ a.secondary {
   .sectorRow {
     grid-template-columns: 1fr;
   }
+}
+
+/* Light theme: main column tokens live in ThemeRoot.module.css (`.st-surface`). */
+
+:global(.st-theme[data-theme="light"]) .main {
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.04) inset,
+    0 18px 48px rgba(12, 48, 42, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .adSlot,
+:global(.st-theme[data-theme="light"]) .adStrip {
+  border-color: rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.025);
+}
+
+:global(.st-theme[data-theme="light"]) .code {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .statCard {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--button-secondary-border);
+}
+
+:global(.st-theme[data-theme="light"]) .tableWrap {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--button-secondary-border);
+}
+
+:global(.st-theme[data-theme="light"]) .dataTable th {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+:global(.st-theme[data-theme="light"]) .highlightChartWrap {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--button-secondary-border);
+}
+
+:global(.st-theme[data-theme="light"]) a.primary {
+  color: #f8fffd;
 }

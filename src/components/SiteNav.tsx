@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { ThemeToggle } from "@/components/ThemeToggle";
+
 import styles from "./SiteNav.module.css";
 
 export function SiteNav() {
@@ -19,6 +21,10 @@ export function SiteNav() {
             ·
           </span>
           <Link href="/about">About</Link>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          <ThemeToggle />
         </div>
       </nav>
     </header>

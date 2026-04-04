@@ -29,7 +29,10 @@ export default async function Home() {
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
   const newThemeNames = Array.isArray(manifest.new_themes) ? manifest.new_themes : [];
-  const updatedThemeNames = Array.isArray(manifest.updated_themes) ? manifest.updated_themes : [];
+  const updatedThemeNamesRaw = Array.isArray(manifest.updated_themes) ? manifest.updated_themes : [];
+  // Prefer ETL-side dedupe; also filter here so old manifests / static embeds never show the same theme twice.
+  const newNameSet = new Set(newThemeNames.map((n) => String(n).trim()));
+  const updatedThemeNames = updatedThemeNamesRaw.filter((n) => !newNameSet.has(String(n).trim()));
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
   const trendingThemes = trendingNames.map((name) => themeByName.get(name)).filter(Boolean);
   const updatedThemes = updatedThemeNames.map((name) => themeByName.get(name)).filter(Boolean);
@@ -53,7 +56,7 @@ export default async function Home() {
   const updatedLabel = new Date(manifest.as_of).toLocaleString();
 
   return (
-    <div className={styles.page}>
+    <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
@@ -145,7 +148,7 @@ export default async function Home() {
                   if (!t) return null;
                   return (
                     <Link key={`new-${t.slug}`} href={`/themes/${t.slug}`} className={styles.chip}>
-                      New: {t.name}
+                      {t.name}
                     </Link>
                   );
                 })}
@@ -154,7 +157,7 @@ export default async function Home() {
               <div className={styles.chipList}>
                 {updatedThemes.slice(0, 16).map((t) => (
                   <Link key={`upd-${t!.slug}`} href={`/themes/${t!.slug}`} className={styles.chipMuted}>
-                    Updated: {t!.name}
+                    {t!.name}
                   </Link>
                 ))}
               </div>

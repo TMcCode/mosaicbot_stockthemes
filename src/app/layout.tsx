@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
+import { ThemeRoot } from "@/components/ThemeRoot";
 import { siteBaseUrl } from "@/lib/siteUrl";
 
 const geistSans = Geist({
@@ -30,10 +32,17 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      className={`${geistSans.variable} ${geistMono.variable}`}
+      suppressHydrationWarning
+    >
       <body>
-        <SiteNav />
-        {children}
+        <ThemeRoot>
+          <SiteNav />
+          {children}
+          <SiteFooter />
+        </ThemeRoot>
       </body>
     </html>
   );

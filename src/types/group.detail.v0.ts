@@ -8,6 +8,9 @@ export type GroupDetailChildThemeV0 = {
   name: string;
   ticker_count?: number;
   group_slug?: string;
+  /** First few constituents (ETL); `tickers_preview_more` = additional count. */
+  tickers_preview?: string[];
+  tickers_preview_more?: number;
 };
 
 export type GroupDetailV0 = {
@@ -21,6 +24,6 @@ export type GroupDetailV0 = {
   theme_slugs?: string[];
   seo_intro?: string;
   themes: GroupDetailChildThemeV0[];
-  /** Group aggregate line; ETL omits `composition_indexed`. */
+  /** Group aggregate line + optional per-theme lines (`composition_indexed`, 2+ child themes). */
   chart_1y?: ThemeChart1yV0;
 };

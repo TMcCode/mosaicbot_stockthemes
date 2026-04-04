@@ -1,8 +1,12 @@
+import type { ChartCompositionSeriesV0 } from "@/types/chart.v0";
+import type { GroupDetailChildThemeV0 } from "@/types/group.detail.v0";
 import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 
 export type CompositionMeta = {
   name?: string;
   marketCapUsd?: number;
+  /** Group composition legend: comma-separated tickers, optional `+N` suffix. */
+  tickersPreview?: string;
 };
 
 function pickNumber(v: unknown): number | undefined {
@@ -31,6 +35,68 @@ export function inferMarketCapUsd(c: ThemeDetailConstituentV0): number | undefin
     pickNumber(c.mcap) ??
     undefined
   );
+}
+
+function marketCapSortKey(usd: number | undefined): number {
+  return usd != null && Number.isFinite(usd) && usd > 0 ? usd : -1;
+}
+
+/** Descending by inferred USD market cap; missing or non-positive at end; tie-break by ticker. */
+export function sortConstituentsByMarketCapDesc(
+  constituents: ThemeDetailConstituentV0[],
+): ThemeDetailConstituentV0[] {
+  return [...constituents].sort((a, b) => {
+    const nb = marketCapSortKey(inferMarketCapUsd(b));
+    const na = marketCapSortKey(inferMarketCapUsd(a));
+    if (nb !== na) return nb - na;
+    return String(a.ticker || "").localeCompare(String(b.ticker || ""), undefined, {
+      sensitivity: "base",
+    });
+  });
+}
+
+/** Align composition chart + legend: same ordering as constituents when meta includes marketCapUsd. */
+export function sortCompositionSeriesByMarketCapDesc(
+  series: ChartCompositionSeriesV0[] | undefined,
+  metaByTicker: Record<string, CompositionMeta> | undefined,
+): ChartCompositionSeriesV0[] {
+  if (!series?.length) return [];
+  return [...series].sort((a, b) => {
+    const va = marketCapSortKey(metaByTicker?.[a.ticker.toUpperCase()]?.marketCapUsd);
+    const vb = marketCapSortKey(metaByTicker?.[b.ticker.toUpperCase()]?.marketCapUsd);
+    if (vb !== va) return vb - va;
+    return a.ticker.localeCompare(b.ticker, undefined, { sensitivity: "base" });
+  });
+}
+
+function formatTickersPreviewLine(t: GroupDetailChildThemeV0): string | undefined {
+  const raw = t.tickers_preview;
+  if (!Array.isArray(raw) || raw.length === 0) return undefined;
+  const parts = raw.map((x) => String(x).trim().toUpperCase()).filter(Boolean);
+  if (!parts.length) return undefined;
+  const more = pickNumber(t.tickers_preview_more);
+  const head = parts.join(", ");
+  if (more != null && more > 0) return `${head} +${more}`;
+  return head;
+}
+
+/** Map theme slug → display name (+ optional ticker preview) for group composition chart legend. */
+export function buildGroupThemeChartMetaMap(
+  themes: GroupDetailChildThemeV0[] | undefined,
+): Record<string, CompositionMeta> {
+  const out: Record<string, CompositionMeta> = {};
+  if (!themes?.length) return out;
+  for (const t of themes) {
+    const slug = String(t.slug || "").trim().toUpperCase();
+    if (!slug) continue;
+    const name = String(t.name || "").trim();
+    const tickersPreview = formatTickersPreviewLine(t);
+    const meta: CompositionMeta = {};
+    if (name) meta.name = name;
+    if (tickersPreview) meta.tickersPreview = tickersPreview;
+    if (meta.name || meta.tickersPreview) out[slug] = meta;
+  }
+  return out;
 }
 
 export function buildCompositionMetaMap(

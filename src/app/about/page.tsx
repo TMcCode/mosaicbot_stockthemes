@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import styles from "../page.module.css";
 import { getManifestCached } from "@/lib/getManifestCached";
 
@@ -20,7 +21,7 @@ export default async function AboutPage() {
     .filter(Boolean);
 
   return (
-    <div className={styles.page}>
+    <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>About</p>
@@ -32,6 +33,7 @@ export default async function AboutPage() {
               </p>
             ))}
           </div>
+          <NewsletterSignup />
           <p>
             <Link href="/" style={{ fontWeight: 500 }}>
               ← Back to home

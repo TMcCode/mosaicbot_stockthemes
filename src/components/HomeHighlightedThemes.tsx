@@ -40,7 +40,7 @@ export function HomeHighlightedThemes({ items }: Props) {
         ))}
       </div>
       <div className={styles.highlightChartWrap}>
-        <Chart1yPanel chart1y={active.chart1y} />
+        <Chart1yPanel chart1y={active.chart1y} performanceTitle={active.name} />
       </div>
       <p className={styles.highlightLink}>
         <Link href={`/themes/${active.slug}`}>Open {active.name}</Link>

@@ -1,0 +1,49 @@
+.root {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  width: 100%;
+  color: var(--foreground);
+  background: var(--background);
+  color-scheme: dark;
+  --background: #040506;
+  --foreground: #eaf2f0;
+  --nav-fg: #eaf2f0;
+  --nav-muted: #a6b4b2;
+  --nav-accent: #26fcd6;
+  --nav-border: rgba(255, 255, 255, 0.14);
+}
+
+.root[data-theme="light"] {
+  color-scheme: light;
+  --background: #e6ecea;
+  --foreground: #0c1412;
+  --nav-fg: #0d1816;
+  --nav-muted: #4a5c58;
+  --nav-accent: #0a8f7a;
+  --nav-border: rgba(0, 0, 0, 0.12);
+}
+
+/*
+ * Main column `.page` redefines dark theme tokens on the same element, so they
+ * win over inherited `.root` values. Apply light tokens via a stable global
+ * class under `.root[data-theme="light"]` so the main surface actually updates.
+ */
+.root[data-theme="light"] :global(.st-surface) {
+  --background: #dfe8e5;
+  --foreground: #0a1010;
+  --card-surface: rgba(255, 255, 255, 0.92);
+  --card-border: rgba(10, 100, 88, 0.14);
+  --text-primary: #0d1816;
+  --text-secondary: #3d4f4c;
+  --text-muted: #5c6e6a;
+  --accent: #0a9b86;
+  --button-primary-hover: #088f7a;
+  --button-secondary-hover: rgba(0, 0, 0, 0.05);
+  --button-secondary-border: rgba(0, 0, 0, 0.1);
+  background:
+    radial-gradient(900px 520px at 15% -10%, rgba(38, 252, 214, 0.1), transparent 60%),
+    radial-gradient(1000px 560px at 100% -20%, rgba(53, 94, 251, 0.08), transparent 60%),
+    var(--background);
+}

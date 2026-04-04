@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
@@ -22,11 +22,31 @@ function hasComposition(c: ThemeChart1yV0 | undefined): boolean {
   );
 }
 
+/** Cheap structural key so merged `chart_1y` keeps a stable reference when data is unchanged. */
+function chartStructuralKey(c: ThemeChart1yV0 | undefined): string {
+  if (!c) return "";
+  const p = c.performance;
+  const comp = c.composition_indexed;
+  const pl = p?.dates?.length ?? 0;
+  const pTail = pl ? `${p!.dates![pl - 1]}\0${p!.values?.[pl - 1] ?? ""}` : "";
+  const rows =
+    comp?.series
+      ?.filter((s) => s.dates?.length && s.values?.length)
+      .map((s) => {
+        const L = s.dates!.length;
+        return `${s.ticker}:${L}:${s.values![L - 1]}`;
+      })
+      .join("\x1e") ?? "";
+  return `${pl}\x1f${pTail}\x1f${rows}`;
+}
+
 type Props = {
   slug: string;
   dataBaseUrl: string;
   serverChart: ThemeChart1yV0 | undefined;
   compositionMetaByTicker?: Record<string, CompositionMeta>;
+  /** Performance tooltip label (theme or group display name). */
+  performanceTitle?: string;
   /** Bucket path: `themes/<slug>.json` or `groups/<slug>.json`. */
   chartJsonFolder?: "themes" | "groups";
 };
@@ -44,6 +64,7 @@ export function ThemeChartLiveHydrate({
   dataBaseUrl,
   serverChart,
   compositionMetaByTicker,
+  performanceTitle,
   chartJsonFolder = "themes",
 }: Props) {
   const [fetched, setFetched] = useState<ThemeChart1yV0 | undefined>(undefined);
@@ -51,18 +72,29 @@ export function ThemeChartLiveHydrate({
   const [noChartInPayload, setNoChartInPayload] = useState(false);
   const [lastFetchUrl, setLastFetchUrl] = useState<string | null>(null);
 
+  const serverChartRef = useRef(serverChart);
+  const fetchedRef = useRef(fetched);
+  serverChartRef.current = serverChart;
+  fetchedRef.current = fetched;
+
+  const serverKey = chartStructuralKey(serverChart);
+  const fetchedKey = chartStructuralKey(fetched);
+
   const chart1y = useMemo(() => {
-    if (!chartHasRenderableData(serverChart)) {
-      return fetched;
+    const sc = serverChartRef.current;
+    const fd = fetchedRef.current;
+    if (!chartHasRenderableData(sc)) {
+      return fd;
     }
-    if (fetched && hasComposition(fetched)) {
+    if (fd && hasComposition(fd)) {
       return {
-        ...serverChart,
-        composition_indexed: fetched.composition_indexed,
+        ...sc,
+        composition_indexed: fd.composition_indexed,
       } satisfies ThemeChart1yV0;
     }
-    return serverChart;
-  }, [serverChart, fetched]);
+    return sc;
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
+  }, [serverKey, fetchedKey]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(
@@ -126,7 +158,11 @@ export function ThemeChartLiveHydrate({
 
   return (
     <>
-      <Chart1yPanel chart1y={chart1y} compositionMetaByTicker={compositionMetaByTicker} />
+      <Chart1yPanel
+        chart1y={chart1y}
+        compositionMetaByTicker={compositionMetaByTicker}
+        performanceTitle={performanceTitle}
+      />
       {!chart1y && fetchError ? (
         <p
           style={{

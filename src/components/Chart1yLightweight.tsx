@@ -1,6 +1,14 @@
 "use client";
 
-import { memo, useCallback, useEffect, useRef, useState, type MutableRefObject } from "react";
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MutableRefObject,
+} from "react";
 import {
   ColorType,
   CrosshairMode,
@@ -13,8 +21,18 @@ import {
 
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
+import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
+import { TickerBadge } from "@/components/TickerBadge";
 
 import styles from "./Chart1yPanel.module.css";
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
 
 function lineDataValue(data: unknown): number | null {
   if (data && typeof data === "object" && "value" in data) {
@@ -35,7 +53,16 @@ function pickLineSeriesForTooltip(
   if (!param.seriesData?.size) return undefined;
 
   const fromHover = param.hoveredSeries as ISeriesApi<"Line"> | undefined;
-  if (fromHover && seriesIdByApi.has(fromHover)) return fromHover;
+  if (fromHover && seriesIdByApi.has(fromHover) && fromHover.options().visible) {
+    return fromHover;
+  }
+
+  if (seriesIdByApi.size === 1) {
+    const line = seriesIdByApi.keys().next().value as ISeriesApi<"Line"> | undefined;
+    if (!line?.options().visible) return undefined;
+    const data = param.seriesData.get(line);
+    return lineDataValue(data) != null ? line : undefined;
+  }
 
   const pt = param.point;
   let best: ISeriesApi<"Line"> | undefined;
@@ -44,6 +71,7 @@ function pickLineSeriesForTooltip(
   for (const [sApi, data] of param.seriesData) {
     const line = sApi as ISeriesApi<"Line">;
     if (!seriesIdByApi.has(line)) continue;
+    if (!line.options().visible) continue;
     const val = lineDataValue(data);
     if (val == null) continue;
     if (!pt) {
@@ -62,6 +90,7 @@ function pickLineSeriesForTooltip(
     for (const [sApi, data] of param.seriesData) {
       const line = sApi as ISeriesApi<"Line">;
       if (!seriesIdByApi.has(line)) continue;
+      if (!line.options().visible) continue;
       if (lineDataValue(data) != null) return line;
     }
   }
@@ -126,6 +155,9 @@ type Chart1yCanvasProps = {
   chart1y: ThemeChart1yV0 | undefined;
   activeView: "performance" | "composition";
   lineApisRef: MutableRefObject<Map<string, ISeriesApi<"Line">>>;
+  /** Ref so tooltip meta stays fresh without remounting the chart when `memo` skips canvas render. */
+  compositionMetaRef: MutableRefObject<Record<string, CompositionMeta> | undefined>;
+  performanceTitleRef: MutableRefObject<string | undefined>;
 };
 
 /**
@@ -136,6 +168,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   chart1y,
   activeView,
   lineApisRef,
+  compositionMetaRef,
+  performanceTitleRef,
 }: Chart1yCanvasProps) {
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -197,6 +231,13 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             labelBackgroundColor: "#0f1115",
           },
         },
+        handleScale: {
+          mouseWheel: false,
+          pinch: false,
+          axisPressedMouseMove: false,
+        },
+        // No horizontal pan: keep the fitted ~1Y range fixed in the viewport.
+        handleScroll: false,
         rightPriceScale: {
           borderColor: "rgba(255,255,255,0.08)",
           scaleMargins: { top: 0.1, bottom: 0.15 },
@@ -219,6 +260,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     const perfHasPoints = Boolean(perfPoints && perfPoints.length);
 
     const seriesIdByApi = new Map<ISeriesApi<"Line">, string>();
+    /** Single series in performance mode — skip nearest-line scan on every crosshair frame. */
+    let perfLineApi: ISeriesApi<"Line"> | undefined;
     try {
       if (activeView === "performance" && perfPoints) {
         const series = chart.addLineSeries({
@@ -229,13 +272,10 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           title: "",
           priceLineVisible: false,
           lastValueVisible: false,
-        });
-        series.applyOptions({
-          title: "",
-          priceLineVisible: false,
-          lastValueVisible: false,
+          crosshairMarkerVisible: true,
         });
         series.setData(perfPoints);
+        perfLineApi = series;
         lineApisRef.current.set(PERF_SERIES_ID, series);
         seriesIdByApi.set(series, PERF_SERIES_ID);
       } else if (activeView === "composition" && comp?.series) {
@@ -249,11 +289,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             title: "",
             priceLineVisible: false,
             lastValueVisible: false,
-          });
-          series.applyOptions({
-            title: "",
-            priceLineVisible: false,
-            lastValueVisible: false,
+            crosshairMarkerVisible: false,
           });
           series.setData(pts);
           lineApisRef.current.set(s.ticker, series);
@@ -271,48 +307,140 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
     chart.timeScale().fitContent();
 
-    // Custom tooltip: ticker (or perf aggregation) + price at crosshair time.
-    const handleCrosshairMove = (param: MouseEventParams) => {
+    const tickerToSeriesName = new Map<string, string | undefined>();
+    comp?.series?.forEach((s) => tickerToSeriesName.set(s.ticker, s.name));
+
+    /** Only toggle the previous/next series — avoid O(n) applyOptions on every crosshair frame. */
+    let seriesWithCrosshairMarker: ISeriesApi<"Line"> | undefined;
+    const syncCompositionCrosshairMarkers = (picked: ISeriesApi<"Line"> | undefined) => {
+      if (activeView !== "composition") return;
+      if (seriesWithCrosshairMarker === picked) return;
+      if (seriesWithCrosshairMarker) {
+        seriesWithCrosshairMarker.applyOptions({ crosshairMarkerVisible: false });
+      }
+      seriesWithCrosshairMarker = picked;
+      if (picked) {
+        picked.applyOptions({ crosshairMarkerVisible: true });
+      }
+    };
+
+    let crosshairRaf = 0;
+    let pendingCrosshair: MouseEventParams | null = null;
+    let lastPerfTooltipText = "";
+    let lastCompositionTipKey = "";
+
+    const flushCrosshair = () => {
+      crosshairRaf = 0;
+      const param = pendingCrosshair;
+      pendingCrosshair = null;
       const tooltip = tooltipRef.current;
-      if (!tooltip) return;
+      if (!tooltip || !chartRef.current) return;
+
       if (!param?.point) {
         tooltip.style.display = "none";
+        lastPerfTooltipText = "";
+        lastCompositionTipKey = "";
+        syncCompositionCrosshairMarkers(undefined);
         return;
       }
-      const hovered = pickLineSeriesForTooltip(param, seriesIdByApi);
+      const hovered =
+        activeView === "performance"
+          ? perfLineApi
+          : pickLineSeriesForTooltip(param, seriesIdByApi);
       if (!hovered) {
         tooltip.style.display = "none";
+        lastPerfTooltipText = "";
+        lastCompositionTipKey = "";
+        syncCompositionCrosshairMarkers(undefined);
         return;
       }
       const id = seriesIdByApi.get(hovered);
       if (!id) {
         tooltip.style.display = "none";
+        lastPerfTooltipText = "";
+        lastCompositionTipKey = "";
+        syncCompositionCrosshairMarkers(undefined);
         return;
       }
 
-      const ticker = id === PERF_SERIES_ID ? perf?.aggregation ?? "Performance" : id;
+      syncCompositionCrosshairMarkers(hovered);
+
       const price = lineDataValue(param.seriesData.get(hovered));
-      tooltip.textContent =
-        price != null ? `${ticker} — ${price.toLocaleString(undefined, { maximumFractionDigits: 2 })}` : ticker;
+      const priceStr =
+        price != null ? price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : null;
+
+      if (id === PERF_SERIES_ID) {
+        const perfLabel =
+          performanceTitleRef.current?.trim() ||
+          perf?.aggregation?.trim() ||
+          "Performance";
+        const nextText = priceStr != null ? `${perfLabel} — ${priceStr}` : perfLabel;
+        if (nextText !== lastPerfTooltipText) {
+          lastPerfTooltipText = nextText;
+          tooltip.innerHTML = "";
+          tooltip.textContent = nextText;
+        }
+      } else {
+        const upper = id.toUpperCase();
+        const name =
+          compositionMetaRef.current?.[upper]?.name?.trim() ||
+          tickerToSeriesName.get(id)?.trim() ||
+          "";
+        const displayTitle = name || id;
+        const valueLine = priceStr != null ? escapeHtml(priceStr) : "—";
+        const tipKey = `${displayTitle}\x00${valueLine}`;
+        if (tipKey !== lastCompositionTipKey) {
+          lastCompositionTipKey = tipKey;
+          tooltip.innerHTML = [
+            `<div><strong style="color:#e8eaed;font-weight:600">${escapeHtml(displayTitle)}</strong></div>`,
+            `<div>${valueLine}</div>`,
+          ].join("");
+        }
+      }
 
       tooltip.style.display = "block";
-      tooltip.style.left = `${param.point.x + 10}px`;
-      tooltip.style.top = `${param.point.y + 10}px`;
+      const lx = Math.round(param.point.x + 10);
+      const ly = Math.round(param.point.y + 10);
+      tooltip.style.left = `${lx}px`;
+      tooltip.style.top = `${ly}px`;
+    };
+
+    const handleCrosshairMove = (param: MouseEventParams) => {
+      pendingCrosshair = param;
+      if (crosshairRaf !== 0) return;
+      crosshairRaf = requestAnimationFrame(flushCrosshair);
     };
     chart.subscribeCrosshairMove(handleCrosshairMove);
 
+    let resizeFitTimer: ReturnType<typeof setTimeout> | null = null;
+    let lastObservedWidth = width;
     const ro =
       typeof ResizeObserver !== "undefined"
         ? new ResizeObserver(() => {
             if (!wrapRef.current || !chartRef.current) return;
-            chartRef.current.applyOptions({
-              width: Math.max(wrapRef.current.clientWidth, 200),
-            });
+            const w = Math.max(wrapRef.current.clientWidth, 200);
+            if (w === lastObservedWidth) return;
+            lastObservedWidth = w;
+            if (resizeFitTimer !== null) clearTimeout(resizeFitTimer);
+            resizeFitTimer = setTimeout(() => {
+              resizeFitTimer = null;
+              if (!wrapRef.current || !chartRef.current) return;
+              const w2 = Math.max(wrapRef.current.clientWidth, 200);
+              lastObservedWidth = w2;
+              chartRef.current.applyOptions({ width: w2 });
+              chartRef.current.timeScale().fitContent();
+            }, 120);
           })
         : null;
     ro?.observe(el);
 
     return () => {
+      if (crosshairRaf !== 0) {
+        cancelAnimationFrame(crosshairRaf);
+      }
+      if (resizeFitTimer !== null) {
+        clearTimeout(resizeFitTimer);
+      }
       ro?.disconnect();
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
       chart?.remove();
@@ -337,8 +465,9 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           color: "#a6abb9",
           fontSize: 12,
           pointerEvents: "none",
-          whiteSpace: "nowrap",
-          maxWidth: 280,
+          whiteSpace: "normal",
+          maxWidth: 360,
+          lineHeight: 1.35,
           overflow: "hidden",
           textOverflow: "ellipsis",
         }}
@@ -370,6 +499,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 export type Chart1yLightweightProps = {
   chart1y: ThemeChart1yV0 | undefined;
   compositionMetaByTicker?: Record<string, CompositionMeta>;
+  /** Performance-line tooltip label; overrides JSON `performance.aggregation` (e.g. "average"). */
+  performanceTitle?: string;
 };
 
 function formatMarketCap(v: number | undefined): string {
@@ -387,6 +518,7 @@ function formatMarketCap(v: number | undefined): string {
 export function Chart1yLightweight({
   chart1y,
   compositionMetaByTicker,
+  performanceTitle,
 }: Chart1yLightweightProps) {
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
@@ -394,6 +526,14 @@ export function Chart1yLightweight({
   const hasComp = Boolean(
     comp?.series?.some((s) => s.dates?.length && s.values?.length),
   );
+
+  const chart1ySorted = useMemo(() => {
+    if (!chart1y) return chart1y;
+    const c = chart1y.composition_indexed;
+    if (!c?.series?.length) return chart1y;
+    const series = sortCompositionSeriesByMarketCapDesc(c.series, compositionMetaByTicker);
+    return { ...chart1y, composition_indexed: { ...c, series } };
+  }, [chart1y, compositionMetaByTicker]);
 
   const [view, setView] = useState<"performance" | "composition">(
     () => (hasPerf ? "performance" : "composition"),
@@ -409,14 +549,18 @@ export function Chart1yLightweight({
           : "performance";
 
   const lineApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
+  const compositionMetaRef = useRef(compositionMetaByTicker);
+  compositionMetaRef.current = compositionMetaByTicker;
+  const performanceTitleRef = useRef(performanceTitle);
+  performanceTitleRef.current = performanceTitle;
   /** Tickers / PERF_SERIES_ID hidden via legend click (state so we don't read refs during render). */
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([]);
+  const hiddenSet = useMemo(() => new Set(hiddenSeries), [hiddenSeries]);
 
   useEffect(() => {
     // Reset legend toggles when the chart data or mode changes (new series APIs in Chart1yCanvas).
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- intentional sync after chart rebuild
     setHiddenSeries([]);
-  }, [chart1y, activeView]);
+  }, [chart1ySorted, activeView]);
 
   const toggleSeries = useCallback((id: string) => {
     const api = lineApisRef.current.get(id);
@@ -428,8 +572,6 @@ export function Chart1yLightweight({
       return [...prev, id];
     });
   }, []);
-
-  const legendHidden = (id: string) => hiddenSeries.includes(id);
 
   if (!hasPerf && !hasComp) {
     return null;
@@ -458,31 +600,49 @@ export function Chart1yLightweight({
           </div>
         ) : null}
       </div>
-      <Chart1yCanvas chart1y={chart1y} activeView={activeView} lineApisRef={lineApisRef} />
-      {activeView === "composition" && hasComp && comp?.series ? (
+      <Chart1yCanvas
+        chart1y={chart1ySorted}
+        activeView={activeView}
+        lineApisRef={lineApisRef}
+        compositionMetaRef={compositionMetaRef}
+        performanceTitleRef={performanceTitleRef}
+      />
+      {activeView === "composition" && hasComp && chart1ySorted?.composition_indexed?.series ? (
         <div
           className={styles.legend}
           role="group"
           aria-label="Series — click a name to show or hide on the chart"
         >
-          {comp.series.map((s, i) => {
+          {chart1ySorted.composition_indexed.series.map((s, i) => {
             if (!s.dates?.length || !s.values?.length) return null;
             const meta = compositionMetaByTicker?.[s.ticker.toUpperCase()];
+            const name = meta?.name?.trim() || s.name?.trim() || "";
+            const ticker = s.ticker?.trim() || "";
             return (
               <button
                 key={s.ticker}
                 type="button"
-                className={`${styles.legendItemButton} ${legendHidden(s.ticker) ? styles.legendItemMuted : ""}`}
-                aria-pressed={!legendHidden(s.ticker)}
+                className={`${styles.legendItemButton} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
+                aria-pressed={!hiddenSet.has(s.ticker)}
                 onClick={() => toggleSeries(s.ticker)}
               >
                 <span
                   className={styles.swatch}
                   style={{ background: PALETTE[i % PALETTE.length] }}
                 />
-                <span className={styles.legendTicker}>{s.ticker}</span>
-                <span className={styles.legendCompany}>{meta?.name ?? s.name ?? "—"}</span>
-                <span className={styles.legendMcap}>{formatMarketCap(meta?.marketCapUsd)}</span>
+                <span className={styles.legendNameCell}>
+                  {name ? <span className={styles.legendLabel}>{name}</span> : null}
+                  {ticker ? <TickerBadge ticker={ticker} /> : null}
+                </span>
+                <span
+                  className={
+                    meta?.tickersPreview?.trim() ? styles.legendTickers : styles.legendMcap
+                  }
+                >
+                  {meta?.tickersPreview?.trim()
+                    ? meta.tickersPreview.trim()
+                    : formatMarketCap(meta?.marketCapUsd)}
+                </span>
               </button>
             );
           })}

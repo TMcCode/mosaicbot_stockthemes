@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import { buildCompositionMetaMap } from "@/lib/constituentMeta";
+import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
+import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
@@ -97,7 +98,11 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
           {detail.seo_intro}
         </p>
       ) : null}
-      <Chart1yPanel chart1y={detail.chart_1y} compositionMetaByTicker={compositionMetaByTicker} />
+      <Chart1yPanel
+        chart1y={detail.chart_1y}
+        compositionMetaByTicker={compositionMetaByTicker}
+        performanceTitle={detail.name}
+      />
       {detail.constituents?.length ? (
         <section className={styles.section} aria-labelledby="constituents-heading-runtime">
           <h2 id="constituents-heading-runtime">Constituents</h2>
@@ -121,12 +126,14 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {detail.constituents.map((c) => (
+                {sortConstituentsByMarketCapDesc(detail.constituents).map((c) => (
                   <tr key={c.ticker}>
                     <td>
-                      <code className={styles.code}>{c.ticker}</code>
+                      <div className={styles.companyCell}>
+                        <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
+                        <TickerBadge ticker={c.ticker} />
+                      </div>
                     </td>
-                    <td>{c.name ?? "—"}</td>
                     {hasWeight ? (
                       <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
                     ) : null}

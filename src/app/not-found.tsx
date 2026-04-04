@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className={styles.page}>
+    <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>404</p>

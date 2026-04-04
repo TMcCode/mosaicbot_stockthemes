@@ -3,12 +3,14 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import styles from "../../page.module.css";
 
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { loadManifest } from "@/lib/loadManifest";
+import { buildGroupThemeChartMetaMap } from "@/lib/constituentMeta";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailChildThemeV0 } from "@/types/group.detail.v0";
 import type { ManifestThemeSummaryV0 } from "@/types/manifest.v0";
@@ -85,35 +87,41 @@ export default async function GroupDetailPage({ params }: Props) {
     detail?.themes?.length ? detail.themes : childRowFromManifest(manifestChildren);
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
+  const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
 
   return (
-    <div className={styles.page}>
+    <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
-          <p className={styles.eyebrow}>
-            Group · {source === "live" ? "live manifest" : "local fixture"}
-            {detailLabel ? ` · ${detailLabel}` : ""}
-          </p>
-          <h1>{group.name}</h1>
-          <p>
-            {group.theme_count != null ? `${group.theme_count} themes` : ""}
-            {group.theme_count != null && group.ticker_count != null ? " · " : ""}
-            {group.ticker_count != null ? `${group.ticker_count} tickers` : ""}
-          </p>
-          {detail?.seo_intro ? (
-            <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
-              {detail.seo_intro}
-            </p>
-          ) : null}
-          <aside className={styles.adSlot}>Ad Slot · Group detail</aside>
-          {!detail ? (
-            <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-              No group detail JSON found at <code className={styles.code}>groups/{slug}.json</code>. Run
-              MosaicBot <code className={styles.code}>stockthemes_manifest.py</code> with{" "}
-              <code className={styles.code}>STOCKTHEMES_PUBLIC_BUCKET</code>, or add{" "}
-              <code className={styles.code}>public/fixtures/groups/&lt;slug&gt;.json</code> for offline builds.
-            </p>
-          ) : null}
+          <div className={styles.heroGrid}>
+            <div className={styles.heroMain}>
+              <p className={styles.eyebrow}>
+                Group · {source === "live" ? "live manifest" : "local fixture"}
+                {detailLabel ? ` · ${detailLabel}` : ""}
+              </p>
+              <h1>{group.name}</h1>
+              <p>
+                {group.theme_count != null ? `${group.theme_count} themes` : ""}
+                {group.theme_count != null && group.ticker_count != null ? " · " : ""}
+                {group.ticker_count != null ? `${group.ticker_count} tickers` : ""}
+              </p>
+              {detail?.seo_intro ? (
+                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
+                  {detail.seo_intro}
+                </p>
+              ) : null}
+              {!detail ? (
+                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
+                  No group detail JSON found at <code className={styles.code}>groups/{slug}.json</code>. Run
+                  MosaicBot <code className={styles.code}>stockthemes_manifest.py</code> with{" "}
+                  <code className={styles.code}>STOCKTHEMES_PUBLIC_BUCKET</code>, or add{" "}
+                  <code className={styles.code}>public/fixtures/groups/&lt;slug&gt;.json</code> for offline
+                  builds.
+                </p>
+              ) : null}
+            </div>
+            <aside className={`${styles.adSlot} ${styles.adSlotTall}`}>Ad Slot · Group detail</aside>
+          </div>
           {detail && dataBaseUrl ? (
             <ThemeChartLiveHydrate
               key={slug}
@@ -121,9 +129,17 @@ export default async function GroupDetailPage({ params }: Props) {
               dataBaseUrl={dataBaseUrl}
               serverChart={detail.chart_1y}
               chartJsonFolder="groups"
+              performanceTitle={group.name}
+              compositionMetaByTicker={groupChartMetaBySlug}
             />
           ) : null}
-          {detail && !dataBaseUrl ? <Chart1yPanel chart1y={detail.chart_1y} /> : null}
+          {detail && !dataBaseUrl ? (
+            <Chart1yPanel
+              chart1y={detail.chart_1y}
+              performanceTitle={group.name}
+              compositionMetaByTicker={groupChartMetaBySlug}
+            />
+          ) : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">
             <h2 id="group-themes-heading">Themes in this group</h2>
             {detail?.as_of ? (
@@ -164,6 +180,7 @@ export default async function GroupDetailPage({ params }: Props) {
           <aside className={styles.adStrip}>
             Ad Slot · Group Footer Strip
           </aside>
+          <NewsletterSignup />
           <p>
             <Link href="/groups" style={{ fontWeight: 500 }}>
               ← All groups
