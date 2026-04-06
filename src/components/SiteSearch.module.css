@@ -1,0 +1,151 @@
+.wrap {
+  position: relative;
+  flex: 1 1 200px;
+  max-width: 360px;
+  min-width: 140px;
+}
+
+.input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 13px;
+  border-radius: 10px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nav-fg, #eaf2f0);
+  outline: none;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.input::placeholder {
+  color: var(--nav-muted, #6f7e7c);
+}
+
+.input:hover {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.input:focus {
+  border-color: rgba(38, 252, 214, 0.45);
+  box-shadow: 0 0 0 2px rgba(38, 252, 214, 0.12);
+}
+
+.panel {
+  position: absolute;
+  z-index: 50;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  max-height: min(70vh, 380px);
+  overflow: auto;
+  border-radius: 12px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  background: var(--nav-panel-bg, rgba(12, 14, 16, 0.98));
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  padding: 6px 0;
+}
+
+:global(.st-theme[data-theme="light"]) .panel {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+.meta {
+  padding: 6px 12px 8px;
+  font-size: 11px;
+  color: var(--nav-muted, #7a8a88);
+  border-bottom: 1px solid var(--nav-border, rgba(255, 255, 255, 0.08));
+  margin-bottom: 4px;
+}
+
+.row {
+  display: block;
+  padding: 8px 12px;
+  text-decoration: none;
+  color: inherit;
+  border: none;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  background: transparent;
+  box-sizing: border-box;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: rgba(38, 252, 214, 0.08);
+  outline: none;
+}
+
+.rowTitle {
+  font-weight: 600;
+  color: var(--nav-fg, #eaf2f0);
+}
+
+.rowSub {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--nav-muted, #9aa8a6);
+  line-height: 1.35;
+}
+
+/* Nested theme links (ticker rows): real <a>s, visibly distinct from muted label text */
+.themeLink {
+  color: var(--nav-accent, #26fcd6);
+  text-decoration: none;
+  font-weight: 500;
+  border-bottom: 1px solid transparent;
+  transition:
+    color 0.12s ease,
+    border-color 0.12s ease;
+}
+
+.themeLink:hover {
+  color: var(--nav-fg, #eaf2f0);
+  border-bottom-color: rgba(38, 252, 214, 0.55);
+}
+
+.themeLink:focus-visible {
+  outline: 2px solid var(--nav-accent, #26fcd6);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+:global(.st-theme[data-theme="light"]) .themeLink {
+  color: #0d9488;
+}
+
+:global(.st-theme[data-theme="light"]) .themeLink:hover {
+  color: #042f2e;
+  border-bottom-color: rgba(13, 148, 136, 0.55);
+}
+
+.badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--nav-accent, #26fcd6);
+  margin-right: 8px;
+}
+
+.err {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #f0a8a8;
+}
+
+@media (max-width: 720px) {
+  .wrap {
+    order: 3;
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}

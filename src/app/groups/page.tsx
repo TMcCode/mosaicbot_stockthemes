@@ -67,7 +67,7 @@ export default async function GroupsPage() {
                   <ul className={styles.groupThemeGrid} style={{ listStyle: "none", paddingLeft: 0 }}>
                     {(groupsBySector.get(sector) || []).map((g) => (
                       <li key={g.slug}>
-                        <Link href={`/groups/${g.slug}`} className={styles.listLink}>
+                        <Link href={`/groups/${g.slug}`} className={styles.listLink} prefetch={false}>
                           <span className={styles.name}>{g.name}</span>
                           <span className={styles.meta}>
                             {g.theme_count != null ? `${g.theme_count} themes` : ""}

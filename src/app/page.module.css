@@ -102,6 +102,13 @@
   padding: 0 8px;
 }
 
+/* Horizontal display unit (e.g. AdSense); placeholder strip stays short above. */
+.adStripBanner {
+  height: auto;
+  min-height: 90px;
+  padding: 8px;
+}
+
 .statGrid {
   width: 100%;
   display: grid;
@@ -196,31 +203,68 @@
 
 .trendingTable {
   display: grid;
-  grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(72px, 1fr));
-  gap: 8px 10px;
+  /* grid-template-columns set inline (column count matches Compare / SelectedDates) */
+  gap: 5px 5px;
   align-items: center;
 }
 
 .trendingHead {
-  font-size: 11px;
+  font-size: 10px;
+  line-height: 1.2;
   color: var(--text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.04em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.trendingHead:first-child {
+  text-align: left;
+}
+
+.trendingThemeCell {
+  min-width: 0;
 }
 
 .trendingThemeName {
+  display: block;
   color: var(--text-primary);
   text-decoration: none;
   font-size: 14px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trendingThemeName:hover {
   text-decoration: underline;
 }
 
+.trendingThemeNameMuted {
+  display: block;
+  color: var(--text-muted);
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .trendingValue {
-  font-size: 13px;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
+  padding: 3px 4px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
 }
 
 .chipList {
@@ -244,38 +288,6 @@
 
 .chipMuted {
   color: var(--text-secondary);
-}
-
-.highlightTabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 10px;
-}
-
-.highlightTab {
-  border: 1px solid var(--button-secondary-border);
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-secondary);
-  padding: 6px 10px;
-  font-size: 12px;
-}
-
-.highlightTabActive {
-  color: var(--text-primary);
-  border-color: var(--accent);
-}
-
-.highlightChartWrap {
-  border: 1px solid var(--button-secondary-border);
-  border-radius: 12px;
-  padding: 10px;
-  background: rgba(255, 255, 255, 0.02);
-}
-
-.highlightLink {
-  margin-top: 8px;
 }
 
 .sectorBlock {
@@ -466,12 +478,6 @@
 }
 
 
-.updatedAt {
-  margin: 4px 0 0;
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
 .intro a {
   font-weight: 600;
   color: var(--accent);
@@ -629,11 +635,6 @@ a.secondary {
 
 :global(.st-theme[data-theme="light"]) .dataTable th {
   background: rgba(0, 0, 0, 0.04);
-}
-
-:global(.st-theme[data-theme="light"]) .highlightChartWrap {
-  background: rgba(0, 0, 0, 0.03);
-  border-color: var(--button-secondary-border);
 }
 
 :global(.st-theme[data-theme="light"]) a.primary {

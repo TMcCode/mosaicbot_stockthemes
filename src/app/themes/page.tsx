@@ -34,7 +34,7 @@ export default async function ThemesPage() {
             <ul className={styles.list} style={{ listStyle: "none", paddingLeft: 0 }}>
               {themesSorted.map((t) => (
                 <li key={t.slug}>
-                  <Link href={`/themes/${t.slug}`} className={styles.listLink}>
+                  <Link href={`/themes/${t.slug}`} className={styles.listLink} prefetch={false}>
                     <span className={styles.name}>{t.name}</span>
                     <span className={styles.meta}>
                       {t.group_slug ? `${groupBySlug.get(t.group_slug)?.name ?? "Group"}` : ""}

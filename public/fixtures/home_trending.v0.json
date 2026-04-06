@@ -1,0 +1,19 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "rows": [
+    {
+      "slug": "ai-chips",
+      "name": "AI Chips",
+      "chart_1y": null,
+      "compare_returns": null
+    },
+    {
+      "slug": "data-centers",
+      "name": "Data Centers",
+      "chart_1y": null,
+      "compare_returns": null
+    }
+  ]
+}

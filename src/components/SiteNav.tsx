@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SiteSearch } from "@/components/SiteSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 import styles from "./SiteNav.module.css";
@@ -11,6 +12,7 @@ export function SiteNav() {
         <Link href="/" className={styles.brand}>
           stockthemes.ai
         </Link>
+        <SiteSearch />
         <div className={styles.links}>
           <Link href="/groups">All groups</Link>
           <span className={styles.sep} aria-hidden="true">

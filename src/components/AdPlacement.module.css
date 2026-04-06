@@ -1,0 +1,16 @@
+/* Wrapper when a real unit is active: drop dashed “placeholder” feel from parent; center unit. */
+.live {
+  border-style: solid;
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ins {
+  min-width: 0;
+  width: 100%;
+}
+
+:global(.st-theme[data-theme="light"]) .live {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}

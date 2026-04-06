@@ -2,9 +2,11 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { ThemeRoot } from "@/components/ThemeRoot";
+import { getManifestCached } from "@/lib/getManifestCached";
 import { siteBaseUrl } from "@/lib/siteUrl";
 
 const geistSans = Geist({
@@ -26,11 +28,19 @@ export const metadata: Metadata = {
   description: "Themes, groups, and stock exposure — fast public index.",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  /** GitHub Pages is a static export: `/api/*` is not deployed; keep API signup off in CI. */
+  const staticPagesBuild = process.env.STOCKTHEMES_STATIC_PAGES === "1";
+  const beehiivApiConfigured =
+    !staticPagesBuild &&
+    Boolean(process.env.BEEHIIV_API_KEY?.trim() && process.env.BEEHIIV_PUBLICATION_ID?.trim());
+
+  const { manifest } = await getManifestCached();
+
   return (
     <html
       lang="en"
@@ -38,11 +48,13 @@ export default function RootLayout({
       suppressHydrationWarning
     >
       <body>
-        <ThemeRoot>
-          <SiteNav />
-          {children}
-          <SiteFooter />
-        </ThemeRoot>
+        <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
+          <ThemeRoot>
+            <SiteNav />
+            {children}
+            <SiteFooter dataAsOf={manifest.as_of} />
+          </ThemeRoot>
+        </NewsletterRuntimeProvider>
       </body>
     </html>
   );

@@ -2,8 +2,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AdPlacement } from "@/components/AdPlacement";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import styles from "../../page.module.css";
 
@@ -120,7 +120,11 @@ export default async function GroupDetailPage({ params }: Props) {
                 </p>
               ) : null}
             </div>
-            <aside className={`${styles.adSlot} ${styles.adSlotTall}`}>Ad Slot · Group detail</aside>
+            <AdPlacement
+              placement="groupRail"
+              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              placeholderLabel="Ad Slot · Group detail"
+            />
           </div>
           {detail && dataBaseUrl ? (
             <ThemeChartLiveHydrate
@@ -131,6 +135,7 @@ export default async function GroupDetailPage({ params }: Props) {
               chartJsonFolder="groups"
               performanceTitle={group.name}
               compositionMetaByTicker={groupChartMetaBySlug}
+              compositionLegendShowSeriesBadge={false}
             />
           ) : null}
           {detail && !dataBaseUrl ? (
@@ -138,20 +143,14 @@ export default async function GroupDetailPage({ params }: Props) {
               chart1y={detail.chart_1y}
               performanceTitle={group.name}
               compositionMetaByTicker={groupChartMetaBySlug}
+              compositionLegendShowSeriesBadge={false}
             />
           ) : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">
             <h2 id="group-themes-heading">Themes in this group</h2>
-            {detail?.as_of ? (
+            {detail?.build_id ? (
               <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-                Data as of{" "}
-                <time dateTime={detail.as_of}>{new Date(detail.as_of).toLocaleString()}</time>
-                {detail.build_id ? (
-                  <>
-                    {" "}
-                    · build <code className={styles.code}>{detail.build_id}</code>
-                  </>
-                ) : null}
+                Build <code className={styles.code}>{detail.build_id}</code>
               </p>
             ) : null}
             <div className={styles.tableWrap}>
@@ -166,7 +165,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   {tableRows.map((t) => (
                     <tr key={t.slug}>
                       <td>
-                        <Link href={`/themes/${t.slug}`} className={styles.name}>
+                        <Link href={`/themes/${t.slug}`} className={styles.name} prefetch={false}>
                           {t.name}
                         </Link>
                       </td>
@@ -177,10 +176,13 @@ export default async function GroupDetailPage({ params }: Props) {
               </table>
             </div>
           </section>
-          <aside className={styles.adStrip}>
-            Ad Slot · Group Footer Strip
-          </aside>
-          <NewsletterSignup />
+          <AdPlacement
+            placement="groupStrip"
+            className={styles.adStrip}
+            classNameWhenActive={`${styles.adStrip} ${styles.adStripBanner}`}
+            placeholderLabel="Ad Slot · Group Footer Strip"
+            format="horizontal"
+          />
           <p>
             <Link href="/groups" style={{ fontWeight: 500 }}>
               ← All groups

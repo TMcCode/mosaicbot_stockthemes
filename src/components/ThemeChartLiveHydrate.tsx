@@ -49,6 +49,7 @@ type Props = {
   performanceTitle?: string;
   /** Bucket path: `themes/<slug>.json` or `groups/<slug>.json`. */
   chartJsonFolder?: "themes" | "groups";
+  compositionLegendShowSeriesBadge?: boolean;
 };
 
 /**
@@ -66,6 +67,7 @@ export function ThemeChartLiveHydrate({
   compositionMetaByTicker,
   performanceTitle,
   chartJsonFolder = "themes",
+  compositionLegendShowSeriesBadge = true,
 }: Props) {
   const [fetched, setFetched] = useState<ThemeChart1yV0 | undefined>(undefined);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -162,6 +164,7 @@ export function ThemeChartLiveHydrate({
         chart1y={chart1y}
         compositionMetaByTicker={compositionMetaByTicker}
         performanceTitle={performanceTitle}
+        compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
       />
       {!chart1y && fetchError ? (
         <p

@@ -7,6 +7,18 @@
   "build_id": "example-local-dev",
   "ticker_count": 4,
   "seo_intro": "AI Chips tracks semiconductor and accelerator names tied to AI compute. Sample tickers: AMD, ARM, INTC, NVDA — see the table for the full fixture list.",
+  "theme_thesis": {
+    "thesis_update": "2026-03-15",
+    "thesis": "Fixture sample: AI accelerators and foundry capacity remain the binding constraint for frontier-model training and inference scale-out.",
+    "bull_case": [
+      "Hyperscaler capex cycles still favor GPU-class silicon and HBM supply.",
+      "Second-source and custom ASIC programs broaden the revenue pool beyond one vendor."
+    ],
+    "bear_case": [
+      "Export controls and packaging bottlenecks can stall unit growth even when demand is strong.",
+      "Model efficiency gains could slow the marginal chip-intensity of new workloads."
+    ]
+  },
   "constituents": [
     { "ticker": "AMD", "name": "Advanced Micro Devices Inc." },
     { "ticker": "ARM", "name": "Arm Holdings plc" },

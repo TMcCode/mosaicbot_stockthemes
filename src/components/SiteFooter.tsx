@@ -4,17 +4,39 @@ import { NewsletterSignup } from "@/components/NewsletterSignup";
 
 import styles from "./SiteFooter.module.css";
 
-export function SiteFooter() {
+type Props = {
+  /** Manifest `as_of` (ISO); site-wide “data updated” time. */
+  dataAsOf?: string;
+};
+
+export function SiteFooter({ dataAsOf }: Props) {
+  const asOfIso = dataAsOf?.trim() || "";
+  const updatedLabel = asOfIso ? new Date(asOfIso).toLocaleString() : "";
+
   return (
     <footer className={styles.wrap}>
       <NewsletterSignup variant="footer" />
       <div className={styles.meta}>
-        <span className={styles.copyright}>© {new Date().getFullYear()} stockthemes.ai</span>
-        <nav className={styles.nav} aria-label="Footer">
-          <Link href="/themes">Themes</Link>
-          <Link href="/groups">Groups</Link>
-          <Link href="/about">About</Link>
-        </nav>
+        <div className={styles.metaBar}>
+          <div className={styles.metaLead}>
+            <span className={styles.copyright}>© {new Date().getFullYear()} stockthemes.ai</span>
+            {updatedLabel ? (
+              <>
+                {"\u2003"}
+                <span className={styles.dataAsOf}>
+                  Updated <time dateTime={asOfIso}>{updatedLabel}</time>
+                </span>
+              </>
+            ) : null}
+          </div>
+          <nav className={styles.nav} aria-label="Footer">
+            <span className={styles.navLinks}>
+              <Link href="/themes">Themes</Link>
+              <Link href="/groups">Groups</Link>
+              <Link href="/about">About</Link>
+            </span>
+          </nav>
+        </div>
       </div>
     </footer>
   );

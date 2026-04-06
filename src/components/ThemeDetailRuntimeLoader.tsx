@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { ThemeThesisSection, themeThesisHasContent } from "@/components/ThemeThesisSection";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
@@ -98,6 +99,12 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
           {detail.seo_intro}
         </p>
       ) : null}
+      {detail.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
+        <ThemeThesisSection
+          themeThesis={detail.theme_thesis}
+          headingId="theme-thesis-heading-runtime"
+        />
+      ) : null}
       <Chart1yPanel
         chart1y={detail.chart_1y}
         compositionMetaByTicker={compositionMetaByTicker}
@@ -106,16 +113,11 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
       {detail.constituents?.length ? (
         <section className={styles.section} aria-labelledby="constituents-heading-runtime">
           <h2 id="constituents-heading-runtime">Constituents</h2>
-          <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-            Data as of{" "}
-            <time dateTime={detail.as_of}>{new Date(detail.as_of).toLocaleString()}</time>
-            {detail.build_id ? (
-              <>
-                {" "}
-                · build <code className={styles.code}>{detail.build_id}</code>
-              </>
-            ) : null}
-          </p>
+          {detail.build_id ? (
+            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
+              Build <code className={styles.code}>{detail.build_id}</code>
+            </p>
+          ) : null}
           <div className={styles.tableWrap}>
             <table className={styles.dataTable}>
               <thead>

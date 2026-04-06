@@ -1,0 +1,59 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "tickers": [
+    {
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc",
+      "theme_slugs": ["ai-chips"],
+      "theme_names": ["AI Chips"],
+      "aliases": []
+    },
+    {
+      "ticker": "MSFT",
+      "name": "Microsoft Corporation",
+      "theme_slugs": ["ai-software", "data-centers"],
+      "theme_names": ["AI Software", "Data Centers"],
+      "aliases": []
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corporation",
+      "theme_slugs": ["ai-chips", "data-centers"],
+      "theme_names": ["AI Chips", "Data Centers"],
+      "aliases": []
+    }
+  ],
+  "themes": [
+    {
+      "slug": "ai-chips",
+      "name": "AI Chips",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "aliases": []
+    },
+    {
+      "slug": "ai-software",
+      "name": "AI Software",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "aliases": []
+    },
+    {
+      "slug": "data-centers",
+      "name": "Data Centers",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "aliases": []
+    }
+  ],
+  "groups": [
+    {
+      "slug": "artificial-intelligence",
+      "name": "Artificial Intelligence",
+      "spy_sector": "Technology",
+      "aliases": []
+    }
+  ]
+}

@@ -501,6 +501,8 @@ export type Chart1yLightweightProps = {
   compositionMetaByTicker?: Record<string, CompositionMeta>;
   /** Performance-line tooltip label; overrides JSON `performance.aggregation` (e.g. "average"). */
   performanceTitle?: string;
+  /** See `Chart1yPanelProps.compositionLegendShowSeriesBadge`. */
+  compositionLegendShowSeriesBadge?: boolean;
 };
 
 function formatMarketCap(v: number | undefined): string {
@@ -519,6 +521,7 @@ export function Chart1yLightweight({
   chart1y,
   compositionMetaByTicker,
   performanceTitle,
+  compositionLegendShowSeriesBadge = true,
 }: Chart1yLightweightProps) {
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
@@ -632,7 +635,9 @@ export function Chart1yLightweight({
                 />
                 <span className={styles.legendNameCell}>
                   {name ? <span className={styles.legendLabel}>{name}</span> : null}
-                  {ticker ? <TickerBadge ticker={ticker} /> : null}
+                  {compositionLegendShowSeriesBadge && ticker ? (
+                    <TickerBadge ticker={ticker} />
+                  ) : null}
                 </span>
                 <span
                   className={

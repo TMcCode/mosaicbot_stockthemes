@@ -38,6 +38,12 @@
   color: var(--text-secondary, var(--nav-muted, #9aa8a6));
 }
 
+.embedWrap {
+  margin-top: 4px;
+  width: 100%;
+  min-width: 0;
+}
+
 .form {
   display: flex;
   flex-wrap: wrap;
@@ -105,9 +111,10 @@
 /* Footer variant: sits on shell (.root), not inside .page */
 .footer {
   width: 100%;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 24px 24px 0;
+  max-width: none;
+  margin: 0;
+  padding: 24px max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
   border-top: 1px solid var(--nav-border, rgba(255, 255, 255, 0.12));
 }
 

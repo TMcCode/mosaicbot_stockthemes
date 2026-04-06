@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 
-import styles from "@/app/page.module.css";
+import pageStyles from "@/app/page.module.css";
+import styles from "@/components/HomeHighlightedThemes.module.css";
 
 type HighlightedThemeItem = {
   slug: string;
@@ -21,31 +22,84 @@ type Props = {
 export function HomeHighlightedThemes({ items }: Props) {
   const safeItems = useMemo(() => items.filter((x) => x.slug && x.name), [items]);
   const [activeIdx, setActiveIdx] = useState(0);
+
+  useEffect(() => {
+    setActiveIdx((i) => {
+      const max = Math.max(0, safeItems.length - 1);
+      return Math.min(i, max);
+    });
+  }, [safeItems.length]);
+
+  const goPrev = useCallback(() => {
+    setActiveIdx((i) => {
+      const n = safeItems.length;
+      if (n === 0) return 0;
+      const cur = Math.min(Math.max(0, i), n - 1);
+      return cur <= 0 ? n - 1 : cur - 1;
+    });
+  }, [safeItems.length]);
+
+  const goNext = useCallback(() => {
+    setActiveIdx((i) => {
+      const n = safeItems.length;
+      if (n === 0) return 0;
+      const cur = Math.min(Math.max(0, i), n - 1);
+      return cur >= n - 1 ? 0 : cur + 1;
+    });
+  }, [safeItems.length]);
+
   if (!safeItems.length) return null;
-  const active = safeItems[Math.max(0, Math.min(activeIdx, safeItems.length - 1))];
+
+  const idx = Math.min(Math.max(0, activeIdx), safeItems.length - 1);
+  const active = safeItems[idx];
+  const single = safeItems.length <= 1;
 
   return (
-    <section className={styles.section}>
+    <section className={pageStyles.section}>
       <h2>Highlighted themes</h2>
-      <div className={styles.highlightTabs}>
-        {safeItems.map((item, idx) => (
-          <button
-            key={item.slug}
-            type="button"
-            className={`${styles.highlightTab} ${idx === activeIdx ? styles.highlightTabActive : ""}`}
-            onClick={() => setActiveIdx(idx)}
+      <div className={styles.toolbar}>
+        <button
+          type="button"
+          className={styles.navBtn}
+          onClick={goPrev}
+          disabled={single}
+          aria-label="Previous trending theme chart"
+        >
+          ‹
+        </button>
+        <div className={styles.selectWrap}>
+          <select
+            className={styles.themeSelect}
+            value={active.slug}
+            onChange={(e) => {
+              const next = safeItems.findIndex((x) => x.slug === e.target.value);
+              if (next >= 0) setActiveIdx(next);
+            }}
+            aria-label="Choose a trending theme chart"
           >
-            {item.name}
-          </button>
-        ))}
+            {safeItems.map((item) => (
+              <option key={item.slug} value={item.slug}>
+                {item.name}
+              </option>
+            ))}
+          </select>
+        </div>
+        <button
+          type="button"
+          className={styles.navBtn}
+          onClick={goNext}
+          disabled={single}
+          aria-label="Next trending theme chart"
+        >
+          ›
+        </button>
       </div>
-      <div className={styles.highlightChartWrap}>
+      <div className={styles.chartWrap}>
         <Chart1yPanel chart1y={active.chart1y} performanceTitle={active.name} />
       </div>
-      <p className={styles.highlightLink}>
+      <p className={styles.footerLink}>
         <Link href={`/themes/${active.slug}`}>Open {active.name}</Link>
       </p>
     </section>
   );
 }
-

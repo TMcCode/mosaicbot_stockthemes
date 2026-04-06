@@ -2,11 +2,12 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
+import { AdPlacement } from "@/components/AdPlacement";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
+import { ThemeThesisSection, themeThesisHasContent } from "@/components/ThemeThesisSection";
 import styles from "../../page.module.css";
 
 import { formatWeight } from "@/lib/formatWeight";
@@ -107,6 +108,9 @@ export default async function ThemeDetailPage({ params }: Props) {
                   {detail.seo_intro}
                 </p>
               ) : null}
+              {detail?.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
+                <ThemeThesisSection themeThesis={detail.theme_thesis} />
+              ) : null}
               {!detail && !dataBaseUrl ? (
                 <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
                   No theme detail JSON at build time and no{" "}
@@ -117,7 +121,11 @@ export default async function ThemeDetailPage({ params }: Props) {
                 </p>
               ) : null}
             </div>
-            <aside className={`${styles.adSlot} ${styles.adSlotTall}`}>Ad Slot · Theme detail</aside>
+            <AdPlacement
+              placement="themeRail"
+              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              placeholderLabel="Ad Slot · Theme detail"
+            />
           </div>
           {!detail && dataBaseUrl ? (
             <ThemeDetailRuntimeLoader slug={slug} dataBaseUrl={dataBaseUrl} />
@@ -142,16 +150,11 @@ export default async function ThemeDetailPage({ params }: Props) {
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">
               <h2 id="constituents-heading">Constituents</h2>
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-                Data as of{" "}
-                <time dateTime={detail.as_of}>{new Date(detail.as_of).toLocaleString()}</time>
-                {detail.build_id ? (
-                  <>
-                    {" "}
-                    · build <code className={styles.code}>{detail.build_id}</code>
-                  </>
-                ) : null}
-              </p>
+              {detail.build_id ? (
+                <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
+                  Build <code className={styles.code}>{detail.build_id}</code>
+                </p>
+              ) : null}
               <div className={styles.tableWrap}>
                 <table className={styles.dataTable}>
                   <thead>
@@ -186,7 +189,6 @@ export default async function ThemeDetailPage({ params }: Props) {
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
           ) : null}
-          <NewsletterSignup />
           <p>
             <Link href="/themes" style={{ fontWeight: 500 }}>
               ← All themes

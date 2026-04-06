@@ -1,6 +1,7 @@
 .section {
   width: 100%;
-  margin-top: 1.5rem;
+  /* Tighter when parent sets vars, e.g. homepage highlighted card (see HomeHighlightedThemes.chartWrap). */
+  margin-top: var(--chart-panel-section-margin-top, 1.5rem);
 }
 
 .toolbar {
@@ -8,8 +9,8 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: var(--chart-panel-toolbar-gap, 12px);
+  margin-bottom: var(--chart-panel-toolbar-margin-bottom, 12px);
 }
 
 .toolbarLabel {

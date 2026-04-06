@@ -1,5 +1,6 @@
 .wrap {
   width: 100%;
+  min-width: 0;
   margin-top: auto;
   padding-bottom: 28px;
   font-family: var(--font-geist-sans, system-ui, sans-serif);
@@ -8,14 +9,29 @@
 }
 
 .meta {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  /* Match SiteNav / .page inset; full width between insets (no inner max-width) so the row doesn’t clip */
+  padding: 16px max(24px, env(safe-area-inset-right, 0px)) 0 max(24px, env(safe-area-inset-left, 0px));
+  box-sizing: border-box;
+}
+
+.metaBar {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: 16px 24px 0;
+  gap: 10px 20px;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.metaLead {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding-right: 0;
+  word-break: break-word;
 }
 
 .copyright {
@@ -23,18 +39,47 @@
   font-size: 12px;
 }
 
-.nav {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 16px;
+.dataAsOf {
+  color: var(--nav-muted, #9aa8a6);
+  font-size: 12px;
 }
 
-.nav a {
+.nav {
+  flex: 0 1 auto;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.navLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px 16px;
+}
+
+.navLinks a {
   color: var(--nav-muted, #9aa8a6);
   text-decoration: none;
   font-weight: 500;
 }
 
-.nav a:hover {
+.navLinks a:hover {
   color: var(--nav-accent, #26fcd6);
+}
+
+@media (max-width: 520px) {
+  .metaBar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .nav {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .navLinks {
+    justify-content: flex-start;
+  }
 }

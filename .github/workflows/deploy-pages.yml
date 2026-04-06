@@ -6,10 +6,23 @@
 # Repository Variables (Settings → Secrets and variables → Actions → Variables):
 #   NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL — public manifest URL (full site at build time).
 #     If unset, build defaults to https://storage.googleapis.com/stockthemes-public/manifest.json
+#   NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL — optional; if unset the client uses
+#     <same directory as manifest>/search_index.v0.json (MosaicBot ETL uploads it with the manifest).
 #   NEXT_PUBLIC_SITE_URL — no trailing slash, e.g. https://tmccode.github.io/mosaicbot_stockthemes
 #     until you use a custom domain (then https://stockthemes.ai)
 #   NEXT_PUBLIC_BASE_PATH — for project Pages only: /mosaicbot_stockthemes (same as repo name).
 #     Leave unset when the site is served at domain root (custom domain apex).
+#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL — Beehiiv iframe `src` (one form for both themes), or
+#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT + _DARK — duplicate forms in Beehiiv, each styled
+#     for that mode; the site swaps iframe src when the user toggles theme.
+#
+# Beehiiv API (styled form + /api/newsletter/subscribe) does NOT work on this workflow: the site
+# is output: "export" with no server. Do not add BEEHIIV_API_KEY / BEEHIIV_PUBLICATION_ID here
+# unless you change hosting to Node/serverless (e.g. Vercel). Then remove STOCKTHEMES_STATIC_PAGES
+# from the build env and add those as Repository secrets.
+#
+# Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit.
+# Commit public/ads.txt for your publisher id on the custom domain root.
 #
 # GCS: bucket CORS must allow GET from every origin that loads the site (e.g. https://stockthemes.ai),
 # or browser chart hydration will fail. See MosaicBot docs/stockthemes/gcs-cors.example.json
@@ -50,9 +63,19 @@ jobs:
       - name: Build static export
         run: npm run build
         env:
+          STOCKTHEMES_STATIC_PAGES: "1"
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
+          NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
+          NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL }}
+          NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT }}
+          NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK }}
+          NEXT_PUBLIC_ADSENSE_CLIENT: ${{ vars.NEXT_PUBLIC_ADSENSE_CLIENT }}
+          NEXT_PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_HERO }}
+          NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL }}
+          NEXT_PUBLIC_ADSENSE_SLOT_GROUP_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_RAIL }}
+          NEXT_PUBLIC_ADSENSE_SLOT_GROUP_STRIP: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_STRIP }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
