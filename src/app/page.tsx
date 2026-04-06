@@ -185,54 +185,62 @@ export default async function Home() {
           <div className={styles.directoryGrid}>
             <section className={styles.section}>
               <h2>Trending themes</h2>
-              <div
-                className={styles.trendingTable}
-                style={{
-                  gridTemplateColumns: `minmax(0, 1fr) repeat(${trendingColumns.length}, max-content)`,
-                }}
-              >
-                <div className={styles.trendingHead}>Theme</div>
-                {trendingColumns.map((col) => (
-                  <div key={`h-${col}`} className={styles.trendingHead} title={col}>
-                    {trendingColumnHeader(col)}
-                  </div>
-                ))}
-                {rowsForTable.flatMap((row) => {
-                  const keyBase = row.slug ?? `n-${row.name}`;
-                  const nameCell =
-                    row.slug != null ? (
-                      <div key={`${keyBase}-name`} className={styles.trendingThemeCell}>
-                        <Link
-                          href={`/themes/${row.slug}`}
-                          className={styles.trendingThemeName}
-                          title={row.name}
+              <div className={styles.trendingScrollWrap}>
+                <div
+                  className={styles.trendingTable}
+                  style={{
+                    gridTemplateColumns: `var(--trending-theme-col) repeat(${trendingColumns.length}, minmax(76px, max-content))`,
+                  }}
+                >
+                  <div className={`${styles.trendingHead} ${styles.trendingSticky}`}>Theme</div>
+                  {trendingColumns.map((col) => (
+                    <div key={`h-${col}`} className={styles.trendingHead} title={col}>
+                      {trendingColumnHeader(col)}
+                    </div>
+                  ))}
+                  {rowsForTable.flatMap((row) => {
+                    const keyBase = row.slug ?? `n-${row.name}`;
+                    const nameCell =
+                      row.slug != null ? (
+                        <div
+                          key={`${keyBase}-name`}
+                          className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
                         >
-                          {row.name}
-                        </Link>
-                      </div>
-                    ) : (
-                      <div key={`${keyBase}-name`} className={styles.trendingThemeCell}>
-                        <span
-                          className={styles.trendingThemeNameMuted}
-                          title={row.name}
-                          style={row.marketBaseline ? { fontWeight: 700 } : undefined}
+                          <Link
+                            href={`/themes/${row.slug}`}
+                            className={styles.trendingThemeName}
+                            title={row.name}
+                          >
+                            {row.name}
+                          </Link>
+                        </div>
+                      ) : (
+                        <div
+                          key={`${keyBase}-name`}
+                          className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
                         >
-                          {row.name}
-                        </span>
-                      </div>
-                    );
-                  const cells = trendingColumns.map((col) => {
-                    const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf);
-                    const style =
-                      v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
-                    return (
-                      <div key={`${keyBase}-${col}`} className={styles.trendingValue} style={style}>
-                        {fmtPct(v)}
-                      </div>
-                    );
-                  });
-                  return [nameCell, ...cells];
-                })}
+                          <span
+                            className={styles.trendingThemeNameMuted}
+                            title={row.name}
+                            style={row.marketBaseline ? { fontWeight: 700 } : undefined}
+                          >
+                            {row.name}
+                          </span>
+                        </div>
+                      );
+                    const cells = trendingColumns.map((col) => {
+                      const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf);
+                      const style =
+                        v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
+                      return (
+                        <div key={`${keyBase}-${col}`} className={styles.trendingValue} style={style}>
+                          {fmtPct(v)}
+                        </div>
+                      );
+                    });
+                    return [nameCell, ...cells];
+                  })}
+                </div>
               </div>
             </section>
 

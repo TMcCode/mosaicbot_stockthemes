@@ -206,11 +206,41 @@
   color: var(--text-primary);
 }
 
+.trendingScrollWrap {
+  /* Keep theme names single-line; scroll horizontally for overflow */
+  --trending-theme-col: max-content;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  padding-bottom: 4px;
+}
+
 .trendingTable {
   display: grid;
   /* grid-template-columns set inline (column count matches Compare / SelectedDates) */
-  gap: 5px 5px;
-  align-items: center;
+  width: max-content;
+  min-width: 100%;
+  gap: 5px 10px;
+  align-items: start;
+}
+
+.trendingSticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  padding-right: 8px;
+  margin-right: -2px;
+  background: var(--card-surface);
+  background-clip: padding-box;
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+}
+
+.trendingHead.trendingSticky {
+  z-index: 3;
 }
 
 .trendingHead {
@@ -231,6 +261,11 @@
   min-width: 0;
 }
 
+.trendingThemeCell.trendingSticky {
+  /* Keep grid track width; plain min-width:0 can collapse the theme column on small screens */
+  min-width: auto;
+}
+
 .trendingThemeName {
   display: block;
   color: var(--text-primary);
@@ -238,8 +273,8 @@
   font-size: 14px;
   line-height: 1.35;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .trendingThemeName:hover {
@@ -252,8 +287,8 @@
   font-size: 14px;
   line-height: 1.35;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 .trendingValue {
@@ -644,4 +679,8 @@ a.secondary {
 
 :global(.st-theme[data-theme="light"]) a.primary {
   color: #f8fffd;
+}
+
+:global(.st-theme[data-theme="light"]) .trendingSticky {
+  box-shadow: 6px 0 14px -8px rgba(0, 0, 0, 0.1);
 }
