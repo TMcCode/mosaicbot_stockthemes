@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
 import pageStyles from "@/app/page.module.css";
 import styles from "@/components/HomeHighlightedThemes.module.css";
@@ -17,18 +17,12 @@ type HighlightedThemeItem = {
 
 type Props = {
   items: HighlightedThemeItem[];
+  benchmarkPerformance?: ChartPerformanceV0;
 };
 
-export function HomeHighlightedThemes({ items }: Props) {
+export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
   const safeItems = useMemo(() => items.filter((x) => x.slug && x.name), [items]);
   const [activeIdx, setActiveIdx] = useState(0);
-
-  useEffect(() => {
-    setActiveIdx((i) => {
-      const max = Math.max(0, safeItems.length - 1);
-      return Math.min(i, max);
-    });
-  }, [safeItems.length]);
 
   const goPrev = useCallback(() => {
     setActiveIdx((i) => {
@@ -95,7 +89,11 @@ export function HomeHighlightedThemes({ items }: Props) {
         </button>
       </div>
       <div className={styles.chartWrap}>
-        <Chart1yPanel chart1y={active.chart1y} performanceTitle={active.name} />
+        <Chart1yPanel
+          chart1y={active.chart1y}
+          performanceTitle={active.name}
+          benchmarkPerformance={benchmarkPerformance}
+        />
       </div>
       <p className={styles.footerLink}>
         <Link href={`/themes/${active.slug}`}>Open {active.name}</Link>

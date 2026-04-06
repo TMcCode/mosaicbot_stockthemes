@@ -7,7 +7,11 @@ import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
-import { ThemeThesisSection, themeThesisHasContent } from "@/components/ThemeThesisSection";
+import {
+  ThemeThesisSection,
+  ThemeThesisUpdateBadge,
+  themeThesisHasContent,
+} from "@/components/ThemeThesisSection";
 import styles from "../../page.module.css";
 
 import { formatWeight } from "@/lib/formatWeight";
@@ -18,6 +22,7 @@ import {
   sortConstituentsByMarketCapDesc,
 } from "@/lib/constituentMeta";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
@@ -77,6 +82,10 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
+  const spyPerf = await getSpyMarketPerfCached();
+  const totalMarketCapUsd =
+    detail?.constituents?.reduce((sum, c) => sum + (inferMarketCapUsd(c) ?? 0), 0) ?? 0;
+  const hasTotalMarketCap = totalMarketCapUsd > 0;
 
   const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
   const hasMcap = Boolean(detail?.constituents?.some((c) => inferMarketCapUsd(c) != null));
@@ -92,8 +101,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                 {detailLabel ? ` · ${detailLabel}` : ""}
               </p>
               <h1>{theme.name}</h1>
-              {theme.ticker_count != null ? (
-                <p>{theme.ticker_count} tickers (manifest)</p>
+              {theme.ticker_count != null || hasTotalMarketCap ? (
+                <p>
+                  {theme.ticker_count != null ? `${theme.ticker_count} tickers` : null}
+                  {theme.ticker_count != null && hasTotalMarketCap ? " · " : null}
+                  {hasTotalMarketCap ? `${formatUsdMarketCap(totalMarketCapUsd)} total market cap` : null}
+                </p>
               ) : null}
               {theme.group_slug ? (
                 <p>
@@ -103,14 +116,15 @@ export default async function ThemeDetailPage({ params }: Props) {
                   </Link>
                 </p>
               ) : null}
+              {detail?.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
+                <ThemeThesisSection themeThesis={detail.theme_thesis} />
+              ) : null}
               {detail?.seo_intro ? (
                 <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
                   {detail.seo_intro}
                 </p>
               ) : null}
-              {detail?.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
-                <ThemeThesisSection themeThesis={detail.theme_thesis} />
-              ) : null}
+              <ThemeThesisUpdateBadge themeThesis={detail?.theme_thesis} />
               {!detail && !dataBaseUrl ? (
                 <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
                   No theme detail JSON at build time and no{" "}
@@ -128,24 +142,34 @@ export default async function ThemeDetailPage({ params }: Props) {
             />
           </div>
           {!detail && dataBaseUrl ? (
-            <ThemeDetailRuntimeLoader slug={slug} dataBaseUrl={dataBaseUrl} />
-          ) : null}
-          {detail && dataBaseUrl ? (
-            <ThemeChartLiveHydrate
-              key={slug}
+            <ThemeDetailRuntimeLoader
               slug={slug}
               dataBaseUrl={dataBaseUrl}
-              serverChart={detail.chart_1y}
-              compositionMetaByTicker={compositionMetaByTicker}
-              performanceTitle={theme.name}
+              benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
           ) : null}
+          {detail && dataBaseUrl ? (
+            <div className={styles.tightChartTop}>
+              <ThemeChartLiveHydrate
+                key={slug}
+                slug={slug}
+                dataBaseUrl={dataBaseUrl}
+                serverChart={detail.chart_1y}
+                compositionMetaByTicker={compositionMetaByTicker}
+                performanceTitle={theme.name}
+                benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              />
+            </div>
+          ) : null}
           {detail && !dataBaseUrl ? (
-            <Chart1yPanel
-              chart1y={detail.chart_1y}
-              compositionMetaByTicker={compositionMetaByTicker}
-              performanceTitle={theme.name}
-            />
+            <div className={styles.tightChartTop}>
+              <Chart1yPanel
+                chart1y={detail.chart_1y}
+                compositionMetaByTicker={compositionMetaByTicker}
+                performanceTitle={theme.name}
+                benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              />
+            </div>
           ) : null}
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">

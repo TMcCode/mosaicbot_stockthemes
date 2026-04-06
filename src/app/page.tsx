@@ -8,6 +8,7 @@ import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
 import { getHomeTrendingCached } from "@/lib/getHomeTrendingCached";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
 import {
@@ -26,9 +27,10 @@ function fmtPct(v?: number): string {
 }
 
 export default async function Home() {
-  const [{ manifest, source }, homeTrendingRes] = await Promise.all([
+  const [{ manifest, source }, homeTrendingRes, spyPerf] = await Promise.all([
     getManifestCached(),
     getHomeTrendingCached(),
+    getSpyMarketPerfCached(),
   ]);
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
@@ -49,6 +51,7 @@ export default async function Home() {
     chart1y: ThemeChart1yV0 | undefined;
     chartPerf: ChartPerfReturns;
     compare_returns?: ThemeCompareReturnsV0;
+    marketBaseline?: boolean;
   }[] = useHomeBundle && homeBundle
     ? homeBundle.rows.map((row, i) => {
         const nameFromManifest = String(trendingNames[i] || "").trim();
@@ -88,7 +91,15 @@ export default async function Home() {
           };
         }),
       );
-  const detailsSorted = [...details].sort((a, b) => {
+  const marketRow = {
+    slug: null as string | null,
+    name: "S&P 500",
+    chart1y: undefined as ThemeChart1yV0 | undefined,
+    chartPerf: spyPerf?.chartPerf ?? {},
+    compare_returns: spyPerf?.compareReturns,
+    marketBaseline: true,
+  };
+  const detailsSorted = [...details, marketRow].sort((a, b) => {
     const va = valueForTrendingColumn("10D", a.compare_returns, a.chartPerf);
     const vb = valueForTrendingColumn("10D", b.compare_returns, b.chartPerf);
     const aOk = va != null && Number.isFinite(va);
@@ -98,6 +109,10 @@ export default async function Home() {
     if (bOk) return 1;
     return 0;
   });
+  const rowsForTable = detailsSorted.map((row) => ({
+    ...row,
+    marketBaseline: row.marketBaseline === true,
+  }));
   const trendingColumns = resolveTrendingColumnOrder(detailsSorted);
   const eyebrow =
     source === "live"
@@ -182,7 +197,7 @@ export default async function Home() {
                     {trendingColumnHeader(col)}
                   </div>
                 ))}
-                {detailsSorted.flatMap((row) => {
+                {rowsForTable.flatMap((row) => {
                   const keyBase = row.slug ?? `n-${row.name}`;
                   const nameCell =
                     row.slug != null ? (
@@ -197,7 +212,11 @@ export default async function Home() {
                       </div>
                     ) : (
                       <div key={`${keyBase}-name`} className={styles.trendingThemeCell}>
-                        <span className={styles.trendingThemeNameMuted} title={row.name}>
+                        <span
+                          className={styles.trendingThemeNameMuted}
+                          title={row.name}
+                          style={row.marketBaseline ? { fontWeight: 700 } : undefined}
+                        >
                           {row.name}
                         </span>
                       </div>
@@ -225,6 +244,7 @@ export default async function Home() {
                   name: d.name,
                   chart1y: d.chart1y,
                 }))}
+              benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
 
             <section className={styles.section}>

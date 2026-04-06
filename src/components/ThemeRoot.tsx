@@ -4,7 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useLayoutEffect,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -34,20 +34,16 @@ export function useStockthemesTheme(): ThemeContextValue {
 function readStoredTheme(): StockthemesTheme {
   try {
     const t = localStorage.getItem(STOCKTHEMES_THEME_STORAGE_KEY);
-    return t === "light" ? "light" : "dark";
+    return t === "dark" ? "dark" : "light";
   } catch {
-    return "dark";
+    return "light";
   }
 }
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<StockthemesTheme>("dark");
+  const [theme, setTheme] = useState<StockthemesTheme>(() => readStoredTheme());
 
-  useLayoutEffect(() => {
-    setTheme(readStoredTheme());
-  }, []);
-
-  useLayoutEffect(() => {
+  useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STOCKTHEMES_THEME_STORAGE_KEY) return;
       if (e.newValue === "light" || e.newValue === "dark") {

@@ -4,7 +4,7 @@ import { memo } from "react";
 
 import { Chart1yLightweight } from "@/components/Chart1yLightweight";
 import { chart1yHasRenderableSeries } from "@/lib/chart1yRenderable";
-import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 
 export type Chart1yPanelProps = {
@@ -16,6 +16,8 @@ export type Chart1yPanelProps = {
    * Use for **group** charts where `series[].ticker` is a theme slug; keep true for **theme** charts (stock tickers).
    */
   compositionLegendShowSeriesBadge?: boolean;
+  /** Optional benchmark overlay for performance view (e.g., S&P 500). */
+  benchmarkPerformance?: ChartPerformanceV0;
 };
 
 /**
@@ -26,6 +28,7 @@ function Chart1yPanelInner({
   compositionMetaByTicker,
   performanceTitle,
   compositionLegendShowSeriesBadge = true,
+  benchmarkPerformance,
 }: Chart1yPanelProps) {
   if (!chart1yHasRenderableSeries(chart1y)) {
     return null;
@@ -36,6 +39,7 @@ function Chart1yPanelInner({
       compositionMetaByTicker={compositionMetaByTicker}
       performanceTitle={performanceTitle}
       compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
+      benchmarkPerformance={benchmarkPerformance}
     />
   );
 }

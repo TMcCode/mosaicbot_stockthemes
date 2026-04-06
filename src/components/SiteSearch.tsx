@@ -4,6 +4,7 @@ import type Fuse from "fuse.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import posthog from "posthog-js";
 
 import { searchIndexFetchUrl } from "@/lib/searchIndexUrl";
 import type {
@@ -225,8 +226,27 @@ export function SiteSearch() {
 
   const cursor = hits.length > 0 ? Math.min(active, hits.length - 1) : 0;
 
+  const noResultsReportedRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (engine && debounced.trim() && hits.length === 0) {
+      if (noResultsReportedRef.current !== debounced) {
+        noResultsReportedRef.current = debounced;
+        posthog.capture("search_no_results", { query: debounced });
+      }
+    } else {
+      noResultsReportedRef.current = null;
+    }
+  }, [engine, debounced, hits]);
+
   const goToHit = useCallback(
     (h: Hit) => {
+      const slug = h.kind === "ticker" ? h.ref.theme_slugs[0] ?? null : h.ref.slug;
+      posthog.capture("search_result_clicked", {
+        query: query.trim(),
+        result_kind: h.kind,
+        result_slug: slug,
+        result_name: h.kind === "ticker" ? h.ref.ticker : h.ref.name,
+      });
       if (h.kind === "theme") {
         router.push(`/themes/${encodeURIComponent(h.ref.slug)}`);
       } else if (h.kind === "group") {
@@ -237,7 +257,7 @@ export function SiteSearch() {
       setOpen(false);
       setQuery("");
     },
-    [router],
+    [router, query],
   );
 
   const onKeyDown = useCallback(

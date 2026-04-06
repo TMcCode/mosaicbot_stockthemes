@@ -19,7 +19,7 @@ import {
   type MouseEventParams,
 } from "lightweight-charts";
 
-import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
 import { TickerBadge } from "@/components/TickerBadge";
@@ -40,6 +40,23 @@ function lineDataValue(data: unknown): number | null {
     return Number.isFinite(v) ? v : null;
   }
   return null;
+}
+
+function formatTooltipDate(time: MouseEventParams["time"] | undefined): string {
+  if (!time) return "";
+  if (typeof time === "string") return time;
+  if (typeof time === "number") {
+    const d = new Date(time * 1000);
+    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
+  }
+  if (typeof time === "object" && "year" in time && "month" in time && "day" in time) {
+    const y = Number((time as { year: number }).year);
+    const m = Number((time as { month: number }).month);
+    const d = Number((time as { day: number }).day);
+    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return "";
+    return `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  }
+  return "";
 }
 
 /**
@@ -153,6 +170,7 @@ function toPoints(dates: string[], values: (number | string)[]) {
 
 type Chart1yCanvasProps = {
   chart1y: ThemeChart1yV0 | undefined;
+  benchmarkPerformance?: ChartPerformanceV0;
   activeView: "performance" | "composition";
   lineApisRef: MutableRefObject<Map<string, ISeriesApi<"Line">>>;
   /** Ref so tooltip meta stays fresh without remounting the chart when `memo` skips canvas render. */
@@ -166,6 +184,7 @@ type Chart1yCanvasProps = {
  */
 const Chart1yCanvas = memo(function Chart1yCanvas({
   chart1y,
+  benchmarkPerformance,
   activeView,
   lineApisRef,
   compositionMetaRef,
@@ -257,6 +276,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
     const perfPoints =
       activeView === "performance" ? toPoints(perf?.dates ?? [], perf?.values ?? []) : null;
+    const benchmarkPointsRaw = toPoints(
+      benchmarkPerformance?.dates ?? [],
+      benchmarkPerformance?.values ?? [],
+    );
+    const benchmarkPoints =
+      benchmarkPointsRaw && benchmarkPointsRaw.length >= 20 ? benchmarkPointsRaw : null;
     const perfHasPoints = Boolean(perfPoints && perfPoints.length);
 
     const seriesIdByApi = new Map<ISeriesApi<"Line">, string>();
@@ -278,7 +303,31 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         perfLineApi = series;
         lineApisRef.current.set(PERF_SERIES_ID, series);
         seriesIdByApi.set(series, PERF_SERIES_ID);
+        if (benchmarkPoints && benchmarkPoints.length) {
+          const bench = chart.addLineSeries({
+            color: "rgba(173, 182, 199, 0.85)",
+            lineWidth: 2,
+            lineStyle: LineStyle.Dotted,
+            title: "",
+            priceLineVisible: false,
+            lastValueVisible: false,
+            crosshairMarkerVisible: false,
+          });
+          bench.setData(benchmarkPoints);
+        }
       } else if (activeView === "composition" && comp?.series) {
+        if (benchmarkPoints && benchmarkPoints.length) {
+          const bench = chart.addLineSeries({
+            color: "rgba(173, 182, 199, 0.85)",
+            lineWidth: 2,
+            lineStyle: LineStyle.Dotted,
+            title: "",
+            priceLineVisible: false,
+            lastValueVisible: false,
+            crosshairMarkerVisible: false,
+          });
+          bench.setData(benchmarkPoints);
+        }
         comp.series.forEach((s, i) => {
           if (!s.dates?.length || !s.values?.length) return;
           const pts = toPoints(s.dates, s.values);
@@ -368,13 +417,16 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       const price = lineDataValue(param.seriesData.get(hovered));
       const priceStr =
         price != null ? price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : null;
+      const dateLabel = formatTooltipDate(param.time);
 
       if (id === PERF_SERIES_ID) {
         const perfLabel =
           performanceTitleRef.current?.trim() ||
           perf?.aggregation?.trim() ||
           "Performance";
-        const nextText = priceStr != null ? `${perfLabel} — ${priceStr}` : perfLabel;
+        const nextText = priceStr != null
+          ? `${dateLabel ? `${dateLabel} · ` : ""}${perfLabel} — ${priceStr}`
+          : `${dateLabel ? `${dateLabel} · ` : ""}${perfLabel}`;
         if (nextText !== lastPerfTooltipText) {
           lastPerfTooltipText = nextText;
           tooltip.innerHTML = "";
@@ -388,10 +440,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           "";
         const displayTitle = name || id;
         const valueLine = priceStr != null ? escapeHtml(priceStr) : "—";
-        const tipKey = `${displayTitle}\x00${valueLine}`;
+        const dateLine = dateLabel ? escapeHtml(dateLabel) : "";
+        const tipKey = `${dateLine}\x00${displayTitle}\x00${valueLine}`;
         if (tipKey !== lastCompositionTipKey) {
           lastCompositionTipKey = tipKey;
           tooltip.innerHTML = [
+            dateLine ? `<div style="color:#a6abb9">${dateLine}</div>` : "",
             `<div><strong style="color:#e8eaed;font-weight:600">${escapeHtml(displayTitle)}</strong></div>`,
             `<div>${valueLine}</div>`,
           ].join("");
@@ -498,6 +552,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
 export type Chart1yLightweightProps = {
   chart1y: ThemeChart1yV0 | undefined;
+  benchmarkPerformance?: ChartPerformanceV0;
   compositionMetaByTicker?: Record<string, CompositionMeta>;
   /** Performance-line tooltip label; overrides JSON `performance.aggregation` (e.g. "average"). */
   performanceTitle?: string;
@@ -519,6 +574,7 @@ function formatMarketCap(v: number | undefined): string {
  */
 export function Chart1yLightweight({
   chart1y,
+  benchmarkPerformance,
   compositionMetaByTicker,
   performanceTitle,
   compositionLegendShowSeriesBadge = true,
@@ -553,17 +609,18 @@ export function Chart1yLightweight({
 
   const lineApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
   const compositionMetaRef = useRef(compositionMetaByTicker);
-  compositionMetaRef.current = compositionMetaByTicker;
   const performanceTitleRef = useRef(performanceTitle);
-  performanceTitleRef.current = performanceTitle;
   /** Tickers / PERF_SERIES_ID hidden via legend click (state so we don't read refs during render). */
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([]);
   const hiddenSet = useMemo(() => new Set(hiddenSeries), [hiddenSeries]);
 
   useEffect(() => {
-    // Reset legend toggles when the chart data or mode changes (new series APIs in Chart1yCanvas).
-    setHiddenSeries([]);
-  }, [chart1ySorted, activeView]);
+    compositionMetaRef.current = compositionMetaByTicker;
+  }, [compositionMetaByTicker]);
+
+  useEffect(() => {
+    performanceTitleRef.current = performanceTitle;
+  }, [performanceTitle]);
 
   const toggleSeries = useCallback((id: string) => {
     const api = lineApisRef.current.get(id);
@@ -579,11 +636,14 @@ export function Chart1yLightweight({
   if (!hasPerf && !hasComp) {
     return null;
   }
+  const themeLabel = performanceTitle?.trim() || "Theme";
 
   return (
     <section className={styles.section} aria-label="About one year chart">
       <div className={styles.toolbar}>
-        <span className={styles.toolbarLabel}>Chart (~1Y)</span>
+        <span className={styles.toolbarLabel}>
+          <span className={styles.themeTitleAccent}>{themeLabel}</span> vs S&P 500 Over the Past Year
+        </span>
         {hasPerf && hasComp ? (
           <div className={styles.toggle} role="group" aria-label="Chart type">
             <button
@@ -605,6 +665,7 @@ export function Chart1yLightweight({
       </div>
       <Chart1yCanvas
         chart1y={chart1ySorted}
+        benchmarkPerformance={benchmarkPerformance}
         activeView={activeView}
         lineApisRef={lineApisRef}
         compositionMetaRef={compositionMetaRef}

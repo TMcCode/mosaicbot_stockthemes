@@ -1,0 +1,22 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-03-27T18:00:00Z",
+  "ticker": "SPY",
+  "columns": ["1D", "10D", "MTD", "YTD", "Period", "IranWar", "LibDay"],
+  "performance": {
+    "aggregation": "adj_close",
+    "value_basis": "indexed",
+    "source": "fixture_spy",
+    "dates": ["2025-04-06", "2025-10-06", "2026-04-06"],
+    "values": [100, 114.1, 131.52]
+  },
+  "metrics": {
+    "1D": 0.42,
+    "10D": 1.86,
+    "MTD": 2.11,
+    "YTD": 5.34,
+    "Period": 14.92,
+    "IranWar": 3.87,
+    "LibDay": 14.92
+  }
+}

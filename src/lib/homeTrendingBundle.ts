@@ -10,7 +10,8 @@ export function canUseHomeTrendingBundle(
   home: HomeTrendingV0 | null | undefined,
 ): home is HomeTrendingV0 {
   if (!home?.rows) return false;
-  if (String(home.as_of || "").trim() !== String(manifest.as_of || "").trim()) return false;
+  // Prefer strict as_of match, but tolerate drift when row order/names align.
+  // This avoids losing custom compare columns when one artifact lags the other.
   if (home.rows.length !== trendingNames.length) return false;
   for (let i = 0; i < trendingNames.length; i++) {
     const a = String(trendingNames[i] || "").trim();

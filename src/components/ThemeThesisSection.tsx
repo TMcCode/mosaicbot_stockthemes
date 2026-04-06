@@ -1,6 +1,3 @@
-import type { CSSProperties } from "react";
-
-import styles from "@/app/page.module.css";
 import type { ThemeThesisV0 } from "@/types/theme.detail.v0";
 
 function formatThesisUpdateDate(raw: string): string {
@@ -22,102 +19,52 @@ export function themeThesisHasContent(tt: ThemeThesisV0 | undefined): boolean {
   if (!tt) {
     return false;
   }
-  const thesis = tt.thesis?.trim();
-  if (thesis) {
-    return true;
-  }
-  if (tt.thesis_update?.trim()) {
-    return true;
-  }
-  return Boolean(tt.bull_case?.some((s) => s.trim()) || tt.bear_case?.some((s) => s.trim()));
+  return Boolean(tt.thesis?.trim());
 }
 
 type Props = {
   themeThesis: ThemeThesisV0;
-  /** Defaults to `theme-thesis-heading` for static page; use a distinct id on runtime-loaded content. */
-  headingId?: string;
+};
+
+type UpdateProps = {
+  themeThesis: ThemeThesisV0 | undefined;
 };
 
 /**
- * Theme_BullBearDetails copy (thesis paragraph, last update, bull/bear bullets) as a readable table.
+ * Render only the headline thesis paragraph (no details/counterpoints table).
  */
-export function ThemeThesisSection({ themeThesis, headingId = "theme-thesis-heading" }: Props) {
-  const tt = themeThesis;
-  const thesis = tt.thesis?.trim();
-  const upd = tt.thesis_update?.trim();
-  const bulls = (tt.bull_case ?? []).map((s) => s.trim()).filter(Boolean);
-  const bears = (tt.bear_case ?? []).map((s) => s.trim()).filter(Boolean);
+export function ThemeThesisSection({ themeThesis }: Props) {
+  const thesis = themeThesis.thesis?.trim();
+  if (!thesis) {
+    return null;
+  }
+  return <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 760 }}>{thesis}</p>;
+}
 
-  const cellText: CSSProperties = {
-    fontSize: 15,
-    lineHeight: 1.55,
-    color: "var(--text-secondary, #666)",
-    verticalAlign: "top",
-    whiteSpace: "pre-wrap",
-  };
-
-  const thRow: CSSProperties = {
-    fontSize: 13,
-    fontWeight: 600,
-    color: "var(--text-primary, #111)",
-    verticalAlign: "top",
-    width: "9.5rem",
-    paddingRight: 12,
-  };
-
+export function ThemeThesisUpdateBadge({ themeThesis }: UpdateProps) {
+  const upd = themeThesis?.thesis_update?.trim();
+  if (!upd) {
+    return null;
+  }
+  const updateDate = formatThesisUpdateDate(upd);
   return (
-    <section className={styles.section} aria-labelledby={headingId}>
-      <h2 id={headingId}>Theme thesis</h2>
-      <div className={styles.tableWrap}>
-        <table className={styles.dataTable}>
-          <tbody>
-            {upd ? (
-              <tr>
-                <th scope="row" style={thRow}>
-                  Last updated
-                </th>
-                <td style={cellText}>{formatThesisUpdateDate(upd)}</td>
-              </tr>
-            ) : null}
-            {thesis ? (
-              <tr>
-                <th scope="row" style={thRow}>
-                  Thesis
-                </th>
-                <td style={cellText}>{thesis}</td>
-              </tr>
-            ) : null}
-            {bulls.length ? (
-              <tr>
-                <th scope="row" style={thRow}>
-                  Details
-                </th>
-                <td style={cellText}>
-                  <ul style={{ margin: 0, paddingLeft: "1.15rem" }}>
-                    {bulls.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                </td>
-              </tr>
-            ) : null}
-            {bears.length ? (
-              <tr>
-                <th scope="row" style={thRow}>
-                  Counterpoints
-                </th>
-                <td style={cellText}>
-                  <ul style={{ margin: 0, paddingLeft: "1.15rem" }}>
-                    {bears.map((b, i) => (
-                      <li key={i}>{b}</li>
-                    ))}
-                  </ul>
-                </td>
-              </tr>
-            ) : null}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <p style={{ marginTop: 0, marginBottom: 0 }}>
+      <span
+        style={{
+          display: "inline-block",
+          padding: "4px 10px",
+          borderRadius: 12,
+          border: "1px solid var(--border-subtle, rgba(128,128,128,0.35))",
+          background: "var(--surface-muted, rgba(127,127,127,0.08))",
+          color: "var(--text-secondary, #666)",
+          fontSize: 13,
+          fontWeight: 600,
+          lineHeight: 1.2,
+          whiteSpace: "nowrap",
+        }}
+      >
+        Thesis update: {updateDate}
+      </span>
+    </p>
   );
 }

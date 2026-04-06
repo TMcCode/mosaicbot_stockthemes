@@ -2,6 +2,7 @@
 
 import { type FormEvent, useId, useState } from "react";
 import Script from "next/script";
+import posthog from "posthog-js";
 
 import { useBeehiivApiConfigured } from "@/components/NewsletterRuntimeProvider";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
@@ -66,22 +67,38 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
       return;
     }
     setApiStatus("loading");
+    posthog.capture("newsletter_signup_submitted", { variant });
     try {
       const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "X-POSTHOG-DISTINCT-ID": posthog.get_distinct_id() ?? "",
+          "X-POSTHOG-SESSION-ID": posthog.get_session_id() ?? "",
+        },
         body: JSON.stringify({ email }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
+        posthog.capture("newsletter_signup_failed", {
+          variant,
+          error: data.error ?? "unknown",
+          http_status: res.status,
+        });
         setApiStatus("error");
         setApiErrorMessage(data.error ?? "Something went wrong. Try again.");
         return;
       }
+      posthog.capture("newsletter_signup_succeeded", { variant });
       setApiStatus("success");
       setApiEmail("");
       form.reset();
-    } catch {
+    } catch (err) {
+      posthog.capture("newsletter_signup_failed", {
+        variant,
+        error: err instanceof Error ? err.message : "network_error",
+        http_status: null,
+      });
       setApiStatus("error");
       setApiErrorMessage("Network error. Try again.");
     }

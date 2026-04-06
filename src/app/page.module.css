@@ -194,6 +194,11 @@
   margin-top: 6px;
 }
 
+.tightChartTop {
+  width: 100%;
+  --chart-panel-section-margin-top: 0.5rem;
+}
+
 .section h2 {
   margin: 0 0 10px;
   font-size: 17px;

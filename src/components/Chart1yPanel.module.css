@@ -20,6 +20,10 @@
   color: var(--text-secondary, #9aa8a6);
 }
 
+.themeTitleAccent {
+  color: #26fcd6;
+}
+
 .toggle {
   display: inline-flex;
   border-radius: 999px;
@@ -149,6 +153,14 @@
 :global(.st-theme[data-theme="light"]) .toggle {
   border-color: rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.03);
+}
+
+:global(.st-theme[data-theme="light"]) .toolbarLabel {
+  color: #586470;
+}
+
+:global(.st-theme[data-theme="light"]) .themeTitleAccent {
+  color: #0d8874;
 }
 
 :global(.st-theme[data-theme="light"]) .toggle button.active {

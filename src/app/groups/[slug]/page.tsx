@@ -9,6 +9,7 @@ import styles from "../../page.module.css";
 
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { loadManifest } from "@/lib/loadManifest";
 import { buildGroupThemeChartMetaMap } from "@/lib/constituentMeta";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
@@ -88,6 +89,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
+  const spyPerf = await getSpyMarketPerfCached();
 
   return (
     <div className={`st-surface ${styles.page}`}>
@@ -136,6 +138,7 @@ export default async function GroupDetailPage({ params }: Props) {
               performanceTitle={group.name}
               compositionMetaByTicker={groupChartMetaBySlug}
               compositionLegendShowSeriesBadge={false}
+              benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
           ) : null}
           {detail && !dataBaseUrl ? (
@@ -144,6 +147,7 @@ export default async function GroupDetailPage({ params }: Props) {
               performanceTitle={group.name}
               compositionMetaByTicker={groupChartMetaBySlug}
               compositionLegendShowSeriesBadge={false}
+              benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
           ) : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">

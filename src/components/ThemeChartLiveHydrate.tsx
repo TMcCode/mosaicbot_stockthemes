@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
-import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
 import styles from "@/app/page.module.css";
 
@@ -50,6 +50,8 @@ type Props = {
   /** Bucket path: `themes/<slug>.json` or `groups/<slug>.json`. */
   chartJsonFolder?: "themes" | "groups";
   compositionLegendShowSeriesBadge?: boolean;
+  /** Optional benchmark overlay for performance view (e.g., S&P 500). */
+  benchmarkPerformance?: ChartPerformanceV0;
 };
 
 /**
@@ -68,6 +70,7 @@ export function ThemeChartLiveHydrate({
   performanceTitle,
   chartJsonFolder = "themes",
   compositionLegendShowSeriesBadge = true,
+  benchmarkPerformance,
 }: Props) {
   const [fetched, setFetched] = useState<ThemeChart1yV0 | undefined>(undefined);
   const [fetchError, setFetchError] = useState<string | null>(null);
@@ -165,6 +168,7 @@ export function ThemeChartLiveHydrate({
         compositionMetaByTicker={compositionMetaByTicker}
         performanceTitle={performanceTitle}
         compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
+        benchmarkPerformance={benchmarkPerformance}
       />
       {!chart1y && fetchError ? (
         <p

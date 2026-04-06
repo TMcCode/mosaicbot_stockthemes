@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getPostHogClient } from "@/lib/posthog-server";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -27,6 +28,9 @@ export async function POST(req: NextRequest) {
   const referring =
     req.headers.get("referer")?.slice(0, 512) ??
     req.headers.get("referrer")?.slice(0, 512);
+  const clientDistinctId = req.headers.get("x-posthog-distinct-id")?.trim() || null;
+  const clientSessionId = req.headers.get("x-posthog-session-id")?.trim() || null;
+  const distinctId = clientDistinctId ?? raw;
 
   const beehiivRes = await fetch(
     `https://api.beehiiv.com/v2/publications/${encodeURIComponent(publicationId)}/subscriptions`,
@@ -47,16 +51,36 @@ export async function POST(req: NextRequest) {
     }
   );
 
+  const posthog = getPostHogClient();
+
   if (beehiivRes.ok) {
+    posthog.capture({
+      distinctId,
+      event: "newsletter_subscribed",
+      properties: {
+        ...(clientSessionId ? { $session_id: clientSessionId } : {}),
+        referring_url: referring ?? null,
+      },
+    });
     return NextResponse.json({ ok: true as const });
   }
 
   if (beehiivRes.status === 429) {
+    posthog.capture({
+      distinctId,
+      event: "newsletter_subscribe_failed",
+      properties: { reason: "rate_limited", http_status: 429 },
+    });
     return NextResponse.json(
       { error: "Too many attempts. Please try again later." },
       { status: 429 }
     );
   }
 
+  posthog.capture({
+    distinctId,
+    event: "newsletter_subscribe_failed",
+    properties: { reason: "beehiiv_error", http_status: beehiivRes.status },
+  });
   return NextResponse.json({ error: "Could not subscribe right now." }, { status: 502 });
 }

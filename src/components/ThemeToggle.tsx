@@ -1,5 +1,6 @@
 "use client";
 
+import posthog from "posthog-js";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
 
 import styles from "./SiteNav.module.css";
@@ -35,11 +36,16 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useStockthemesTheme();
   const isDark = theme === "dark";
 
+  function handleToggle() {
+    posthog.capture("theme_toggled", { from: theme, to: isDark ? "light" : "dark" });
+    toggleTheme();
+  }
+
   return (
     <button
       type="button"
       className={styles.themeToggle}
-      onClick={toggleTheme}
+      onClick={handleToggle}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       aria-pressed={!isDark}
     >

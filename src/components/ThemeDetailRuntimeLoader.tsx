@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import { ThemeThesisSection, themeThesisHasContent } from "@/components/ThemeThesisSection";
+import {
+  ThemeThesisSection,
+  ThemeThesisUpdateBadge,
+  themeThesisHasContent,
+} from "@/components/ThemeThesisSection";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
+import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
 import styles from "@/app/page.module.css";
@@ -14,6 +20,7 @@ import styles from "@/app/page.module.css";
 type Props = {
   slug: string;
   dataBaseUrl: string;
+  benchmarkPerformance?: ChartPerformanceV0;
 };
 
 function parseDetail(raw: string): ThemeDetailV0 {
@@ -31,7 +38,7 @@ function parseDetail(raw: string): ThemeDetailV0 {
  * When static export had no theme JSON at build time, try fetching the same URL in the
  * browser (needs GCS CORS for this origin). Fills charts + constituents when the object exists.
  */
-export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
+export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerformance }: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "error"; message: string }
@@ -51,14 +58,15 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
       .then((raw) => {
         if (cancelled) return;
         const detail = parseDetail(raw);
+        posthog.capture("theme_detail_runtime_loaded", { slug });
         setState({ status: "ok", detail });
       })
       .catch((e: unknown) => {
         if (cancelled) return;
-        setState({
-          status: "error",
-          message: e instanceof Error ? e.message : String(e),
-        });
+        const message = e instanceof Error ? e.message : String(e);
+        posthog.captureException(e, { slug });
+        posthog.capture("theme_detail_runtime_error", { slug, error: message });
+        setState({ status: "error", message });
       });
     return () => {
       cancelled = true;
@@ -94,22 +102,23 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl }: Props) {
       <p className={styles.eyebrow} style={{ marginTop: 8 }}>
         Loaded in browser · live theme JSON
       </p>
+      {detail.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
+        <ThemeThesisSection themeThesis={detail.theme_thesis} />
+      ) : null}
       {detail.seo_intro ? (
         <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
           {detail.seo_intro}
         </p>
       ) : null}
-      {detail.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
-        <ThemeThesisSection
-          themeThesis={detail.theme_thesis}
-          headingId="theme-thesis-heading-runtime"
+      <ThemeThesisUpdateBadge themeThesis={detail.theme_thesis} />
+      <div className={styles.tightChartTop}>
+        <Chart1yPanel
+          chart1y={detail.chart_1y}
+          compositionMetaByTicker={compositionMetaByTicker}
+          performanceTitle={detail.name}
+          benchmarkPerformance={benchmarkPerformance}
         />
-      ) : null}
-      <Chart1yPanel
-        chart1y={detail.chart_1y}
-        compositionMetaByTicker={compositionMetaByTicker}
-        performanceTitle={detail.name}
-      />
+      </div>
       {detail.constituents?.length ? (
         <section className={styles.section} aria-labelledby="constituents-heading-runtime">
           <h2 id="constituents-heading-runtime">Constituents</h2>
