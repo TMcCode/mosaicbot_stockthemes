@@ -642,6 +642,18 @@ a.secondary {
   .sectorRow {
     grid-template-columns: 1fr;
   }
+
+  .trendingScrollWrap {
+    /* Keep a readable name column on phones without consuming the whole viewport */
+    --trending-theme-col: minmax(170px, 62vw);
+  }
+
+  .trendingThemeCell.trendingSticky .trendingThemeName,
+  .trendingThemeCell.trendingSticky .trendingThemeNameMuted {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 }
 
 /* Light theme: main column tokens live in ThemeRoot.module.css (`.st-surface`). */
