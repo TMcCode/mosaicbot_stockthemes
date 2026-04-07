@@ -44,12 +44,6 @@
   min-width: 0;
 }
 
-.embedFrame {
-  display: block;
-  height: 210px;
-  min-height: 210px;
-}
-
 .form {
   display: flex;
   flex-wrap: wrap;
@@ -153,11 +147,4 @@
 :global(.st-theme[data-theme="light"]) .footer .input {
   background: rgba(255, 255, 255, 0.95);
   color: var(--foreground, #0c1412);
-}
-
-@media (max-width: 760px) {
-  .embedFrame {
-    height: 250px;
-    min-height: 250px;
-  }
 }

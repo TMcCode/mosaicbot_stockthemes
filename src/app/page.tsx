@@ -92,7 +92,7 @@ function feedChangesText(evt: ManifestHomeFeedEventV0): string {
 }
 
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
-const HOME_FEED_RENDER_LIMIT = 25;
+const HOME_FEED_RENDER_LIMIT = 5;
 const HOME_FEED_MAX_DAYS = 10;
 
 export const metadata: Metadata = buildPageMetadata({

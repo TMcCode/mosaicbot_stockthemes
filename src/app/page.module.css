@@ -509,10 +509,11 @@ a.feedTitle:hover {
 
 .feedMoreLink {
   margin: 8px 0 0;
-  font-size: 12px;
+  font-size: 10px;
 }
 
 .feedMoreLink a {
+  font-size: 10px;
   color: var(--accent);
   text-decoration: underline;
 }

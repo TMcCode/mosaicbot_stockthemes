@@ -133,6 +133,7 @@ const PALETTE = [
 
 /** Stable id for the single performance line (not a ticker). */
 const PERF_SERIES_ID = "__performance__";
+const INTEGER_PRICE_FORMAT = { type: "price" as const, precision: 0, minMove: 1 };
 
 /** Lightweight Charts: business-day ISO strings, sorted ascending. */
 function toDay(d: string): string {
@@ -298,6 +299,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           priceLineVisible: false,
           lastValueVisible: false,
           crosshairMarkerVisible: true,
+          priceFormat: INTEGER_PRICE_FORMAT,
         });
         series.setData(perfPoints);
         perfLineApi = series;
@@ -312,6 +314,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             priceLineVisible: false,
             lastValueVisible: false,
             crosshairMarkerVisible: false,
+            priceFormat: INTEGER_PRICE_FORMAT,
           });
           bench.setData(benchmarkPoints);
         }
@@ -325,6 +328,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             priceLineVisible: false,
             lastValueVisible: false,
             crosshairMarkerVisible: false,
+            priceFormat: INTEGER_PRICE_FORMAT,
           });
           bench.setData(benchmarkPoints);
         }
@@ -339,6 +343,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             priceLineVisible: false,
             lastValueVisible: false,
             crosshairMarkerVisible: false,
+            priceFormat: INTEGER_PRICE_FORMAT,
           });
           series.setData(pts);
           lineApisRef.current.set(s.ticker, series);
@@ -416,7 +421,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
       const price = lineDataValue(param.seriesData.get(hovered));
       const priceStr =
-        price != null ? price.toLocaleString(undefined, { maximumFractionDigits: 2 }) : null;
+        price != null ? price.toLocaleString(undefined, { maximumFractionDigits: 0 }) : null;
       const dateLabel = formatTooltipDate(param.time);
 
       if (id === PERF_SERIES_ID) {

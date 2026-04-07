@@ -135,7 +135,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
             key={`${theme}-${beehiivFormUrl}`}
             src={beehiivFormUrl}
             title="Subscribe to the Den of Themes newsletter"
-            className={`beehiiv-embed ${styles.embedFrame}`}
+            className="beehiiv-embed"
             data-test-id="beehiiv-embed"
             frameBorder={0}
             scrolling="no"
@@ -143,6 +143,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
               width: "100%",
               margin: 0,
               maxWidth: "100%",
+              minHeight: 92,
               border: "none",
               backgroundColor: "transparent",
             }}
