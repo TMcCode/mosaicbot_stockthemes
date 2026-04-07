@@ -60,6 +60,9 @@
   background-size: 6px 6px, 6px 6px;
   background-repeat: no-repeat;
   padding-right: 36px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .themeSelect:hover {
@@ -80,6 +83,7 @@
   --chart-panel-section-margin-top: 0;
   --chart-panel-toolbar-margin-bottom: 6px;
   --chart-panel-toolbar-gap: 8px;
+  --chart-panel-chart-min-height: 360px;
 }
 
 .footerLink {
@@ -95,4 +99,27 @@
 :global(.st-theme[data-theme="light"]) .themeSelect {
   background: rgba(0, 0, 0, 0.02);
   border-color: var(--button-secondary-border);
+}
+
+@media (max-width: 760px) {
+  .toolbar {
+    gap: 6px;
+  }
+
+  .navBtn {
+    display: none;
+  }
+
+  .themeSelect {
+    font-size: 12px;
+    padding-left: 10px;
+    padding-right: 30px;
+    background-position: calc(100% - 16px) calc(50% - 3px), calc(100% - 10px) calc(50% - 3px);
+  }
+
+  .chartWrap {
+    /* Mobile: keep highlighted chart compact and near-square. */
+    --chart-panel-chart-min-height: min(80vw, 340px);
+    padding: 6px 6px 6px;
+  }
 }
