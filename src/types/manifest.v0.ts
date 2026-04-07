@@ -31,6 +31,13 @@ export type ManifestV0 = {
   build_id?: string;
   home_intro?: string;
   theme_basket_intro?: string;
+  methodology_intro?: string;
+  methodology_purpose_scope?: string;
+  methodology_theme_construction?: string;
+  methodology_weights?: string;
+  methodology_performance_calculation?: string;
+  methodology_update_cadence?: string;
+  methodology_limitations?: string;
   trending_themes?: string[];
   new_themes?: string[];
   new_theme_events?: ManifestNewThemeEventV0[];

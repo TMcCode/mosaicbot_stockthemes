@@ -70,6 +70,14 @@ export default async function AboutPage() {
               compare themes, understand exposure, and follow how membership changes as the narrative
               evolves.
             </p>
+            <p className={styles.introCopy}>
+              For a clinical breakdown of construction rules, weights, return calculations, and refresh
+              cadence, see the{" "}
+              <Link href="/about/methodology">
+                methodology page
+              </Link>
+              .
+            </p>
           </section>
           <p>
             <Link href="/" style={{ fontWeight: 500 }}>
