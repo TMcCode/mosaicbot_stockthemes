@@ -23,6 +23,8 @@ export type AdPlacementId =
   | "themesIndexStrip";
 
 const AD_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
+const ADS_ENABLED =
+  process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_ADS_IN_DEV === "true";
 
 function slotFor(placement: AdPlacementId): string | undefined {
   switch (placement) {
@@ -73,8 +75,9 @@ export function AdPlacement({
   placeholderLabel,
   format = "auto",
 }: Props) {
+  const minAdWidthPx = format === "horizontal" ? 300 : 250;
   const slotId = slotFor(placement);
-  const active = Boolean(AD_CLIENT && slotId);
+  const active = Boolean(ADS_ENABLED && AD_CLIENT && slotId);
   const hostRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
   const [shouldRequest, setShouldRequest] = useState(
@@ -93,7 +96,7 @@ export function AdPlacement({
       (entries) => {
         const entry = entries[0];
         if (!entry || !entry.isIntersecting) return;
-        if (!cancelled) setShouldRequest(true);
+        if (!cancelled && node.getBoundingClientRect().width >= minAdWidthPx) setShouldRequest(true);
         obs.disconnect();
       },
       { root: null, rootMargin: "300px 0px", threshold: 0.01 },
@@ -103,17 +106,30 @@ export function AdPlacement({
       cancelled = true;
       obs.disconnect();
     };
-  }, [active]);
+  }, [active, minAdWidthPx]);
 
   useEffect(() => {
     if (!active || !shouldRequest || pushedRef.current) return;
+    const host = hostRef.current;
+    if (!host || host.getBoundingClientRect().width < minAdWidthPx) return;
     pushedRef.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
       pushedRef.current = false;
     }
-  }, [active, shouldRequest]);
+  }, [active, minAdWidthPx, shouldRequest]);
+
+  useEffect(() => {
+    if (!active || shouldRequest) return;
+    const host = hostRef.current;
+    if (!host || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (host.getBoundingClientRect().width >= minAdWidthPx) setShouldRequest(true);
+    });
+    observer.observe(host);
+    return () => observer.disconnect();
+  }, [active, minAdWidthPx, shouldRequest]);
 
   if (!active) {
     return <aside className={shellClass}>{placeholderLabel}</aside>;

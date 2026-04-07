@@ -19,6 +19,7 @@
   width: 100%;
   min-height: calc(100vh - 64px);
   padding: 24px;
+  overflow-x: hidden;
   font-family: var(--font-geist-sans);
   background:
     radial-gradient(900px 520px at 15% -10%, rgba(38, 252, 214, 0.12), transparent 60%),
@@ -40,6 +41,7 @@
     0 0 0 1px rgba(255, 255, 255, 0.03) inset,
     0 22px 60px rgba(0, 0, 0, 0.45);
   padding: 42px 44px;
+  overflow-x: hidden;
 }
 
 .heroGrid {
@@ -218,7 +220,7 @@
 .directoryGrid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr);
   gap: 14px;
 }
 
@@ -268,6 +270,7 @@
 
 .section {
   width: 100%;
+  min-width: 0;
   margin-top: 6px;
 }
 
@@ -286,21 +289,28 @@
 .trendingScrollWrap {
   /* Keep theme names single-line; scroll horizontally for overflow */
   --trending-theme-col: max-content;
+  --trending-value-col: 76px;
   width: 100%;
+  min-width: 0;
   max-width: 100%;
-  overflow-x: scroll;
+  overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
-  touch-action: pan-x pan-y;
+  scrollbar-width: thin;
+  cursor: grab;
   padding-bottom: 4px;
+}
+
+.trendingScrollWrap:active {
+  cursor: grabbing;
 }
 
 .trendingTable {
   display: grid;
   /* grid-template-columns set inline (column count matches Compare / SelectedDates) */
   width: max-content;
-  min-width: 100%;
+  min-width: max-content;
   gap: 5px 10px;
   align-items: start;
 }
@@ -315,7 +325,6 @@
   background: var(--card-surface);
   background-clip: padding-box;
   box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
-  touch-action: pan-x pan-y;
 }
 
 .trendingHead.trendingSticky {
@@ -890,6 +899,8 @@ a.secondary {
   .trendingScrollWrap {
     /* Keep a readable name column on phones without consuming the whole viewport */
     --trending-theme-col: minmax(170px, 62vw);
+    /* Force value columns wide enough so the table overflows and can be panned. */
+    --trending-value-col: 88px;
   }
 
   .trendingThemeCell.trendingSticky .trendingThemeName,
@@ -897,7 +908,6 @@ a.secondary {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    touch-action: pan-x pan-y;
   }
 }
 

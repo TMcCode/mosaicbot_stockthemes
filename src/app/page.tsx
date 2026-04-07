@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
+import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import styles from "./page.module.css";
 
@@ -269,11 +270,11 @@ export default async function Home() {
           <div className={styles.directoryGrid}>
             <section className={styles.section}>
               <h2>Trending themes</h2>
-              <div className={styles.trendingScrollWrap}>
+              <HorizontalScrollArea className={styles.trendingScrollWrap}>
                 <div
                   className={styles.trendingTable}
                   style={{
-                    gridTemplateColumns: `var(--trending-theme-col) repeat(${trendingColumns.length}, minmax(76px, max-content))`,
+                    gridTemplateColumns: `var(--trending-theme-col) repeat(${trendingColumns.length}, minmax(var(--trending-value-col), max-content))`,
                   }}
                 >
                   <div className={`${styles.trendingHead} ${styles.trendingSticky}`}>Theme</div>
@@ -325,7 +326,7 @@ export default async function Home() {
                     return [nameCell, ...cells];
                   })}
                 </div>
-              </div>
+              </HorizontalScrollArea>
             </section>
 
             <DeferRender minHeight={460} rootMargin="420px 0px">

@@ -10,19 +10,24 @@ import { useEffect } from "react";
  */
 export function AdSenseGlobalScript() {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
+  const adsEnabled =
+    process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_ADS_IN_DEV === "true";
   const validClient = Boolean(client && /^ca-pub-\d+$/i.test(client));
   const src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(client || "")}`;
+  const scriptId = "st-adsense-loader";
 
   useEffect(() => {
+    if (!adsEnabled) return;
     if (!validClient) return;
-    if (document.querySelector('script[data-st-adsense="1"]')) return;
+    if (document.getElementById(scriptId)) return;
+    if (document.querySelector(`script[src="${src}"]`)) return;
     const script = document.createElement("script");
+    script.id = scriptId;
     script.async = true;
     script.src = src;
     script.crossOrigin = "anonymous";
-    script.setAttribute("data-st-adsense", "1");
     document.head.appendChild(script);
-  }, [src, validClient]);
+  }, [adsEnabled, scriptId, src, validClient]);
 
   return null;
 }
