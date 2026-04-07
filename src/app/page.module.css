@@ -109,6 +109,18 @@
   padding: 8px;
 }
 
+/* Full-width slots below stats / between home sections */
+.adHomeWide {
+  width: 100%;
+  margin-top: 4px;
+}
+
+.adChartEnd {
+  width: 100%;
+  margin-top: 12px;
+  min-height: 100px;
+}
+
 .statGrid {
   width: 100%;
   display: grid;
@@ -211,10 +223,11 @@
   --trending-theme-col: max-content;
   width: 100%;
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: scroll;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior-x: contain;
+  touch-action: pan-x pan-y;
   padding-bottom: 4px;
 }
 
@@ -237,6 +250,7 @@
   background: var(--card-surface);
   background-clip: padding-box;
   box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+  touch-action: pan-x pan-y;
 }
 
 .trendingHead.trendingSticky {
@@ -328,6 +342,105 @@
 
 .chipMuted {
   color: var(--text-secondary);
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedItem {
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--button-secondary-border);
+}
+
+.feedItem:last-child {
+  border-bottom: 0;
+}
+
+.feedDate {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding-top: 1px;
+}
+
+.feedBody {
+  min-width: 0;
+}
+
+.feedTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.feedTitle {
+  display: inline-block;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 16px;
+  line-height: 1.22;
+  font-weight: 600;
+  min-width: 0;
+}
+
+a.feedTitle:hover {
+  text-decoration: underline;
+}
+
+.feedMeta {
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feedKind {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.feedKindInline {
+  color: var(--accent);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+.feedSummary {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.feedNote {
+  margin-top: 1px;
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.25;
+}
+
+.feedMoreLink {
+  margin: 8px 0 0;
+  font-size: 12px;
+}
+
+.feedMoreLink a {
+  color: var(--accent);
+  text-decoration: underline;
 }
 
 .sectorBlock {
@@ -653,6 +766,7 @@ a.secondary {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    touch-action: pan-x pan-y;
   }
 }
 

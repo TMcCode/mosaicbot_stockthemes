@@ -171,6 +171,15 @@ export default async function ThemeDetailPage({ params }: Props) {
               />
             </div>
           ) : null}
+          {detail ? (
+            <AdPlacement
+              placement="themeChartEnd"
+              className={`${styles.adSlot} ${styles.adChartEnd}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.adChartEnd}`}
+              placeholderLabel="Ad Slot · Below chart"
+              format="horizontal"
+            />
+          ) : null}
           {detail?.constituents?.length ? (
             <section className={styles.section} aria-labelledby="constituents-heading">
               <h2 id="constituents-heading">Constituents</h2>

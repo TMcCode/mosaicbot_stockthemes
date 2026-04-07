@@ -17,6 +17,9 @@
 /.next/
 /out/
 
+# Generated at build from NEXT_PUBLIC_ADSENSE_CLIENT (see scripts/write-ads-txt.mjs)
+/public/ads.txt
+
 # production
 /build
 

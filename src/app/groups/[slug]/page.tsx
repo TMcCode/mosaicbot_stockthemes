@@ -150,6 +150,15 @@ export default async function GroupDetailPage({ params }: Props) {
               benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
           ) : null}
+          {detail ? (
+            <AdPlacement
+              placement="groupStrip"
+              className={`${styles.adSlot} ${styles.adChartEnd}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.adChartEnd}`}
+              placeholderLabel="Ad Slot · Below chart"
+              format="horizontal"
+            />
+          ) : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">
             <h2 id="group-themes-heading">Themes in this group</h2>
             {detail?.build_id ? (
@@ -180,13 +189,6 @@ export default async function GroupDetailPage({ params }: Props) {
               </table>
             </div>
           </section>
-          <AdPlacement
-            placement="groupStrip"
-            className={styles.adStrip}
-            classNameWhenActive={`${styles.adStrip} ${styles.adStripBanner}`}
-            placeholderLabel="Ad Slot · Group Footer Strip"
-            format="horizontal"
-          />
           <p>
             <Link href="/groups" style={{ fontWeight: 500 }}>
               ← All groups

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import Script from "next/script";
 
 import styles from "./AdPlacement.module.css";
 
@@ -11,7 +10,17 @@ declare global {
   }
 }
 
-export type AdPlacementId = "hero" | "themeRail" | "groupRail" | "groupStrip";
+export type AdPlacementId =
+  | "hero"
+  | "homeDiscoveryMid"
+  | "themeChartEnd"
+  | "themeRail"
+  | "groupRail"
+  | "groupStrip"
+  | "groupsIndexRail"
+  | "groupsIndexStrip"
+  | "themesIndexRail"
+  | "themesIndexStrip";
 
 const AD_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
 
@@ -19,12 +28,24 @@ function slotFor(placement: AdPlacementId): string | undefined {
   switch (placement) {
     case "hero":
       return process.env.NEXT_PUBLIC_ADSENSE_SLOT_HERO?.trim();
+    case "homeDiscoveryMid":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME_DISCOVERY_MID?.trim();
+    case "themeChartEnd":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_THEME_CHART_END?.trim();
     case "themeRail":
       return process.env.NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL?.trim();
     case "groupRail":
       return process.env.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_RAIL?.trim();
     case "groupStrip":
       return process.env.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_STRIP?.trim();
+    case "groupsIndexRail":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_RAIL?.trim();
+    case "groupsIndexStrip":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_STRIP?.trim();
+    case "themesIndexRail":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_RAIL?.trim();
+    case "themesIndexStrip":
+      return process.env.NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_STRIP?.trim();
     default:
       return undefined;
   }
@@ -43,7 +64,7 @@ type Props = {
 
 /**
  * Google AdSense display units. Set `NEXT_PUBLIC_ADSENSE_CLIENT` (ca-pub-…) and per-slot env vars.
- * Without them, shows the dashed placeholder. Add `public/ads.txt` on the apex domain before going live.
+ * Without them, shows the dashed placeholder. Global `adsbygoogle.js` is loaded in root layout via AdSenseGlobalScript.
  */
 export function AdPlacement({
   placement,
@@ -71,25 +92,20 @@ export function AdPlacement({
     return <aside className={shellClass}>{placeholderLabel}</aside>;
   }
 
-  const scriptSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(AD_CLIENT!)}`;
-
   return (
-    <>
-      <Script async src={scriptSrc} crossOrigin="anonymous" strategy="lazyOnload" />
-      <aside
-        className={`${shellClass} ${styles.live}`}
-        data-ad-placement={placement}
-        aria-label="Advertisement"
-      >
-        <ins
-          className={`adsbygoogle ${styles.ins}`}
-          style={{ display: "block" }}
-          data-ad-client={AD_CLIENT}
-          data-ad-slot={slotId}
-          data-ad-format={format === "horizontal" ? "horizontal" : "auto"}
-          data-full-width-responsive={format === "horizontal" ? "false" : "true"}
-        />
-      </aside>
-    </>
+    <aside
+      className={`${shellClass} ${styles.live}`}
+      data-ad-placement={placement}
+      aria-label="Advertisement"
+    >
+      <ins
+        className={`adsbygoogle ${styles.ins}`}
+        style={{ display: "block" }}
+        data-ad-client={AD_CLIENT}
+        data-ad-slot={slotId}
+        data-ad-format={format === "horizontal" ? "horizontal" : "auto"}
+        data-full-width-responsive={format === "horizontal" ? "false" : "true"}
+      />
+    </aside>
   );
 }

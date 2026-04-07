@@ -24,7 +24,8 @@ export function trendingReturnHeatStyle(value: number): { backgroundColor: strin
     const b = Math.round(255 * (1 - ratio));
     return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: "#1a1a1a" };
   }
-  const ratio = Math.min(1, (v - EFFECTIVE_MIN) / (0 - EFFECTIVE_MIN));
+  // Negative ramp should mirror positive ramp: small losses stay near white.
+  const ratio = Math.min(1, Math.abs(v) / Math.abs(EFFECTIVE_MIN));
   const r = 255;
   const g = Math.round(255 * (1 - ratio));
   const b = Math.round(255 * (1 - ratio));

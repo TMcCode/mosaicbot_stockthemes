@@ -21,8 +21,9 @@
 # unless you change hosting to Node/serverless (e.g. Vercel). Then remove STOCKTHEMES_STATIC_PAGES
 # from the build env and add those as Repository secrets.
 #
-# Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit.
-# Commit public/ads.txt for your publisher id on the custom domain root.
+# Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit
+# (hero, rails, strips, groups/themes index rail+strip, home discovery mid, theme chart end — optional except client).
+# prebuild writes public/ads.txt from NEXT_PUBLIC_ADSENSE_CLIENT (required at https://<domain>/ads.txt).
 #
 # GCS: bucket CORS must allow GET from every origin that loads the site (e.g. https://stockthemes.ai),
 # or browser chart hydration will fail. See MosaicBot docs/stockthemes/gcs-cors.example.json
@@ -76,6 +77,12 @@ jobs:
           NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL }}
           NEXT_PUBLIC_ADSENSE_SLOT_GROUP_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_RAIL }}
           NEXT_PUBLIC_ADSENSE_SLOT_GROUP_STRIP: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUP_STRIP }}
+          NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_RAIL }}
+          NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_STRIP: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_GROUPS_INDEX_STRIP }}
+          NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_RAIL }}
+          NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_STRIP: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_STRIP }}
+          NEXT_PUBLIC_ADSENSE_SLOT_HOME_DISCOVERY_MID: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_HOME_DISCOVERY_MID }}
+          NEXT_PUBLIC_ADSENSE_SLOT_THEME_CHART_END: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEME_CHART_END }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

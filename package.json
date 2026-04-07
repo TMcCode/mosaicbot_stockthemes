@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "dev:webpack": "next dev --webpack",
+    "prebuild": "node scripts/write-ads-txt.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

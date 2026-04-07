@@ -322,3 +322,80 @@ Acceptance:
 
 These 3 produce the highest SEO/GEO impact with relatively low engineering risk.
 
+For **how to run AdSense setup in parallel**, use **§9** below.
+
+---
+
+## 9) Integrated step-by-step plan (AdSense + SEO + GEO)
+
+One timeline: **AdSense** is mostly configuration and deploy (start early because review can take ~1–2 weeks). **SEO/GEO** is the main engineering track. Work streams can overlap; checkpoints show what “done” looks like.
+
+### Before you start (once)
+
+| Action | Owner | Notes |
+|--------|--------|------|
+| Confirm live site URL and custom domain (e.g. `https://stockthemes.ai`) | You | AdSense + canonicals + `NEXT_PUBLIC_SITE_URL` must match. |
+| Google Search Console property for that URL | You | Needed for sitemap and indexing feedback (Phase 0.2). |
+| GitHub Actions variables for build (manifest URL, `NEXT_PUBLIC_SITE_URL`, base path if any) | You | Already in `deploy-pages.yml` comments. |
+
+### Week 1 — Ship foundations + start AdSense clock
+
+**AdSense (parallel, low code)**
+
+1. In **Google AdSense**: add your **site URL**, accept policies, create **Display** ad units for each placement your app expects (`AdPlacement`: hero, theme rail, group rail, group strip — see `.env.local.example`).
+2. Set **Repository Variables** (or secrets where appropriate): `NEXT_PUBLIC_ADSENSE_CLIENT`, each `NEXT_PUBLIC_ADSENSE_SLOT_*`.
+3. **Deploy** production build. Verify:
+   - `https://<your-domain>/ads.txt` returns a single valid `google.com, pub-…, DIRECT, …` line (generated at build from `NEXT_PUBLIC_ADSENSE_CLIENT` via `prebuild`; see `scripts/write-ads-txt.mjs`).
+   - Pages show real ad slots (not only placeholders) if env is set.
+4. In AdSense, **request site review** / connect site as the product UI directs.
+
+**SEO/GEO (Phase 0)**
+
+5. **§0.1 Metadata**: unique `title` / `description`, **canonical**, **OpenGraph + Twitter** on home, themes index, groups index, theme detail, group detail, about (and any other major templates).
+6. **§0.2 Sitemap + robots**: all important routes in sitemap with sensible `lastmod`; `robots.txt` allows crawl; submit sitemap in Search Console.
+7. **Light measurement**: note baseline — indexed pages, a few target queries (optional).
+
+**Checkpoint — end of Week 1:** AdSense review submitted (or in progress); metadata + sitemap/robots live; no blocking crawl issues.
+
+### Week 2 — Structured data + internal graph
+
+**AdSense**
+
+8. If Google emails **fixes** (ads.txt, policy, navigation, content): address and resubmit. No need to pause SEO work for this.
+
+**SEO/GEO (Phase 1 + 0.3)**
+
+9. **§1.1–1.2 JSON-LD** on theme and group pages (`WebPage` + entity blocks as in §1).
+10. **§1.3 Validate** with schema tools + Search Console enhancements after deploy.
+11. **§0.3 Internal links**: theme → group, group → themes, related themes; **breadcrumbs** consistent across detail templates.
+
+**Checkpoint — end of Week 2:** Valid JSON-LD on theme/group pages; stronger internal linking; AdSense either approved or you have a concrete punch list from Google.
+
+### Weeks 3–4 — Retrieval-oriented content + GEO assets
+
+**AdSense**
+
+12. If **approved**: monitor fill and layout; avoid pushing more ad units until CWV stable (§4).
+13. If **not approved yet**: keep site compliant; continue SEO/GEO — approval is not a prerequisite for shipping schema and content.
+
+**SEO/GEO (Phases 2–3)**
+
+14. **§2.1–2.2** Answer blocks and entity consistency on theme pages (what / why / how / exposure).
+15. **§2.3** Hubs: `/about/methodology`, `/about/glossary` (or equivalent paths).
+16. **§3.1 `llms.txt`** (+ optional `llms-full.txt`) with cite-friendly site summary and preferred URLs.
+17. **§3.2–3.3** Short top-of-page abstracts + machine-readable “as of” / source lines where appropriate.
+
+**Checkpoint — end of Week 4:** Methodology/glossary live; `llms.txt` live; theme pages easier to quote for humans and models; ads running or still in review without blocking releases.
+
+### Weeks 5+ — Authority and tuning (optional / ongoing)
+
+18. **§4** Topic hubs, clusters, external signals, freshness messaging — as capacity allows.
+19. **§5** Weekly: Search Console + analytics + a small GEO prompt checklist.
+20. **§4 (performance)** Re-check LCP/INP/CLS after ads + schema + new sections; tighten if needed.
+
+### Rule of thumb
+
+- **Do not** delay Phase 0–1 SEO for AdSense; they reinforce each other (clear site, real URLs, `ads.txt`).
+- **Do** submit AdSense in **Week 1** so review time overlaps engineering-heavy weeks.
+- **Treat AdSense approval as async**: fix policy requests when they arrive; keep shipping SEO/GEO milestones.
+

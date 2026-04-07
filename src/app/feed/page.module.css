@@ -1,0 +1,126 @@
+.page {
+  --card-surface: rgba(12, 16, 20, 0.9);
+  --text-primary: #eaf2f0;
+  --text-secondary: #9aa8a6;
+  --text-muted: #6e7d7b;
+  --accent: #26fcd6;
+  --button-secondary-border: rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex: 1;
+  justify-content: center;
+  width: 100%;
+  min-height: calc(100vh - 64px);
+  padding: 24px;
+}
+
+.main {
+  width: 100%;
+  max-width: 1120px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 16px;
+  background: var(--card-surface);
+  padding: 28px;
+}
+
+.backLink {
+  margin: 0 0 10px;
+  font-size: 12px;
+}
+
+.backLink a {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.main h1 {
+  margin: 0 0 14px;
+  font-size: 26px;
+  color: var(--text-primary);
+}
+
+.empty {
+  color: var(--text-secondary);
+}
+
+.feedList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.feedItem {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--button-secondary-border);
+}
+
+.feedItem:last-child {
+  border-bottom: 0;
+}
+
+.feedDate {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.feedBody {
+  min-width: 0;
+}
+
+.feedTitleRow {
+  display: flex;
+  align-items: baseline;
+  gap: 7px;
+}
+
+.feedTitle {
+  display: inline-block;
+  font-size: 15px;
+  line-height: 1.2;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 600;
+  min-width: 0;
+}
+
+a.feedTitle:hover {
+  text-decoration: underline;
+}
+
+.feedMeta {
+  margin-top: 1px;
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.feedKind {
+  color: var(--accent);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.feedKindInline {
+  color: var(--accent);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+
+.feedSummary {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+.feedNote {
+  margin-top: 1px;
+  color: var(--text-muted);
+  font-size: 11px;
+}

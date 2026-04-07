@@ -13,6 +13,18 @@ export type ManifestUpdatedThemeEventV0 = {
   last_content_change_at: string;
 };
 
+export type ManifestHomeFeedEventV0 = {
+  kind: "theme_new" | "theme_updated" | "text_table_update" | "theme_change";
+  event_at: string;
+  title: string;
+  summary?: string;
+  note?: string;
+  changes_preview?: string[];
+  changes_more_count?: number;
+  theme_name?: string;
+  theme_slug?: string;
+};
+
 export type ManifestV0 = {
   schema_version: 0;
   as_of: string;
@@ -23,6 +35,7 @@ export type ManifestV0 = {
   new_theme_events?: ManifestNewThemeEventV0[];
   updated_themes?: string[];
   updated_theme_events?: ManifestUpdatedThemeEventV0[];
+  home_feed_events?: ManifestHomeFeedEventV0[];
   stats?: {
     total_tickers?: number;
     total_groups?: number;
@@ -50,8 +63,8 @@ export type ManifestThemeSummaryV0 = {
   group_slug?: string | null;
   industry_id?: string | null;
   ticker_count?: number;
-  /** ISO 8601 UTC from sym_theme_df theme_created_at (optional until backfilled) */
+  /** ISO 8601 UTC from Theme_Metadata.created_at (optional until backfilled) */
   created_at?: string;
-  /** ISO 8601 UTC from sym_theme_df theme_updated_at */
+  /** ISO 8601 UTC from Theme_Metadata.updated_at */
   updated_at?: string;
 };

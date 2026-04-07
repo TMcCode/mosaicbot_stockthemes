@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
+import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -48,6 +49,7 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <AdSenseGlobalScript />
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <ThemeRoot>
             <SiteNav />

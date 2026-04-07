@@ -16,8 +16,10 @@ import {
   trendingColumnHeader,
   valueForTrendingColumn,
 } from "@/lib/trendingCompareMetrics";
+import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 function fmtPct(v?: number): string {
@@ -25,6 +27,39 @@ function fmtPct(v?: number): string {
   const sign = v > 0 ? "+" : "";
   return `${sign}${v.toFixed(2)}%`;
 }
+
+function fmtFeedDate(iso?: string): string {
+  if (!iso) return "";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleDateString(undefined, { month: "short", day: "2-digit" });
+}
+
+function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
+  const title = String(evt.title || "").trim();
+  if (evt.kind === "theme_new" && title.toLowerCase().endsWith(" - new theme")) {
+    return title.slice(0, -(" - new theme".length));
+  }
+  if (evt.kind === "theme_updated" && title.toLowerCase().endsWith(" - theme updated")) {
+    return title.slice(0, -(" - theme updated".length));
+  }
+  return title;
+}
+
+function feedChangesText(evt: ManifestHomeFeedEventV0): string {
+  const changes = Array.isArray(evt.changes_preview)
+    ? evt.changes_preview.map((x) => String(x || "").trim()).filter(Boolean)
+    : [];
+  const more = Number.isFinite(evt.changes_more_count) ? Number(evt.changes_more_count) : 0;
+  if (!changes.length && more <= 0) return "";
+  const head = changes.join(", ");
+  if (more > 0) return head ? `${head} +${more} more changes` : `+${more} more changes`;
+  return head;
+}
+
+/** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
+const HOME_FEED_RENDER_LIMIT = 25;
+const HOME_FEED_MAX_DAYS = 10;
 
 export default async function Home() {
   const [{ manifest, source }, homeTrendingRes, spyPerf] = await Promise.all([
@@ -34,13 +69,16 @@ export default async function Home() {
   ]);
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
-  const newThemeNames = Array.isArray(manifest.new_themes) ? manifest.new_themes : [];
-  const updatedThemeNamesRaw = Array.isArray(manifest.updated_themes) ? manifest.updated_themes : [];
-  // Prefer ETL-side dedupe; also filter here so old manifests / static embeds never show the same theme twice.
-  const newNameSet = new Set(newThemeNames.map((n) => String(n).trim()));
-  const updatedThemeNames = updatedThemeNamesRaw.filter((n) => !newNameSet.has(String(n).trim()));
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
-  const updatedThemes = updatedThemeNames.map((name) => themeByName.get(name)).filter(Boolean);
+  const etlFeed = Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : [];
+  const homeFeedEvents = mergeHomeFeedEvents(manifest, themeByName, etlFeed);
+  const homeFeedDisplay = prioritizeLifecycleHomeFeed(
+    homeFeedEvents,
+    HOME_FEED_RENDER_LIMIT,
+    HOME_FEED_MAX_DAYS,
+  );
+  /** Full merged list (including outside the 10-day window) is on `/feed`; show link if anything is left off the home strip. */
+  const hasMoreFeed = homeFeedEvents.length > homeFeedDisplay.length;
   const homeBundle = homeTrendingRes?.bundle;
   const useHomeBundle = canUseHomeTrendingBundle(manifest, trendingNames, homeBundle ?? null);
 
@@ -255,28 +293,63 @@ export default async function Home() {
               benchmarkPerformance={spyPerf?.benchmarkPerformance}
             />
 
+            <AdPlacement
+              placement="homeDiscoveryMid"
+              className={`${styles.adSlot} ${styles.adHomeWide}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.adHomeWide}`}
+              placeholderLabel="Ad Slot · Discovery"
+            />
+
             <section className={styles.section}>
-              <h2>New and updated themes</h2>
-              <h3 className={styles.sectorHeading}>New</h3>
-              <div className={styles.chipList}>
-                {newThemeNames.slice(0, 16).map((name) => {
-                  const t = themeByName.get(name);
-                  if (!t) return null;
-                  return (
-                    <Link key={`new-${t.slug}`} href={`/themes/${t.slug}`} className={styles.chip}>
-                      {t.name}
+              <h2>Feed</h2>
+              <div className={styles.feedList}>
+                {homeFeedDisplay.map((evt, idx) => {
+                  const slug = String(evt.theme_slug || "").trim();
+                  const displayTitle = cleanFeedTitle(evt);
+                  const dateLabel = fmtFeedDate(evt.event_at);
+                  const changesText = feedChangesText(evt);
+                  const noteText = String(evt.note || "").trim();
+                  const isThemeLifecycle = evt.kind === "theme_new" || evt.kind === "theme_updated";
+                  const kindLabel =
+                    evt.kind === "theme_new"
+                      ? "New theme"
+                      : evt.kind === "theme_updated"
+                        ? "Theme updated"
+                        : evt.kind === "text_table_update"
+                          ? "Text tables"
+                          : "Theme change";
+                  const titleNode = slug ? (
+                    <Link href={`/themes/${slug}`} className={styles.feedTitle}>
+                      {displayTitle}
                     </Link>
+                  ) : (
+                    <span className={styles.feedTitle}>{displayTitle}</span>
+                  );
+                  return (
+                    <article key={`${evt.kind}-${evt.event_at}-${idx}`} className={styles.feedItem}>
+                      <div className={styles.feedDate}>{dateLabel}</div>
+                      <div className={styles.feedBody}>
+                        <div className={styles.feedTitleRow}>
+                          {titleNode}
+                          <span className={styles.feedKindInline}>{kindLabel}</span>
+                        </div>
+                        <div className={styles.feedMeta}>
+                          {changesText ? <span className={styles.feedSummary}>{changesText}</span> : null}
+                          {!changesText && evt.summary && !isThemeLifecycle ? (
+                            <span className={styles.feedSummary}>{evt.summary}</span>
+                          ) : null}
+                        </div>
+                        {noteText ? <div className={styles.feedNote}>{noteText}</div> : null}
+                      </div>
+                    </article>
                   );
                 })}
               </div>
-              <h3 className={styles.sectorHeading}>Updated</h3>
-              <div className={styles.chipList}>
-                {updatedThemes.slice(0, 16).map((t) => (
-                  <Link key={`upd-${t!.slug}`} href={`/themes/${t!.slug}`} className={styles.chipMuted}>
-                    {t!.name}
-                  </Link>
-                ))}
-              </div>
+              {hasMoreFeed ? (
+                <p className={styles.feedMoreLink}>
+                  <Link href="/feed">View full feed</Link>
+                </p>
+              ) : null}
             </section>
           </div>
         </div>

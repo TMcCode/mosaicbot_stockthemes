@@ -1,0 +1,5 @@
+# Copy to ads.txt only if you need a manual file (e.g. non-CI build).
+# Normally: set NEXT_PUBLIC_ADSENSE_CLIENT=ca-pub-XXXXXXXXXXXXXXXX — prebuild writes public/ads.txt.
+#
+# Replace PUB with your numeric publisher id (same digits as in ca-pub-…):
+# google.com, pub-PUB, DIRECT, f08c47fec0942fa0

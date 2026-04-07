@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import { AdPlacement } from "@/components/AdPlacement";
 import styles from "../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -57,42 +58,40 @@ export default async function GroupsPage() {
                 {manifest.stats?.total_tickers?.toLocaleString() ?? "—"} tickers
               </p>
             </div>
-            <aside className={styles.adSlot}>Ad Slot · Groups</aside>
+            <AdPlacement
+              placement="groupsIndexRail"
+              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              placeholderLabel="Ad Slot · Groups index"
+            />
           </div>
+          <AdPlacement
+            placement="groupsIndexStrip"
+            className={`${styles.adSlot} ${styles.adChartEnd}`}
+            classNameWhenActive={`${styles.adSlot} ${styles.adChartEnd}`}
+            placeholderLabel="Ad Slot · Below intro"
+            format="horizontal"
+          />
           <section className={styles.section}>
-            {orderedSectors.flatMap((sector, idx) => {
-              const nodes = [
-                <div key={`sector-${sector}`} className={styles.sectorBlock}>
-                  <h3 className={styles.sectorHeading}>{sector}</h3>
-                  <ul className={styles.groupThemeGrid} style={{ listStyle: "none", paddingLeft: 0 }}>
-                    {(groupsBySector.get(sector) || []).map((g) => (
-                      <li key={g.slug}>
-                        <Link href={`/groups/${g.slug}`} className={styles.listLink} prefetch={false}>
-                          <span className={styles.name}>{g.name}</span>
-                          <span className={styles.meta}>
-                            {g.theme_count != null ? `${g.theme_count} themes` : ""}
-                            {g.theme_count != null && g.ticker_count != null ? " · " : ""}
-                            {g.ticker_count != null ? `${g.ticker_count} tickers` : ""}
-                          </span>
-                          {g.blurb ? <span className={styles.groupBlurb}>{g.blurb}</span> : null}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </div>,
-              ];
-              if ((idx + 1) % 2 === 0 && idx < orderedSectors.length - 1) {
-                nodes.push(
-                  <aside key={`ad-strip-${idx}`} className={styles.adStrip}>
-                    Ad Slot · Groups Strip
-                  </aside>
-                );
-              }
-              return nodes;
-            })}
-            <aside className={styles.adStrip}>
-              Ad Slot · Groups Footer Strip
-            </aside>
+            {orderedSectors.map((sector) => (
+              <div key={`sector-${sector}`} className={styles.sectorBlock}>
+                <h3 className={styles.sectorHeading}>{sector}</h3>
+                <ul className={styles.groupThemeGrid} style={{ listStyle: "none", paddingLeft: 0 }}>
+                  {(groupsBySector.get(sector) || []).map((g) => (
+                    <li key={g.slug}>
+                      <Link href={`/groups/${g.slug}`} className={styles.listLink} prefetch={false}>
+                        <span className={styles.name}>{g.name}</span>
+                        <span className={styles.meta}>
+                          {g.theme_count != null ? `${g.theme_count} themes` : ""}
+                          {g.theme_count != null && g.ticker_count != null ? " · " : ""}
+                          {g.ticker_count != null ? `${g.ticker_count} tickers` : ""}
+                        </span>
+                        {g.blurb ? <span className={styles.groupBlurb}>{g.blurb}</span> : null}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </section>
         </div>
       </main>
