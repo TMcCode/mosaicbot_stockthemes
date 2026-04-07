@@ -674,6 +674,49 @@ a.feedTitle:hover {
   margin-bottom: 0;
 }
 
+.aboutProse {
+  max-width: 900px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.aboutProse .introCopy {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.56;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.aboutProse h2 {
+  margin: 2px 0 6px;
+  font-size: 32px;
+  line-height: 1.16;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.aboutLead {
+  max-width: 980px;
+}
+
+.aboutLead .introCopy {
+  font-size: 16px;
+  line-height: 1.56;
+}
+
+.aboutBasketCard {
+  max-width: 980px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(38, 252, 214, 0.08) 0%, rgba(38, 252, 214, 0) 55%),
+    var(--surface-card);
+}
+
 .intro .introPunchline {
   margin: 0 0 8px;
   font-size: 32px;
@@ -779,6 +822,25 @@ a.secondary {
 
   .introMore {
     font-size: 11px;
+  }
+
+  .aboutProse .introCopy {
+    font-size: 14px;
+    line-height: 1.52;
+  }
+
+  .aboutProse h2 {
+    font-size: 29px;
+  }
+
+  .aboutLead .introCopy {
+    font-size: 15px;
+    line-height: 1.52;
+  }
+
+  .aboutBasketCard {
+    border-radius: 14px;
+    padding: 14px 14px;
   }
 
   .page {

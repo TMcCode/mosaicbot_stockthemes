@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import styles from "../../page.module.css";
 
@@ -11,6 +12,7 @@ import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { loadManifest } from "@/lib/loadManifest";
+import { absoluteUrl } from "@/lib/seoMetadata";
 import { buildGroupThemeChartMetaMap } from "@/lib/constituentMeta";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailChildThemeV0 } from "@/types/group.detail.v0";
@@ -49,6 +51,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: g.name,
     description: desc,
+    alternates: {
+      canonical: absoluteUrl(`/groups/${slug}`),
+    },
+    openGraph: {
+      title: g.name,
+      description: desc,
+      url: absoluteUrl(`/groups/${slug}`),
+      siteName: "stockthemes.ai",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: g.name,
+      description: desc,
+    },
   };
 }
 
@@ -90,9 +107,42 @@ export default async function GroupDetailPage({ params }: Props) {
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
   const spyPerf = await getSpyMarketPerfCached();
+  const groupUrl = absoluteUrl(`/groups/${slug}`);
+  const dateModified = detail?.as_of || manifest.as_of;
+  const pageDescription = detail?.seo_intro?.trim() || `${group.name} investment theme group.`;
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "CollectionPage",
+      name: `${group.name} group`,
+      description: pageDescription,
+      url: groupUrl,
+      dateModified,
+      isPartOf: {
+        "@type": "WebSite",
+        name: "stockthemes.ai",
+        url: absoluteUrl("/"),
+      },
+      },
+      {
+      "@type": "ItemList",
+      name: `${group.name} themes`,
+      url: groupUrl,
+      numberOfItems: tableRows.length,
+      itemListElement: tableRows.slice(0, 50).map((t, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        url: absoluteUrl(`/themes/${t.slug}`),
+        name: t.name,
+      })),
+      },
+    ],
+  };
 
   return (
     <div className={`st-surface ${styles.page}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
@@ -124,31 +174,37 @@ export default async function GroupDetailPage({ params }: Props) {
             </div>
             <AdPlacement
               placement="groupRail"
-              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
               placeholderLabel="Ad Slot · Group detail"
+              format="horizontal"
             />
           </div>
           {detail && dataBaseUrl ? (
-            <ThemeChartLiveHydrate
-              key={slug}
-              slug={slug}
-              dataBaseUrl={dataBaseUrl}
-              serverChart={detail.chart_1y}
-              chartJsonFolder="groups"
-              performanceTitle={group.name}
-              compositionMetaByTicker={groupChartMetaBySlug}
-              compositionLegendShowSeriesBadge={false}
-              benchmarkPerformance={spyPerf?.benchmarkPerformance}
-            />
+            <DeferRender minHeight={460} rootMargin="360px 0px">
+              <ThemeChartLiveHydrate
+                key={slug}
+                slug={slug}
+                dataBaseUrl={dataBaseUrl}
+                serverChart={detail.chart_1y}
+                chartJsonFolder="groups"
+                performanceTitle={group.name}
+                compositionMetaByTicker={groupChartMetaBySlug}
+                compositionLegendShowSeriesBadge={false}
+                benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              />
+            </DeferRender>
           ) : null}
           {detail && !dataBaseUrl ? (
-            <Chart1yPanel
-              chart1y={detail.chart_1y}
-              performanceTitle={group.name}
-              compositionMetaByTicker={groupChartMetaBySlug}
-              compositionLegendShowSeriesBadge={false}
-              benchmarkPerformance={spyPerf?.benchmarkPerformance}
-            />
+            <DeferRender minHeight={460} rootMargin="360px 0px">
+              <Chart1yPanel
+                chart1y={detail.chart_1y}
+                performanceTitle={group.name}
+                compositionMetaByTicker={groupChartMetaBySlug}
+                compositionLegendShowSeriesBadge={false}
+                benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              />
+            </DeferRender>
           ) : null}
           {detail ? (
             <AdPlacement

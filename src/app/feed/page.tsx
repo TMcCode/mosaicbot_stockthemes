@@ -1,10 +1,18 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { getManifestCached } from "@/lib/getManifestCached";
 import { mergeHomeFeedEvents, prioritizeLifecycleFeedFull } from "@/lib/mergeHomeFeedEvents";
+import { buildPageMetadata } from "@/lib/seoMetadata";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 
 import styles from "./page.module.css";
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "Full feed",
+  description: "Complete activity feed for new, updated, and thesis-updated themes.",
+  path: "/feed",
+});
 
 function fmtFeedDate(iso?: string): string {
   if (!iso) return "";

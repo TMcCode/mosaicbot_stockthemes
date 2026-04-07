@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Terms of Service",
   description: "Terms for using stockthemes.ai.",
-};
+  path: "/terms",
+});
 
 export default function TermsPage() {
   const updated = "April 7, 2026";

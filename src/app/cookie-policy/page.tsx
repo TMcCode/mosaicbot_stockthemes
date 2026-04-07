@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "Cookie Policy",
   description: "How stockthemes.ai uses cookies and how you can manage them.",
-};
+  path: "/cookie-policy",
+});
 
 export default function CookiePolicyPage() {
   const updated = "April 7, 2026";

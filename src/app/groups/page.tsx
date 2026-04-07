@@ -5,11 +5,13 @@ import { GroupsProgressiveSections } from "@/components/GroupsProgressiveSection
 import styles from "../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
+import { buildPageMetadata } from "@/lib/seoMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "All groups",
   description: "Browse investment theme groups and constituent themes.",
-};
+  path: "/groups",
+});
 
 export default async function GroupsPage() {
   const { manifest, source } = await getManifestCached();

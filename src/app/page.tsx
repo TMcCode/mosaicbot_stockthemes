@@ -1,6 +1,8 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { DeferRender } from "@/components/DeferRender";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import styles from "./page.module.css";
 
@@ -11,6 +13,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
+import { buildPageMetadata } from "@/lib/seoMetadata";
 import {
   resolveTrendingColumnOrder,
   trendingColumnHeader,
@@ -90,6 +93,12 @@ function feedChangesText(evt: ManifestHomeFeedEventV0): string {
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
 const HOME_FEED_RENDER_LIMIT = 25;
 const HOME_FEED_MAX_DAYS = 10;
+
+export const metadata: Metadata = buildPageMetadata({
+  title: "stockthemes.ai",
+  description: "Thematic equity intelligence for discovering stock narratives, groups, and theme exposure.",
+  path: "/",
+});
 
 export default async function Home() {
   const [{ manifest, source }, homeTrendingRes, spyPerf] = await Promise.all([
@@ -211,6 +220,9 @@ export default async function Home() {
                 <p className={styles.introMore}>
                   <Link href="/about">Read about the methodology and background</Link>
                 </p>
+                <p className={styles.introMore}>
+                  <Link href="/about#what-is-theme-basket">New here? What is a theme basket?</Link>
+                </p>
               </div>
               <div className={styles.ctas}>
                 <Link className={styles.secondary} href="/themes">
@@ -316,16 +328,18 @@ export default async function Home() {
               </div>
             </section>
 
-            <HomeHighlightedThemes
-              items={detailsSorted
-                .filter((d) => d.slug)
-                .map((d) => ({
-                  slug: d.slug as string,
-                  name: d.name,
-                  chart1y: d.chart1y,
-                }))}
-              benchmarkPerformance={spyPerf?.benchmarkPerformance}
-            />
+            <DeferRender minHeight={460} rootMargin="420px 0px">
+              <HomeHighlightedThemes
+                items={detailsSorted
+                  .filter((d) => d.slug)
+                  .map((d) => ({
+                    slug: d.slug as string,
+                    name: d.name,
+                    chart1y: d.chart1y,
+                  }))}
+                benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              />
+            </DeferRender>
 
             <AdPlacement
               placement="homeDiscoveryMid"

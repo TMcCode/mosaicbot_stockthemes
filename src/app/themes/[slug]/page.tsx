@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { DeferRender } from "@/components/DeferRender";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
@@ -25,6 +26,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
+import { absoluteUrl } from "@/lib/seoMetadata";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -60,6 +62,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: t.name,
     description: desc,
+    alternates: {
+      canonical: absoluteUrl(`/themes/${slug}`),
+    },
+    openGraph: {
+      title: t.name,
+      description: desc,
+      url: absoluteUrl(`/themes/${slug}`),
+      siteName: "stockthemes.ai",
+      type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t.name,
+      description: desc,
+    },
   };
 }
 
@@ -89,9 +106,50 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
   const hasMcap = Boolean(detail?.constituents?.some((c) => inferMarketCapUsd(c) != null));
+  const themeUrl = absoluteUrl(`/themes/${slug}`);
+  const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
+  const pageDescription = detail?.seo_intro?.trim() || `Stocks and exposure for ${theme.name}.`;
+  const mentions = (detail?.constituents || []).slice(0, 25).map((c) => ({
+    "@type": "Thing",
+    name: c.name ? `${c.name} (${c.ticker})` : c.ticker,
+  }));
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+      "@type": "WebPage",
+      name: `${theme.name} theme`,
+      description: pageDescription,
+      url: themeUrl,
+      dateModified,
+      isPartOf: {
+        "@type": "WebSite",
+        name: "stockthemes.ai",
+        url: absoluteUrl("/"),
+      },
+      about: [
+        { "@type": "Thing", name: theme.name },
+        ...(group?.name ? [{ "@type": "Thing", name: group.name }] : []),
+      ],
+      },
+      {
+      "@type": "DefinedTermSet",
+      name: theme.name,
+      description: pageDescription,
+      url: themeUrl,
+      dateModified,
+      isPartOf: absoluteUrl("/themes"),
+      keywords: [theme.name, group?.name, "stocks", "theme investing", "equity exposure"]
+        .filter(Boolean)
+        .join(", "),
+      hasDefinedTerm: mentions,
+      },
+    ],
+  };
 
   return (
     <div className={`st-surface ${styles.page}`}>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
@@ -137,8 +195,10 @@ export default async function ThemeDetailPage({ params }: Props) {
             </div>
             <AdPlacement
               placement="themeRail"
-              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
               placeholderLabel="Ad Slot · Theme detail"
+              format="horizontal"
             />
           </div>
           {!detail && dataBaseUrl ? (
@@ -149,27 +209,31 @@ export default async function ThemeDetailPage({ params }: Props) {
             />
           ) : null}
           {detail && dataBaseUrl ? (
-            <div className={styles.tightChartTop}>
-              <ThemeChartLiveHydrate
-                key={slug}
-                slug={slug}
-                dataBaseUrl={dataBaseUrl}
-                serverChart={detail.chart_1y}
-                compositionMetaByTicker={compositionMetaByTicker}
-                performanceTitle={theme.name}
-                benchmarkPerformance={spyPerf?.benchmarkPerformance}
-              />
-            </div>
+            <DeferRender minHeight={460} rootMargin="360px 0px">
+              <div className={styles.tightChartTop}>
+                <ThemeChartLiveHydrate
+                  key={slug}
+                  slug={slug}
+                  dataBaseUrl={dataBaseUrl}
+                  serverChart={detail.chart_1y}
+                  compositionMetaByTicker={compositionMetaByTicker}
+                  performanceTitle={theme.name}
+                  benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                />
+              </div>
+            </DeferRender>
           ) : null}
           {detail && !dataBaseUrl ? (
-            <div className={styles.tightChartTop}>
-              <Chart1yPanel
-                chart1y={detail.chart_1y}
-                compositionMetaByTicker={compositionMetaByTicker}
-                performanceTitle={theme.name}
-                benchmarkPerformance={spyPerf?.benchmarkPerformance}
-              />
-            </div>
+            <DeferRender minHeight={460} rootMargin="360px 0px">
+              <div className={styles.tightChartTop}>
+                <Chart1yPanel
+                  chart1y={detail.chart_1y}
+                  compositionMetaByTicker={compositionMetaByTicker}
+                  performanceTitle={theme.name}
+                  benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                />
+              </div>
+            </DeferRender>
           ) : null}
           {detail ? (
             <AdPlacement

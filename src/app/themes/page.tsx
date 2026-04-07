@@ -5,11 +5,13 @@ import { ThemesProgressiveList } from "@/components/ThemesProgressiveList";
 import styles from "../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
+import { buildPageMetadata } from "@/lib/seoMetadata";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: "All themes",
   description: "Browse themes and stocks by theme.",
-};
+  path: "/themes",
+});
 
 export default async function ThemesPage() {
   const { manifest, source } = await getManifestCached();

@@ -21,7 +21,17 @@ function Chart1yPanelSkeleton() {
 }
 
 const Chart1yPanelLoaded = dynamic(
-  () => import("@/components/Chart1yPanelContent").then((m) => m.Chart1yPanel),
+  async () => {
+    try {
+      const mod = await import("@/components/Chart1yPanelContent");
+      return mod.Chart1yPanel;
+    } catch {
+      // Dev/HMR can occasionally race chunk invalidation; retry once.
+      await new Promise((resolve) => setTimeout(resolve, 120));
+      const mod = await import("@/components/Chart1yPanelContent");
+      return mod.Chart1yPanel;
+    }
+  },
   { ssr: false, loading: () => <Chart1yPanelSkeleton /> },
 );
 

@@ -30,6 +30,7 @@ export type ManifestV0 = {
   as_of: string;
   build_id?: string;
   home_intro?: string;
+  theme_basket_intro?: string;
   trending_themes?: string[];
   new_themes?: string[];
   new_theme_events?: ManifestNewThemeEventV0[];
