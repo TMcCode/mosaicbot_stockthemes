@@ -221,9 +221,6 @@ export default async function Home() {
                 <p className={styles.introMore}>
                   <Link href="/about">Read about the methodology and background</Link>
                 </p>
-                <p className={styles.introMore}>
-                  <Link href="/about#what-is-theme-basket">New here? What is a theme basket?</Link>
-                </p>
               </div>
               <div className={styles.ctas}>
                 <Link className={styles.secondary} href="/themes">

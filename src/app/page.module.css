@@ -586,7 +586,7 @@ a.feedTitle:hover {
   padding-left: 1.25rem;
   display: flex;
   flex-direction: column;
-  gap: 11px;
+  gap: 7px;
   font-size: 14px;
   line-height: 1.45;
   color: var(--text-secondary);
@@ -627,7 +627,7 @@ a.feedTitle:hover {
   color: inherit;
   border-radius: 10px;
   margin: 0 -6px;
-  padding: 7px 9px;
+  padding: 5px 9px;
   border: 1px solid transparent;
   transition: border-color 0.18s ease, background-color 0.18s ease;
 }

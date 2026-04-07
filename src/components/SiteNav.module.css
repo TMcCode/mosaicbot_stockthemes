@@ -113,3 +113,24 @@
     font-size: 14px;
   }
 }
+
+@media (max-width: 430px) {
+  .row {
+    gap: 8px 10px;
+  }
+
+  .links {
+    flex-wrap: nowrap;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .links a {
+    white-space: nowrap;
+    font-size: 12px;
+  }
+
+  .sep {
+    padding: 0;
+  }
+}
