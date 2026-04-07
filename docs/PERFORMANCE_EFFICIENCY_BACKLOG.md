@@ -50,6 +50,21 @@ Goal: keep initial load fast, keep chart interactions smooth, and keep business 
    - Align `revalidate` intervals by artifact type (manifest vs trending vs spy snapshot).
    - Define stale tolerance for each page class (home, list pages, detail pages).
 
+4. Perceived-speed polish for progressive list pages
+   - Add lightweight skeleton placeholders while `/themes` and `/groups` progressively reveal blocks.
+   - Goal: reduce visual "pop-in" and improve perceived responsiveness during scroll-based loading.
+   - Priority: Medium (good UX win, low implementation risk, modest real latency impact).
+
+5. Smarter prefetch heuristics for likely-next navigation
+   - Prefetch only high-likelihood routes (for example, cards/rows near viewport or on hover intent), instead of broad eager prefetching.
+   - Goal: improve click-to-render responsiveness without inflating background network and parse work.
+   - Priority: Medium-Low (can help navigation feel, but needs guardrails to avoid overfetching).
+
+6. Memoize row/list item renderers where rerenders are measurable
+   - Apply targeted memoization to heavy repeated list rows only after profiling confirms rerender cost.
+   - Goal: reduce unnecessary client work on interaction-heavy pages.
+   - Priority: Low (usually smaller gains than ETL/data-contract and payload improvements).
+
 ## Longer-Term Opportunities
 
 1. Add periodic performance budgets
@@ -68,8 +83,10 @@ Goal: keep initial load fast, keep chart interactions smooth, and keep business 
 
 - Phase 1 (now): ETL contract hardening for `spy_snapshot` + `total_market_cap_usd`.
 - Phase 2: tighten home trending bundle reliability and fallback behavior.
-- Phase 3: chart payload split if page weight starts trending up.
-- Phase 4: CI performance budgets and monitoring.
+- Phase 3: perceived-speed polish (progressive-list skeletons), then selective prefetch heuristics.
+- Phase 4: chart payload split if page weight starts trending up.
+- Phase 5: CI performance budgets and monitoring.
+- Phase 6: targeted row memoization only if profiling shows meaningful rerender cost.
 
 ## What Not to Optimize Yet
 

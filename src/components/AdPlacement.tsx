@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import styles from "./AdPlacement.module.css";
 
@@ -75,18 +75,46 @@ export function AdPlacement({
 }: Props) {
   const slotId = slotFor(placement);
   const active = Boolean(AD_CLIENT && slotId);
+  const hostRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
+  const [shouldRequest, setShouldRequest] = useState(false);
   const shellClass = active ? (classNameWhenActive ?? className) : className;
 
   useEffect(() => {
-    if (!active || pushedRef.current) return;
+    if (!active) return;
+    const node = hostRef.current;
+    if (!node) return;
+    // Progressive loading: request ads only when near viewport.
+    if (typeof IntersectionObserver === "undefined") {
+      setShouldRequest(true);
+      return;
+    }
+    let cancelled = false;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry || !entry.isIntersecting) return;
+        if (!cancelled) setShouldRequest(true);
+        obs.disconnect();
+      },
+      { root: null, rootMargin: "300px 0px", threshold: 0.01 },
+    );
+    obs.observe(node);
+    return () => {
+      cancelled = true;
+      obs.disconnect();
+    };
+  }, [active]);
+
+  useEffect(() => {
+    if (!active || !shouldRequest || pushedRef.current) return;
     pushedRef.current = true;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
       pushedRef.current = false;
     }
-  }, [active]);
+  }, [active, shouldRequest]);
 
   if (!active) {
     return <aside className={shellClass}>{placeholderLabel}</aside>;
@@ -94,6 +122,9 @@ export function AdPlacement({
 
   return (
     <aside
+      ref={(el) => {
+        hostRef.current = el;
+      }}
       className={`${shellClass} ${styles.live}`}
       data-ad-placement={placement}
       aria-label="Advertisement"

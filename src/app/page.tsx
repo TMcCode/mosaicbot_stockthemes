@@ -47,14 +47,44 @@ function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
 }
 
 function feedChangesText(evt: ManifestHomeFeedEventV0): string {
-  const changes = Array.isArray(evt.changes_preview)
+  const raw = Array.isArray(evt.changes_preview)
     ? evt.changes_preview.map((x) => String(x || "").trim()).filter(Boolean)
     : [];
   const more = Number.isFinite(evt.changes_more_count) ? Number(evt.changes_more_count) : 0;
-  if (!changes.length && more <= 0) return "";
-  const head = changes.join(", ");
-  if (more > 0) return head ? `${head} +${more} more changes` : `+${more} more changes`;
-  return head;
+  if (!raw.length && more <= 0) return "";
+
+  const added: string[] = [];
+  const removed: string[] = [];
+  const other: string[] = [];
+  for (const item of raw) {
+    const m = item.match(/^(.+?)\s+(added|removed)$/i);
+    if (!m) {
+      other.push(item);
+      continue;
+    }
+    const ticker = String(m[1] || "").trim();
+    const action = String(m[2] || "").toLowerCase();
+    if (!ticker) continue;
+    if (action === "added") added.push(ticker);
+    else if (action === "removed") removed.push(ticker);
+    else other.push(item);
+  }
+
+  const parts: string[] = [];
+  if (removed.length) parts.push(`${removed.join(", ")} removed`);
+  if (added.length) parts.push(`${added.join(", ")} added`);
+  if (other.length) parts.push(other.join(", "));
+
+  if (more > 0) {
+    if (added.length && !removed.length) {
+      parts.push(`+${more} more added`);
+    } else if (removed.length && !added.length) {
+      parts.push(`+${more} more removed`);
+    } else {
+      parts.push(`+${more} more changes`);
+    }
+  }
+  return parts.join("; ");
 }
 
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
@@ -161,10 +191,19 @@ export default async function Home() {
     <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={styles.heroGrid}>
+          <div className={`${styles.heroGrid} ${styles.heroGridSingle}`}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>{eyebrow}</p>
-              <h1>Thematic equity intelligence, organized for discovery</h1>
+              <div className={styles.titleRow}>
+                <h1>Thematic equity intelligence, organized for discovery</h1>
+                <AdPlacement
+                  placement="hero"
+                  className={styles.titleAdSmall}
+                  classNameWhenActive={styles.titleAdSmall}
+                  placeholderLabel="Ad Slot"
+                  format="horizontal"
+                />
+              </div>
               <div className={styles.introCopyWrap}>
                 <p className={styles.introPunchline}>
                   Discover and track stock market narratives better than ever before
@@ -182,11 +221,6 @@ export default async function Home() {
                 </Link>
               </div>
             </div>
-            <AdPlacement
-              placement="hero"
-              className={`${styles.adSlot} ${styles.adSlotTall}`}
-              placeholderLabel="Ad Slot · Hero"
-            />
           </div>
 
           {stats ? (
@@ -312,11 +346,11 @@ export default async function Home() {
                   const isThemeLifecycle = evt.kind === "theme_new" || evt.kind === "theme_updated";
                   const kindLabel =
                     evt.kind === "theme_new"
-                      ? "New theme"
+                      ? "Theme created"
                       : evt.kind === "theme_updated"
                         ? "Theme updated"
                         : evt.kind === "text_table_update"
-                          ? "Text tables"
+                          ? "Thesis update"
                           : "Theme change";
                   const titleNode = slug ? (
                     <Link href={`/themes/${slug}`} className={styles.feedTitle}>

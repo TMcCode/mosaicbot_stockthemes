@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { ThemesProgressiveList } from "@/components/ThemesProgressiveList";
 import styles from "../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -11,9 +11,6 @@ export const metadata: Metadata = {
   description: "Browse themes and stocks by theme.",
 };
 
-/** Insert a horizontal strip after every N themes (first strip after items 1..N, before N+1). */
-const THEMES_PER_STRIP_BLOCK = 50;
-
 export default async function ThemesPage() {
   const { manifest, source } = await getManifestCached();
   const label = source === "live" ? "live manifest" : "local fixture";
@@ -21,39 +18,12 @@ export default async function ThemesPage() {
   const themesSorted = [...manifest.themes].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
   );
-
-  const sections: React.ReactNode[] = [];
-  for (let start = 0; start < themesSorted.length; start += THEMES_PER_STRIP_BLOCK) {
-    const slice = themesSorted.slice(start, start + THEMES_PER_STRIP_BLOCK);
-    sections.push(
-      <ul key={`themes-ul-${start}`} className={styles.list} style={{ listStyle: "none", paddingLeft: 0 }}>
-        {slice.map((t) => (
-          <li key={t.slug}>
-            <Link href={`/themes/${t.slug}`} className={styles.listLink} prefetch={false}>
-              <span className={styles.name}>{t.name}</span>
-              <span className={styles.meta}>
-                {t.group_slug ? `${groupBySlug.get(t.group_slug)?.name ?? "Group"}` : ""}
-                {t.group_slug && t.ticker_count != null ? " · " : ""}
-                {t.ticker_count != null ? `${t.ticker_count} tickers` : ""}
-              </span>
-            </Link>
-          </li>
-        ))}
-      </ul>,
-    );
-    if (start + THEMES_PER_STRIP_BLOCK < themesSorted.length) {
-      sections.push(
-        <AdPlacement
-          key={`themes-strip-after-${start + THEMES_PER_STRIP_BLOCK}`}
-          placement="themesIndexStrip"
-          className={`${styles.adSlot} ${styles.adChartEnd}`}
-          classNameWhenActive={`${styles.adSlot} ${styles.adChartEnd}`}
-          placeholderLabel="Ad Slot · Every 50 themes"
-          format="horizontal"
-        />,
-      );
-    }
-  }
+  const themeRows = themesSorted.map((t) => ({
+    slug: t.slug,
+    name: t.name,
+    groupName: t.group_slug ? `${groupBySlug.get(t.group_slug)?.name ?? "Group"}` : "",
+    tickerCount: t.ticker_count ?? null,
+  }));
 
   return (
     <div className={`st-surface ${styles.page}`}>
@@ -67,11 +37,23 @@ export default async function ThemesPage() {
             </div>
             <AdPlacement
               placement="themesIndexRail"
-              className={`${styles.adSlot} ${styles.adSlotTall}`}
+              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
               placeholderLabel="Ad Slot · Themes index"
+              format="horizontal"
             />
           </div>
-          <section className={styles.section}>{sections}</section>
+          <section className={styles.section}>
+            <ThemesProgressiveList
+              themes={themeRows}
+              classNameList={styles.list}
+              classNameListLink={styles.listLink}
+              classNameName={styles.name}
+              classNameMeta={styles.meta}
+              classNameAdSlot={styles.adSlot}
+              classNameAdChartEnd={styles.adChartEnd}
+            />
+          </section>
         </div>
       </main>
     </div>

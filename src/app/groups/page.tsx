@@ -1,7 +1,7 @@
-import Link from "next/link";
 import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { GroupsProgressiveSections } from "@/components/GroupsProgressiveSections";
 import styles from "../page.module.css";
 
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -45,6 +45,17 @@ export default async function GroupsPage() {
       .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" })),
   ];
 
+  const sectors = orderedSectors.map((sector) => ({
+    sector,
+    groups: (groupsBySector.get(sector) || []).map((g) => ({
+      slug: g.slug,
+      name: g.name,
+      themeCount: g.theme_count ?? null,
+      tickerCount: g.ticker_count ?? null,
+      blurb: g.blurb ?? "",
+    })),
+  }));
+
   return (
     <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
@@ -60,38 +71,26 @@ export default async function GroupsPage() {
             </div>
             <AdPlacement
               placement="groupsIndexRail"
-              className={`${styles.adSlot} ${styles.adSlotTall}`}
-              placeholderLabel="Ad Slot · Groups index"
+              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
+              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
+              placeholderLabel="Ad Slot"
+              format="horizontal"
             />
           </div>
-          <AdPlacement
-            placement="groupsIndexStrip"
-            className={`${styles.adSlot} ${styles.adChartEnd}`}
-            classNameWhenActive={`${styles.adSlot} ${styles.adChartEnd}`}
-            placeholderLabel="Ad Slot · Below intro"
-            format="horizontal"
-          />
           <section className={styles.section}>
-            {orderedSectors.map((sector) => (
-              <div key={`sector-${sector}`} className={styles.sectorBlock}>
-                <h3 className={styles.sectorHeading}>{sector}</h3>
-                <ul className={styles.groupThemeGrid} style={{ listStyle: "none", paddingLeft: 0 }}>
-                  {(groupsBySector.get(sector) || []).map((g) => (
-                    <li key={g.slug}>
-                      <Link href={`/groups/${g.slug}`} className={styles.listLink} prefetch={false}>
-                        <span className={styles.name}>{g.name}</span>
-                        <span className={styles.meta}>
-                          {g.theme_count != null ? `${g.theme_count} themes` : ""}
-                          {g.theme_count != null && g.ticker_count != null ? " · " : ""}
-                          {g.ticker_count != null ? `${g.ticker_count} tickers` : ""}
-                        </span>
-                        {g.blurb ? <span className={styles.groupBlurb}>{g.blurb}</span> : null}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            <GroupsProgressiveSections
+              sectors={sectors}
+              classNameSectorBlock={styles.sectorBlock}
+              classNameSectorHeading={styles.sectorHeading}
+              classNameGrid={styles.groupThemeGrid}
+              classNameListLink={styles.listLink}
+              classNameName={styles.name}
+              classNameMeta={styles.meta}
+              classNameGroupBlurb={styles.groupBlurb}
+              classNameAdStrip={styles.adStrip}
+              classNameAdStripBanner={styles.adStripBanner}
+              classNameGroupsAdStrip={styles.groupsAdStrip}
+            />
           </section>
         </div>
       </main>

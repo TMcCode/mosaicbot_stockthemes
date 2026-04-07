@@ -105,13 +105,8 @@ export function isWithinFeedWindow(iso: string | undefined, maxDays: number): bo
   return ageMs >= 0 && ageMs <= maxDays * 24 * 60 * 60 * 1000;
 }
 
-function isLifecycleFeedKind(e: ManifestHomeFeedEventV0): boolean {
-  return e.kind === "theme_new" || e.kind === "theme_updated";
-}
-
 /**
- * Homepage: show **new / updated theme** rows first (newest first), then other activity.
- * Otherwise pure date order buries them under many same-day text-table or audit rows.
+ * Homepage: pure date-desc order within the rolling time window.
  */
 export function prioritizeLifecycleHomeFeed(
   events: ManifestHomeFeedEventV0[],
@@ -119,13 +114,11 @@ export function prioritizeLifecycleHomeFeed(
   maxDays: number,
 ): ManifestHomeFeedEventV0[] {
   const inWin = (e: ManifestHomeFeedEventV0) => isWithinFeedWindow(e.event_at, maxDays);
-  const lifecycle = events.filter(isLifecycleFeedKind).filter(inWin);
-  const rest = events.filter((e) => !isLifecycleFeedKind(e)).filter(inWin);
+  const inWindow = events.filter(inWin);
   const sortDesc = (a: ManifestHomeFeedEventV0, b: ManifestHomeFeedEventV0) =>
     String(b.event_at).localeCompare(String(a.event_at));
-  lifecycle.sort(sortDesc);
-  rest.sort(sortDesc);
-  return [...lifecycle, ...rest].slice(0, maxItems);
+  inWindow.sort(sortDesc);
+  return inWindow.slice(0, maxItems);
 }
 
 export function countFeedEventsInWindow(
@@ -135,13 +128,11 @@ export function countFeedEventsInWindow(
   return events.filter((e) => isWithinFeedWindow(e.event_at, maxDays)).length;
 }
 
-/** Full feed page: lifecycle rows first (newest first), then other activity (newest first). No day cap. */
+/** Full feed page: pure date-desc order, no day cap. */
 export function prioritizeLifecycleFeedFull(events: ManifestHomeFeedEventV0[]): ManifestHomeFeedEventV0[] {
-  const lifecycle = events.filter(isLifecycleFeedKind);
-  const rest = events.filter((e) => !isLifecycleFeedKind(e));
+  const ordered = [...events];
   const sortDesc = (a: ManifestHomeFeedEventV0, b: ManifestHomeFeedEventV0) =>
     String(b.event_at).localeCompare(String(a.event_at));
-  lifecycle.sort(sortDesc);
-  rest.sort(sortDesc);
-  return [...lifecycle, ...rest];
+  ordered.sort(sortDesc);
+  return ordered;
 }

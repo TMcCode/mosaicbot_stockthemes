@@ -47,13 +47,26 @@
   display: grid;
   grid-template-columns: 1fr 300px;
   gap: 18px;
-  align-items: stretch;
+  /* Prevent rails from stretching to match the tallest hero content block. */
+  align-items: start;
+}
+
+/* Home page only: collapse hero to single column after removing right rail ad. */
+.heroGridSingle {
+  grid-template-columns: 1fr;
 }
 
 .heroMain {
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+.titleRow {
+  display: grid;
+  grid-template-columns: 1fr 210px;
+  gap: 12px;
+  align-items: start;
 }
 
 .adSlot {
@@ -71,7 +84,57 @@
 }
 
 .adSlotTall {
-  min-height: 220px;
+  height: 56px;
+  min-height: 48px;
+  max-height: 64px;
+  overflow: hidden;
+}
+
+/* Home hero ad should not dominate above-the-fold height. */
+.heroAdCompact {
+  height: 120px;
+  min-height: 120px;
+  max-height: 120px;
+  overflow: hidden;
+}
+
+.titleAdSmall {
+  border: 1px dashed rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 10px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  width: 210px;
+  min-height: 48px;
+  max-height: 64px;
+  height: 56px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.titleAdSmall :global(ins.adsbygoogle) {
+  height: 56px !important;
+  max-height: 56px !important;
+}
+
+.groupsAdCompact {
+  width: 220px;
+  height: 56px;
+  min-height: 48px;
+  max-height: 64px;
+}
+
+.groupsAdStrip {
+  margin: 10px 0 6px;
+}
+
+.groupsAdCompact :global(ins.adsbygoogle) {
+  height: 56px !important;
+  max-height: 56px !important;
 }
 
 .adSlotThin {
@@ -718,6 +781,10 @@ a.secondary {
 
   .page {
     padding: 10px;
+  }
+
+  .titleRow {
+    grid-template-columns: 1fr;
   }
 }
 

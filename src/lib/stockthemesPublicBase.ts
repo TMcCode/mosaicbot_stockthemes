@@ -18,6 +18,10 @@ export function stockthemesPublicDataBase(): string | undefined {
   const raw = explicit?.trim() || STOCKTHEMES_DEFAULT_MANIFEST_URL;
   try {
     const u = new URL(raw);
+    // Manifest URL may include cache-buster query params in dev; data-base derivation
+    // must ignore those or downstream `${base}/home_trending.v0.json` becomes invalid.
+    u.search = "";
+    u.hash = "";
     const parts = u.pathname.split("/").filter(Boolean);
     if (parts.length < 2) {
       return undefined;
