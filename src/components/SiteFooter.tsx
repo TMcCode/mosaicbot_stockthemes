@@ -31,8 +31,9 @@ export function SiteFooter({ dataAsOf }: Props) {
           </div>
           <nav className={styles.nav} aria-label="Footer">
             <span className={styles.navLinks}>
-              <Link href="/themes">Themes</Link>
-              <Link href="/groups">Groups</Link>
+              <Link href="/privacy">Privacy</Link>
+              <Link href="/cookie-policy#manage-cookies">Manage cookies</Link>
+              <Link href="/terms">Terms of Service</Link>
               <Link href="/about">About</Link>
             </span>
           </nav>

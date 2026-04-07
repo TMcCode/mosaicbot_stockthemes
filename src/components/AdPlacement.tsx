@@ -77,7 +77,9 @@ export function AdPlacement({
   const active = Boolean(AD_CLIENT && slotId);
   const hostRef = useRef<HTMLElement | null>(null);
   const pushedRef = useRef(false);
-  const [shouldRequest, setShouldRequest] = useState(false);
+  const [shouldRequest, setShouldRequest] = useState(
+    () => typeof window !== "undefined" && typeof IntersectionObserver === "undefined",
+  );
   const shellClass = active ? (classNameWhenActive ?? className) : className;
 
   useEffect(() => {
@@ -85,10 +87,7 @@ export function AdPlacement({
     const node = hostRef.current;
     if (!node) return;
     // Progressive loading: request ads only when near viewport.
-    if (typeof IntersectionObserver === "undefined") {
-      setShouldRequest(true);
-      return;
-    }
+    if (typeof IntersectionObserver === "undefined") return;
     let cancelled = false;
     const obs = new IntersectionObserver(
       (entries) => {
