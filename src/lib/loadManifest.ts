@@ -39,9 +39,10 @@ export type ManifestLoadResult = {
 export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
   if (url) {
-    // Always bypass fetch cache so `next build` (static export) pulls current GCS JSON. Updating
-    // GCS alone does not update already-deployed HTML; you must rebuild/redeploy the site.
-    const res = await fetch(url, { cache: "no-store" });
+    // `cache: "no-store"` opts out of static generation; static export (`output: "export"`)
+    // needs build-time fetch to succeed. Use no-store only in dev for fresher reloads.
+    const isDev = process.env.NODE_ENV === "development";
+    const res = await fetch(url, isDev ? { cache: "no-store" } : {});
     if (!res.ok) {
       throw new Error(`Manifest fetch failed ${res.status}: ${url}`);
     }
