@@ -72,7 +72,7 @@
 
 .legendItemButton {
   display: grid;
-  grid-template-columns: 10px minmax(0, 1fr) minmax(0, min(320px, 46vw));
+  grid-template-columns: 10px minmax(0, 1fr) minmax(88px, min(220px, 34vw));
   align-items: center;
   gap: 8px;
   margin: 0;
@@ -86,6 +86,10 @@
   padding: 8px 10px;
   border-radius: 10px;
   text-align: left;
+}
+
+.legendItemButtonTwoCol {
+  grid-template-columns: 10px minmax(0, 1fr);
 }
 
 .legendItemButton:hover {
@@ -135,6 +139,10 @@
   font-variant-numeric: tabular-nums;
   justify-self: end;
   text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
 }
 
 .legendTickers {
@@ -175,5 +183,22 @@
 
 :global(.st-theme[data-theme="light"]) .legendItemButton:hover {
   background: rgba(0, 0, 0, 0.07);
+}
+
+@media (max-width: 600px) {
+  .legendItemButton {
+    grid-template-columns: 10px minmax(0, 1fr) minmax(84px, 30vw);
+    gap: 7px;
+    padding: 7px 9px;
+  }
+
+  .legendItemButtonTwoCol {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+
+  .legendTickers,
+  .legendMcap {
+    font-size: 10px;
+  }
 }
 

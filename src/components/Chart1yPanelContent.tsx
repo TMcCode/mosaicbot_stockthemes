@@ -16,6 +16,8 @@ export type Chart1yPanelProps = {
    * Use for **group** charts where `series[].ticker` is a theme slug; keep true for **theme** charts (stock tickers).
    */
   compositionLegendShowSeriesBadge?: boolean;
+  /** When false, composition legend omits the market-cap column (group ticker preview still shows when present). */
+  compositionLegendShowMcap?: boolean;
   /** Optional benchmark overlay for performance view (e.g., S&P 500). */
   benchmarkPerformance?: ChartPerformanceV0;
 };
@@ -28,6 +30,7 @@ function Chart1yPanelInner({
   compositionMetaByTicker,
   performanceTitle,
   compositionLegendShowSeriesBadge = true,
+  compositionLegendShowMcap = true,
   benchmarkPerformance,
 }: Chart1yPanelProps) {
   if (!chart1yHasRenderableSeries(chart1y)) {
@@ -39,6 +42,7 @@ function Chart1yPanelInner({
       compositionMetaByTicker={compositionMetaByTicker}
       performanceTitle={performanceTitle}
       compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
+      compositionLegendShowMcap={compositionLegendShowMcap}
       benchmarkPerformance={benchmarkPerformance}
     />
   );

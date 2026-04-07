@@ -93,6 +93,7 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
           chart1y={active.chart1y}
           performanceTitle={active.name}
           benchmarkPerformance={benchmarkPerformance}
+          compositionLegendShowMcap={false}
         />
       </div>
       <p className={styles.footerLink}>

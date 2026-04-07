@@ -12,18 +12,27 @@ function clientBasePath(): string {
 }
 
 /**
- * Absolute URL or same-origin path to search index JSON for browser `fetch`.
- * Mirrors manifest resolution: GCS base from manifest URL, else fixtures when no public base.
+ * Ordered URLs for browser `fetch`: same-origin file first (written at build by
+ * `scripts/fetch-search-index.mjs`), then upstream GCS if the bundle is missing or stale locally.
  */
-export function searchIndexFetchUrl(): string {
+export function searchIndexFetchUrls(): string[] {
   const override = process.env.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL?.trim();
   if (override) {
-    return override;
+    return [override];
   }
   const base = stockthemesPublicDataBase();
   const prefix = clientBasePath();
-  if (base) {
-    return `${base}/${DEFAULT_OBJECT}`;
+  if (!base) {
+    return [`${prefix}${FIXTURE_PATH}`];
   }
-  return `${prefix}${FIXTURE_PATH}`;
+  const sameOrigin = `${prefix}/${DEFAULT_OBJECT}`.replace(/\/+/g, "/");
+  const upstream = `${base}/${DEFAULT_OBJECT}`;
+  return [sameOrigin, upstream];
+}
+
+/**
+ * @deprecated Prefer {@link searchIndexFetchUrls} for fallback behavior.
+ */
+export function searchIndexFetchUrl(): string {
+  return searchIndexFetchUrls()[0] ?? `${clientBasePath()}${FIXTURE_PATH}`;
 }

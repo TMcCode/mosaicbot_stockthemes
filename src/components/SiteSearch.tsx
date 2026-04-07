@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import posthog from "posthog-js";
 
-import { searchIndexFetchUrl } from "@/lib/searchIndexUrl";
+import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import type {
   SearchIndexGroupRowV0,
   SearchIndexThemeRowV0,
@@ -171,15 +171,25 @@ export function SiteSearch() {
     loadInflight.current = true;
     setLoadBusy(true);
     setLoadError(null);
-    const url = searchIndexFetchUrl();
+    const urls = searchIndexFetchUrls();
     Promise.all([
       import("fuse.js"),
-      fetch(url, { credentials: "omit" }).then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
+      (async () => {
+        let lastErr: unknown;
+        for (const url of urls) {
+          try {
+            const res = await fetch(url, { credentials: "omit" });
+            if (!res.ok) {
+              lastErr = new Error(`HTTP ${res.status}`);
+              continue;
+            }
+            return await res.text();
+          } catch (e) {
+            lastErr = e;
+          }
         }
-        return res.text();
-      }),
+        throw lastErr instanceof Error ? lastErr : new Error("Failed to load search index");
+      })(),
     ])
       .then(([fuseMod, raw]) => {
         const FuseCtor = fuseMod.default;

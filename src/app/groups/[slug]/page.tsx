@@ -181,30 +181,34 @@ export default async function GroupDetailPage({ params }: Props) {
             />
           </div>
           {detail && dataBaseUrl ? (
-            <DeferRender minHeight={460} rootMargin="360px 0px">
-              <ThemeChartLiveHydrate
-                key={slug}
-                slug={slug}
-                dataBaseUrl={dataBaseUrl}
-                serverChart={detail.chart_1y}
-                chartJsonFolder="groups"
-                performanceTitle={group.name}
-                compositionMetaByTicker={groupChartMetaBySlug}
-                compositionLegendShowSeriesBadge={false}
-                benchmarkPerformance={spyPerf?.benchmarkPerformance}
-              />
-            </DeferRender>
+            <div className={styles.tightChartTop}>
+              <DeferRender minHeight={460} rootMargin="360px 0px">
+                <ThemeChartLiveHydrate
+                  key={slug}
+                  slug={slug}
+                  dataBaseUrl={dataBaseUrl}
+                  serverChart={detail.chart_1y}
+                  chartJsonFolder="groups"
+                  performanceTitle={group.name}
+                  compositionMetaByTicker={groupChartMetaBySlug}
+                  compositionLegendShowSeriesBadge={false}
+                  benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                />
+              </DeferRender>
+            </div>
           ) : null}
           {detail && !dataBaseUrl ? (
-            <DeferRender minHeight={460} rootMargin="360px 0px">
-              <Chart1yPanel
-                chart1y={detail.chart_1y}
-                performanceTitle={group.name}
-                compositionMetaByTicker={groupChartMetaBySlug}
-                compositionLegendShowSeriesBadge={false}
-                benchmarkPerformance={spyPerf?.benchmarkPerformance}
-              />
-            </DeferRender>
+            <div className={styles.tightChartTop}>
+              <DeferRender minHeight={460} rootMargin="360px 0px">
+                <Chart1yPanel
+                  chart1y={detail.chart_1y}
+                  performanceTitle={group.name}
+                  compositionMetaByTicker={groupChartMetaBySlug}
+                  compositionLegendShowSeriesBadge={false}
+                  benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                />
+              </DeferRender>
+            </div>
           ) : null}
           {detail ? (
             <AdPlacement

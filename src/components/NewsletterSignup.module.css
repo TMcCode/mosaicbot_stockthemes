@@ -42,6 +42,31 @@
   margin-top: 4px;
   width: 100%;
   min-width: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  /* Avoid a light “card” halo around the iframe on dark pages when Beehiiv paints near-white. */
+  background: var(--background);
+  /* Kill stray gap under replaced element (iframe) in some engines */
+  line-height: 0;
+}
+
+/* Reserve space before iframe mounts (theme read from localStorage). */
+.embedPlaceholder {
+  width: 100%;
+  min-height: 120px;
+  border-radius: 12px;
+  background: var(--background);
+}
+
+/* Beehiiv embed.js resizes the iframe; keep a low floor so layout doesn’t collapse before JS runs. */
+.embedIframe {
+  width: 100%;
+  margin: 0;
+  max-width: 100%;
+  min-height: 120px;
+  border: none;
+  background-color: transparent;
+  display: block;
 }
 
 .form {

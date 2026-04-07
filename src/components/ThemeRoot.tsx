@@ -41,7 +41,12 @@ function readStoredTheme(): StockthemesTheme {
 }
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<StockthemesTheme>(() => readStoredTheme());
+  // Keep first client render aligned with SSR to prevent hydration mismatches.
+  const [theme, setTheme] = useState<StockthemesTheme>("light");
+
+  useEffect(() => {
+    setTheme(readStoredTheme());
+  }, []);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {

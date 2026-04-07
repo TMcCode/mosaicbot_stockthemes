@@ -231,6 +231,7 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-muted);
+  white-space: nowrap;
 }
 
 .code {
@@ -276,7 +277,15 @@
 
 .tightChartTop {
   width: 100%;
+  min-width: 0;
   --chart-panel-section-margin-top: 0.5rem;
+}
+
+/* Desktop / tablet: stretch past flex-start so chart gets full .intro width (mobile unchanged). */
+@media (min-width: 601px) {
+  .tightChartTop {
+    align-self: stretch;
+  }
 }
 
 .section h2 {
@@ -811,6 +820,11 @@ a.secondary {
     gap: 14px;
   }
 
+  .eyebrow {
+    font-size: 10px;
+    letter-spacing: 0.05em;
+  }
+
   .intro h1 {
     font-size: 34px;
     line-height: 1.08;
@@ -859,6 +873,31 @@ a.secondary {
 
   .titleRow {
     grid-template-columns: 1fr;
+  }
+
+  .statGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .statGroups {
+    order: 1;
+  }
+
+  .statThemes {
+    order: 2;
+  }
+
+  .statTickers {
+    order: 3;
+  }
+
+  .statMarketCap {
+    order: 4;
+  }
+
+  .statMarketCap span {
+    white-space: nowrap;
+    font-size: 11px;
   }
 }
 

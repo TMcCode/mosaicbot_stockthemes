@@ -20,6 +20,9 @@
 # Generated at build from NEXT_PUBLIC_ADSENSE_CLIENT (see scripts/write-ads-txt.mjs)
 /public/ads.txt
 
+# Generated at build (see scripts/fetch-search-index.mjs)
+/public/search_index.v0.json
+
 # production
 /build
 

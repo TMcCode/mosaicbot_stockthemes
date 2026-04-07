@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 
+import styles from "./DeferRender.module.css";
+
 type Props = {
   children: React.ReactNode;
   minHeight?: number;
@@ -41,8 +43,12 @@ export function DeferRender({ children, minHeight = 360, rootMargin = "320px 0px
   }, [ready, rootMargin]);
 
   return (
-    <div ref={hostRef}>
-      {ready ? children : <div aria-hidden="true" style={{ minHeight }} />}
+    <div ref={hostRef} className={styles.host}>
+      {ready ? (
+        children
+      ) : (
+        <div aria-hidden="true" className={styles.placeholder} style={{ minHeight }} />
+      )}
     </div>
   );
 }

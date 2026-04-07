@@ -1,0 +1,23 @@
+/**
+ * Full-width host only from tablet-up. Below 601px we omit fixed width so flex layout
+ * matches pre-fix mobile (user-confirmed fine); desktop needs width for chart clientWidth.
+ */
+.host {
+  min-width: 0;
+}
+
+@media (min-width: 601px) {
+  .host {
+    width: 100%;
+  }
+}
+
+.placeholder {
+  width: 100%;
+}
+
+@media (max-width: 600px) {
+  .placeholder {
+    width: auto;
+  }
+}

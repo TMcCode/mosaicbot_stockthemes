@@ -236,24 +236,24 @@ export default async function Home() {
           {stats ? (
             <ul className={styles.statGrid}>
               {stats.total_tickers != null ? (
-                <li className={styles.statCard}>
+                <li className={`${styles.statCard} ${styles.statTickers}`}>
                   <strong>{stats.total_tickers.toLocaleString()}</strong>
                   <span>Public tickers tracked</span>
                 </li>
               ) : null}
               {stats.total_groups != null ? (
-                <li className={styles.statCard}>
+                <li className={`${styles.statCard} ${styles.statGroups}`}>
                   <strong>{stats.total_groups}</strong>
                   <span>Theme groups</span>
                 </li>
               ) : null}
               {stats.total_themes != null ? (
-                <li className={styles.statCard}>
+                <li className={`${styles.statCard} ${styles.statThemes}`}>
                   <strong>{stats.total_themes}</strong>
                   <span>Curated themes</span>
                 </li>
               ) : null}
-              <li className={styles.statCard}>
+              <li className={`${styles.statCard} ${styles.statMarketCap}`}>
                 <strong>
                   {stats.total_market_cap_usd != null
                     ? `$${(stats.total_market_cap_usd / 1e12).toFixed(1)}T`

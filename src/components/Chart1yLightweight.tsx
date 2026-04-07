@@ -563,10 +563,15 @@ export type Chart1yLightweightProps = {
   performanceTitle?: string;
   /** See `Chart1yPanelProps.compositionLegendShowSeriesBadge`. */
   compositionLegendShowSeriesBadge?: boolean;
+  /**
+   * When false, composition legend omits the market-cap column (e.g. home highlighted chart).
+   * Group ticker-preview column is unchanged when present.
+   */
+  compositionLegendShowMcap?: boolean;
 };
 
 function formatMarketCap(v: number | undefined): string {
-  if (v == null || !Number.isFinite(v) || v <= 0) return "—";
+  if (v == null || !Number.isFinite(v) || v <= 0) return "MCap n/a";
   if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
   if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
   if (v >= 1e6) return `$${(v / 1e6).toFixed(1)}M`;
@@ -583,6 +588,7 @@ export function Chart1yLightweight({
   compositionMetaByTicker,
   performanceTitle,
   compositionLegendShowSeriesBadge = true,
+  compositionLegendShowMcap = true,
 }: Chart1yLightweightProps) {
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
@@ -687,11 +693,13 @@ export function Chart1yLightweight({
             const meta = compositionMetaByTicker?.[s.ticker.toUpperCase()];
             const name = meta?.name?.trim() || s.name?.trim() || "";
             const ticker = s.ticker?.trim() || "";
+            const tickersPreview = meta?.tickersPreview?.trim();
+            const showThirdColumn = Boolean(tickersPreview) || compositionLegendShowMcap;
             return (
               <button
                 key={s.ticker}
                 type="button"
-                className={`${styles.legendItemButton} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
+                className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
                 aria-pressed={!hiddenSet.has(s.ticker)}
                 onClick={() => toggleSeries(s.ticker)}
               >
@@ -705,15 +713,17 @@ export function Chart1yLightweight({
                     <TickerBadge ticker={ticker} />
                   ) : null}
                 </span>
-                <span
-                  className={
-                    meta?.tickersPreview?.trim() ? styles.legendTickers : styles.legendMcap
-                  }
-                >
-                  {meta?.tickersPreview?.trim()
-                    ? meta.tickersPreview.trim()
-                    : formatMarketCap(meta?.marketCapUsd)}
-                </span>
+                {showThirdColumn ? (
+                  <span
+                    className={
+                      tickersPreview ? styles.legendTickers : styles.legendMcap
+                    }
+                  >
+                    {tickersPreview
+                      ? tickersPreview
+                      : formatMarketCap(meta?.marketCapUsd)}
+                  </span>
+                ) : null}
               </button>
             );
           })}

@@ -15,6 +15,8 @@
 #   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL — Beehiiv iframe `src` (one form for both themes), or
 #   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT + _DARK — duplicate forms in Beehiiv, each styled
 #     for that mode; the site swaps iframe src when the user toggles theme.
+#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT + _MOBILE_DARK — optional; at max-width 640px
+#     the footer embed uses these instead of _LIGHT/_DARK when both are set.
 #
 # Beehiiv API (styled form + /api/newsletter/subscribe) does NOT work on this workflow: the site
 # is output: "export" with no server. Do not add BEEHIIV_API_KEY / BEEHIIV_PUBLICATION_ID here
@@ -23,7 +25,8 @@
 #
 # Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit
 # (hero, rails, strips, groups/themes index rail+strip, home discovery mid, theme chart end — optional except client).
-# prebuild writes public/ads.txt from NEXT_PUBLIC_ADSENSE_CLIENT (required at https://<domain>/ads.txt).
+# prebuild writes public/ads.txt from NEXT_PUBLIC_ADSENSE_CLIENT (required at https://<domain>/ads.txt),
+# and public/search_index.v0.json from the public bucket so search loads same-origin (see scripts/fetch-search-index.mjs).
 #
 # GCS: bucket CORS must allow GET from every origin that loads the site (e.g. https://stockthemes.ai),
 # or browser chart hydration will fail. See MosaicBot docs/stockthemes/gcs-cors.example.json
@@ -72,6 +75,8 @@ jobs:
           NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL }}
           NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT }}
           NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK }}
+          NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT }}
+          NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_DARK: ${{ vars.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_DARK }}
           NEXT_PUBLIC_ADSENSE_CLIENT: ${{ vars.NEXT_PUBLIC_ADSENSE_CLIENT }}
           NEXT_PUBLIC_ADSENSE_SLOT_HERO: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_HERO }}
           NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEME_RAIL }}

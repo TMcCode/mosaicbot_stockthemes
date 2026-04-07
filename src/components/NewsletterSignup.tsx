@@ -1,10 +1,11 @@
 "use client";
 
-import { type FormEvent, useId, useState } from "react";
+import { type FormEvent, useId, useLayoutEffect, useState } from "react";
 import Script from "next/script";
 import posthog from "posthog-js";
 
 import { useBeehiivApiConfigured } from "@/components/NewsletterRuntimeProvider";
+import { STOCKTHEMES_THEME_STORAGE_KEY } from "@/lib/themeStorage";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
 
 import styles from "./NewsletterSignup.module.css";
@@ -20,18 +21,54 @@ type Props = {
 const BEEHIIV_EMBED_JS = "https://subscribe-forms.beehiiv.com/embed.js";
 const BEEHIIV_ATTRIBUTION_JS = "https://subscribe-forms.beehiiv.com/attribution.js";
 
+/** Matches `.embedIframe` / layout breakpoints in NewsletterSignup.module.css */
+const NEWSLETTER_NARROW_VIEWPORT_MQ = "(max-width: 640px)";
+
 /**
- * Two Beehiiv subscribe forms (dark- vs light-styled); Beehiiv cannot theme-switch inside one iframe.
- * Set both _LIGHT and _DARK, or use a single NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL.
+ * Beehiiv cannot theme-switch inside one iframe. Optional mobile-specific embed URLs when the
+ * viewport is narrow; otherwise desktop LIGHT/DARK or a single URL.
  */
-function getBeehiivFormUrl(theme: "light" | "dark"): string | undefined {
+function getBeehiivFormUrl(theme: "light" | "dark", narrowViewport: boolean): string | undefined {
+  const mobileLight = process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT?.trim();
+  const mobileDark = process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_DARK?.trim();
   const light = process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT?.trim();
   const dark = process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK?.trim();
   const single = process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL?.trim();
+
+  if (narrowViewport) {
+    if (mobileLight && mobileDark) {
+      return theme === "light" ? mobileLight : mobileDark;
+    }
+    if (mobileLight || mobileDark) {
+      return theme === "light"
+        ? (mobileLight || light || single)
+        : (mobileDark || dark || single);
+    }
+  }
+
   if (light && dark) {
     return theme === "light" ? light : dark;
   }
   return single || light || dark || undefined;
+}
+
+function beehiivEmbedConfigured(): boolean {
+  const keys = [
+    process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL,
+    process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT,
+    process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_DARK,
+    process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT,
+    process.env.NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_DARK,
+  ] as const;
+  return keys.some((v) => Boolean(v?.trim()));
+}
+
+function readStoredThemeForEmbed(): "light" | "dark" {
+  try {
+    return localStorage.getItem(STOCKTHEMES_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
+  } catch {
+    return "light";
+  }
 }
 
 /**
@@ -47,8 +84,25 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
   const [apiEmail, setApiEmail] = useState("");
   const [apiStatus, setApiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
+  /**
+   * ThemeRoot defaults to "light" on first paint; dual Beehiiv URLs would load the light (white) form
+   * before useEffect runs. Read localStorage in useLayoutEffect and mount the iframe only after the
+   * real theme is known so dark mode never flashes the wrong embed.
+   */
+  const [embedTheme, setEmbedTheme] = useState<"light" | "dark" | null>(null);
+  const [narrowViewport, setNarrowViewport] = useState(false);
 
-  const beehiivFormUrl = getBeehiivFormUrl(theme);
+  useLayoutEffect(() => {
+    setEmbedTheme(readStoredThemeForEmbed());
+    const mq = window.matchMedia(NEWSLETTER_NARROW_VIEWPORT_MQ);
+    setNarrowViewport(mq.matches);
+    const onChange = () => setNarrowViewport(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, [theme]);
+
+  const beehiivFormUrl =
+    embedTheme !== null ? getBeehiivFormUrl(embedTheme, narrowViewport) : undefined;
 
   function onPlaceholderSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -121,7 +175,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
     </div>
   );
 
-  if (beehiivFormUrl) {
+  if (beehiivEmbedConfigured()) {
     return (
       <section
         className={rootClass}
@@ -131,23 +185,22 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
         <Script src={BEEHIIV_EMBED_JS} strategy="lazyOnload" />
         <Script src={BEEHIIV_ATTRIBUTION_JS} strategy="lazyOnload" />
         <div className={styles.embedWrap} data-gtm="newsletter-signup-beehiiv">
-          <iframe
-            key={`${theme}-${beehiivFormUrl}`}
-            src={beehiivFormUrl}
-            title="Subscribe to the Den of Themes newsletter"
-            className="beehiiv-embed"
-            data-test-id="beehiiv-embed"
-            frameBorder={0}
-            scrolling="no"
-            style={{
-              width: "100%",
-              margin: 0,
-              maxWidth: "100%",
-              minHeight: 92,
-              border: "none",
-              backgroundColor: "transparent",
-            }}
-          />
+          {embedTheme !== null && beehiivFormUrl ? (
+            <iframe
+              key={`${embedTheme}-${narrowViewport}-${beehiivFormUrl}`}
+              src={beehiivFormUrl}
+              title="Subscribe to the Den of Themes newsletter"
+              className={`beehiiv-embed ${styles.embedIframe}`}
+              data-test-id="beehiiv-embed"
+              frameBorder={0}
+            />
+          ) : (
+            <div
+              className={styles.embedPlaceholder}
+              aria-busy
+              aria-label="Loading newsletter form"
+            />
+          )}
         </div>
         <p className={styles.hint}>
           Emails are collected by Beehiiv. You can unsubscribe anytime.
