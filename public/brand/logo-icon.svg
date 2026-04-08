@@ -1,0 +1,16 @@
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .teal { fill: #2ACFC8; }
+      .blue { fill: #3B4DA1; }
+      .violet { fill: #6A5CFB; }
+      .red { fill: #E63946; }
+      .center { fill: #FFB86B; }
+    </style>
+  </defs>
+  <circle cx="88" cy="128" r="44" class="teal"></circle>
+  <circle cx="128" cy="172" r="44" class="blue"></circle>
+  <circle cx="168" cy="132" r="44" class="violet"></circle>
+  <circle cx="132" cy="88" r="44" class="red"></circle>
+  <circle cx="132" cy="128" r="14" class="center"></circle>
+</svg>

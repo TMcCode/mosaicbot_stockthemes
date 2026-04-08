@@ -8,6 +8,7 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { ThemeRoot } from "@/components/ThemeRoot";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
 
 const geistSans = Geist({
@@ -20,13 +21,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const SITE_TAGLINE =
+  "Thematic equity intelligence—explore stock market themes, groups, and holdings with fresh public data.";
+
 export const metadata: Metadata = {
   metadataBase: new URL(siteBaseUrl()),
   title: {
     default: "stockthemes.ai",
     template: "%s · stockthemes.ai",
   },
-  description: "Themes, groups, and stock exposure — fast public index.",
+  description: SITE_TAGLINE,
+  applicationName: "stockthemes.ai",
+  openGraph: {
+    title: "stockthemes.ai",
+    description: SITE_TAGLINE,
+    url: siteBaseUrl(),
+    siteName: "stockthemes.ai",
+    locale: "en_US",
+    type: "website",
+    images: [openGraphImageAsset()],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "stockthemes.ai",
+    description: SITE_TAGLINE,
+    images: [openGraphImageAsset().url],
+  },
 };
 
 export default async function RootLayout({

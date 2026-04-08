@@ -26,7 +26,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
-import { absoluteUrl } from "@/lib/seoMetadata";
+import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -59,6 +59,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     loaded?.detail.seo_intro != null && loaded.detail.seo_intro.trim() !== ""
       ? clipDescription(loaded.detail.seo_intro)
       : `Stocks and exposure for ${t.name} — stockthemes.ai`;
+  const ogImage = openGraphImageAsset();
   return {
     title: t.name,
     description: desc,
@@ -71,11 +72,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: absoluteUrl(`/themes/${slug}`),
       siteName: "stockthemes.ai",
       type: "article",
+      locale: "en_US",
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
       title: t.name,
       description: desc,
+      images: [ogImage.url],
     },
   };
 }

@@ -12,7 +12,7 @@ import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { loadManifest } from "@/lib/loadManifest";
-import { absoluteUrl } from "@/lib/seoMetadata";
+import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { buildGroupThemeChartMetaMap } from "@/lib/constituentMeta";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailChildThemeV0 } from "@/types/group.detail.v0";
@@ -48,6 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     loaded?.detail.seo_intro != null && loaded.detail.seo_intro.trim() !== ""
       ? clipDescription(loaded.detail.seo_intro)
       : `${g.name}: ${g.theme_count ?? 0} themes, ${g.ticker_count ?? 0} tickers — stockthemes.ai`;
+  const ogImage = openGraphImageAsset();
   return {
     title: g.name,
     description: desc,
@@ -60,11 +61,14 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       url: absoluteUrl(`/groups/${slug}`),
       siteName: "stockthemes.ai",
       type: "website",
+      locale: "en_US",
+      images: [ogImage],
     },
     twitter: {
       card: "summary_large_image",
       title: g.name,
       description: desc,
+      images: [ogImage.url],
     },
   };
 }
