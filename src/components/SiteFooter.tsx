@@ -15,7 +15,9 @@ export function SiteFooter({ dataAsOf }: Props) {
 
   return (
     <footer className={styles.wrap}>
-      <NewsletterSignup variant="footer" />
+      <div id="newsletter-signup">
+        <NewsletterSignup variant="footer" />
+      </div>
       <div className={styles.meta}>
         <div className={styles.metaBar}>
           <div className={styles.metaLead}>
@@ -35,6 +37,13 @@ export function SiteFooter({ dataAsOf }: Props) {
               <Link href="/cookie-policy#manage-cookies">Manage cookies</Link>
               <Link href="/terms">Terms of Service</Link>
               <Link href="/about">About</Link>
+              <a
+                href="https://www.tradingview.com/"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Charting by TradingView
+              </a>
             </span>
           </nav>
         </div>

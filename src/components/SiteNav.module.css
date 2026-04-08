@@ -19,11 +19,48 @@
 }
 
 .brand {
+  --brand-label-top: -10px;
+  --brand-mark-top: 2px;
+  --brand-mark-margin-right: -4px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 3px;
+  flex: 0 1 auto;
+  min-width: 0;
+  height: 36px;
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.01em;
+  line-height: 1;
   color: var(--nav-fg, #eaf2f0);
   text-decoration: none;
+}
+
+.brandLabel {
+  display: inline-flex;
+  align-items: center;
+  height: 100%;
+  line-height: 1;
+  position: relative;
+  top: 0;
+}
+
+/* Flex default min-width:auto uses the image intrinsic width (~612px) — must override or the mark blows up. */
+.brandMark {
+  display: block;
+  flex-shrink: 0;
+  align-self: center;
+  min-width: 0;
+  width: 24px;
+  height: 24px;
+  max-width: 24px;
+  max-height: 24px;
+  object-fit: contain;
+  object-position: center;
+  position: relative;
+  top: var(--brand-mark-top);
+  margin-right: var(--brand-mark-margin-right);
 }
 
 .brand:hover {
@@ -110,9 +147,25 @@
   }
 
   .brand {
-    font-size: 14px;
+    gap: 5px;
+    font-size: 13px;
+    letter-spacing: 0;
+    height: 36px;
+  }
+
+  .brandLabel {
+    top: 0 !important;
+    transform: none !important;
+  }
+
+  .brandMark {
+    width: 20px;
+    height: 20px;
+    max-width: 20px;
+    max-height: 20px;
   }
 }
+
 
 @media (max-width: 430px) {
   .row {
@@ -132,5 +185,12 @@
 
   .sep {
     padding: 0;
+  }
+}
+
+@media (min-width: 601px) {
+  .brandLabel {
+    top: auto !important;
+    transform: none !important;
   }
 }

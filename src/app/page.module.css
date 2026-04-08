@@ -350,6 +350,15 @@
   white-space: nowrap;
 }
 
+.metricInfoAsterisk {
+  display: inline-block;
+  color: var(--text-secondary);
+  font-size: 10px;
+  line-height: 1;
+  padding-left: 2px;
+  cursor: help;
+}
+
 .trendingHead:first-child {
   text-align: left;
 }

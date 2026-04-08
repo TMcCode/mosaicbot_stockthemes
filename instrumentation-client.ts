@@ -20,5 +20,6 @@ posthog.init(process.env.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN!, {
       env: process.env.NODE_ENV,
     });
   },
-  debug: process.env.NODE_ENV === "development",
+  // Keep dev consoles and startup lean unless explicitly enabled.
+  debug: process.env.NEXT_PUBLIC_POSTHOG_DEBUG === "1",
 });

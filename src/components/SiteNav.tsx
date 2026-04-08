@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { SiteSearch } from "@/components/SiteSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { publicAssetPath } from "@/lib/siteUrl";
 
 import styles from "./SiteNav.module.css";
 
@@ -10,7 +11,18 @@ export function SiteNav() {
     <header className={styles.wrap}>
       <nav className={styles.row} aria-label="Primary">
         <Link href="/" className={styles.brand}>
-          stockthemes.ai
+          <img
+            className={styles.brandMark}
+            src={publicAssetPath("/brand/logo-icon-custom.png")}
+            alt=""
+            width={38}
+            height={25}
+            decoding="async"
+            aria-hidden
+          />
+          <span className={styles.brandLabel} style={{ position: "relative", top: 12 }}>
+            stockthemes.ai
+          </span>
         </Link>
         <SiteSearch />
         <div className={styles.links}>

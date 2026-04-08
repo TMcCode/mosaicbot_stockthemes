@@ -30,8 +30,9 @@ export async function loadHomeTrending(): Promise<HomeTrendingLoadResult | null>
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/home_trending.v0.json`;
-    const isDev = process.env.NODE_ENV === "development";
-    const res = await fetch(url, isDev ? { cache: "no-store" } : {});
+    const devNoStore =
+      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
+    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
     if (!res.ok) {
       return null;
     }

@@ -24,6 +24,10 @@
   color: #26fcd6;
 }
 
+.benchmarkTitle {
+  color: var(--text-secondary, #9aa8a6);
+}
+
 .toggle {
   display: inline-flex;
   border-radius: 999px;
@@ -53,6 +57,26 @@
   border-radius: 8px;
   overflow: hidden;
   background: #0f1115;
+}
+
+.chartBrandMark {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+  z-index: 6;
+  pointer-events: none;
+  line-height: 0;
+  opacity: 0.98;
+}
+
+/* Full logo lockup on dark chart background; keep compact and unobtrusive. */
+.chartBrandMark img {
+  display: block;
+  width: clamp(150px, 22vw, 270px);
+  height: auto;
+  max-width: min(270px, calc(100vw - 56px));
+  object-fit: contain;
+  object-position: left center;
 }
 
 .legend {

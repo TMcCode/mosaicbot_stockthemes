@@ -29,8 +29,9 @@ export async function loadGroupDetail(slug: string): Promise<GroupDetailLoadResu
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/groups/${encodeURIComponent(slug)}.json`;
-    const isDev = process.env.NODE_ENV === "development";
-    const res = await fetch(url, isDev ? { cache: "no-store" } : {});
+    const devNoStore =
+      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
+    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
     if (!res.ok) {
       return null;
     }

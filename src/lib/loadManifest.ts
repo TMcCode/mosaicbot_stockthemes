@@ -39,10 +39,9 @@ export type ManifestLoadResult = {
 export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
   if (url) {
-    // `cache: "no-store"` opts out of static generation; static export (`output: "export"`)
-    // needs build-time fetch to succeed. Use no-store only in dev for fresher reloads.
-    const isDev = process.env.NODE_ENV === "development";
-    const res = await fetch(url, isDev ? { cache: "no-store" } : {});
+    const devNoStore =
+      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
+    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
     if (!res.ok) {
       throw new Error(`Manifest fetch failed ${res.status}: ${url}`);
     }

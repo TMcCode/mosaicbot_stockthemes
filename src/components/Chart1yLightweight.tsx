@@ -22,6 +22,7 @@ import {
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
+import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
 
 import styles from "./Chart1yPanel.module.css";
@@ -226,6 +227,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           textColor: "#a6abb9",
           fontSize: 12,
           fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+          // Hide pane logo; lightweight-charts license still requires a site-visible TradingView link (see SiteFooter).
+          attributionLogo: false,
         },
         grid: {
           vertLines: { color: "rgba(255,255,255,0.06)" },
@@ -511,6 +514,15 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   return (
     <div style={{ position: "relative" }}>
       <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: 420 }} />
+      <div className={styles.chartBrandMark} aria-hidden="true">
+        <img
+          src={publicAssetPath("/brand/logo-full-dark-tight.png")}
+          alt=""
+          loading="lazy"
+          fetchPriority="low"
+          decoding="async"
+        />
+      </div>
       <div
         ref={tooltipRef}
         style={{
@@ -648,12 +660,20 @@ export function Chart1yLightweight({
     return null;
   }
   const themeLabel = performanceTitle?.trim() || "Theme";
-
   return (
     <section className={styles.section} aria-label="About one year chart">
       <div className={styles.toolbar}>
         <span className={styles.toolbarLabel}>
-          <span className={styles.themeTitleAccent}>{themeLabel}</span> vs S&P 500 Over the Past Year
+          {activeView === "composition" ? (
+            <>
+              <span className={styles.themeTitleAccent}>{themeLabel}</span> Constituents Over the Past Year
+            </>
+          ) : (
+            <>
+              <span className={styles.themeTitleAccent}>{themeLabel} Index</span>
+              <span className={styles.benchmarkTitle}> vs. S&P 500 Index Over the Past Year</span>
+            </>
+          )}
         </span>
         {hasPerf && hasComp ? (
           <div className={styles.toggle} role="group" aria-label="Chart type">

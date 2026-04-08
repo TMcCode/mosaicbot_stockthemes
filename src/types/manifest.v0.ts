@@ -38,6 +38,7 @@ export type ManifestV0 = {
   methodology_performance_calculation?: string;
   methodology_update_cadence?: string;
   methodology_limitations?: string;
+  selected_dates?: ManifestSelectedDateV0[];
   trending_themes?: string[];
   new_themes?: string[];
   new_theme_events?: ManifestNewThemeEventV0[];
@@ -52,6 +53,12 @@ export type ManifestV0 = {
   };
   groups: ManifestGroupSummaryV0[];
   themes: ManifestThemeSummaryV0[];
+};
+
+export type ManifestSelectedDateV0 = {
+  day_name: string;
+  date: string;
+  long_name?: string;
 };
 
 export type ManifestGroupSummaryV0 = {

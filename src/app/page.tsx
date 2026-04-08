@@ -39,6 +39,13 @@ function fmtFeedDate(iso?: string): string {
   return d.toLocaleDateString(undefined, { month: "short", day: "2-digit" });
 }
 
+function normalizeEventKey(value: string): string {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "");
+}
+
 function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
   const title = String(evt.title || "").trim();
   if (evt.kind === "theme_new" && title.toLowerCase().endsWith(" - new theme")) {
@@ -192,6 +199,25 @@ export default async function Home() {
     marketBaseline: row.marketBaseline === true,
   }));
   const trendingColumns = resolveTrendingColumnOrder(detailsSorted);
+  const selectedDateRows = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
+  const selectedDateByKey = new Map(
+    selectedDateRows.map((r) => [normalizeEventKey(String(r.day_name || "")), r]),
+  );
+  const fmtSlashDate = (iso?: string): string => {
+    if (!iso) return "";
+    const d = new Date(iso);
+    if (Number.isNaN(d.getTime())) return String(iso);
+    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  };
+  const customDateHelpText = (col: string): string | undefined => {
+    const key = normalizeEventKey(col);
+    const row = selectedDateByKey.get(key);
+    const datePrefix = row?.date ? `${fmtSlashDate(row.date)}: ` : "";
+    if (key === "IRANWAR") return `${datePrefix}Start of U.S. War with Iran`;
+    if (key === "LIBDAY")
+      return `${datePrefix}U.S. President Trump's Tariff 'Liberation Day' speech date`;
+    return undefined;
+  };
   const eyebrow =
     source === "live"
       ? "stockthemes.ai · manifest v0 (live)"
@@ -220,6 +246,9 @@ export default async function Home() {
                 </p>
                 <p className={styles.introMore}>
                   <Link href="/about">Read about the methodology and background</Link>
+                </p>
+                <p className={styles.introMore}>
+                  <Link href="#newsletter-signup">Get our Den of Themes newsletter</Link>
                 </p>
               </div>
               <div className={styles.ctas}>
@@ -276,8 +305,21 @@ export default async function Home() {
                 >
                   <div className={`${styles.trendingHead} ${styles.trendingSticky}`}>Theme</div>
                   {trendingColumns.map((col) => (
-                    <div key={`h-${col}`} className={styles.trendingHead} title={col}>
+                    <div
+                      key={`h-${col}`}
+                      className={styles.trendingHead}
+                      title={customDateHelpText(col) || col}
+                    >
                       {trendingColumnHeader(col)}
+                      {customDateHelpText(col) ? (
+                        <span
+                          className={styles.metricInfoAsterisk}
+                          title={customDateHelpText(col)}
+                          aria-label={`${trendingColumnHeader(col)} explanation`}
+                        >
+                          *
+                        </span>
+                      ) : null}
                     </div>
                   ))}
                   {rowsForTable.flatMap((row) => {

@@ -12,7 +12,7 @@ function Chart1yPanelSkeleton() {
     <section className={styles.section} aria-busy="true" aria-label="Loading chart">
       <div className={styles.toolbar}>
         <span className={styles.toolbarLabel}>
-          <span style={{ color: "#26fcd6" }}>Theme</span> vs S&P 500 Over the Past Year
+          <span style={{ color: "#26fcd6" }}>Theme Index vs. S&P 500 Index Over the Past Year</span>
         </span>
       </div>
       <div className={styles.chartBox} />

@@ -91,9 +91,10 @@ async function getSpyMarketPerfInternal(): Promise<SpyMarketPerf | null> {
   if (base) {
     try {
       const url = `${base}/spy_snapshot.v0.json`;
-      const isDev = process.env.NODE_ENV === "development";
+      const devNoStore =
+        process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
       const res = await fetch(url, {
-        ...(isDev ? { cache: "no-store" as const } : { next: { revalidate: 300 } }),
+        ...(devNoStore ? { cache: "no-store" as const } : { next: { revalidate: 300 } }),
         // Prevent slow external fetch from delaying homepage render.
         signal: AbortSignal.timeout(1200),
       });
