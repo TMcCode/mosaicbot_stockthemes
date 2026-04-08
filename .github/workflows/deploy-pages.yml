@@ -25,6 +25,8 @@
 #
 # Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit
 # (hero, rails, strips, groups/themes index rail+strip, home discovery mid, theme chart end — optional except client).
+# PostHog (optional but recommended): NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN (or NEXT_PUBLIC_POSTHOG_KEY),
+# NEXT_PUBLIC_POSTHOG_HOST, and optional NEXT_PUBLIC_POSTHOG_DEBUG (leave unset/0 in prod).
 # prebuild writes public/ads.txt from NEXT_PUBLIC_ADSENSE_CLIENT (required at https://<domain>/ads.txt),
 # and public/search_index.v0.json from the public bucket so search loads same-origin (see scripts/fetch-search-index.mjs).
 #
@@ -88,6 +90,10 @@ jobs:
           NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_STRIP: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEMES_INDEX_STRIP }}
           NEXT_PUBLIC_ADSENSE_SLOT_HOME_DISCOVERY_MID: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_HOME_DISCOVERY_MID }}
           NEXT_PUBLIC_ADSENSE_SLOT_THEME_CHART_END: ${{ vars.NEXT_PUBLIC_ADSENSE_SLOT_THEME_CHART_END }}
+          NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN: ${{ vars.NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN }}
+          NEXT_PUBLIC_POSTHOG_KEY: ${{ vars.NEXT_PUBLIC_POSTHOG_KEY }}
+          NEXT_PUBLIC_POSTHOG_HOST: ${{ vars.NEXT_PUBLIC_POSTHOG_HOST }}
+          NEXT_PUBLIC_POSTHOG_DEBUG: ${{ vars.NEXT_PUBLIC_POSTHOG_DEBUG }}
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
