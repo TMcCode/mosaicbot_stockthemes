@@ -39,6 +39,10 @@ on:
   push:
     branches:
       - main
+  # Rebuild static site daily so layout/footer `manifest.as_of` matches fresh GCS JSON after ETL.
+  # Times are UTC (GitHub requirement). 14:00 UTC ≈ 9am ET / 6am PT (standard time).
+  schedule:
+    - cron: "0 14 * * *"
   workflow_dispatch:
 
 permissions:
