@@ -40,10 +40,11 @@ on:
     branches:
       - main
   # Rebuild static site so layout/footer `manifest.as_of` matches GCS JSON (output: export).
-  # Cron is UTC only. Below uses US Eastern Standard Time (EST = UTC-5). During EDT (~Mar–Nov),
-  # local times are one hour later than the labels (e.g. 11:00 UTC = 6am EST / 7am EDT).
+  # Cron is UTC only. Morning pair targets 05:00 and 06:00 Eastern during EDT (summer); in EST
+  # (winter) those same UTC times are 04:00 and 05:00 Eastern. Weekday slots use EST labels.
   schedule:
-    - cron: "0 11 * * *" # daily 06:00 Eastern (standard)
+    - cron: "0 9 * * *" # daily 05:00 Eastern in summer (EDT)
+    - cron: "0 10 * * *" # daily 06:00 Eastern in summer (EDT)
     - cron: "0 16 * * 1-5" # Mon–Fri 11:00 Eastern (standard)
     - cron: "0 19 * * 1-5" # Mon–Fri 14:00 Eastern (standard)
     - cron: "0 23 * * 1-5" # Mon–Fri 18:00 Eastern (standard)
