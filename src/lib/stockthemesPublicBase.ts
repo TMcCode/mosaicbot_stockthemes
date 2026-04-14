@@ -33,3 +33,32 @@ export function stockthemesPublicDataBase(): string | undefined {
     return undefined;
   }
 }
+
+/**
+ * `fetch()` options for stockthemes public JSON (manifest, theme/group detail, bundles).
+ * Development defaults to Next data cache (`revalidate: 300`) for faster repeat loads; set
+ * `STOCKTHEMES_DEV_NO_STORE=1` when you need every navigation to pull fresh JSON.
+ */
+export function stockthemesLiveFetchInit():
+  | { cache: "no-store" }
+  | { next: { revalidate: number } } {
+  if (process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1") {
+    return { cache: "no-store" };
+  }
+  return { next: { revalidate: 300 } };
+}
+
+/**
+ * `fetch()` options for stockthemes public JSON (manifest, theme/group detail, bundles).
+ * Development defaults to Next’s Data Cache (`revalidate: 300`) for faster repeat loads; set
+ * `STOCKTHEMES_DEV_NO_STORE=1` when you need every navigation to pull fresh GCS JSON.
+ * Production builds use the same revalidate window for SSG/export.
+ */
+export function stockthemesLiveFetchInit():
+  | { cache: "no-store" }
+  | { next: { revalidate: number } } {
+  if (process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1") {
+    return { cache: "no-store" };
+  }
+  return { next: { revalidate: 300 } };
+}
