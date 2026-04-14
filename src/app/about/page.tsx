@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import styles from "../page.module.css";
-import { getManifestCached } from "@/lib/getManifestCached";
+import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -12,16 +12,16 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function AboutPage() {
-  const { manifest } = await getManifestCached();
+  const content = await getWebsiteContentCached();
   const homeIntro =
-    (manifest.home_intro || "").trim() ||
+    (content?.home_intro || "").trim() ||
     "Stockthemes.ai helps you discover equity themes and groups quickly. Start with groups to find macro narratives, then drill into themes for constituent-level details.";
   const introParagraphs = homeIntro
     .split(/\n\s*\n/g)
     .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
     .filter(Boolean);
   const themeBasketIntro =
-    (manifest.theme_basket_intro || "").trim() ||
+    (content?.theme_basket_intro || "").trim() ||
     "A theme basket is a curated set of public stocks connected by a common narrative, such as AI infrastructure, obesity treatment, or grid modernization.";
 
   return (

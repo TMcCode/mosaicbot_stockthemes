@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import styles from "../../page.module.css";
-import { getManifestCached } from "@/lib/getManifestCached";
+import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -43,21 +43,21 @@ function renderParagraphs(text: string) {
 }
 
 export default async function MethodologyPage() {
-  const { manifest } = await getManifestCached();
-  const intro = (manifest.methodology_intro || "").trim() || DEFAULT_METHODOLOGY_INTRO;
+  const content = await getWebsiteContentCached();
+  const intro = (content?.methodology_intro || "").trim() || DEFAULT_METHODOLOGY_INTRO;
   const purposeScope =
-    (manifest.methodology_purpose_scope || "").trim() || DEFAULT_METHODOLOGY_PURPOSE_SCOPE;
+    (content?.methodology_purpose_scope || "").trim() || DEFAULT_METHODOLOGY_PURPOSE_SCOPE;
   const themeConstruction =
-    (manifest.methodology_theme_construction || "").trim() ||
+    (content?.methodology_theme_construction || "").trim() ||
     DEFAULT_METHODOLOGY_THEME_CONSTRUCTION;
-  const weights = (manifest.methodology_weights || "").trim() || DEFAULT_METHODOLOGY_WEIGHTS;
+  const weights = (content?.methodology_weights || "").trim() || DEFAULT_METHODOLOGY_WEIGHTS;
   const performanceCalculation =
-    (manifest.methodology_performance_calculation || "").trim() ||
+    (content?.methodology_performance_calculation || "").trim() ||
     DEFAULT_METHODOLOGY_PERFORMANCE_CALCULATION;
   const updateCadence =
-    (manifest.methodology_update_cadence || "").trim() || DEFAULT_METHODOLOGY_UPDATE_CADENCE;
+    (content?.methodology_update_cadence || "").trim() || DEFAULT_METHODOLOGY_UPDATE_CADENCE;
   const limitations =
-    (manifest.methodology_limitations || "").trim() || DEFAULT_METHODOLOGY_LIMITATIONS;
+    (content?.methodology_limitations || "").trim() || DEFAULT_METHODOLOGY_LIMITATIONS;
 
   return (
     <div className={`st-surface ${styles.page}`}>
