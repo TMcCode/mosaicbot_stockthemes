@@ -2,7 +2,8 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
@@ -34,7 +35,7 @@ let memoizedSpyPerfPromise: Promise<SpyMarketPerf | null> | null = null;
 
 function parseSpySnapshot(raw: string): SpyMarketPerf | null {
   try {
-    const data = JSON.parse(raw) as SpySnapshotV0;
+    const data = parseJsonPayload<SpySnapshotV0>(raw);
     if (data.schema_version !== 0 || !data.metrics) return null;
     const m = data.metrics;
     const chartPerf: ChartPerfReturns = {
@@ -91,10 +92,8 @@ async function getSpyMarketPerfInternal(): Promise<SpyMarketPerf | null> {
   if (base) {
     try {
       const url = `${base}/spy_snapshot.v0.json`;
-      const devNoStore =
-        process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
       const res = await fetch(url, {
-        ...(devNoStore ? { cache: "no-store" as const } : { next: { revalidate: 300 } }),
+        ...stockthemesLiveFetchInit(),
         // Prevent slow external fetch from delaying homepage render.
         signal: AbortSignal.timeout(1200),
       });

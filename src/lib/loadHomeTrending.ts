@@ -1,13 +1,14 @@
 import { readFile } from "fs/promises";
 import path from "path";
 
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { HomeTrendingV0 } from "@/types/home_trending.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "home_trending.v0.json");
 
 function parseHomeTrending(raw: string): HomeTrendingV0 {
-  const data = JSON.parse(raw) as HomeTrendingV0;
+  const data = parseJsonPayload<HomeTrendingV0>(raw);
   if (data.schema_version !== 0) {
     throw new Error(`Unsupported home_trending schema_version: ${data.schema_version}`);
   }
@@ -30,9 +31,7 @@ export async function loadHomeTrending(): Promise<HomeTrendingLoadResult | null>
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/home_trending.v0.json`;
-    const devNoStore =
-      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
-    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
+    const res = await fetch(url, stockthemesLiveFetchInit());
     if (!res.ok) {
       return null;
     }

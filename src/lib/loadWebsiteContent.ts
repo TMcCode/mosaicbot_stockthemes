@@ -1,3 +1,4 @@
+import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { WebsiteContentV0 } from "@/types/website_content.v0";
 
@@ -9,7 +10,7 @@ function websiteContentFetchInit(): { cache: "no-store" } | { next: { revalidate
 }
 
 function parseWebsiteContent(raw: string): WebsiteContentV0 {
-  const data = JSON.parse(raw) as WebsiteContentV0;
+  const data = parseJsonPayload<WebsiteContentV0>(raw);
   if (data.schema_version !== 0) {
     throw new Error(`Unsupported website_content schema_version: ${data.schema_version}`);
   }

@@ -1,7 +1,9 @@
 import { readFile } from "fs/promises";
 import path from "path";
 
+import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { STOCKTHEMES_DEFAULT_MANIFEST_URL } from "@/lib/stockthemesDefaultManifestUrl";
+import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
 import type { ManifestV0 } from "@/types/manifest.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "manifest.json");
@@ -19,7 +21,7 @@ function manifestUrl(): string | undefined {
 }
 
 function parseManifest(raw: string): ManifestV0 {
-  const data = JSON.parse(raw) as ManifestV0;
+  const data = parseJsonPayload<ManifestV0>(raw);
   if (data.schema_version !== 0) {
     throw new Error(`Unsupported manifest schema_version: ${data.schema_version}`);
   }
@@ -39,9 +41,7 @@ export type ManifestLoadResult = {
 export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
   if (url) {
-    const devNoStore =
-      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
-    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
+    const res = await fetch(url, stockthemesLiveFetchInit());
     if (!res.ok) {
       throw new Error(`Manifest fetch failed ${res.status}: ${url}`);
     }

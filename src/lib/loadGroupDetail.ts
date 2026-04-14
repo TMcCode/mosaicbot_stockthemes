@@ -1,13 +1,14 @@
 import { readFile } from "fs/promises";
 import path from "path";
 
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailV0 } from "@/types/group.detail.v0";
 
 const FIXTURE_DIR = path.join("public", "fixtures", "groups");
 
 function parseGroupDetail(raw: string): GroupDetailV0 {
-  const data = JSON.parse(raw) as GroupDetailV0;
+  const data = parseJsonPayload<GroupDetailV0>(raw);
   if (data.schema_version !== 0) {
     throw new Error(`Unsupported group detail schema_version: ${data.schema_version}`);
   }
@@ -29,9 +30,7 @@ export async function loadGroupDetail(slug: string): Promise<GroupDetailLoadResu
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/groups/${encodeURIComponent(slug)}.json`;
-    const devNoStore =
-      process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1";
-    const res = await fetch(url, devNoStore ? { cache: "no-store" } : { next: { revalidate: 300 } });
+    const res = await fetch(url, stockthemesLiveFetchInit());
     if (!res.ok) {
       return null;
     }
