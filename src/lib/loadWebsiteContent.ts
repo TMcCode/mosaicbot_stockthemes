@@ -1,5 +1,12 @@
-import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { WebsiteContentV0 } from "@/types/website_content.v0";
+
+function websiteContentFetchInit(): { cache: "no-store" } | { next: { revalidate: number } } {
+  if (process.env.NODE_ENV === "development" && process.env.STOCKTHEMES_DEV_NO_STORE === "1") {
+    return { cache: "no-store" };
+  }
+  return { next: { revalidate: 300 } };
+}
 
 function parseWebsiteContent(raw: string): WebsiteContentV0 {
   const data = JSON.parse(raw) as WebsiteContentV0;
@@ -18,7 +25,7 @@ export async function loadWebsiteContent(): Promise<WebsiteContentV0 | null> {
     return null;
   }
   const url = `${base}/website_content.v0.json`;
-  const res = await fetch(url, stockthemesLiveFetchInit());
+  const res = await fetch(url, websiteContentFetchInit());
   if (!res.ok) {
     return null;
   }
