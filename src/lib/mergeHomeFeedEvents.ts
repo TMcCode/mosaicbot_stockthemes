@@ -17,7 +17,8 @@ function isGroupOverviewTextTableNoise(e: ManifestHomeFeedEventV0): boolean {
 
 /**
  * Lifecycle (theme_new / theme_updated) from manifest lists, enriched by ETL. Non-lifecycle
- * rows from ETL are text-table updates only (no renames / theme_change; Group Overview out).
+ * rows from ETL are text-table updates and theme_weights_updated (no renames / theme_change;
+ * Group Overview out).
  */
 export function mergeHomeFeedEvents(
   manifest: ManifestV0,
@@ -86,11 +87,10 @@ export function mergeHomeFeedEvents(
     if (!baseKeys.has(lifecycleFeedKey(e))) orphanLifecycle.push(e);
   }
 
-  const nonLifecycle = etl.filter(
-    (e) =>
-      e.kind === "text_table_update" &&
-      !isGroupOverviewTextTableNoise(e),
-  );
+  const nonLifecycle = etl.filter((e) => {
+    if (e.kind === "theme_weights_updated") return true;
+    return e.kind === "text_table_update" && !isGroupOverviewTextTableNoise(e);
+  });
 
   const combined = [...mergedLifecycle, ...orphanLifecycle, ...nonLifecycle];
   combined.sort((a, b) => String(b.event_at).localeCompare(String(a.event_at)));

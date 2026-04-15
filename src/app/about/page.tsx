@@ -24,6 +24,32 @@ export default async function AboutPage() {
     (content?.theme_basket_intro || "").trim() ||
     "A theme basket is a curated set of public stocks connected by a common narrative, such as AI infrastructure, obesity treatment, or grid modernization.";
 
+  const renderIntroParagraph = (p: string, i: number) => {
+    const email = "hello@stockthemes.ai";
+    if (!p.includes(email)) {
+      return (
+        <p key={`about-${i}`} className={styles.introCopy}>
+          {p}
+        </p>
+      );
+    }
+    const parts = p.split(email);
+    return (
+      <p key={`about-${i}`} className={styles.introCopy}>
+        {parts.map((part, idx) => (
+          <span key={`about-${i}-${idx}`}>
+            {idx > 0 ? (
+              <a href={`mailto:${email}`} style={{ fontWeight: 600 }}>
+                {email}
+              </a>
+            ) : null}
+            {part}
+          </span>
+        ))}
+      </p>
+    );
+  };
+
   return (
     <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
@@ -34,11 +60,9 @@ export default async function AboutPage() {
             className={`${styles.introCopyWrap} ${styles.aboutProse} ${styles.aboutLead} ${styles.aboutBasketCard}`}
           >
             <h2 id="about-founder-note">Why I built stockthemes.ai</h2>
-            {(introParagraphs.length ? introParagraphs : [homeIntro]).map((p, i) => (
-              <p key={`about-${i}`} className={styles.introCopy}>
-                {p}
-              </p>
-            ))}
+            {(introParagraphs.length ? introParagraphs : [homeIntro]).map((p, i) =>
+              renderIntroParagraph(p, i),
+            )}
           </div>
           <section
             className={`${styles.aboutProse} ${styles.aboutBasketCard}`}

@@ -14,7 +14,7 @@ export type ManifestUpdatedThemeEventV0 = {
 };
 
 export type ManifestHomeFeedEventV0 = {
-  kind: "theme_new" | "theme_updated" | "text_table_update" | "theme_change";
+  kind: "theme_new" | "theme_updated" | "theme_weights_updated" | "text_table_update" | "theme_change";
   event_at: string;
   title: string;
   summary?: string;
@@ -82,4 +82,6 @@ export type ManifestThemeSummaryV0 = {
   created_at?: string;
   /** ISO 8601 UTC from Theme_Metadata.updated_at */
   updated_at?: string;
+  /** ISO 8601 UTC when manual ThemeWgt edits last published (Theme_Metadata.manual_weights_updated_at) */
+  manual_weights_updated_at?: string;
 };

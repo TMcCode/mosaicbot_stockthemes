@@ -178,7 +178,10 @@ export function SiteSearch() {
         let lastErr: unknown;
         for (const url of urls) {
           try {
-            const res = await fetch(url, { credentials: "omit" });
+            const res = await fetch(url, {
+              credentials: "omit",
+              ...(process.env.NODE_ENV === "development" ? { cache: "no-store" as const } : {}),
+            });
             if (!res.ok) {
               lastErr = new Error(`HTTP ${res.status}`);
               continue;

@@ -29,6 +29,9 @@ function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
   if (evt.kind === "theme_updated" && title.toLowerCase().endsWith(" - theme updated")) {
     return title.slice(0, -(" - theme updated".length));
   }
+  if (evt.kind === "theme_weights_updated" && title.toLowerCase().endsWith(" - theme weights updated")) {
+    return title.slice(0, -(" - theme weights updated".length));
+  }
   return title;
 }
 
@@ -95,15 +98,20 @@ export default async function FeedPage() {
               const displayTitle = cleanFeedTitle(evt);
               const changesText = feedChangesText(evt);
               const noteText = String(evt.note || "").trim();
-              const isThemeLifecycle = evt.kind === "theme_new" || evt.kind === "theme_updated";
+              const isThemeLifecycle =
+                evt.kind === "theme_new" ||
+                evt.kind === "theme_updated" ||
+                evt.kind === "theme_weights_updated";
               const kindLabel =
                 evt.kind === "theme_new"
                   ? "Theme created"
                   : evt.kind === "theme_updated"
                     ? "Theme updated"
-                    : evt.kind === "text_table_update"
-                      ? "Thesis update"
-                      : "Theme change";
+                    : evt.kind === "theme_weights_updated"
+                      ? "Weights updated"
+                      : evt.kind === "text_table_update"
+                        ? "Thesis update"
+                        : "Theme change";
               return (
                 <article key={`${evt.kind}-${evt.event_at}-${idx}`} className={styles.feedItem}>
                   <div className={styles.feedDate}>{fmtFeedDate(evt.event_at)}</div>

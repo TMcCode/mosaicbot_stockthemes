@@ -49,13 +49,20 @@ export function GroupsProgressiveSections({
 }: Props) {
   const [visibleCount, setVisibleCount] = useState(Math.min(initialSectors, sectors.length));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-  const observerAvailable = typeof IntersectionObserver !== "undefined";
+  /** Only true after mount when IntersectionObserver is missing (avoids SSR/client HTML mismatch). */
+  const [needsManualLoadMore, setNeedsManualLoadMore] = useState(false);
   const visible = useMemo(() => sectors.slice(0, visibleCount), [sectors, visibleCount]);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      setNeedsManualLoadMore(true);
+    }
+  }, []);
 
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node || visibleCount >= sectors.length) return;
-    if (!observerAvailable) return;
+    if (typeof IntersectionObserver === "undefined") return;
     let cancelled = false;
     const obs = new IntersectionObserver(
       (entries) => {
@@ -72,7 +79,7 @@ export function GroupsProgressiveSections({
       cancelled = true;
       obs.disconnect();
     };
-  }, [visibleCount, sectors.length, observerAvailable]);
+  }, [visibleCount, sectors.length]);
 
   return (
     <>
@@ -110,7 +117,7 @@ export function GroupsProgressiveSections({
       {visibleCount < sectors.length ? (
         <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
       ) : null}
-      {visibleCount < sectors.length && !observerAvailable ? (
+      {visibleCount < sectors.length && needsManualLoadMore ? (
         <button
           type="button"
           onClick={() => setVisibleCount((n) => Math.min(sectors.length, n + 4))}

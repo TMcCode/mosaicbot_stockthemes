@@ -1,7 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import { AdPlacement } from "@/components/AdPlacement";
@@ -40,7 +39,14 @@ export function ThemesProgressiveList({
   const [visibleBlocks, setVisibleBlocks] = useState(Math.min(initialBlocks, totalBlocks));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const visibleThemeCount = Math.min(themes.length, visibleBlocks * blockSize);
-  const observerAvailable = typeof IntersectionObserver !== "undefined";
+  /** Only true after mount when IntersectionObserver is missing (avoids SSR/client HTML mismatch). */
+  const [needsManualLoadMore, setNeedsManualLoadMore] = useState(false);
+
+  useEffect(() => {
+    if (typeof IntersectionObserver === "undefined") {
+      setNeedsManualLoadMore(true);
+    }
+  }, []);
 
   const blocks = useMemo(() => {
     const out: ThemeRow[][] = [];
@@ -53,7 +59,7 @@ export function ThemesProgressiveList({
   useEffect(() => {
     const node = sentinelRef.current;
     if (!node || visibleBlocks >= totalBlocks) return;
-    if (!observerAvailable) return;
+    if (typeof IntersectionObserver === "undefined") return;
     let cancelled = false;
     const obs = new IntersectionObserver(
       (entries) => {
@@ -70,7 +76,7 @@ export function ThemesProgressiveList({
       cancelled = true;
       obs.disconnect();
     };
-  }, [visibleBlocks, totalBlocks, observerAvailable]);
+  }, [visibleBlocks, totalBlocks]);
 
   return (
     <>
@@ -108,7 +114,7 @@ export function ThemesProgressiveList({
       {visibleBlocks < totalBlocks ? (
         <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} />
       ) : null}
-      {visibleBlocks < totalBlocks && !observerAvailable ? (
+      {visibleBlocks < totalBlocks && needsManualLoadMore ? (
         <button
           type="button"
           onClick={() => setVisibleBlocks((b) => Math.min(totalBlocks, b + 2))}

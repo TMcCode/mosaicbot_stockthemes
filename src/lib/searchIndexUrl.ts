@@ -27,6 +27,11 @@ export function searchIndexFetchUrls(): string[] {
   }
   const sameOrigin = `${prefix}/${DEFAULT_OBJECT}`.replace(/\/+/g, "/");
   const upstream = `${base}/${DEFAULT_OBJECT}`;
+  // In dev, a leftover `public/search_index.v0.json` (from an old prebuild) is often older than
+  // live manifest/home_feed. Prefer the bucket first; fall back to same-origin if CORS/network fails.
+  if (process.env.NODE_ENV === "development") {
+    return [upstream, sameOrigin];
+  }
   return [sameOrigin, upstream];
 }
 

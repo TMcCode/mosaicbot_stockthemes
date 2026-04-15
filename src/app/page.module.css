@@ -550,15 +550,34 @@ a.feedTitle:hover {
 }
 
 .tableWrap {
+  position: relative;
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   margin-top: 6px;
   border: 1px solid var(--button-secondary-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
 }
 
+.tableWatermark {
+  position: absolute;
+  right: 8px;
+  bottom: -58px;
+  z-index: 0;
+  opacity: 0.98;
+  pointer-events: none;
+}
+
+.tableWatermark img {
+  display: block;
+  width: clamp(120px, 18vw, 220px);
+  height: auto;
+}
+
 .dataTable {
+  position: relative;
+  z-index: 1;
   width: 100%;
   border-collapse: collapse;
   font-size: 13px;
@@ -987,6 +1006,10 @@ a.secondary {
 :global(.st-theme[data-theme="light"]) .tableWrap {
   background: rgba(0, 0, 0, 0.02);
   border-color: var(--button-secondary-border);
+}
+
+:global(.st-theme[data-theme="light"]) .tableWatermark {
+  opacity: 0.48;
 }
 
 :global(.st-theme[data-theme="light"]) .dataTable th {

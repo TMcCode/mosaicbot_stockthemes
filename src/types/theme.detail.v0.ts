@@ -28,7 +28,30 @@ export type ThemeDetailConstituentV0 = {
   current_market_cap?: number;
   marketCapUsd?: number;
   marketCap?: number;
+  last_report_date?: string;
+  next_report_date?: string;
+  last_before_after_market?: string;
+  next_before_after_market?: string;
+  last_rpt_percent?: number;
+  since_last_rpt_percent?: number;
+  pre_earnings_percent_last_report?: number;
+  earnings_percent_last_report?: number;
+  pre_earnings_percent_prev_report?: number;
+  earnings_percent_prev_report?: number;
+  last_rpt_live_percent?: number;
+  last_rpt_final_percent?: number;
+  last_rpt_is_final?: boolean;
   [key: string]: unknown;
+};
+
+export type ThemeDetailConstituentTableStatsV0 = {
+  source?: string;
+  average?: Record<string, number | null>;
+  std_dev?: Record<string, number | null>;
+  positive_tickers_pct?: Record<string, number | null>;
+  median?: Record<string, number | null>;
+  min?: Record<string, number | null>;
+  max?: Record<string, number | null>;
 };
 
 export type ThemeDetailV0 = {
@@ -43,6 +66,7 @@ export type ThemeDetailV0 = {
   updated_at?: string;
   seo_intro?: string;
   theme_thesis?: ThemeThesisV0;
+  constituent_table_stats?: ThemeDetailConstituentTableStatsV0;
   constituents: ThemeDetailConstituentV0[];
   chart_1y?: ThemeChart1yV0;
   compare_returns?: ThemeCompareReturnsV0;
