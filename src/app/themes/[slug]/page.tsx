@@ -304,11 +304,13 @@ function maxValue(values: Array<number | null | undefined>): number | null {
 }
 
 function precomputedStat(
-  detail: { constituent_table_stats?: Record<string, Record<string, number | null> | undefined> } | null | undefined,
+  detail: { constituent_table_stats?: Record<string, Record<string, number | null> | string | undefined> } | null | undefined,
   rowKey: "average" | "std_dev" | "positive_tickers_pct" | "median" | "min" | "max",
   metric: string,
 ): number | null {
-  const v = detail?.constituent_table_stats?.[rowKey]?.[metric];
+  const bucket = detail?.constituent_table_stats?.[rowKey];
+  if (typeof bucket !== "object" || bucket == null) return null;
+  const v = bucket[metric];
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
