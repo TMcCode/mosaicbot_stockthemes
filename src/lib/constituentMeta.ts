@@ -15,7 +15,7 @@ function pickNumber(v: unknown): number | undefined {
 }
 
 /** Human-readable USD market cap for constituent tables and tooltips. */
-export function formatUsdMarketCap(v: number | undefined): string {
+export function formatUsdMarketCap(v: number | null | undefined): string {
   if (v == null || !Number.isFinite(v) || v <= 0) return "—";
   if (v >= 1e12) return `$${(v / 1e12).toFixed(2)}T`;
   if (v >= 1e9) return `$${(v / 1e9).toFixed(2)}B`;
