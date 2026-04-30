@@ -40,14 +40,13 @@ on:
     branches:
       - main
   # Rebuild static site so layout/footer `manifest.as_of` matches GCS JSON (output: export).
-  # Cron is UTC only. Morning pair targets 05:00 and 06:00 Eastern during EDT (summer); in EST
-  # (winter) those same UTC times are 04:00 and 05:00 Eastern. Weekday slots use EST labels.
+  # Cron is UTC only. 09:00 UTC ≈ 05:00 Eastern during EDT (summer); ≈ 04:00 Eastern in EST (winter).
+  # Weekday 17 UTC ≈ 1:00 PM Eastern (EDT) — ~1h after stockthemes manifest noon ET.
+  # Tue–Sat 00:00 UTC ≈ Mon–Fri 8:00 PM Eastern (EDT) — ~1h after stockthemes manifest 7 PM ET.
   schedule:
-    - cron: "0 9 * * *" # daily 05:00 Eastern in summer (EDT)
-    - cron: "0 10 * * *" # daily 06:00 Eastern in summer (EDT)
-    - cron: "0 16 * * 1-5" # Mon–Fri 11:00 Eastern (standard)
-    - cron: "0 19 * * 1-5" # Mon–Fri 14:00 Eastern (standard)
-    - cron: "0 23 * * 1-5" # Mon–Fri 18:00 Eastern (standard)
+    - cron: "0 9 * * *" # daily ~05:00 Eastern (EDT); ~04:00 Eastern (EST)
+    - cron: "0 17 * * 1-5" # Mon–Fri ~1:00 PM Eastern (EDT); ~1h after noon manifest
+    - cron: "0 0 * * 2-6" # Tue–Sat 00:00 UTC ≈ Mon–Fri ~8:00 PM Eastern (EDT); ~1h after 7 PM manifest
   workflow_dispatch:
 
 permissions:
