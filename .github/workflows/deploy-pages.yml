@@ -91,27 +91,28 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Boolean workflow inputs are not the string 'true' — always purge on manual runs when refresh is enabled.
-      - name: Purge stale theme/group cache (manual deploy)
-        if: >-
-          github.event_name == 'workflow_dispatch' &&
-          github.event.inputs.refresh_cache != false &&
-          github.event.inputs.refresh_cache != 'false'
+      # Do not rely on npm prebuild alone — run sync explicitly so logs show "sync-build-cache" and env is set.
+      - name: Sync public JSON from CDN into build cache
         run: |
           rm -rf .cache/stockthemes-public/themes .cache/stockthemes-public/groups
           rm -f .cache/stockthemes-public/_build_cache_meta.json
-          echo "Purged themes/groups — prebuild will re-download from CDN"
+          node scripts/sync-build-cache.mjs
+          THEME_COUNT=$(find .cache/stockthemes-public/themes -name '*.json' 2>/dev/null | wc -l | tr -d ' ')
+          echo "Cached theme JSON files: ${THEME_COUNT}"
+          if [ "${THEME_COUNT}" -lt 50 ]; then
+            echo "::error::Expected 50+ theme JSON files in .cache/stockthemes-public/themes — CDN sync incomplete"
+            exit 1
+          fi
+        env:
+          STOCKTHEMES_BUILD_CACHE: "1"
+          STOCKTHEMES_BUILD_CACHE_REFRESH: "1"
+          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
 
       - name: Build static export
         run: npm run build && node scripts/write-pages-deploy-meta.mjs
         env:
           STOCKTHEMES_STATIC_PAGES: "1"
           STOCKTHEMES_BUILD_CACHE: "1"
-          STOCKTHEMES_BUILD_CACHE_REFRESH: >-
-            ${{ github.event_name == 'workflow_dispatch'
-                && github.event.inputs.refresh_cache != false
-                && github.event.inputs.refresh_cache != 'false'
-                && '1' || '' }}
           NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE: "1"
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}
