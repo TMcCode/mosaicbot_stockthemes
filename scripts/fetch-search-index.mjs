@@ -12,6 +12,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outPath = path.join(root, "public", "search_index.v0.json");
@@ -31,20 +33,11 @@ function searchIndexUpstreamUrl() {
     return null;
   }
   const raw = explicit?.trim() || DEFAULT_MANIFEST;
-  try {
-    const u = new URL(raw);
-    u.search = "";
-    u.hash = "";
-    const parts = u.pathname.split("/").filter(Boolean);
-    if (parts.length < 2) {
-      return null;
-    }
-    parts.pop();
-    u.pathname = `/${parts.join("/")}/search_index.v0.json`;
-    return u.toString();
-  } catch {
+  const base = publicDataBaseFromManifest(raw);
+  if (!base) {
     return null;
   }
+  return `${base}/search_index.v0.json`;
 }
 
 async function main() {

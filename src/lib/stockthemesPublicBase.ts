@@ -26,12 +26,12 @@ export function stockthemesPublicDataBase(): string | undefined {
     u.search = "";
     u.hash = "";
     const parts = u.pathname.split("/").filter(Boolean);
-    if (parts.length < 2) {
+    if (parts.length < 1) {
       return undefined;
     }
     parts.pop();
-    u.pathname = `/${parts.join("/")}`;
-    return normalizePublicDataBase(u.toString().replace(/\/$/, ""));
+    const pathPrefix = parts.length > 0 ? `/${parts.join("/")}` : "";
+    return normalizePublicDataBase(`${u.origin}${pathPrefix}`.replace(/\/$/, ""));
   } catch {
     return undefined;
   }

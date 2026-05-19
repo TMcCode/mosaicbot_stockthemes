@@ -9,6 +9,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const CACHE_DIR = path.join(root, ".cache", "stockthemes-public");
@@ -35,21 +37,6 @@ function manifestUrl() {
     return null;
   }
   return explicit?.trim() || DEFAULT_MANIFEST;
-}
-
-function publicDataBase(manifest) {
-  try {
-    const u = new URL(manifest);
-    u.search = "";
-    u.hash = "";
-    const parts = u.pathname.split("/").filter(Boolean);
-    if (parts.length < 2) return null;
-    parts.pop();
-    u.pathname = `/${parts.join("/")}`;
-    return u.toString().replace(/\/$/, "");
-  } catch {
-    return null;
-  }
 }
 
 function readMeta() {
@@ -139,7 +126,7 @@ async function main() {
     return;
   }
 
-  const base = publicDataBase(manifest);
+  const base = publicDataBaseFromManifest(manifest);
   if (!base) {
     console.log("sync-build-cache: skip (invalid manifest URL)");
     return;
