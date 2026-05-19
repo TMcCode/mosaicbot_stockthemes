@@ -2,7 +2,8 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
-import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { fetchPublicJsonText } from "@/lib/stockthemesBuildCache";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailV0 } from "@/types/group.detail.v0";
 
 const FIXTURE_DIR = path.join("public", "fixtures", "groups");
@@ -30,11 +31,13 @@ export async function loadGroupDetail(slug: string): Promise<GroupDetailLoadResu
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/groups/${encodeURIComponent(slug)}.json`;
-    const res = await fetch(url, stockthemesLiveFetchInit());
-    if (!res.ok) {
+    let raw: string;
+    try {
+      raw = await fetchPublicJsonText(url, `groups/${slug}.json`);
+    } catch {
       return null;
     }
-    const detail = parseGroupDetail(await res.text());
+    const detail = parseGroupDetail(raw);
     return { detail, source: "live" };
   }
 

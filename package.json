@@ -2,15 +2,20 @@
   "name": "mosaicbot_stockthemes",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=20.9 <24"
+  },
   "scripts": {
-    "dev": "next dev",
+    "dev": "next dev --webpack",
+    "dev:turbopack": "next dev",
     "dev:webpack": "next dev --webpack",
-    "prebuild": "node scripts/write-ads-txt.mjs && node scripts/fetch-search-index.mjs && node scripts/generate-og-png.mjs",
+    "prebuild": "node scripts/write-ads-txt.mjs && node scripts/sync-build-cache.mjs && node scripts/fetch-search-index.mjs && node scripts/generate-og-png.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "serve:out": "npx --yes serve out -l 3000",
-    "og:png": "node scripts/generate-og-png.mjs"
+    "og:png": "node scripts/generate-og-png.mjs",
+    "verify:cdn": "node scripts/verify-cdn.mjs"
   },
   "dependencies": {
     "fuse.js": "^7.3.0",

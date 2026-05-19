@@ -16,8 +16,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outPath = path.join(root, "public", "search_index.v0.json");
 
-const DEFAULT_MANIFEST =
-  "https://storage.googleapis.com/stockthemes-public/manifest.json";
+const DEFAULT_MANIFEST = "https://data.stockthemes.ai/manifest.json";
 
 function searchIndexUpstreamUrl() {
   const override = process.env.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL?.trim();
@@ -49,6 +48,11 @@ function searchIndexUpstreamUrl() {
 }
 
 async function main() {
+  if (fs.existsSync(outPath) && process.env.STOCKTHEMES_STATIC_PAGES === "1") {
+    console.log("fetch-search-index: skip (sync-build-cache already wrote public/search_index.v0.json)");
+    return;
+  }
+
   const upstream = searchIndexUpstreamUrl();
   if (!upstream) {
     if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {

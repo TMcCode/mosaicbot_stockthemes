@@ -2,7 +2,8 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
-import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { fetchPublicJsonText } from "@/lib/stockthemesBuildCache";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
 const FIXTURE_DIR = path.join("public", "fixtures", "themes");
@@ -31,11 +32,13 @@ export async function loadThemeDetail(slug: string): Promise<ThemeDetailLoadResu
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/themes/${encodeURIComponent(slug)}.json`;
-    const res = await fetch(url, stockthemesLiveFetchInit());
-    if (!res.ok) {
+    let raw: string;
+    try {
+      raw = await fetchPublicJsonText(url, `themes/${slug}.json`);
+    } catch {
       return null;
     }
-    const detail = parseThemeDetail(await res.text());
+    const detail = parseThemeDetail(raw);
     return { detail, source: "live" };
   }
 

@@ -6,6 +6,12 @@ import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
+import {
+  stockthemesBrowserCacheBusterQuery,
+  stockthemesBrowserFetchCache,
+} from "@/lib/stockthemesCache";
+import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
+
 import styles from "@/app/page.module.css";
 
 function chartHasRenderableData(c: ThemeChart1yV0 | undefined): boolean {
@@ -117,16 +123,21 @@ export function ThemeChartLiveHydrate({
     const needFullChart = !chartHasRenderableData(serverChart);
     const needCompositionOnly =
       chartHasRenderableData(serverChart) && !hasComposition(serverChart);
+    const refreshLiveInDev =
+      process.env.NODE_ENV === "development" && !stockthemesLiveHydrationDisabled();
 
-    if (!needFullChart && !needCompositionOnly) {
+    if (stockthemesLiveHydrationDisabled()) {
+      return;
+    }
+
+    if (!needFullChart && !needCompositionOnly && !refreshLiveInDev) {
       return;
     }
 
     let cancelled = false;
-    // Bust stale browser/proxy cache so newly republished chart JSON appears immediately.
-    const url = `${dataBaseUrl}/${chartJsonFolder}/${encodeURIComponent(slug)}.json?ts=${Date.now()}`;
+    const url = `${dataBaseUrl}/${chartJsonFolder}/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
     setLastFetchUrl(url);
-    fetch(url, { credentials: "omit", cache: "no-store" })
+    fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);
@@ -136,6 +147,13 @@ export function ThemeChartLiveHydrate({
       .then((data) => {
         if (cancelled) return;
         const live = data.chart_1y;
+
+        if (refreshLiveInDev) {
+          if (chartHasRenderableData(live)) {
+            setFetched(live);
+          }
+          return;
+        }
 
         if (needFullChart) {
           if (chartHasRenderableData(live)) {

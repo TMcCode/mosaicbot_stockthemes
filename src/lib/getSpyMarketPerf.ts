@@ -3,6 +3,10 @@ import path from "path";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import {
+  fetchPublicJsonText,
+  stockthemesBuildCacheEnabled,
+} from "@/lib/stockthemesBuildCache";
 import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -90,16 +94,23 @@ export async function getSpyMarketPerfCached(): Promise<SpyMarketPerf | null> {
 async function getSpyMarketPerfInternal(): Promise<SpyMarketPerf | null> {
   const base = stockthemesPublicDataBase();
   if (base) {
+    const url = `${base}/spy_snapshot.v0.json`;
     try {
-      const url = `${base}/spy_snapshot.v0.json`;
-      const res = await fetch(url, {
-        ...stockthemesLiveFetchInit(),
-        // Prevent slow external fetch from delaying homepage render.
-        signal: AbortSignal.timeout(1200),
-      });
-      if (res.ok) {
-        const parsed = parseSpySnapshot(await res.text());
+      if (stockthemesBuildCacheEnabled()) {
+        const parsed = parseSpySnapshot(
+          await fetchPublicJsonText(url, "spy_snapshot.v0.json"),
+        );
         if (parsed) return parsed;
+      } else {
+        const res = await fetch(url, {
+          ...stockthemesLiveFetchInit(),
+          // Prevent slow external fetch from delaying homepage render.
+          signal: AbortSignal.timeout(1200),
+        });
+        if (res.ok) {
+          const parsed = parseSpySnapshot(await res.text());
+          if (parsed) return parsed;
+        }
       }
     } catch {
       // Fall through to fixture.

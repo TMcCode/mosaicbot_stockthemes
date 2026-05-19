@@ -3,7 +3,7 @@ import path from "path";
 
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { STOCKTHEMES_DEFAULT_MANIFEST_URL } from "@/lib/stockthemesDefaultManifestUrl";
-import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
+import { fetchPublicJsonText } from "@/lib/stockthemesBuildCache";
 import type { ManifestV0 } from "@/types/manifest.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "manifest.json");
@@ -41,11 +41,8 @@ export type ManifestLoadResult = {
 export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
   if (url) {
-    const res = await fetch(url, stockthemesLiveFetchInit());
-    if (!res.ok) {
-      throw new Error(`Manifest fetch failed ${res.status}: ${url}`);
-    }
-    const manifest = parseManifest(await res.text());
+    const raw = await fetchPublicJsonText(url, "manifest.json");
+    const manifest = parseManifest(raw);
     return { manifest, source: "live" };
   }
 

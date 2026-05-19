@@ -2,7 +2,8 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
-import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { fetchPublicJsonText } from "@/lib/stockthemesBuildCache";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { HomeTrendingV0 } from "@/types/home_trending.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "home_trending.v0.json");
@@ -31,11 +32,13 @@ export async function loadHomeTrending(): Promise<HomeTrendingLoadResult | null>
   const base = stockthemesPublicDataBase();
   if (base) {
     const url = `${base}/home_trending.v0.json`;
-    const res = await fetch(url, stockthemesLiveFetchInit());
-    if (!res.ok) {
+    let raw: string;
+    try {
+      raw = await fetchPublicJsonText(url, "home_trending.v0.json");
+    } catch {
       return null;
     }
-    const bundle = parseHomeTrending(await res.text());
+    const bundle = parseHomeTrending(raw);
     return { bundle, source: "live" };
   }
 
