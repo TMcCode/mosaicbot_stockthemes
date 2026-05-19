@@ -1,7 +1,8 @@
 # Build Next.js static export (out/) and deploy to GitHub Pages.
 #
 # Egress controls:
-# - Scheduled runs skip build when manifest.as_of unchanged (one manifest HEAD fetch).
+# - Scheduled runs skip build when manifest/home_trending as_of unchanged.
+# - Code pushes rebuild static HTML but reuse CDN cache unless publish data changed.
 # - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs avoid full-catalog GCS pulls when as_of unchanged.
 # - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no browser JSON fetches in production.
 # - Default manifest URL: https://data.stockthemes.ai (CDN Worker), not storage.googleapis.com.
@@ -25,9 +26,9 @@ on:
         default: false
         type: boolean
       refresh_cache:
-        description: "Re-download all theme/group JSON from CDN (fixes empty tables)"
+        description: "Force full re-download of all theme/group JSON from CDN"
         required: false
-        default: true
+        default: false
         type: boolean
 
 permissions:
@@ -44,6 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       should_build: ${{ steps.check.outputs.should_build }}
+      full_cache_refresh: ${{ steps.check.outputs.full_cache_refresh }}
       skip_reason: ${{ steps.check.outputs.reason }}
     steps:
       - uses: actions/checkout@v4
@@ -62,6 +64,7 @@ jobs:
         env:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           FORCE_BUILD: ${{ github.event.inputs.force_build }}
+          REFRESH_CACHE: ${{ github.event.inputs.refresh_cache }}
           MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
         run: node scripts/ci-should-build.mjs
 
@@ -91,21 +94,11 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # Do not rely on npm prebuild alone — run sync explicitly so logs show "sync-build-cache" and env is set.
       - name: Sync public JSON from CDN into build cache
-        run: |
-          rm -rf .cache/stockthemes-public/themes .cache/stockthemes-public/groups
-          rm -f .cache/stockthemes-public/_build_cache_meta.json
-          node scripts/sync-build-cache.mjs
-          THEME_COUNT=$(find .cache/stockthemes-public/themes -name '*.json' 2>/dev/null | wc -l | tr -d ' ')
-          echo "Cached theme JSON files: ${THEME_COUNT}"
-          if [ "${THEME_COUNT}" -lt 50 ]; then
-            echo "::error::Expected 50+ theme JSON files in .cache/stockthemes-public/themes — CDN sync incomplete"
-            exit 1
-          fi
+        run: node scripts/sync-public-json-ci.mjs
         env:
           STOCKTHEMES_BUILD_CACHE: "1"
-          STOCKTHEMES_BUILD_CACHE_REFRESH: "1"
+          FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
 
       - name: Build static export
