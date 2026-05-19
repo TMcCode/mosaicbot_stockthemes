@@ -52,8 +52,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/stockthemes-public
-          key: stockthemes-gcs-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
+          key: stockthemes-public-v2-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
           restore-keys: |
+            stockthemes-public-v2-
             stockthemes-gcs-
 
       - name: Decide if build is needed
@@ -82,19 +83,35 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/stockthemes-public
-          key: stockthemes-gcs-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
+          key: stockthemes-public-v2-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
           restore-keys: |
+            stockthemes-public-v2-
             stockthemes-gcs-
 
       - name: Install dependencies
         run: npm ci
+
+      # Boolean workflow inputs are not the string 'true' — always purge on manual runs when refresh is enabled.
+      - name: Purge stale theme/group cache (manual deploy)
+        if: >-
+          github.event_name == 'workflow_dispatch' &&
+          github.event.inputs.refresh_cache != false &&
+          github.event.inputs.refresh_cache != 'false'
+        run: |
+          rm -rf .cache/stockthemes-public/themes .cache/stockthemes-public/groups
+          rm -f .cache/stockthemes-public/_build_cache_meta.json
+          echo "Purged themes/groups — prebuild will re-download from CDN"
 
       - name: Build static export
         run: npm run build && node scripts/write-pages-deploy-meta.mjs
         env:
           STOCKTHEMES_STATIC_PAGES: "1"
           STOCKTHEMES_BUILD_CACHE: "1"
-          STOCKTHEMES_BUILD_CACHE_REFRESH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.refresh_cache == 'true' && '1' || '' }}
+          STOCKTHEMES_BUILD_CACHE_REFRESH: >-
+            ${{ github.event_name == 'workflow_dispatch'
+                && github.event.inputs.refresh_cache != false
+                && github.event.inputs.refresh_cache != 'false'
+                && '1' || '' }}
           NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE: "1"
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}

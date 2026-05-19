@@ -163,8 +163,20 @@ async function main() {
     prev.manifestUrl === manifest &&
     missing.length === 0;
 
+  const themeFilesOnDisk = fs.existsSync(cachePath("themes"))
+    ? fs.readdirSync(cachePath("themes")).filter((f) => f.endsWith(".json")).length
+    : 0;
+
   if (unchanged) {
-    console.log(`sync-build-cache: manifest as_of=${asOf} unchanged — cache complete (${allJobs.length} objects)`);
+    console.log(
+      `sync-build-cache: manifest as_of=${asOf} unchanged — cache complete (${allJobs.length} objects, theme files=${themeFilesOnDisk}/${themeCount})`,
+    );
+    if (themeFilesOnDisk < themeCount) {
+      console.error(
+        `sync-build-cache: theme file count mismatch (have ${themeFilesOnDisk}, need ${themeCount}) — refusing fast path`,
+      );
+      process.exit(1);
+    }
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
       console.warn(
