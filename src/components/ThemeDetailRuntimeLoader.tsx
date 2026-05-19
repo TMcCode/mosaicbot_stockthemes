@@ -15,6 +15,11 @@ import { formatWeight } from "@/lib/formatWeight";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
+import {
+  stockthemesBrowserCacheBusterQuery,
+  stockthemesBrowserFetchCache,
+} from "@/lib/stockthemesCache";
+import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 import styles from "@/app/page.module.css";
 
 type Props = {
@@ -46,9 +51,18 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
   >({ status: "loading" });
 
   useEffect(() => {
+    if (stockthemesLiveHydrationDisabled()) {
+      setState({
+        status: "error",
+        message:
+          "Theme data was not embedded in this static build. In GitHub Actions run Deploy to GitHub Pages with “Re-download all theme/group JSON” enabled, or push the latest main after ETL publishes.",
+      });
+      return;
+    }
+
     let cancelled = false;
-    const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json`;
-    fetch(url, { credentials: "omit" })
+    const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
+    fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
       .then((res) => {
         if (!res.ok) {
           throw new Error(`HTTP ${res.status}`);

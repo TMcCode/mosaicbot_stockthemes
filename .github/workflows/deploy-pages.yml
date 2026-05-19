@@ -1,37 +1,12 @@
 # Build Next.js static export (out/) and deploy to GitHub Pages.
 #
-# Prereqs (repo Settings → Pages): Source = "GitHub Actions".
-# Prereqs (repo Settings → Environments → github-pages): allow deployment from this workflow if prompted.
+# Egress controls:
+# - Scheduled runs skip build when manifest.as_of unchanged (one manifest HEAD fetch).
+# - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs avoid full-catalog GCS pulls when as_of unchanged.
+# - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no browser JSON fetches in production.
+# - Default manifest URL: https://data.stockthemes.ai (CDN Worker), not storage.googleapis.com.
 #
-# Repository Variables (Settings → Secrets and variables → Actions → Variables):
-#   NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL — public manifest URL (full site at build time).
-#     If unset, build defaults to https://storage.googleapis.com/stockthemes-public/manifest.json
-#   NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL — optional; if unset the client uses
-#     <same directory as manifest>/search_index.v0.json (MosaicBot ETL uploads it with the manifest).
-#   NEXT_PUBLIC_SITE_URL — no trailing slash, e.g. https://tmccode.github.io/mosaicbot_stockthemes
-#     until you use a custom domain (then https://stockthemes.ai)
-#   NEXT_PUBLIC_BASE_PATH — for project Pages only: /mosaicbot_stockthemes (same as repo name).
-#     Leave unset when the site is served at domain root (custom domain apex).
-#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL — Beehiiv iframe `src` (one form for both themes), or
-#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_LIGHT + _DARK — duplicate forms in Beehiiv, each styled
-#     for that mode; the site swaps iframe src when the user toggles theme.
-#   NEXT_PUBLIC_BEEHIIV_SUBSCRIBE_FORM_URL_MOBILE_LIGHT + _MOBILE_DARK — optional; at max-width 640px
-#     the footer embed uses these instead of _LIGHT/_DARK when both are set.
-#
-# Beehiiv API (styled form + /api/newsletter/subscribe) does NOT work on this workflow: the site
-# is output: "export" with no server. Do not add BEEHIIV_API_KEY / BEEHIIV_PUBLICATION_ID here
-# unless you change hosting to Node/serverless (e.g. Vercel). Then remove STOCKTHEMES_STATIC_PAGES
-# from the build env and add those as Repository secrets.
-#
-# Google AdSense (optional Repository Variables): NEXT_PUBLIC_ADSENSE_CLIENT + SLOT_* for each unit
-# (hero, rails, strips, groups/themes index rail+strip, home discovery mid, theme chart end — optional except client).
-# PostHog (optional but recommended): NEXT_PUBLIC_POSTHOG_PROJECT_TOKEN (or NEXT_PUBLIC_POSTHOG_KEY),
-# NEXT_PUBLIC_POSTHOG_HOST, and optional NEXT_PUBLIC_POSTHOG_DEBUG (leave unset/0 in prod).
-# prebuild writes public/ads.txt from NEXT_PUBLIC_ADSENSE_CLIENT (required at https://<domain>/ads.txt),
-# and public/search_index.v0.json from the public bucket so search loads same-origin (see scripts/fetch-search-index.mjs).
-#
-# GCS: bucket CORS must allow GET from every origin that loads the site (e.g. https://stockthemes.ai),
-# or browser chart hydration will fail. See MosaicBot docs/stockthemes/gcs-cors.example.json
+# See docs/GCS_EGRESS_REDUCTION.md and docs/CLOUDFLARE_CDN_SETUP.md
 
 name: Deploy to GitHub Pages
 
@@ -39,15 +14,21 @@ on:
   push:
     branches:
       - main
-  # Rebuild static site so layout/footer `manifest.as_of` matches GCS JSON (output: export).
-  # Cron is UTC only. 09:00 UTC ≈ 05:00 Eastern during EDT (summer); ≈ 04:00 Eastern in EST (winter).
-  # Weekday 17 UTC ≈ 1:00 PM Eastern (EDT) — ~1h after stockthemes manifest noon ET.
-  # Tue–Sat 00:00 UTC ≈ Mon–Fri 8:00 PM Eastern (EDT) — ~1h after stockthemes manifest 7 PM ET.
+  # Once daily after typical ETL manifest windows (UTC). Push always rebuilds; schedule checks as_of.
   schedule:
-    - cron: "0 9 * * *" # daily ~05:00 Eastern (EDT); ~04:00 Eastern (EST)
-    - cron: "0 17 * * 1-5" # Mon–Fri ~1:00 PM Eastern (EDT); ~1h after noon manifest
-    - cron: "0 0 * * 2-6" # Tue–Sat 00:00 UTC ≈ Mon–Fri ~8:00 PM Eastern (EDT); ~1h after 7 PM manifest
+    - cron: "0 13 * * *"
   workflow_dispatch:
+    inputs:
+      force_build:
+        description: "Rebuild even if manifest.as_of unchanged"
+        required: false
+        default: false
+        type: boolean
+      refresh_cache:
+        description: "Re-download all theme/group JSON from CDN (fixes empty tables)"
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -59,7 +40,33 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_build: ${{ steps.check.outputs.should_build }}
+      skip_reason: ${{ steps.check.outputs.reason }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore deploy meta cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/stockthemes-public
+          key: stockthemes-gcs-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
+          restore-keys: |
+            stockthemes-gcs-
+
+      - name: Decide if build is needed
+        id: check
+        env:
+          GITHUB_EVENT_NAME: ${{ github.event_name }}
+          FORCE_BUILD: ${{ github.event.inputs.force_build }}
+          MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
+        run: node scripts/ci-should-build.mjs
+
   build:
+    needs: check
+    if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -71,14 +78,25 @@ jobs:
           node-version: "20"
           cache: npm
 
+      - name: Restore GCS build cache
+        uses: actions/cache@v4
+        with:
+          path: .cache/stockthemes-public
+          key: stockthemes-gcs-${{ hashFiles('.cache/stockthemes-public/_pages_deploy_meta.json') }}
+          restore-keys: |
+            stockthemes-gcs-
+
       - name: Install dependencies
         run: npm ci
 
       - name: Build static export
-        run: npm run build
+        run: npm run build && node scripts/write-pages-deploy-meta.mjs
         env:
           STOCKTHEMES_STATIC_PAGES: "1"
-          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
+          STOCKTHEMES_BUILD_CACHE: "1"
+          STOCKTHEMES_BUILD_CACHE_REFRESH: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.refresh_cache == 'true' && '1' || '' }}
+          NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE: "1"
+          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}
@@ -109,7 +127,8 @@ jobs:
           path: out
 
   deploy:
-    needs: build
+    needs: [check, build]
+    if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -118,3 +137,13 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+  skip_notice:
+    needs: check
+    if: needs.check.outputs.should_build != 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Skipped
+        run: |
+          echo "Pages deploy skipped: ${{ needs.check.outputs.skip_reason }}"
+          echo "Use workflow_dispatch with force_build=true to rebuild anyway."
