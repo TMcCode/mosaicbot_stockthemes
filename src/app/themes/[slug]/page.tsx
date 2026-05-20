@@ -6,6 +6,7 @@ import { AdPlacement } from "@/components/AdPlacement";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { TickerBadge } from "@/components/TickerBadge";
+import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import {
@@ -553,7 +554,16 @@ export default async function ThemeDetailPage({ params }: Props) {
                 Theme · {source === "live" ? "live manifest" : "local fixture"}
                 {detailLabel ? ` · ${detailLabel}` : ""}
               </p>
-              <h1>{theme.name}</h1>
+              <h1 style={{ margin: 0 }}>{theme.name}</h1>
+              <div className={styles.themeWatchlistAction}>
+                <WatchlistStar
+                  prominent
+                  itemType="theme"
+                  itemKey={slug}
+                  label={theme.name}
+                  signInNext={`/themes/${slug}`}
+                />
+              </div>
               {theme.ticker_count != null || hasTotalMarketCap ? (
                 <p>
                   {theme.ticker_count != null ? `${theme.ticker_count} tickers` : null}

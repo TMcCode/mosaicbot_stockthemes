@@ -64,6 +64,23 @@
   margin-bottom: 4px;
 }
 
+.rowWithAction {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 8px 10px 8px 12px;
+  box-sizing: border-box;
+}
+
+.rowBody {
+  flex: 1;
+  min-width: 0;
+}
+
+.rowWithAction > .rowBody.row {
+  padding: 0;
+}
+
 .row {
   display: block;
   padding: 8px 12px;

@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 
 import styles from "@/app/page.module.css";
 
+import { sanitizeAuthNextPath } from "@/lib/authRedirect";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 import { exchangePkceCodeOnce } from "@/lib/supabase/exchangePkceCodeOnce";
 
@@ -27,15 +28,7 @@ export default function AuthCallbackPage() {
       try {
         const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
         const code = url?.searchParams.get("code");
-        const rawNext = url?.searchParams.get("next");
-        const next =
-          rawNext &&
-          rawNext.startsWith("/") &&
-          !rawNext.startsWith("//") &&
-          !rawNext.includes(":") &&
-          rawNext.length <= 256
-            ? rawNext
-            : "/my";
+        const next = sanitizeAuthNextPath(url?.searchParams.get("next") ?? null) ?? "/my";
 
         if (code) {
           const { data: before } = await client.auth.getSession();

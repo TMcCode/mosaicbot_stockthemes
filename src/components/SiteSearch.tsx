@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 import posthog from "posthog-js";
 
+import { WatchlistStar } from "@/components/WatchlistStar";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import type {
   SearchIndexGroupRowV0,
@@ -408,79 +409,98 @@ export function SiteSearch() {
                   <li key={h.key} role="presentation">
                     {h.kind === "ticker" ? (
                       <div
-                        className={styles.row}
+                        className={styles.rowWithAction}
                         style={{
                           background: i === cursor ? "rgba(38, 252, 214, 0.08)" : undefined,
                         }}
                         role="option"
                         aria-selected={i === cursor}
                       >
-                        <div className={styles.rowTitle}>
-                          <span className={styles.badge}>Ticker</span>
-                          {h.ref.ticker}
-                          {h.ref.name ? ` · ${h.ref.name}` : ""}
+                        <div className={styles.rowBody}>
+                          <div className={styles.rowTitle}>
+                            <span className={styles.badge}>Ticker</span>
+                            {h.ref.ticker}
+                            {h.ref.name ? ` · ${h.ref.name}` : ""}
+                          </div>
+                          <div className={styles.rowSub}>
+                            {h.ref.theme_slugs.length === 0 ? (
+                              "No theme links"
+                            ) : (
+                              <>
+                                Themes:{" "}
+                                {h.ref.theme_slugs.map((slug, j) => (
+                                  <span key={slug}>
+                                    {j > 0 ? " · " : ""}
+                                    <Link
+                                      href={`/themes/${encodeURIComponent(slug)}`}
+                                      className={styles.themeLink}
+                                      prefetch={false}
+                                      onMouseEnter={() =>
+                                        prefetchHref(`/themes/${encodeURIComponent(slug)}`)
+                                      }
+                                      onFocus={() =>
+                                        prefetchHref(`/themes/${encodeURIComponent(slug)}`)
+                                      }
+                                      onClick={() => {
+                                        setOpen(false);
+                                        setQuery("");
+                                      }}
+                                    >
+                                      {h.ref.theme_names[j] ?? slug}
+                                    </Link>
+                                  </span>
+                                ))}
+                              </>
+                            )}
+                          </div>
                         </div>
-                        <div className={styles.rowSub}>
-                          {h.ref.theme_slugs.length === 0 ? (
-                            "No theme links"
-                          ) : (
-                            <>
-                              Themes:{" "}
-                              {h.ref.theme_slugs.map((slug, j) => (
-                                <span key={slug}>
-                                  {j > 0 ? " · " : ""}
-                                  <Link
-                                    href={`/themes/${encodeURIComponent(slug)}`}
-                                    className={styles.themeLink}
-                                    prefetch={false}
-                                    onMouseEnter={() =>
-                                      prefetchHref(`/themes/${encodeURIComponent(slug)}`)
-                                    }
-                                    onFocus={() =>
-                                      prefetchHref(`/themes/${encodeURIComponent(slug)}`)
-                                    }
-                                    onClick={() => {
-                                      setOpen(false);
-                                      setQuery("");
-                                    }}
-                                  >
-                                    {h.ref.theme_names[j] ?? slug}
-                                  </Link>
-                                </span>
-                              ))}
-                            </>
-                          )}
-                        </div>
+                        <WatchlistStar
+                          compact
+                          itemType="ticker"
+                          itemKey={h.ref.ticker}
+                          label={h.ref.ticker}
+                        />
                       </div>
                     ) : h.kind === "theme" ? (
-                      <Link
-                        href={`/themes/${encodeURIComponent(h.ref.slug)}`}
-                        className={styles.row}
-                        prefetch={false}
-                        onMouseEnter={() =>
-                          prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
-                        }
-                        onFocus={() =>
-                          prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
-                        }
+                      <div
+                        className={styles.rowWithAction}
                         style={{
                           background: i === cursor ? "rgba(38, 252, 214, 0.08)" : undefined,
                         }}
                         role="option"
                         aria-selected={i === cursor}
-                        onClick={() => {
-                          setOpen(false);
-                          setQuery("");
-                        }}
                       >
-                        <div className={styles.rowTitle}>
-                          <span className={styles.badge}>Theme</span>
-                          {h.ref.name}
-                        </div>
-                        {h.ref.group_name ? (
-                          <div className={styles.rowSub}>Group: {h.ref.group_name}</div>
-                        ) : null}
-                      </Link>
+                        <Link
+                          href={`/themes/${encodeURIComponent(h.ref.slug)}`}
+                          className={`${styles.row} ${styles.rowBody}`}
+                          prefetch={false}
+                          onMouseEnter={() =>
+                            prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
+                          }
+                          onFocus={() =>
+                            prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
+                          }
+                          onClick={() => {
+                            setOpen(false);
+                            setQuery("");
+                          }}
+                        >
+                          <div className={styles.rowTitle}>
+                            <span className={styles.badge}>Theme</span>
+                            {h.ref.name}
+                          </div>
+                          {h.ref.group_name ? (
+                            <div className={styles.rowSub}>Group: {h.ref.group_name}</div>
+                          ) : null}
+                        </Link>
+                        <WatchlistStar
+                          compact
+                          itemType="theme"
+                          itemKey={h.ref.slug}
+                          label={h.ref.name}
+                          signInNext={`/themes/${encodeURIComponent(h.ref.slug)}`}
+                        />
+                      </div>
                     ) : (
                       <Link
                         href={`/groups/${encodeURIComponent(h.ref.slug)}`}

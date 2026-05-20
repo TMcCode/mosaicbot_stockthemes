@@ -1,0 +1,142 @@
+.wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.wrapProminent {
+  width: 100%;
+  max-width: 320px;
+}
+
+.star {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin: 0;
+  padding: 4px 8px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nav-muted, #9aa8a6);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.star:hover:not(:disabled) {
+  color: var(--nav-accent, #26fcd6);
+  border-color: rgba(38, 252, 214, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.star:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.starSaved {
+  color: #f5c842;
+  border-color: rgba(245, 200, 66, 0.45);
+}
+
+.starSaved:hover:not(:disabled) {
+  color: #ffe08a;
+  border-color: rgba(245, 200, 66, 0.65);
+}
+
+.starCompact {
+  padding: 2px 6px;
+  font-size: 15px;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.starProminent {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+}
+
+.starProminent span {
+  white-space: nowrap;
+}
+
+.signInLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--nav-muted, #9aa8a6);
+  text-decoration: none;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.signInLink:hover {
+  color: var(--nav-accent, #26fcd6);
+  border-color: rgba(38, 252, 214, 0.35);
+}
+
+.signInLinkCompact {
+  padding: 2px 6px;
+  font-size: 15px;
+  border-radius: 8px;
+  gap: 4px;
+}
+
+.signInLinkProminent {
+  width: 100%;
+  justify-content: flex-start;
+  padding: 12px 18px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.2;
+  border-radius: 12px;
+  letter-spacing: 0.01em;
+}
+
+.signInLinkProminent span {
+  white-space: nowrap;
+}
+
+.hint {
+  margin: 0;
+  max-width: 320px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted, #6e7d7b);
+  text-align: left;
+}
+
+.hintError {
+  color: #f87171;
+}
+
+:global(.st-theme[data-theme="light"]) .star,
+:global(.st-theme[data-theme="light"]) .signInLink {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: rgba(0, 0, 0, 0.12);
+}

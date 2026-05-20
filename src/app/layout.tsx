@@ -7,6 +7,7 @@ import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvide
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { SupabaseAuthProvider } from "@/components/SupabaseAuthProvider";
+import { WatchlistProvider } from "@/components/WatchlistProvider";
 import { ThemeRoot } from "@/components/ThemeRoot";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
@@ -73,11 +74,13 @@ export default async function RootLayout({
         <AdSenseGlobalScript />
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>
-            <ThemeRoot>
-              <SiteNav />
-              {children}
-              <SiteFooter dataAsOf={manifest.as_of} />
-            </ThemeRoot>
+            <WatchlistProvider>
+              <ThemeRoot>
+                <SiteNav />
+                {children}
+                <SiteFooter dataAsOf={manifest.as_of} />
+              </ThemeRoot>
+            </WatchlistProvider>
           </SupabaseAuthProvider>
         </NewsletterRuntimeProvider>
       </body>

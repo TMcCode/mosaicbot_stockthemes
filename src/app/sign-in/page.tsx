@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 
 import styles from "@/app/page.module.css";
 
-import { authCallbackAbsoluteUrl } from "@/lib/authRedirect";
+import { authCallbackAbsoluteUrl, sanitizeAuthNextPath } from "@/lib/authRedirect";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -18,13 +18,22 @@ export default function SignInPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [returnPath, setReturnPath] = useState("/my");
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const next = sanitizeAuthNextPath(new URLSearchParams(window.location.search).get("next"));
+    if (next) {
+      setReturnPath(next);
+    }
+  }, []);
 
   useEffect(() => {
     if (!configured || loading) return;
     if (user) {
-      router.replace("/my");
+      router.replace(returnPath);
     }
-  }, [configured, loading, user, router]);
+  }, [configured, loading, user, router, returnPath]);
 
   if (!configured) {
     return (
@@ -63,7 +72,7 @@ export default function SignInPage() {
     setMessage(null);
     const supabase = getBrowserSupabase();
     if (!supabase) return;
-    const redirectTo = authCallbackAbsoluteUrl();
+    const redirectTo = authCallbackAbsoluteUrl(returnPath);
     if (!redirectTo) {
       setError("Could not determine callback URL.");
       return;
