@@ -1,4 +1,12 @@
+"use client";
+
+import Link from "next/link";
+
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { shouldShowThemeThesisUi, themeThesisHasContent } from "@/lib/themeThesis";
 import type { ThemeThesisV0 } from "@/types/theme.detail.v0";
+
+import styles from "./ThemeThesisSection.module.css";
 
 function formatThesisUpdateDate(raw: string): string {
   const t = raw.trim();
@@ -15,56 +23,95 @@ function formatThesisUpdateDate(raw: string): string {
   return t;
 }
 
-export function themeThesisHasContent(tt: ThemeThesisV0 | undefined): boolean {
-  if (!tt) {
-    return false;
-  }
-  return Boolean(tt.thesis?.trim());
-}
-
 type Props = {
-  themeThesis: ThemeThesisV0;
+  themeThesis?: ThemeThesisV0;
+  /** Return path after sign-in (e.g. `/themes/my-slug`). */
+  signInNext?: string;
 };
 
-type UpdateProps = {
-  themeThesis: ThemeThesisV0 | undefined;
-};
-
-/**
- * Render only the headline thesis paragraph (no details/counterpoints table).
- */
-export function ThemeThesisSection({ themeThesis }: Props) {
+function ThesisParagraph({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
   const thesis = themeThesis.thesis?.trim();
   if (!thesis) {
     return null;
   }
-  return <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 760 }}>{thesis}</p>;
+  return <p className={styles.thesis}>{thesis}</p>;
 }
 
-export function ThemeThesisUpdateBadge({ themeThesis }: UpdateProps) {
-  const upd = themeThesis?.thesis_update?.trim();
+function ThesisUpdateBadge({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
+  const upd = themeThesis.thesis_update?.trim();
   if (!upd) {
     return null;
   }
-  const updateDate = formatThesisUpdateDate(upd);
   return (
-    <p style={{ marginTop: 0, marginBottom: 0 }}>
-      <span
-        style={{
-          display: "inline-block",
-          padding: "4px 10px",
-          borderRadius: 12,
-          border: "1px solid var(--border-subtle, rgba(128,128,128,0.35))",
-          background: "var(--surface-muted, rgba(127,127,127,0.08))",
-          color: "var(--text-secondary, #666)",
-          fontSize: 13,
-          fontWeight: 600,
-          lineHeight: 1.2,
-          whiteSpace: "nowrap",
-        }}
-      >
-        Thesis update: {updateDate}
-      </span>
+    <p className={styles.updateBadge}>
+      <span className={styles.badge}>Thesis update: {formatThesisUpdateDate(upd)}</span>
     </p>
+  );
+}
+
+function ThesisSignInPrompt({ signInNext }: { signInNext?: string }) {
+  const signInHref = signInNext
+    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
+    : "/sign-in";
+
+  return (
+    <div className={styles.locked} aria-label="Theme thesis sign-in prompt">
+      <p className={styles.lockedTitle}>Sign in to read the full theme thesis</p>
+      <p className={styles.lockedCopy}>
+        Free account — unlock the investment thesis for this theme, save it to your watchlist, and
+        track performance on My watchlist.
+      </p>
+      <div className={styles.lockedActions}>
+        <Link href={signInHref} className={styles.signInBtn}>
+          Sign in free
+        </Link>
+        <Link href="/my" className={styles.secondaryLink}>
+          What is My watchlist?
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Theme thesis + update badge; guests see a sign-in prompt instead of thesis text.
+ */
+export function ThemeThesisBlock({ themeThesis, signInNext }: Props) {
+  if (!shouldShowThemeThesisUi(themeThesis)) {
+    return null;
+  }
+
+  const thesis = themeThesis!;
+  const { configured, loading, user } = useSupabaseAuth();
+
+  if (!configured) {
+    return (
+      <div className={styles.block}>
+        <ThesisParagraph themeThesis={thesis} />
+        <ThesisUpdateBadge themeThesis={thesis} />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return null;
+  }
+
+  if (!user) {
+    if (!themeThesisHasContent(thesis)) {
+      return null;
+    }
+    return (
+      <div className={styles.block}>
+        <ThesisSignInPrompt signInNext={signInNext} />
+      </div>
+    );
+  }
+
+  return (
+    <div className={styles.block}>
+      <ThesisParagraph themeThesis={thesis} />
+      <ThesisUpdateBadge themeThesis={thesis} />
+    </div>
   );
 }

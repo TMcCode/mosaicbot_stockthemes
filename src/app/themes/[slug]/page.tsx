@@ -9,11 +9,8 @@ import { TickerBadge } from "@/components/TickerBadge";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
-import {
-  ThemeThesisSection,
-  ThemeThesisUpdateBadge,
-  themeThesisHasContent,
-} from "@/components/ThemeThesisSection";
+import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
+import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import styles from "../../page.module.css";
 
 import { formatWeight } from "@/lib/formatWeight";
@@ -579,15 +576,17 @@ export default async function ThemeDetailPage({ params }: Props) {
                   </Link>
                 </p>
               ) : null}
-              {detail?.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
-                <ThemeThesisSection themeThesis={detail.theme_thesis} />
+              {shouldShowThemeThesisUi(detail?.theme_thesis) ? (
+                <ThemeThesisBlock
+                  themeThesis={detail?.theme_thesis}
+                  signInNext={`/themes/${slug}`}
+                />
               ) : null}
               {detail?.seo_intro ? (
                 <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
                   {detail.seo_intro}
                 </p>
               ) : null}
-              <ThemeThesisUpdateBadge themeThesis={detail?.theme_thesis} />
               {!detail && !dataBaseUrl ? (
                 <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
                   No theme detail JSON at build time and no{" "}

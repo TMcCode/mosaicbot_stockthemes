@@ -1,0 +1,92 @@
+.block {
+  max-width: 760px;
+}
+
+.thesis {
+  margin: 0;
+  font-size: 16px;
+  line-height: 1.55;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.locked {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.lockedTitle {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.lockedCopy {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.lockedActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+}
+
+.signInBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.signInBtn:hover {
+  filter: brightness(1.05);
+}
+
+.secondaryLink {
+  font-size: 13px;
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.secondaryLink:hover {
+  text-decoration: underline;
+}
+
+.updateBadge {
+  margin: 10px 0 0;
+}
+
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.35));
+  background: var(--surface-muted, rgba(127, 127, 127, 0.08));
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+:global(.st-theme[data-theme="light"]) .locked {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .signInBtn {
+  color: #064032;
+}

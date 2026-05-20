@@ -4,11 +4,8 @@ import { useEffect, useState } from "react";
 import posthog from "posthog-js";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import {
-  ThemeThesisSection,
-  ThemeThesisUpdateBadge,
-  themeThesisHasContent,
-} from "@/components/ThemeThesisSection";
+import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
+import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
@@ -116,15 +113,14 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
       <p className={styles.eyebrow} style={{ marginTop: 8 }}>
         Loaded in browser · live theme JSON
       </p>
-      {detail.theme_thesis && themeThesisHasContent(detail.theme_thesis) ? (
-        <ThemeThesisSection themeThesis={detail.theme_thesis} />
+      {shouldShowThemeThesisUi(detail.theme_thesis) ? (
+        <ThemeThesisBlock themeThesis={detail.theme_thesis} signInNext={`/themes/${slug}`} />
       ) : null}
       {detail.seo_intro ? (
         <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
           {detail.seo_intro}
         </p>
       ) : null}
-      <ThemeThesisUpdateBadge themeThesis={detail.theme_thesis} />
       <div className={styles.tightChartTop}>
         <Chart1yPanel
           chart1y={detail.chart_1y}
