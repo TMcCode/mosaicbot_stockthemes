@@ -98,6 +98,9 @@ jobs:
         run: node scripts/sync-public-json-ci.mjs
         env:
           STOCKTHEMES_BUILD_CACHE: "1"
+          # Private bucket: CI cannot use anonymous CDN; read GCS with cdn-reader SA (GitHub secret).
+          STOCKTHEMES_SYNC_VIA_GCS: "1"
+          STOCKTHEMES_GCS_SA_JSON: ${{ secrets.STOCKTHEMES_GCS_SA_JSON }}
           FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
 

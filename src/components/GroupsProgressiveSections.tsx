@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 
@@ -47,6 +48,8 @@ export function GroupsProgressiveSections({
   classNameAdStripBanner,
   classNameGroupsAdStrip,
 }: Props) {
+  const router = useRouter();
+  const prefetchedHrefsRef = useRef<Set<string>>(new Set());
   const [visibleCount, setVisibleCount] = useState(Math.min(initialSectors, sectors.length));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   /** Only true after mount when IntersectionObserver is missing (avoids SSR/client HTML mismatch). */
@@ -81,6 +84,12 @@ export function GroupsProgressiveSections({
     };
   }, [visibleCount, sectors.length]);
 
+  const prefetchHref = (href: string) => {
+    if (prefetchedHrefsRef.current.has(href)) return;
+    prefetchedHrefsRef.current.add(href);
+    void router.prefetch(href);
+  };
+
   return (
     <>
       {visible.map((row, idx) => (
@@ -90,7 +99,13 @@ export function GroupsProgressiveSections({
             <ul className={classNameGrid} style={{ listStyle: "none", paddingLeft: 0 }}>
               {row.groups.map((g) => (
                 <li key={g.slug}>
-                  <Link href={`/groups/${g.slug}`} className={classNameListLink} prefetch={false}>
+                  <Link
+                    href={`/groups/${g.slug}`}
+                    className={classNameListLink}
+                    prefetch={false}
+                    onMouseEnter={() => prefetchHref(`/groups/${g.slug}`)}
+                    onFocus={() => prefetchHref(`/groups/${g.slug}`)}
+                  >
                     <span className={classNameName}>{g.name}</span>
                     <span className={classNameMeta}>
                       {g.themeCount != null ? `${g.themeCount} themes` : ""}

@@ -10,12 +10,26 @@ let basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").trim().replace(/\/$/, "
 if (basePath && !basePath.startsWith("/")) {
   basePath = `/${basePath}`;
 }
+const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
-  output: "export",
+  ...(isDev ? {} : { output: "export" }),
+  experimental: {
+    // Turbopack FS cache can occasionally corrupt local `.next/dev` in this repo.
+    // Keep prod behavior unchanged; this only affects `next dev`.
+    turbopackFileSystemCacheForDev: false,
+  },
   // Allow LAN-origin browser access to dev-only assets (e.g. HMR) while testing from another device.
   allowedDevOrigins: ["192.168.1.218"],
   ...(basePath ? { basePath } : {}),
+  webpack: (config, { dev }) => {
+    if (dev) {
+      // Avoid filesystem rename races in `.next/dev/cache/webpack/*` on some local setups,
+      // while still keeping fast rebuilds via in-memory caching.
+      config.cache = { type: "memory" };
+    }
+    return config;
+  },
   // Documents/ has a stray package-lock.json; without this, Turbopack uses the wrong root.
   turbopack: {
     root: path.join(__dirname),

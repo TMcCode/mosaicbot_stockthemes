@@ -191,7 +191,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   key={slug}
                   slug={slug}
                   dataBaseUrl={dataBaseUrl}
-                  serverChart={detail.chart_1y}
+                  serverChart={detail?.chart_1y}
                   chartJsonFolder="groups"
                   performanceTitle={group.name}
                   compositionMetaByTicker={groupChartMetaBySlug}
@@ -205,7 +205,7 @@ export default async function GroupDetailPage({ params }: Props) {
             <div className={styles.tightChartTop}>
               <DeferRender minHeight={460} rootMargin="360px 0px">
                 <Chart1yPanel
-                  chart1y={detail.chart_1y}
+                  chart1y={detail?.chart_1y}
                   performanceTitle={group.name}
                   compositionMetaByTicker={groupChartMetaBySlug}
                   compositionLegendShowSeriesBadge={false}

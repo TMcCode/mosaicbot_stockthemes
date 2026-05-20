@@ -15,6 +15,7 @@
 
 # next.js
 /.next/
+/.next 2/
 /out/
 
 # Generated at build from NEXT_PUBLIC_ADSENSE_CLIENT (see scripts/write-ads-txt.mjs)
@@ -22,6 +23,9 @@
 
 # Generated at build (see scripts/fetch-search-index.mjs)
 /public/search_index.v0.json
+
+# CI/static-export GCS mirror (see scripts/sync-build-cache.mjs)
+/.cache/stockthemes-public/
 
 # production
 /build

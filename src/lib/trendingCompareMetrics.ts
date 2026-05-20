@@ -42,6 +42,8 @@ export function trendingColumnHeader(key: string): string {
   const labels: Record<string, string> = {
     "1D": "1D %",
     "10D": "10D %",
+    SinceLstRpt: "Since LstRpt %",
+    "LstRpt %": "LstRpt %",
     MTD: "MTD %",
     YTD: "YTD %",
     Period: "1Yr %",

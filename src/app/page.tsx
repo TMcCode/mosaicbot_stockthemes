@@ -201,7 +201,9 @@ export default async function Home() {
     ...row,
     marketBaseline: row.marketBaseline === true,
   }));
-  const trendingColumns = resolveTrendingColumnOrder(detailsSorted);
+  const trendingColumns = resolveTrendingColumnOrder(detailsSorted).filter(
+    (col) => col !== "LstRpt %" && col !== "SinceLstRpt",
+  );
   const selectedDateRows = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const selectedDateByKey = new Map(
     selectedDateRows.map((r) => [normalizeEventKey(String(r.day_name || "")), r]),
@@ -299,6 +301,9 @@ export default async function Home() {
           <div className={styles.directoryGrid}>
             <section className={styles.section}>
               <h2>Trending themes</h2>
+              <p className={styles.introMore}>
+                <Link href="/compare">Open full compare table</Link>
+              </p>
               <HorizontalScrollArea className={styles.trendingScrollWrap}>
                 <div
                   className={styles.trendingTable}

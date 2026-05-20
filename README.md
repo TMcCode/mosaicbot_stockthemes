@@ -29,7 +29,7 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 Copy `.env.local.example` to `.env.local` and set:
 
-`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=https://storage.googleapis.com/stockthemes-public/manifest.json`
+`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=https://data.stockthemes.ai/manifest.json` (Path A CDN; see `docs/CLOUDFLARE_CDN_SETUP.md`)
 
 Restart `npm run dev`. The home page shows **manifest v0 (live)** and your real group/theme counts. Without this file, it uses `public/fixtures/manifest.json`.
 
@@ -54,7 +54,7 @@ Workflow: **`.github/workflows/deploy-pages.yml`**. On every push to **`main`** 
 
    | Name | Example value | Notes |
    |------|----------------|--------|
-   | `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` | `https://storage.googleapis.com/stockthemes-public/manifest.json` | Same as local; full prerender of all routes. |
+   | `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` | `https://data.stockthemes.ai/manifest.json` | Path A CDN; see `docs/CLOUDFLARE_CDN_SETUP.md`. |
    | `NEXT_PUBLIC_SITE_URL` | `https://tmccode.github.io/mosaicbot_stockthemes` | Your real **GitHub username** + **repo name**; **no** trailing slash. |
    | `NEXT_PUBLIC_BASE_PATH` | `/mosaicbot_stockthemes` | **Must** match the repo name segment in the URL (leading `/`). |
 

@@ -75,6 +75,7 @@ function collectHits(index: SearchIndexV0, fuse: Fuse<FuseRow>, query: string): 
   if (!q) {
     return [];
   }
+  const qLower = q.toLowerCase();
 
   const lettersOnly = q.replace(/[^a-zA-Z]/g, "");
   const upper = lettersOnly.toUpperCase();
@@ -110,7 +111,25 @@ function collectHits(index: SearchIndexV0, fuse: Fuse<FuseRow>, query: string): 
     return out.slice(0, 12);
   }
 
+  // Guarantee obvious group-name matches are surfaced even when ticker/theme rows dominate fuzzy ranks.
+  const directGroupMatches = index.groups
+    .filter((g) => {
+      const name = g.name.toLowerCase();
+      const slug = g.slug.toLowerCase();
+      return name.includes(qLower) || slug.includes(qLower);
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .slice(0, 2);
+  for (const g of directGroupMatches) {
+    const key = `group:${g.slug}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      out.push({ kind: "group", ref: g, key });
+    }
+  }
+
   const fuzzy = fuse.search(q, { limit: 20 });
+  const fuzzyHits: Hit[] = [];
   for (const r of fuzzy) {
     const row = r.item;
     let key: string;
@@ -125,16 +144,36 @@ function collectHits(index: SearchIndexV0, fuse: Fuse<FuseRow>, query: string): 
       continue;
     }
     seen.add(key);
-    out.push(
+    fuzzyHits.push(
       row.kind === "ticker"
         ? { kind: "ticker", ref: row.ref, key }
         : row.kind === "theme"
           ? { kind: "theme", ref: row.ref, key }
           : { kind: "group", ref: row.ref, key },
     );
-    if (out.length >= 14) {
+  }
+
+  // Ensure search results include discovery entities (groups/themes) when they match.
+  const MAX_HITS = 14;
+  const reservedGroups = fuzzyHits.filter((h) => h.kind === "group").slice(0, 2);
+  const reservedThemes = fuzzyHits.filter((h) => h.kind === "theme").slice(0, 2);
+  const promotedKeys = new Set<string>();
+  for (const h of [...reservedGroups, ...reservedThemes]) {
+    if (out.length >= MAX_HITS || promotedKeys.has(h.key)) {
+      continue;
+    }
+    promotedKeys.add(h.key);
+    out.push(h);
+  }
+
+  for (const h of fuzzyHits) {
+    if (out.length >= MAX_HITS) {
       break;
     }
+    if (promotedKeys.has(h.key)) {
+      continue;
+    }
+    out.push(h);
   }
 
   return out;
@@ -147,6 +186,7 @@ export function SiteSearch() {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const loadInflight = useRef(false);
+  const prefetchedHrefsRef = useRef<Set<string>>(new Set());
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
@@ -304,6 +344,15 @@ export function SiteSearch() {
     [cursor, goToHit, hits, open],
   );
 
+  const prefetchHref = useCallback(
+    (href: string) => {
+      if (prefetchedHrefsRef.current.has(href)) return;
+      prefetchedHrefsRef.current.add(href);
+      void router.prefetch(href);
+    },
+    [router],
+  );
+
   const showPanel = Boolean(
     open &&
       (loadBusy ||
@@ -384,6 +433,12 @@ export function SiteSearch() {
                                     href={`/themes/${encodeURIComponent(slug)}`}
                                     className={styles.themeLink}
                                     prefetch={false}
+                                    onMouseEnter={() =>
+                                      prefetchHref(`/themes/${encodeURIComponent(slug)}`)
+                                    }
+                                    onFocus={() =>
+                                      prefetchHref(`/themes/${encodeURIComponent(slug)}`)
+                                    }
                                     onClick={() => {
                                       setOpen(false);
                                       setQuery("");
@@ -402,6 +457,12 @@ export function SiteSearch() {
                         href={`/themes/${encodeURIComponent(h.ref.slug)}`}
                         className={styles.row}
                         prefetch={false}
+                        onMouseEnter={() =>
+                          prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
+                        }
+                        onFocus={() =>
+                          prefetchHref(`/themes/${encodeURIComponent(h.ref.slug)}`)
+                        }
                         style={{
                           background: i === cursor ? "rgba(38, 252, 214, 0.08)" : undefined,
                         }}
@@ -425,6 +486,12 @@ export function SiteSearch() {
                         href={`/groups/${encodeURIComponent(h.ref.slug)}`}
                         className={styles.row}
                         prefetch={false}
+                        onMouseEnter={() =>
+                          prefetchHref(`/groups/${encodeURIComponent(h.ref.slug)}`)
+                        }
+                        onFocus={() =>
+                          prefetchHref(`/groups/${encodeURIComponent(h.ref.slug)}`)
+                        }
                         style={{
                           background: i === cursor ? "rgba(38, 252, 214, 0.08)" : undefined,
                         }}

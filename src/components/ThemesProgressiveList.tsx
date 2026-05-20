@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 
@@ -35,6 +36,8 @@ export function ThemesProgressiveList({
   classNameAdSlot,
   classNameAdChartEnd,
 }: Props) {
+  const router = useRouter();
+  const prefetchedHrefsRef = useRef<Set<string>>(new Set());
   const totalBlocks = Math.max(1, Math.ceil(themes.length / blockSize));
   const [visibleBlocks, setVisibleBlocks] = useState(Math.min(initialBlocks, totalBlocks));
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -78,6 +81,12 @@ export function ThemesProgressiveList({
     };
   }, [visibleBlocks, totalBlocks]);
 
+  const prefetchHref = (href: string) => {
+    if (prefetchedHrefsRef.current.has(href)) return;
+    prefetchedHrefsRef.current.add(href);
+    void router.prefetch(href);
+  };
+
   return (
     <>
       {blocks.map((slice, idx) => {
@@ -88,7 +97,13 @@ export function ThemesProgressiveList({
             <ul className={classNameList} style={{ listStyle: "none", paddingLeft: 0 }}>
               {slice.map((t) => (
                 <li key={t.slug}>
-                  <Link href={`/themes/${t.slug}`} className={classNameListLink} prefetch={false}>
+                  <Link
+                    href={`/themes/${t.slug}`}
+                    className={classNameListLink}
+                    prefetch={false}
+                    onMouseEnter={() => prefetchHref(`/themes/${t.slug}`)}
+                    onFocus={() => prefetchHref(`/themes/${t.slug}`)}
+                  >
                     <span className={classNameName}>{t.name}</span>
                     <span className={classNameMeta}>
                       {t.groupName}

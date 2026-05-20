@@ -1,0 +1,117 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toolbar {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.control select {
+  min-width: 170px;
+  min-height: 86px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 8px;
+  background: var(--card-surface);
+  color: var(--text-primary);
+  padding: 6px;
+}
+
+.hint {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.scrollWrap {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  display: grid;
+  width: max-content;
+  min-width: max-content;
+  gap: 5px 10px;
+  align-items: start;
+}
+
+.sticky {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  box-sizing: border-box;
+  padding-right: 8px;
+  margin-right: -2px;
+  background: var(--card-surface);
+  background-clip: padding-box;
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+}
+
+.head {
+  font-size: 10px;
+  line-height: 1.2;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-align: right;
+  white-space: nowrap;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.head.sticky {
+  z-index: 3;
+  text-align: left;
+}
+
+.themeCell {
+  min-width: 0;
+}
+
+.themeName {
+  display: block;
+  color: var(--text-primary);
+  text-decoration: none;
+  font-size: 14px;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.themeName:hover {
+  text-decoration: underline;
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.value {
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary);
+  padding: 3px 4px;
+  border-radius: 5px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  text-align: right;
+  white-space: nowrap;
+  line-height: 1.25;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}

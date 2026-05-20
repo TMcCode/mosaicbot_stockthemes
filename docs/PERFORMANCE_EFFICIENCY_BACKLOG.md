@@ -18,6 +18,16 @@ Goal: keep initial load fast, keep chart interactions smooth, and keep business 
 - Benchmark line render is guarded to avoid sparse/misleading overlays.
 - Theme detail page still computes some derived values from constituents at render time.
 
+## GCS egress (implemented / ops)
+
+See **`docs/GCS_EGRESS_REDUCTION.md`** and MosaicBot **`docs/stockthemes/CLOUDFLARE_CDN_SETUP.md`**.
+
+- ETL: longer `Cache-Control` on `stockthemes-public` uploads.
+- CI: `sync-build-cache.mjs` + `.cache/stockthemes-public` + GitHub Actions cache.
+- Build loaders: `fetchPublicJsonText` when `STOCKTHEMES_STATIC_PAGES=1`.
+- Browser: `ThemeChartLiveHydrate` uses shared cache-buster window (not `no-store` per hit).
+- **You still need:** Cloudflare (or CDN) + `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` → CDN origin.
+
 ## High-Impact, Low-Risk Next Steps
 
 1. Precompute theme totals in ETL

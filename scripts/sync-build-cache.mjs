@@ -9,6 +9,7 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { downloadGcsObject, gcsSyncEnabled, loadGcsServiceAccount } from "./lib/gcsDownload.mjs";
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -92,11 +93,25 @@ function missingCacheRels(jobs) {
 async function fetchToCache(url, rel) {
   const dest = cachePath(rel);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
-  const res = await fetch(url);
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status} ${url}`);
+  let text;
+
+  if (gcsSyncEnabled()) {
+    text = await downloadGcsObject(rel);
+  } else {
+    const res = await fetch(url);
+    if (!res.ok) {
+      const sa = loadGcsServiceAccount();
+      if (res.status === 403 && sa) {
+        console.warn(`sync-build-cache: CDN 403 for ${rel} — falling back to GCS`);
+        text = await downloadGcsObject(rel);
+      } else {
+        throw new Error(`HTTP ${res.status} ${url}`);
+      }
+    } else {
+      text = await res.text();
+    }
   }
-  const text = await res.text();
+
   fs.writeFileSync(dest, text, "utf8");
   return text;
 }
@@ -133,6 +148,10 @@ async function main() {
   }
 
   fs.mkdirSync(CACHE_DIR, { recursive: true });
+
+  if (gcsSyncEnabled()) {
+    console.log("sync-build-cache: using authenticated GCS (STOCKTHEMES_SYNC_VIA_GCS=1)");
+  }
 
   const manifestText = await fetchToCache(manifest, "manifest.json");
   const manifestJson = JSON.parse(manifestText);
