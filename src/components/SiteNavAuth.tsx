@@ -13,17 +13,9 @@ export function SiteNavAuth() {
     return null;
   }
 
-  if (loading) {
-    return (
-      <span className={styles.navMuted} aria-hidden>
-        …
-      </span>
-    );
-  }
-
   if (user) {
     return (
-      <>
+      <span className={styles.authNav}>
         <Link href="/my">Watchlist</Link>
         <span className={styles.sep} aria-hidden="true">
           ·
@@ -31,9 +23,13 @@ export function SiteNavAuth() {
         <button type="button" className={styles.navButton} onClick={() => void signOut()}>
           Sign out
         </button>
-      </>
+      </span>
     );
   }
 
-  return <Link href="/sign-in">Sign in</Link>;
+  return (
+    <Link href="/sign-in" className={styles.authNav} aria-busy={loading || undefined}>
+      Sign in
+    </Link>
+  );
 }

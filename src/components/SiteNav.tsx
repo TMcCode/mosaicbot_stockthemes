@@ -27,15 +27,26 @@ export function SiteNav() {
         </Link>
         <SiteSearch />
         <div className={styles.links}>
-          <Link href="/groups">All groups</Link>
-          <span className={styles.sep} aria-hidden="true">
-            ·
-          </span>
-          <Link href="/themes">All themes</Link>
-          <span className={styles.sep} aria-hidden="true">
-            ·
-          </span>
-          <Link href="/about">About</Link>
+          <div className={styles.browseMenu}>
+            <button type="button" className={styles.menuTrigger} aria-haspopup="menu" aria-expanded={false}>
+              Browse
+              <span className={styles.menuChevron} aria-hidden="true">
+                ▾
+              </span>
+            </button>
+            <div className={styles.menuPanel} role="menu">
+              <Link href="/groups" className={styles.menuItem} role="menuitem">
+                All groups
+              </Link>
+              <Link href="/themes" className={styles.menuItem} role="menuitem">
+                All themes
+              </Link>
+              <div className={styles.menuDivider} role="separator" />
+              <Link href="/compare" className={styles.menuItem} role="menuitem">
+                Compare theme performance
+              </Link>
+            </div>
+          </div>
           <span className={styles.sep} aria-hidden="true">
             ·
           </span>
