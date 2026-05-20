@@ -3,8 +3,8 @@ import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
-import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
+import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
 import styles from "./page.module.css";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
@@ -15,22 +15,11 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
 import { buildPageMetadata } from "@/lib/seoMetadata";
-import {
-  resolveTrendingColumnOrder,
-  trendingColumnHeader,
-  valueForTrendingColumn,
-} from "@/lib/trendingCompareMetrics";
+import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
-import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
-
-function fmtPct(v?: number): string {
-  if (v == null || !Number.isFinite(v)) return "—";
-  const sign = v > 0 ? "+" : "";
-  return `${sign}${v.toFixed(2)}%`;
-}
 
 function fmtFeedDate(iso?: string): string {
   if (!iso) return "";
@@ -301,76 +290,13 @@ export default async function Home() {
           <div className={styles.directoryGrid}>
             <section className={styles.section}>
               <h2>Trending themes</h2>
-              <HorizontalScrollArea className={styles.trendingScrollWrap}>
-                <div
-                  className={styles.trendingTable}
-                  style={{
-                    gridTemplateColumns: `var(--trending-theme-col) repeat(${trendingColumns.length}, minmax(var(--trending-value-col), max-content))`,
-                  }}
-                >
-                  <div className={`${styles.trendingHead} ${styles.trendingSticky}`}>Theme</div>
-                  {trendingColumns.map((col) => (
-                    <div
-                      key={`h-${col}`}
-                      className={styles.trendingHead}
-                      title={customDateHelpText(col) || col}
-                    >
-                      {trendingColumnHeader(col)}
-                      {customDateHelpText(col) ? (
-                        <span
-                          className={styles.metricInfoAsterisk}
-                          title={customDateHelpText(col)}
-                          aria-label={`${trendingColumnHeader(col)} explanation`}
-                        >
-                          *
-                        </span>
-                      ) : null}
-                    </div>
-                  ))}
-                  {rowsForTable.flatMap((row) => {
-                    const keyBase = row.slug ?? `n-${row.name}`;
-                    const nameCell =
-                      row.slug != null ? (
-                        <div
-                          key={`${keyBase}-name`}
-                          className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
-                        >
-                          <Link
-                            href={`/themes/${row.slug}`}
-                            className={styles.trendingThemeName}
-                            title={row.name}
-                          >
-                            {row.name}
-                          </Link>
-                        </div>
-                      ) : (
-                        <div
-                          key={`${keyBase}-name`}
-                          className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
-                        >
-                          <span
-                            className={styles.trendingThemeNameMuted}
-                            title={row.name}
-                            style={row.marketBaseline ? { fontWeight: 700 } : undefined}
-                          >
-                            {row.name}
-                          </span>
-                        </div>
-                      );
-                    const cells = trendingColumns.map((col) => {
-                      const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf);
-                      const style =
-                        v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
-                      return (
-                        <div key={`${keyBase}-${col}`} className={styles.trendingValue} style={style}>
-                          {fmtPct(v)}
-                        </div>
-                      );
-                    });
-                    return [nameCell, ...cells];
-                  })}
-                </div>
-              </HorizontalScrollArea>
+              <HomeTrendingThemesTable
+                rows={rowsForTable}
+                columns={trendingColumns}
+                columnHelp={Object.fromEntries(
+                  trendingColumns.map((col) => [col, customDateHelpText(col)]),
+                )}
+              />
             </section>
 
             <DeferRender minHeight={460} rootMargin="420px 0px">

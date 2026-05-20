@@ -371,6 +371,18 @@
   min-width: 0;
 }
 
+.trendingThemeRow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: max-content;
+}
+
+.trendingThemeRow .trendingThemeName {
+  flex: 1;
+  min-width: 0;
+}
+
 .trendingThemeCell.trendingSticky {
   /* Keep grid track width; plain min-width:0 can collapse the theme column on small screens */
   min-width: auto;

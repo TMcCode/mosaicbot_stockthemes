@@ -5,6 +5,9 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { WatchlistStar } from "@/components/WatchlistStar";
+
+import listStyles from "./ThemesProgressiveList.module.css";
 
 type ThemeRow = {
   slug: string;
@@ -97,20 +100,29 @@ export function ThemesProgressiveList({
             <ul className={classNameList} style={{ listStyle: "none", paddingLeft: 0 }}>
               {slice.map((t) => (
                 <li key={t.slug}>
-                  <Link
-                    href={`/themes/${t.slug}`}
-                    className={classNameListLink}
-                    prefetch={false}
-                    onMouseEnter={() => prefetchHref(`/themes/${t.slug}`)}
-                    onFocus={() => prefetchHref(`/themes/${t.slug}`)}
-                  >
-                    <span className={classNameName}>{t.name}</span>
-                    <span className={classNameMeta}>
-                      {t.groupName}
-                      {t.groupName && t.tickerCount != null ? " · " : ""}
-                      {t.tickerCount != null ? `${t.tickerCount} tickers` : ""}
-                    </span>
-                  </Link>
+                  <div className={listStyles.row}>
+                    <WatchlistStar
+                      compact
+                      itemType="theme"
+                      itemKey={t.slug}
+                      label={t.name}
+                      signInNext={`/themes/${t.slug}`}
+                    />
+                    <Link
+                      href={`/themes/${t.slug}`}
+                      className={`${classNameListLink} ${listStyles.rowLink}`}
+                      prefetch={false}
+                      onMouseEnter={() => prefetchHref(`/themes/${t.slug}`)}
+                      onFocus={() => prefetchHref(`/themes/${t.slug}`)}
+                    >
+                      <span className={classNameName}>{t.name}</span>
+                      <span className={classNameMeta}>
+                        {t.groupName}
+                        {t.groupName && t.tickerCount != null ? " · " : ""}
+                        {t.tickerCount != null ? `${t.tickerCount} tickers` : ""}
+                      </span>
+                    </Link>
+                  </div>
                 </li>
               ))}
             </ul>

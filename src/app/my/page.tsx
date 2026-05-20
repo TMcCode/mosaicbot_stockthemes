@@ -4,12 +4,11 @@ import Link from "next/link";
 
 import styles from "@/app/page.module.css";
 
+import { MyWatchlistPerformance } from "@/components/MyWatchlistPerformance";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
-import { useWatchlist } from "@/components/WatchlistProvider";
 
 export default function MyWatchlistPage() {
   const { configured, loading, user } = useSupabaseAuth();
-  const watchlist = useWatchlist();
 
   if (!configured) {
     return (
@@ -45,9 +44,9 @@ export default function MyWatchlistPage() {
           <div className={styles.intro}>
             <p className={styles.eyebrow}>My watchlist</p>
             <h1>Sign in required</h1>
-            <p className={styles.introCopy}>Create a free account to save themes and tickers soon.</p>
+            <p className={styles.introCopy}>Sign in to save themes and tickers and track performance here.</p>
             <p className={styles.introCopy}>
-              <Link href="/sign-in">Sign in</Link>
+              <Link href="/sign-in?next=%2Fmy">Sign in</Link>
               {" · "}
               <Link href="/themes">Browse themes</Link>
             </p>
@@ -64,20 +63,12 @@ export default function MyWatchlistPage() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>My watchlist</p>
-          <h1>Signed in</h1>
-          <p className={styles.introCopy}>Signed in as {email}.</p>
-          {watchlist?.ready ? (
-            <p className={styles.introCopy}>
-              {watchlist.themeCount} of 20 themes · {watchlist.tickerCount} of 20 tickers saved. Use ☆ on theme pages
-              or search to add more — performance table coming next.
-            </p>
-          ) : (
-            <p className={styles.introCopy}>
-              Use ☆ on theme pages or search to save themes and tickers (up to 20 each).
-            </p>
-          )}
-          <p className={styles.introCopy}>
+          <h1>Your watchlist</h1>
+          <MyWatchlistPerformance email={email} />
+          <p className={styles.introCopy} style={{ marginTop: 24 }}>
             <Link href="/themes">Browse themes</Link>
+            {" · "}
+            <Link href="/compare">Compare all themes</Link>
             {" · "}
             <Link href="/">Home</Link>
           </p>
