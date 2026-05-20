@@ -246,11 +246,11 @@ export default async function Home() {
                 </p>
               </div>
               <div className={styles.ctas}>
-                <Link className={styles.secondary} href="/themes">
+                <Link className={styles.primary} href="/themes">
                   Browse all themes
                 </Link>
                 <Link className={styles.primary} href="/groups">
-                  Explore groups
+                  Browse all groups
                 </Link>
               </div>
             </div>
