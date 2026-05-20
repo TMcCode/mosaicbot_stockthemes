@@ -1,35 +1,25 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/CompareThemesTable.module.css";
 import localStyles from "@/components/MyWatchlistPerformance.module.css";
 
+import { WatchlistThemeAddCombobox } from "@/components/WatchlistThemeAddCombobox";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
-import { fetchCompareThemesClient } from "@/lib/fetchCompareThemesClient";
-import { fetchManifestClient } from "@/lib/fetchManifestClient";
+import type {
+  MyWatchlistCompareData,
+  MyWatchlistCompareRow,
+} from "@/lib/prepareMyWatchlistCompareData";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
-import {
-  resolveTrendingColumnOrder,
-  trendingColumnHeader,
-  valueForTrendingColumn,
-} from "@/lib/trendingCompareMetrics";
+import { trendingColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
-import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
-import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 type Tab = "themes" | "tickers";
-
-type TableRow = {
-  slug: string;
-  name: string;
-  groupName?: string | null;
-  compareReturns?: ThemeCompareReturnsV0 | null;
-};
 
 type SortState = { key: string; dir: "asc" | "desc" };
 
@@ -51,66 +41,26 @@ function fmtAsOf(iso: string): string {
 
 type Props = {
   email: string;
+  compareData: MyWatchlistCompareData;
 };
 
-export function MyWatchlistPerformance({ email }: Props) {
+export function MyWatchlistPerformance({ email, compareData }: Props) {
   const watchlist = useWatchlist();
   const [tab, setTab] = useState<Tab>("themes");
-  const [compareAsOf, setCompareAsOf] = useState<string | null>(null);
-  const [allRows, setAllRows] = useState<TableRow[]>([]);
-  const [columns, setColumns] = useState<string[]>([]);
-  const [selectedDateByKey, setSelectedDateByKey] = useState(
-    () => new Map<string, ManifestSelectedDateV0>(),
-  );
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [loadBusy, setLoadBusy] = useState(true);
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
   const [removing, setRemoving] = useState<string | null>(null);
 
-  useEffect(() => {
-    let cancelled = false;
-    setLoadBusy(true);
-    setLoadError(null);
-    void Promise.all([fetchCompareThemesClient(), fetchManifestClient()])
-      .then(([compare, manifest]) => {
-        if (cancelled) return;
-        if (!compare) {
-          setLoadError("Compare data is not available in this environment.");
-          setAllRows([]);
-          setColumns([]);
-          return;
-        }
-        setCompareAsOf(compare.as_of);
-        const manifestLookup = buildSelectedDateLookup(manifest?.selected_dates);
-        setSelectedDateByKey(manifestLookup);
-        const rows: TableRow[] = compare.rows.map((r: CompareThemesRowV0) => ({
-          slug: String(r.slug || "").trim(),
-          name: String(r.name || "").trim(),
-          groupName: r.group_name ?? null,
-          compareReturns: r.compare_returns ?? null,
-        }));
-        setAllRows(rows);
-        const fallbackCols = resolveTrendingColumnOrder(
-          rows.map((r) => ({ compare_returns: r.compareReturns ?? undefined })),
-        );
-        const cols =
-          Array.isArray(compare.columns) && compare.columns.length
-            ? compare.columns.filter((c) => c !== "LstRpt %" && c !== "SinceLstRpt")
-            : fallbackCols.filter((c) => c !== "LstRpt %" && c !== "SinceLstRpt");
-        setColumns(cols);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setLoadError("Could not load performance data.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoadBusy(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const compareAsOf = compareData.available ? compareData.asOf : null;
+  const allRows: MyWatchlistCompareRow[] = compareData.available ? compareData.rows : [];
+  const columns = compareData.available ? compareData.columns : [];
+  const loadError = compareData.available ? null : compareData.message;
+  const selectedDateByKey = useMemo(
+    () =>
+      buildSelectedDateLookup(
+        compareData.available ? compareData.selectedDates : undefined,
+      ),
+    [compareData],
+  );
 
   const savedThemeSlugs = useMemo(() => {
     if (!watchlist?.ready) return new Set<string>();
@@ -189,48 +139,58 @@ export function MyWatchlistPerformance({ email }: Props) {
 
   return (
     <div className={localStyles.wrap}>
-      <p className={styles.introCopy}>
-        Signed in as {email}. Save up to 20 themes and 20 tickers with ☆ on theme pages or search.
-      </p>
+      <p className={localStyles.accountLine}>Signed in as {email}</p>
 
-      <div className={localStyles.tabs} role="tablist" aria-label="Watchlist type">
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "themes"}
-          className={tab === "themes" ? localStyles.tabActive : localStyles.tab}
-          onClick={() => setTab("themes")}
-        >
-          Themes ({watchlist?.themeCount ?? 0})
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={tab === "tickers"}
-          className={tab === "tickers" ? localStyles.tabActive : localStyles.tab}
-          onClick={() => setTab("tickers")}
-        >
-          Tickers ({watchlist?.tickerCount ?? 0})
-        </button>
+      <div className={localStyles.toolbar}>
+        <div className={localStyles.tabs} role="tablist" aria-label="Watchlist type">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "themes"}
+            className={tab === "themes" ? localStyles.tabActive : localStyles.tab}
+            onClick={() => setTab("themes")}
+          >
+            Themes ({watchlist?.themeCount ?? 0})
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={tab === "tickers"}
+            className={tab === "tickers" ? localStyles.tabActive : localStyles.tab}
+            onClick={() => setTab("tickers")}
+          >
+            Tickers ({watchlist?.tickerCount ?? 0})
+          </button>
+        </div>
+        <p className={localStyles.limits}>
+          {watchlist?.ready
+            ? `${watchlist.themeCount} of 20 themes · ${watchlist.tickerCount} of 20 tickers`
+            : "Up to 20 themes · 20 tickers"}
+        </p>
       </div>
 
       {tab === "themes" ? (
         <>
-          {loadBusy ? (
-            <p className={localStyles.hint}>Loading performance…</p>
-          ) : loadError ? (
-            <p className={localStyles.hint}>{loadError}</p>
+          <section className={localStyles.addCard} aria-label="Add theme to watchlist">
+            <h2 className={localStyles.addCardTitle}>Add to watchlist</h2>
+            <WatchlistThemeAddCombobox embedded />
+            <p className={localStyles.addCardHint}>
+              Search by name, or save with ☆ on <Link href="/themes">theme pages</Link> and in site search.
+            </p>
+          </section>
+
+          {loadError ? (
+            <p className={localStyles.emptyHint}>{loadError}</p>
           ) : watchlistRows.length === 0 ? (
-            <p className={localStyles.hint}>
-              No themes saved yet.{" "}
-              <Link href="/themes">Browse themes</Link> and use ☆ to add them here.
+            <p className={localStyles.emptyHint}>
+              No themes saved yet — use the search above or{" "}
+              <Link href="/themes">browse themes</Link>.
             </p>
           ) : (
-            <>
-              {compareAsOf ? (
-                <p className={localStyles.metaLine}>Returns as of {fmtAsOf(compareAsOf)}.</p>
-              ) : null}
-              <p className={tableStyles.hint}>Click a header to sort. Shift+click adds secondary sort.</p>
+            <section className={localStyles.tableSection} aria-label="Watchlist performance">
+              <p className={localStyles.sortHint}>
+                Click a header to sort. Shift+click adds secondary sort.
+              </p>
               <div className={tableStyles.scrollWrap}>
                 <div
                   className={tableStyles.table}
@@ -308,13 +268,16 @@ export function MyWatchlistPerformance({ email }: Props) {
                   })}
                 </div>
               </div>
-            </>
+              {compareAsOf ? (
+                <p className={localStyles.asOfLine}>Returns as of {fmtAsOf(compareAsOf)}.</p>
+              ) : null}
+            </section>
           )}
         </>
       ) : (
         <>
           {savedTickers.length === 0 ? (
-            <p className={localStyles.hint}>
+            <p className={localStyles.emptyHint}>
               No tickers saved yet. Use search and ☆ on a ticker row to add one.
             </p>
           ) : (
@@ -334,11 +297,21 @@ export function MyWatchlistPerformance({ email }: Props) {
               ))}
             </div>
           )}
-          <p className={localStyles.hint}>
+          <p className={localStyles.emptyHint}>
             Ticker performance columns will appear here once compare ticker data is published (Phase 4).
           </p>
         </>
       )}
+
+      <footer className={localStyles.siteFooter}>
+        <nav className={localStyles.footerNav} aria-label="Watchlist page links">
+          <Link href="/themes">Browse themes</Link>
+          {" · "}
+          <Link href="/compare">Compare all themes</Link>
+          {" · "}
+          <Link href="/">Home</Link>
+        </nav>
+      </footer>
     </div>
   );
 }

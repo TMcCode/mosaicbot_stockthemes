@@ -287,7 +287,7 @@ Supabase Dashboard: add **Redirect URLs** for `/auth/callback` (apex + localhost
 
 ### Phase 3 — `/my` theme tab
 
-- [ ] Fetch `compare_themes.v0.json` client-side
+- [x] `/my` loads `compare_themes.v0.json` at build time (same as `/compare`; no browser fetch)
 - [ ] Join to watchlist; render full column set
 - [ ] Footnotes for custom date columns (IRANWAR, LIBDAY)
 

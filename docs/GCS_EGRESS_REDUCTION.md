@@ -54,6 +54,7 @@ Force full re-download: `STOCKTHEMES_BUILD_CACHE_REFRESH=1 npm run build`
 | **Cron** | 1×/day (was 3×/day) |
 | **Build cache** | `sync-build-cache.mjs` + Actions cache |
 | **No live hydrate** | `NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1` in Pages build |
+| **`/my` compare** | Baked at build via `prepareMyWatchlistCompareData` (no client `compare_themes` fetch) |
 | **CDN only** | `normalizePublicDataBase()` blocks `storage.googleapis.com` in prod |
 | **Private bucket** | `docs/PRIVATE_BUCKET_SETUP.md` + MosaicBot scripts |
 
