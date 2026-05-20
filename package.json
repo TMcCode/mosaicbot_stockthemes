@@ -18,6 +18,8 @@
     "verify:cdn": "node scripts/verify-cdn.mjs"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
+    "@supabase/supabase-js": "^2.106.0",
     "fuse.js": "^7.3.0",
     "lightweight-charts": "^4.2.2",
     "next": "16.2.1",
@@ -27,12 +29,12 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
-    "sharp": "^0.34.5",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "sharp": "^0.34.5",
     "typescript": "^5"
   }
 }

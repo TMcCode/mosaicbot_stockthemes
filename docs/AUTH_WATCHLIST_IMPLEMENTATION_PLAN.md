@@ -217,29 +217,29 @@ create index watchlist_items_user_idx on public.watchlist_items (user_id, item_t
 
 ### Dependencies & providers
 
-- [ ] Add `@supabase/supabase-js` (+ optional `@supabase/ssr` if needed later)
-- [ ] `SupabaseProvider` + session listener (client)
-- [ ] `posthog.identify(user.id)` on sign-in; `posthog.reset()` on sign-out
+- [x] Add `@supabase/supabase-js` (SSR package not needed for v1 static shell)
+- [x] `SupabaseAuthProvider` + `onAuthStateChange` (client)
+- [x] `posthog.identify` / `posthog.reset` on sign-in and sign-out (lazy import)
 
 ### Pages & components
 
-- [ ] `/sign-in` — email input, magic link sent state, error handling
-- [ ] `/my` — client page: auth gate + `WatchlistTable` (themes/tickers toggle)
+- [x] `/sign-in` — email input, magic link sent state, error handling
+- [ ] `/my` — **stub** placeholder; Phase 3: auth gate + `WatchlistTable` (themes/tickers toggle)
 - [ ] `WatchlistTable` — reuse/compare `CompareThemesTable` styling + `trendingCompareMetrics`
 - [ ] `WatchlistStar` on `/themes/[slug]` (and search results when ready)
-- [ ] `SiteNav` — Sign in / My watchlist / Sign out
-- [ ] `robots` / SEO: `noindex` on `/my` and `/sign-in` (optional but recommended)
+- [x] `SiteNav` — `SiteNavAuth`: Sign in / Watchlist / Sign out when configured
+- [x] `robots` / SEO — `robots: { index: false }` on layouts for `/sign-in`, `/auth/callback`, `/my`
 
 ### Static export constraints
 
-- [ ] No server-only auth for v1 — browser Supabase client + RLS only
-- [ ] `/my` and `/sign-in` as static shells that hydrate (same as other client-heavy pages)
-- [ ] Do not bake session into SSG HTML for public theme pages (keeps CDN cache simple)
+- [x] No server-only auth for v1 — browser Supabase client + RLS only
+- [x] `/my`, `/sign-in`, `/auth/callback` as static shells that hydrate
+- [x] No session baked into theme SSG HTML (auth is client-only)
 
 ### Env documentation
 
-- [ ] Update `.env.local.example` with Supabase vars
-- [ ] Document GitHub Actions variables in README or this file
+- [x] `.env.local.example` lists Supabase `NEXT_PUBLIC_*` vars
+- [x] `deploy-pages.yml` passes `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY` from repo **Variables** (optional; omit to hide auth on deploy)
 
 ---
 
@@ -271,10 +271,12 @@ create index watchlist_items_user_idx on public.watchlist_items (user_id, item_t
 
 ### Phase 1 — Foundation
 
-- [ ] Supabase project + schema + RLS
-- [ ] Env vars local + GitHub Actions
-- [ ] Sign-in page + nav auth state
-- [ ] Session persistence across reloads
+- [ ] Supabase project + schema + RLS (run `supabase/migrations/001_watchlist.sql` in SQL Editor)
+- [x] Env vars documented (`.env.local.example`) + GitHub Actions Variables for Pages build (`NEXT_PUBLIC_SUPABASE_*`)
+- [x] Sign-in page (`/sign-in`), magic-link callback (`/auth/callback`), `/my` stub, nav auth (`SiteNavAuth`)
+- [x] Session persistence via `@supabase/supabase-js` + `detectSessionInUrl` / PKCE
+
+Supabase Dashboard: add **Redirect URLs** for `/auth/callback` (apex + localhost + Pages base path if used).
 
 ### Phase 2 — Watchlist CRUD
 

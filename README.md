@@ -33,6 +33,8 @@ Copy `.env.local.example` to `.env.local` and set:
 
 Restart `npm run dev`. The home page shows **manifest v0 (live)** and your real group/theme counts. Without this file, it uses `public/fixtures/manifest.json`.
 
+**Supabase (optional):** To enable **Sign in** (magic link) and the `/my` watchlist area, set `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` in `.env.local` (see `.env.local.example`). Add the same **Variables** in GitHub Actions for production Pages. Run `supabase/migrations/001_watchlist.sql` in the Supabase SQL Editor and allow **Redirect URLs** for `/auth/callback` (see `docs/AUTH_WATCHLIST_IMPLEMENTATION_PLAN.md`).
+
 **Theme detail JSON:** `/themes/[slug]` loads **`themes/<slug>.json`** from the same public origin as the manifest. **Group detail JSON:** `/groups/[slug]` loads **`groups/<slug>.json`**. MosaicBot **`stockthemes_manifest.py`** uploads both when **`STOCKTHEMES_PUBLIC_BUCKET`** is set. For fixture-only dev, add files under **`public/fixtures/themes/`** and **`public/fixtures/groups/`** (see `artificial-intelligence` + theme examples).
 
 For **GitHub Pages** builds, set the same variable in the Action (or Pages env) so `next build` can fetch the manifest at build time and pre-render every group/theme route (`generateStaticParams`). Without a URL, the build uses `public/fixtures/manifest.json` (smaller set of paths). Theme pages will embed constituent tables when `themes/<slug>.json` exists at build time.

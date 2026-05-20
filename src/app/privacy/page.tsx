@@ -11,7 +11,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function PrivacyPage() {
-  const updated = "April 7, 2026";
+  const updated = "May 20, 2026";
   return (
     <div className={`st-surface ${styles.page}`}>
       <main className={styles.main}>
@@ -32,7 +32,9 @@ export default function PrivacyPage() {
               We may collect basic analytics and device/browser information when you use the site,
               such as pages viewed, timestamps, approximate location, and technical diagnostics. If
               you use newsletter forms, we collect the information you submit (for example, email
-              address).
+              address). If you create an account using email magic links, authentication and saved
+              preferences (such as watchlists when offered) are processed by our account provider
+              (Supabase).
             </p>
 
             <h3>Advertising and cookies</h3>

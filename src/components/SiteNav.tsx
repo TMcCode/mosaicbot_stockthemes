@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { SiteNavAuth } from "@/components/SiteNavAuth";
 import { SiteSearch } from "@/components/SiteSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { publicAssetPath } from "@/lib/siteUrl";
@@ -35,6 +36,10 @@ export function SiteNav() {
             ·
           </span>
           <Link href="/about">About</Link>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          <SiteNavAuth />
           <span className={styles.sep} aria-hidden="true">
             ·
           </span>

@@ -87,6 +87,28 @@
   color: var(--nav-accent, #26fcd6);
 }
 
+.navMuted {
+  color: var(--nav-muted, #5f6e6c);
+  font-weight: 500;
+  user-select: none;
+}
+
+.navButton {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 500;
+  color: var(--nav-muted, #9aa8a6);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.navButton:hover {
+  color: var(--nav-accent, #26fcd6);
+}
+
 .sep {
   color: var(--nav-muted, #5f6e6c);
   user-select: none;
