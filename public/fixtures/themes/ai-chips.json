@@ -20,9 +20,44 @@
     ]
   },
   "constituents": [
-    { "ticker": "AMD", "name": "Advanced Micro Devices Inc." },
-    { "ticker": "ARM", "name": "Arm Holdings plc" },
-    { "ticker": "INTC", "name": "Intel Corporation" },
-    { "ticker": "NVDA", "name": "NVIDIA Corporation", "weight": 0.25 }
+    {
+      "ticker": "AMD",
+      "name": "Advanced Micro Devices Inc.",
+      "market_cap_usd": 280000000000,
+      "weight": 0.22,
+      "price_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD"],
+        "metrics": { "1D": 1.25, "10D": -2.1, "MTD": 4.5, "YTD": 12.3, "Period": 18.4 }
+      }
+    },
+    {
+      "ticker": "ARM",
+      "name": "Arm Holdings plc",
+      "market_cap_usd": 145000000000,
+      "weight": 0.18,
+      "price_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD"],
+        "metrics": { "1D": -0.8, "10D": 3.2, "MTD": 1.1, "YTD": 8.4 }
+      }
+    },
+    {
+      "ticker": "INTC",
+      "name": "Intel Corporation",
+      "market_cap_usd": 95000000000,
+      "weight": 0.12
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA Corporation",
+      "market_cap_usd": 3200000000000,
+      "weight": 0.48,
+      "price_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD"],
+        "metrics": { "1D": 2.05, "10D": 5.6, "MTD": 9.2, "YTD": 28.1 }
+      }
+    }
   ]
 }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -50,7 +51,7 @@ export default async function ComparePage() {
   ).sort();
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
@@ -72,6 +73,6 @@ export default async function ComparePage() {
           </section>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

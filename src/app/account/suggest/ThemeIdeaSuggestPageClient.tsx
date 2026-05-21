@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 import {
   ThemeIdeaSuggestForm,
   type GroupOption,
@@ -18,28 +19,28 @@ export function ThemeIdeaSuggestPageClient({ groups }: Props) {
 
   if (!configured) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <p className={styles.introCopy}>Sign-in is not configured.</p>
           <Link href="/account">← Account</Link>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (loading) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <p className={styles.introCopy}>Loading…</p>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (!user) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>Suggest</p>
@@ -49,12 +50,12 @@ export function ThemeIdeaSuggestPageClient({ groups }: Props) {
             </p>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Account · Suggest</p>
@@ -66,6 +67,6 @@ export function ThemeIdeaSuggestPageClient({ groups }: Props) {
           />
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

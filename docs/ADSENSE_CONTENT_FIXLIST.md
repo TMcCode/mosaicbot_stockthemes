@@ -93,7 +93,7 @@ Main gaps for “publisher quality”:
 
 ---
 
-## 6. Remove or gate “developer-only” copy on public pages
+## 6. Remove or gate “developer-only” copy on public pages ✅ (implemented)
 
 **Issue:** Both theme and group pages can render messages about:
 

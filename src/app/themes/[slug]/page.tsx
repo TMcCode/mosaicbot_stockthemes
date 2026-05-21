@@ -3,11 +3,13 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { TickerBadge } from "@/components/TickerBadge";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
+import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
@@ -15,11 +17,19 @@ import styles from "../../page.module.css";
 
 import { formatWeight } from "@/lib/formatWeight";
 import {
+  CONSTITUENT_PRICE_RETURN_COLUMNS,
+  hasConstituentPriceReturns,
+  priceReturnMetric,
+  type ConstituentPriceReturnColumn,
+} from "@/lib/constituentPriceReturns";
+import { buildConstituentTreemapNodes } from "@/lib/buildConstituentTreemapNodes";
+import {
   buildCompositionMetaMap,
   formatUsdMarketCap,
   inferMarketCapUsd,
   sortConstituentsByMarketCapDesc,
 } from "@/lib/constituentMeta";
+import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
@@ -312,6 +322,29 @@ function precomputedStat(
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
+type ConstituentStatRowKey = "average" | "std_dev" | "positive_tickers_pct" | "median" | "min" | "max";
+
+const PRICE_RETURN_STAT_FN: Record<
+  ConstituentStatRowKey,
+  (values: Array<number | null | undefined>) => number | null
+> = {
+  average,
+  std_dev: stdDev,
+  positive_tickers_pct: positivePercent,
+  median,
+  min: minValue,
+  max: maxValue,
+};
+
+function priceReturnStat(
+  detail: { constituent_table_stats?: Record<string, Record<string, number | null> | string | undefined> } | null | undefined,
+  rowKey: ConstituentStatRowKey,
+  column: ConstituentPriceReturnColumn,
+  values: Array<number | null | undefined>,
+): number | null {
+  return precomputedStat(detail, rowKey, column) ?? PRICE_RETURN_STAT_FN[rowKey](values);
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { manifest } = await getManifestCached();
@@ -368,6 +401,7 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
+  const treemapNodes = buildConstituentTreemapNodes(detail?.constituents);
   const spyPerf = await getSpyMarketPerfCached();
   const totalMarketCapUsd =
     detail?.constituents?.reduce((sum, c) => sum + (inferMarketCapUsd(c) ?? 0), 0) ?? 0;
@@ -375,6 +409,7 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
   const hasMcap = Boolean(detail?.constituents?.some((c) => inferMarketCapUsd(c) != null));
+  const hasPriceReturns = hasConstituentPriceReturns(detail?.constituents);
   const sortedConstituents = detail?.constituents ? sortConstituentsByMarketCapDesc(detail.constituents) : [];
   const earningsRowsByTicker = new Map(
     sortedConstituents.map((c) => [c.ticker, buildQuarterEarningsRow(c)]),
@@ -383,9 +418,13 @@ export default async function ThemeDetailPage({ params }: Props) {
     .map((c) => {
       const earnings = earningsRowsByTicker.get(c.ticker);
       if (!earnings) return null;
+      const priceReturns = Object.fromEntries(
+        CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => [col, priceReturnMetric(c, col)]),
+      ) as Record<ConstituentPriceReturnColumn, number | null>;
       return {
         constituent: c,
         earnings,
+        priceReturns,
         marketCapUsd: inferMarketCapUsd(c),
         weight: c.weight ?? null,
       };
@@ -545,7 +584,7 @@ export default async function ThemeDetailPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={styles.heroGrid}>
+          <div className={`${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>
                 Theme · {source === "live" ? "live manifest" : "local fixture"}
@@ -588,22 +627,25 @@ export default async function ThemeDetailPage({ params }: Props) {
                 </p>
               ) : null}
               {!detail && !dataBaseUrl ? (
-                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-                  No theme detail JSON at build time and no{" "}
-                  <code className={styles.code}>NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL</code> — set it in CI so
-                  the app can load <code className={styles.code}>themes/{slug}.json</code> from the bucket, or
-                  add <code className={styles.code}>public/fixtures/themes/{slug}.json</code> for offline
-                  builds.
-                </p>
+                <StockthemesDetailUnavailable kind="theme" slug={slug} />
               ) : null}
             </div>
-            <AdPlacement
-              placement="themeRail"
-              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
-              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
-              placeholderLabel="Ad Slot · Theme detail"
-              format="horizontal"
-            />
+            <div className={styles.themeHeroRail}>
+              {treemapNodes.length ? (
+                <ThemeHeroTreemap
+                  nodes={treemapNodes}
+                  themeName={theme.name}
+                  priceUpdatedAsOf={detail?.ticker_performance_as_of}
+                />
+              ) : null}
+              <AdPlacement
+                placement="themeRail"
+                className={`${styles.adSlot} ${styles.groupsAdCompact}`}
+                classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
+                placeholderLabel="Ad Slot · Theme detail"
+                format="horizontal"
+              />
+            </div>
           </div>
           {!detail && dataBaseUrl ? (
             <ThemeDetailRuntimeLoader
@@ -669,6 +711,13 @@ export default async function ThemeDetailPage({ params }: Props) {
                   <thead>
                     <tr>
                       <th scope="col">Company</th>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <th key={col} scope="col">
+                              {trendingColumnHeader(col)}
+                            </th>
+                          ))
+                        : null}
                       <th scope="col">Previous Quarter Report Date</th>
                       <th scope="col">Next Expected Report Date</th>
                       <th scope="col">Last Quarter Earnings Move %</th>
@@ -691,6 +740,11 @@ export default async function ThemeDetailPage({ params }: Props) {
                             <TickerBadge ticker={c.ticker} />
                           </div>
                         </td>
+                        {hasPriceReturns
+                          ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                              <td key={col}>{formatPct(row.priceReturns[col])}</td>
+                            ))
+                          : null}
                         <td>{earnings.lastReportDateCell}</td>
                         <td>{earnings.reportDateCell}</td>
                         <td>{earnings.lastQuarterEarningsMoveCell}</td>
@@ -707,6 +761,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>Average</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "average",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(avgLastQuarterEarningsMove)}</strong></td>
@@ -720,6 +790,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>Median</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "median",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(medianLastQuarterEarningsMove)}</strong></td>
@@ -733,6 +819,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>Std Dev</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "std_dev",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(stdLastQuarterEarningsMove)}</strong></td>
@@ -746,6 +848,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>Min</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "min",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(minLastQuarterEarningsMove)}</strong></td>
@@ -759,6 +877,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>Max</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "max",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(maxLastQuarterEarningsMove)}</strong></td>
@@ -772,6 +906,22 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td>
                         <strong>% Positive Tickers</strong>
                       </td>
+                      {hasPriceReturns
+                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                            <td key={col}>
+                              <strong>
+                                {formatPct(
+                                  priceReturnStat(
+                                    detail,
+                                    "positive_tickers_pct",
+                                    col,
+                                    constituentRows.map((r) => r.priceReturns[col]),
+                                  ),
+                                )}
+                              </strong>
+                            </td>
+                          ))
+                        : null}
                       <td></td>
                       <td></td>
                       <td><strong>{formatPct(posLastQuarterEarningsMove)}</strong></td>

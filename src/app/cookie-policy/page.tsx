@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Cookie Policy",
@@ -13,7 +14,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function CookiePolicyPage() {
   const updated = "April 7, 2026";
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Legal</p>
@@ -65,6 +66,6 @@ export default function CookiePolicyPage() {
           </p>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

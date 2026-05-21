@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { PageSurface } from "@/components/PageSurface";
 import styles from "../../page.module.css";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -60,7 +61,7 @@ export default async function MethodologyPage() {
     (content?.methodology_limitations || "").trim() || DEFAULT_METHODOLOGY_LIMITATIONS;
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Methodology</p>
@@ -104,6 +105,6 @@ export default async function MethodologyPage() {
           </p>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

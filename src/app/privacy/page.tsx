@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Privacy Policy",
@@ -13,7 +14,7 @@ export const metadata: Metadata = buildPageMetadata({
 export default function PrivacyPage() {
   const updated = "May 20, 2026";
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Legal</p>
@@ -98,6 +99,6 @@ export default function PrivacyPage() {
           </p>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

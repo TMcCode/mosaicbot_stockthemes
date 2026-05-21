@@ -1,0 +1,86 @@
+.wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.img {
+  position: absolute;
+  max-width: none;
+  height: auto;
+  opacity: var(--page-deco-opacity, 0.36);
+  user-select: none;
+}
+
+/* Default SSR theme is light (ThemeRoot) */
+.light {
+  display: block;
+  filter: saturate(1.05);
+}
+
+.dark {
+  display: none;
+  filter: saturate(1.12) brightness(1.06);
+}
+
+:global(.st-theme[data-theme="dark"]) .light {
+  display: none;
+}
+
+:global(.st-theme[data-theme="dark"]) .dark {
+  display: block;
+}
+
+.galaxyTR {
+  top: 2%;
+  right: -4%;
+  width: min(420px, 38vw);
+}
+
+.galaxyBL {
+  bottom: 6%;
+  left: -6%;
+  width: min(300px, 28vw);
+  transform: rotate(180deg);
+  opacity: calc(var(--page-deco-opacity, 0.36) * 0.85);
+}
+
+.springTL {
+  top: 10%;
+  left: -5%;
+  width: min(340px, 32vw);
+}
+
+.springBR {
+  right: -3%;
+  bottom: 4%;
+  width: min(280px, 26vw);
+  transform: scaleX(-1);
+  opacity: calc(var(--page-deco-opacity, 0.36) * 0.9);
+}
+
+@media (max-width: 600px) {
+  .galaxyTR,
+  .springBR {
+    width: min(220px, 42vw);
+    opacity: calc(var(--page-deco-opacity, 0.36) * 0.75);
+  }
+
+  .galaxyBL,
+  .springTL {
+    display: none;
+  }
+
+  :global(.st-theme[data-theme="dark"]) .galaxyBL.dark,
+  :global(.st-theme[data-theme="dark"]) .springTL.dark {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wrap {
+    display: none;
+  }
+}

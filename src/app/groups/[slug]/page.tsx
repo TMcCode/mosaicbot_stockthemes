@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
@@ -166,15 +167,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   {detail.seo_intro}
                 </p>
               ) : null}
-              {!detail ? (
-                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-                  No group detail JSON found at <code className={styles.code}>groups/{slug}.json</code>. Run
-                  MosaicBot <code className={styles.code}>stockthemes_manifest.py</code> with{" "}
-                  <code className={styles.code}>STOCKTHEMES_PUBLIC_BUCKET</code>, or add{" "}
-                  <code className={styles.code}>public/fixtures/groups/&lt;slug&gt;.json</code> for offline
-                  builds.
-                </p>
-              ) : null}
+              {!detail ? <StockthemesDetailUnavailable kind="group" slug={slug} /> : null}
             </div>
             <AdPlacement
               placement="groupRail"

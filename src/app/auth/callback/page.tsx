@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 import { sanitizeAuthNextPath } from "@/lib/authRedirect";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
@@ -67,7 +68,7 @@ export default function AuthCallbackPage() {
   }, [router]);
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           {!error ? (
@@ -88,6 +89,6 @@ export default function AuthCallbackPage() {
           )}
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

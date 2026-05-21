@@ -6,8 +6,10 @@
     "node": ">=20.9 <24"
   },
   "scripts": {
-    "dev": "next dev --webpack",
-    "dev:turbopack": "next dev",
+    "dev": "next dev",
+    "dev:clean": "bash scripts/dev-reset.sh && next dev",
+    "dev:clean:webpack": "bash scripts/dev-reset.sh && next dev --webpack",
+    "dev:preview": "npm run build && npx --yes serve out -l 3000",
     "dev:webpack": "next dev --webpack",
     "prebuild": "node scripts/write-ads-txt.mjs && node scripts/sync-build-cache.mjs && node scripts/fetch-search-index.mjs && node scripts/generate-og-png.mjs",
     "build": "next build",

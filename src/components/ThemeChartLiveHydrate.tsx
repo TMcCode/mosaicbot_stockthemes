@@ -10,6 +10,13 @@ import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
+import {
+  CHART_FETCH_ERROR_PROD,
+  CHART_MISSING_IN_PAYLOAD_DEV,
+  CHART_MISSING_IN_PAYLOAD_PROD,
+  chartFetchErrorDevMessage,
+  stockthemesDevBuildHintsEnabled,
+} from "@/lib/stockthemesBuildHints";
 import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 
 import styles from "@/app/page.module.css";
@@ -197,24 +204,14 @@ export function ThemeChartLiveHydrate({
             marginTop: 8,
           }}
         >
-          Could not load chart from bucket ({fetchError}).
-          {lastFetchUrl ? (
-            <>
-              {" "}
-              Request URL: <code className={styles.code}>{lastFetchUrl}</code>
-            </>
-          ) : null}{" "}
-          Your page origin must match an entry in the bucket CORS list (e.g. use{" "}
-          <code className={styles.code}>http://localhost:3000</code> not your LAN IP unless that origin is
-          added). See MosaicBot <code className={styles.code}>docs/stockthemes/gcs-cors.example.json</code>{" "}
-          and <code className={styles.code}>gsutil cors set …</code>.
+          {stockthemesDevBuildHintsEnabled()
+            ? chartFetchErrorDevMessage(fetchError, lastFetchUrl ?? undefined)
+            : CHART_FETCH_ERROR_PROD}
         </p>
       ) : null}
       {!chart1y && !fetchError && noChartInPayload ? (
         <p style={{ fontSize: 14, color: "var(--text-secondary, #888)", maxWidth: 560, marginTop: 8 }}>
-          Live JSON loaded but <code className={styles.code}>chart_1y</code> is missing or empty — republish
-          from <code className={styles.code}>stockthemes_manifest.py</code> after intraday chart parquets
-          exist.
+          {stockthemesDevBuildHintsEnabled() ? CHART_MISSING_IN_PAYLOAD_DEV : CHART_MISSING_IN_PAYLOAD_PROD}
         </p>
       ) : null}
     </>

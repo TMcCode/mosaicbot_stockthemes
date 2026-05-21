@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { AdPlacement } from "@/components/AdPlacement";
 import { GroupsProgressiveSections } from "@/components/GroupsProgressiveSections";
 import styles from "../page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 import { getManifestCached } from "@/lib/getManifestCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -59,7 +60,7 @@ export default async function GroupsPage() {
   }));
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
@@ -96,6 +97,6 @@ export default async function GroupsPage() {
           </section>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

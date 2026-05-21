@@ -6,6 +6,7 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 import { authCallbackAbsoluteUrl, sanitizeAuthNextPath } from "@/lib/authRedirect";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
@@ -37,7 +38,7 @@ export default function SignInPage() {
 
   if (!configured) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>Account</p>
@@ -52,17 +53,17 @@ export default function SignInPage() {
             </Link>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (loading || user) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <p className={styles.introCopy}>{user ? "Redirecting…" : "Loading…"}</p>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
@@ -101,7 +102,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Sign in · Create account</p>
@@ -176,6 +177,6 @@ export default function SignInPage() {
           </p>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

@@ -1,5 +1,6 @@
 import { mkdir, readFile, stat, writeFile } from "fs/promises";
 import path from "path";
+import { pathToFileURL } from "url";
 
 import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
 
@@ -24,16 +25,73 @@ export function stockthemesBuildCacheEnabled(): boolean {
 
 function cacheRoot(): string {
   const custom = process.env.STOCKTHEMES_BUILD_CACHE_DIR?.trim();
-  return path.join(process.cwd(), custom || STOCKTHEMES_BUILD_CACHE_DIR);
+  const subdir = custom || STOCKTHEMES_BUILD_CACHE_DIR;
+  // Prevent Turbopack from tracing the entire .cache tree (breaks dev chunks).
+  return path.join(/* turbopackIgnore: true */ process.cwd(), subdir);
 }
 
 function cachePathForRel(relPath: string): string {
   const safe = relPath.replace(/^\/+/, "");
-  return path.join(cacheRoot(), safe);
+  return path.join(/* turbopackIgnore: true */ cacheRoot(), safe);
 }
 
 function devDiskCacheDisabled(): boolean {
   return process.env.STOCKTHEMES_DEV_NO_STORE === "1";
+}
+
+function devViaGcsEnabled(): boolean {
+  return (
+    process.env.NODE_ENV === "development" &&
+    process.env.STOCKTHEMES_DEV_VIA_GCS === "1" &&
+    Boolean(process.env.STOCKTHEMES_GCS_SA_JSON_FILE?.trim() || process.env.STOCKTHEMES_GCS_SA_JSON?.trim())
+  );
+}
+
+function isDetailJsonRel(relPath: string): boolean {
+  const rel = relPath.replace(/^\/+/, "");
+  return /^themes\/[^/]+\.json$/.test(rel) || /^groups\/[^/]+\.json$/.test(rel);
+}
+
+/** Live manifest + theme/group JSON — always refetch from GCS in dev (CDN can lag 24h). */
+function devPreferGcsOverDiskCache(relPath: string): boolean {
+  if (!devViaGcsEnabled()) return false;
+  const rel = relPath.replace(/^\/+/, "");
+  return rel === "manifest.json" || isDetailJsonRel(rel);
+}
+
+async function fetchDevGcsObject(relPath: string): Promise<string> {
+  const modPath = path.join(process.cwd(), "scripts/lib/gcsDownload.mjs");
+  const mod = (await import(/* webpackIgnore: true */ pathToFileURL(modPath).href)) as {
+    downloadGcsObject: (objectPath: string) => Promise<string>;
+  };
+  return mod.downloadGcsObject(relPath.replace(/^\/+/, ""));
+}
+
+/** Read dev cache ignoring TTL (for as_of comparison). */
+async function readDevDiskCacheRaw(relPath: string): Promise<string | null> {
+  if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
+    return null;
+  }
+  try {
+    return await readFile(cachePathForRel(relPath), "utf-8");
+  } catch {
+    return null;
+  }
+}
+
+async function devDetailOlderThanCachedManifest(detailText: string): Promise<boolean> {
+  try {
+    const detail = JSON.parse(detailText) as { as_of?: string };
+    const detailAsOf = String(detail.as_of || "");
+    if (!detailAsOf) return false;
+    const manifestText = await readDevDiskCacheRaw("manifest.json");
+    if (!manifestText) return false;
+    const manifest = JSON.parse(manifestText) as { as_of?: string };
+    const manifestAsOf = String(manifest.as_of || "");
+    return Boolean(manifestAsOf && detailAsOf < manifestAsOf);
+  } catch {
+    return false;
+  }
 }
 
 function devDiskCacheMaxAgeMs(): number {
@@ -91,9 +149,30 @@ export async function fetchPublicJsonText(
     }
   }
 
-  const devCached = await readDevDiskCache(cacheRelPath);
-  if (devCached !== null) {
-    return devCached;
+  if (!devPreferGcsOverDiskCache(cacheRelPath)) {
+    let devCached = await readDevDiskCache(cacheRelPath);
+    if (devCached !== null && isDetailJsonRel(cacheRelPath) && (await devDetailOlderThanCachedManifest(devCached))) {
+      devCached = null;
+    }
+    if (devCached !== null) {
+      return devCached;
+    }
+  }
+
+  if (devViaGcsEnabled()) {
+    try {
+      const text = await fetchDevGcsObject(cacheRelPath);
+      await writeDevDiskCache(cacheRelPath, text);
+      return text;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      if (devPreferGcsOverDiskCache(cacheRelPath)) {
+        throw new Error(
+          `[stockthemes] STOCKTHEMES_DEV_VIA_GCS=1 but GCS fetch failed for ${cacheRelPath}: ${msg}`,
+        );
+      }
+      console.warn(`[stockthemes] dev GCS fetch failed for ${cacheRelPath}, falling back to CDN:`, msg);
+    }
   }
 
   const res = await fetch(url, stockthemesLiveFetchInit());
@@ -105,7 +184,7 @@ export async function fetchPublicJsonText(
   if (stockthemesBuildCacheEnabled()) {
     await mkdir(path.dirname(abs), { recursive: true });
     await writeFile(abs, text, "utf-8");
-  } else {
+  } else if (!devPreferGcsOverDiskCache(cacheRelPath)) {
     await writeDevDiskCache(cacheRelPath, text);
   }
 

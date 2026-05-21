@@ -1,5 +1,12 @@
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 
+/** Per-ticker price returns from ticker_performance_latest.parquet (manifest ETL). */
+export type ConstituentPriceReturnsV0 = {
+  source?: string;
+  metrics?: Record<string, number | null>;
+  columns?: string[];
+};
+
 /** Precomputed Theme Compare row (intraday parquet → manifest ETL). */
 export type ThemeCompareReturnsV0 = {
   source?: string;
@@ -41,6 +48,7 @@ export type ThemeDetailConstituentV0 = {
   last_rpt_live_percent?: number;
   last_rpt_final_percent?: number;
   last_rpt_is_final?: boolean;
+  price_returns?: ConstituentPriceReturnsV0;
   [key: string]: unknown;
 };
 
@@ -64,6 +72,8 @@ export type ThemeDetailV0 = {
   ticker_count?: number;
   created_at?: string;
   updated_at?: string;
+  /** ISO 8601 UTC when intraday ETL last wrote ticker_performance_latest.parquet. */
+  ticker_performance_as_of?: string;
   seo_intro?: string;
   theme_thesis?: ThemeThesisV0;
   constituent_table_stats?: ThemeDetailConstituentTableStatsV0;

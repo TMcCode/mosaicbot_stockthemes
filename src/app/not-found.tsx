@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import styles from "./page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 export const metadata: Metadata = {
   title: "Page not found",
@@ -10,7 +11,7 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>404</p>
@@ -26,6 +27,6 @@ export default function NotFound() {
           </div>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

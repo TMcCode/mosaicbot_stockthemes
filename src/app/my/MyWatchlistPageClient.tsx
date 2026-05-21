@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef } from "react";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 import { MyWatchlistPerformance } from "@/components/MyWatchlistPerformance";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
@@ -26,7 +27,7 @@ export function MyWatchlistPageClient({ compareData }: Props) {
 
   if (!configured) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>My watchlist</p>
@@ -37,23 +38,23 @@ export function MyWatchlistPageClient({ compareData }: Props) {
             </Link>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (loading) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <p className={styles.introCopy}>Loading…</p>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (!user) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>My watchlist</p>
@@ -66,14 +67,14 @@ export function MyWatchlistPageClient({ compareData }: Props) {
             </p>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   const email = user.email ?? "";
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>My watchlist</p>
@@ -81,6 +82,6 @@ export function MyWatchlistPageClient({ compareData }: Props) {
           <MyWatchlistPerformance email={email} compareData={compareData} />
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

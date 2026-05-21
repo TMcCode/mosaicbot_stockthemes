@@ -8,6 +8,7 @@ import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
 import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
+import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
@@ -24,7 +25,6 @@ import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
-import { publicAssetPath } from "@/lib/siteUrl";
 import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
@@ -234,73 +234,7 @@ export default async function Home() {
       : "stockthemes.ai · manifest v0 (local fixture)";
 
   return (
-    <div className={`st-surface ${styles.page}`}>
-      <div className={styles.pageBorderDeco} aria-hidden>
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoGalaxyTR}`}
-          src={publicAssetPath("/brand/home-deco-galaxy.svg")}
-          alt=""
-          width={420}
-          height={315}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoGalaxyTR}`}
-          src={publicAssetPath("/brand/home-deco-galaxy-dark.svg")}
-          alt=""
-          width={420}
-          height={315}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoGalaxyBL}`}
-          src={publicAssetPath("/brand/home-deco-galaxy.svg")}
-          alt=""
-          width={320}
-          height={240}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoGalaxyBL}`}
-          src={publicAssetPath("/brand/home-deco-galaxy-dark.svg")}
-          alt=""
-          width={320}
-          height={240}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoSpringTL}`}
-          src={publicAssetPath("/brand/home-deco-spring.svg")}
-          alt=""
-          width={360}
-          height={290}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoSpringTL}`}
-          src={publicAssetPath("/brand/home-deco-spring-dark.svg")}
-          alt=""
-          width={360}
-          height={290}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoSpringBR}`}
-          src={publicAssetPath("/brand/home-deco-spring.svg")}
-          alt=""
-          width={300}
-          height={240}
-          decoding="async"
-        />
-        <img
-          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoSpringBR}`}
-          src={publicAssetPath("/brand/home-deco-spring-dark.svg")}
-          alt=""
-          width={300}
-          height={240}
-          decoding="async"
-        />
-      </div>
+    <PageSurface>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
@@ -471,6 +405,6 @@ export default async function Home() {
           <HomePublisherIntro />
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }

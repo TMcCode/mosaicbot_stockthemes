@@ -8,6 +8,8 @@ import { buildPageMetadata } from "@/lib/seoMetadata";
 
 import styles from "./page.module.css";
 
+import { PageSurface } from "@/components/PageSurface";
+
 export const metadata: Metadata = buildPageMetadata({
   title: "Market commentary",
   description: "Recent market and theme commentary from the stockthemes team.",
@@ -20,7 +22,7 @@ export default async function CommentaryPage() {
   const listDays = loaded?.commentary.list_days ?? 90;
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <p className={styles.backLink}>
           <Link href="/">Back to home</Link>
@@ -82,6 +84,6 @@ export default async function CommentaryPage() {
           </div>
         )}
       </main>
-    </div>
+    </PageSurface>
   );
 }

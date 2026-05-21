@@ -16,6 +16,15 @@ import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
+import {
+  stockthemesDevBuildHintsEnabled,
+  THEME_RUNTIME_HYDRATE_DISABLED_DEV,
+  THEME_RUNTIME_HYDRATE_DISABLED_PROD,
+  THEME_RUNTIME_LOADING_COPY,
+  THEME_RUNTIME_LOADING_DEV,
+  themeRuntimeErrorDevMessage,
+  themeRuntimeErrorProdMessage,
+} from "@/lib/stockthemesBuildHints";
 import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 import styles from "@/app/page.module.css";
 
@@ -51,8 +60,9 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
     if (stockthemesLiveHydrationDisabled()) {
       setState({
         status: "error",
-        message:
-          "Theme data was not embedded in this static build. In GitHub Actions run Deploy to GitHub Pages with “Re-download all theme/group JSON” enabled, or push the latest main after ETL publishes.",
+        message: stockthemesDevBuildHintsEnabled()
+          ? THEME_RUNTIME_HYDRATE_DISABLED_DEV
+          : THEME_RUNTIME_HYDRATE_DISABLED_PROD,
       });
       return;
     }
@@ -84,24 +94,29 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
     };
   }, [slug, dataBaseUrl]);
 
+  const bodyStyle = {
+    fontSize: 16,
+    color: "var(--text-secondary, #666)",
+    maxWidth: 560,
+  } as const;
+
   if (state.status === "loading") {
     return (
-      <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-        Loading theme JSON from bucket…
+      <p style={bodyStyle}>
+        {stockthemesDevBuildHintsEnabled() ? THEME_RUNTIME_LOADING_DEV : THEME_RUNTIME_LOADING_COPY}
       </p>
     );
   }
 
   if (state.status === "error") {
-    return (
-      <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 560 }}>
-        No theme detail JSON at <code className={styles.code}>themes/{slug}.json</code> (
-        {state.message}). Ensure MosaicBot <code className={styles.code}>stockthemes_manifest.py</code>{" "}
-        uploaded this file to the public bucket, and that{" "}
-        <strong>CORS</strong> allows GET from this site (e.g. GitHub Pages origin in{" "}
-        <code className={styles.code}>gcs-cors</code>).
-      </p>
-    );
+    if (stockthemesDevBuildHintsEnabled()) {
+      return (
+        <p style={bodyStyle}>
+          {themeRuntimeErrorDevMessage(slug, state.message)}
+        </p>
+      );
+    }
+    return <p style={bodyStyle}>{themeRuntimeErrorProdMessage()}</p>;
   }
 
   const detail = state.detail;
@@ -110,9 +125,11 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
 
   return (
     <>
-      <p className={styles.eyebrow} style={{ marginTop: 8 }}>
-        Loaded in browser · live theme JSON
-      </p>
+      {stockthemesDevBuildHintsEnabled() ? (
+        <p className={styles.eyebrow} style={{ marginTop: 8 }}>
+          Loaded in browser · live theme JSON
+        </p>
+      ) : null}
       {shouldShowThemeThesisUi(detail.theme_thesis) ? (
         <ThemeThesisBlock themeThesis={detail.theme_thesis} signInNext={`/themes/${slug}`} />
       ) : null}

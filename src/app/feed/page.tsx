@@ -7,6 +7,7 @@ import { buildPageMetadata } from "@/lib/seoMetadata";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 
 import styles from "./page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Full feed",
@@ -83,7 +84,7 @@ export default async function FeedPage() {
   const events = prioritizeLifecycleFeedFull(mergeHomeFeedEvents(manifest, themeByName, etl));
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <p className={styles.backLink}>
           <Link href="/">Back to home</Link>
@@ -140,6 +141,6 @@ export default async function FeedPage() {
           </div>
         )}
       </main>
-    </div>
+    </PageSurface>
   );
 }

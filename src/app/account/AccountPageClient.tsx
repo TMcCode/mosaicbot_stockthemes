@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useState } from "react";
 
 import styles from "@/app/page.module.css";
+import { PageSurface } from "@/components/PageSurface";
 
 import { AccountSignedInView } from "@/app/account/AccountSignedInView";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
@@ -68,7 +69,7 @@ export function AccountPageClient() {
 
   if (!configured) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>Account</p>
@@ -79,23 +80,23 @@ export function AccountPageClient() {
             </Link>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (loading) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <p className={styles.introCopy}>Loading…</p>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
   if (!user) {
     return (
-      <div className={`st-surface ${styles.page}`}>
+      <PageSurface>
         <main className={styles.main}>
           <div className={styles.intro}>
             <p className={styles.eyebrow}>Account</p>
@@ -108,7 +109,7 @@ export function AccountPageClient() {
             </p>
           </div>
         </main>
-      </div>
+      </PageSurface>
     );
   }
 
@@ -121,7 +122,7 @@ export function AccountPageClient() {
     : null;
 
   return (
-    <div className={`st-surface ${styles.page}`}>
+    <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Account</p>
@@ -150,6 +151,6 @@ export function AccountPageClient() {
           </p>
         </div>
       </main>
-    </div>
+    </PageSurface>
   );
 }
