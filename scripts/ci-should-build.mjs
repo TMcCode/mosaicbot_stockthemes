@@ -3,7 +3,7 @@
  *
  * Outputs (GITHUB_OUTPUT):
  *   should_build — run static export + deploy
- *   full_cache_refresh — purge themes/groups and force sync-build-cache refresh
+ *   full_cache_refresh — purge themes/groups and force full re-download (manual / force only)
  *   reason — log string
  */
 import fs from "fs";
@@ -92,7 +92,8 @@ async function main() {
 
   const live = await fetchLivePublishAsOf();
   const dataChanged = publishDataChanged(live, deployed);
-  const fullCacheRefresh = manualRefresh || forceBuild || dataChanged;
+  // Routine manifest bumps use incremental md5/ETag sync — avoid purging 800+ theme files.
+  const fullCacheRefresh = manualRefresh || forceBuild;
 
   if (forceBuild) {
     writeOutputs({
@@ -161,7 +162,7 @@ async function main() {
 
   writeOutputs({
     shouldBuild: true,
-    fullCacheRefresh: true,
+    fullCacheRefresh: false,
     reason: `publish_changed manifest ${deployed.manifestAsOf} -> ${live.manifestAsOf}`,
   });
 }

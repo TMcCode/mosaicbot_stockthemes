@@ -4,18 +4,32 @@
  *
  * Skips when STOCKTHEMES_USE_FIXTURES=1 or manifest URL is empty.
  * Set STOCKTHEMES_BUILD_CACHE_REFRESH=1 to force re-download all objects.
+ *
+ * When manifest.as_of changes, theme/group JSON is refreshed incrementally via GCS md5
+ * (or CDN ETag) — unchanged objects are not re-downloaded.
  */
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
 import { downloadGcsObject, gcsSyncEnabled, loadGcsServiceAccount } from "./lib/gcsDownload.mjs";
+import {
+  fetchRemoteObjectMetadata,
+  isBundleRel,
+  isDetailJsonRel,
+  readObjectMetaSidecar,
+  recordObjectMeta,
+  selectJobsToDownload,
+  themeSlugFingerprint,
+  writeObjectMetaSidecar,
+} from "./lib/objectMeta.mjs";
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const CACHE_DIR = path.join(root, ".cache", "stockthemes-public");
 const META_PATH = path.join(CACHE_DIR, "_build_cache_meta.json");
+const OBJECT_META_PATH = path.join(CACHE_DIR, "_object_meta.json");
 const SEARCH_OUT = path.join(root, "public", "search_index.v0.json");
 
 const DEFAULT_MANIFEST = "https://data.stockthemes.ai/manifest.json";
@@ -90,7 +104,56 @@ function missingCacheRels(jobs) {
   return jobs.filter(({ rel }) => !cacheFileOk(rel)).map(({ rel }) => rel);
 }
 
-async function fetchToCache(url, rel) {
+function pruneOrphanDetailFiles(manifestJson) {
+  const themeSlugs = new Set(
+    (manifestJson.themes || []).map((t) => String(t?.slug || "").trim()).filter(Boolean),
+  );
+  const groupSlugs = new Set(
+    (manifestJson.groups || []).map((g) => String(g?.slug || "").trim()).filter(Boolean),
+  );
+  let removed = 0;
+  const themesDir = cachePath("themes");
+  if (fs.existsSync(themesDir)) {
+    for (const file of fs.readdirSync(themesDir)) {
+      if (!file.endsWith(".json")) continue;
+      const slug = file.replace(/\.json$/, "");
+      if (!themeSlugs.has(slug)) {
+        fs.unlinkSync(path.join(themesDir, file));
+        removed += 1;
+      }
+    }
+  }
+  const groupsDir = cachePath("groups");
+  if (fs.existsSync(groupsDir)) {
+    for (const file of fs.readdirSync(groupsDir)) {
+      if (!file.endsWith(".json")) continue;
+      const slug = file.replace(/\.json$/, "");
+      if (!groupSlugs.has(slug)) {
+        fs.unlinkSync(path.join(groupsDir, file));
+        removed += 1;
+      }
+    }
+  }
+  if (removed > 0) {
+    console.log(`sync-build-cache: pruned ${removed} orphan theme/group file(s)`);
+  }
+}
+
+async function fetchLiveHomeTrendingAsOf(base) {
+  try {
+    if (gcsSyncEnabled()) {
+      const raw = await downloadGcsObject("home_trending.v0.json");
+      return String(JSON.parse(raw).as_of || "");
+    }
+    const res = await fetch(`${base}/home_trending.v0.json`, { cache: "no-store" });
+    if (!res.ok) return "";
+    return String((JSON.parse(await res.text())).as_of || "");
+  } catch {
+    return "";
+  }
+}
+
+async function fetchToCache(url, rel, objectMeta) {
   const dest = cachePath(rel);
   fs.mkdirSync(path.dirname(dest), { recursive: true });
   let text;
@@ -113,11 +176,22 @@ async function fetchToCache(url, rel) {
   }
 
   fs.writeFileSync(dest, text, "utf8");
+
+  try {
+    const remoteMeta = await fetchRemoteObjectMetadata({ rel, url });
+    if (remoteMeta) {
+      recordObjectMeta(objectMeta, rel, remoteMeta);
+    }
+  } catch {
+    /* metadata optional */
+  }
+
   return text;
 }
 
 async function pool(items, concurrency, fn) {
   const queue = [...items];
+  if (!queue.length) return;
   const workers = Array.from({ length: Math.min(concurrency, queue.length) }, async () => {
     while (queue.length) {
       const item = queue.shift();
@@ -151,14 +225,28 @@ async function main() {
 
   if (gcsSyncEnabled()) {
     console.log("sync-build-cache: using authenticated GCS (STOCKTHEMES_SYNC_VIA_GCS=1)");
+  } else {
+    console.log("sync-build-cache: incremental checks via CDN HEAD (md5 requires GCS in CI)");
   }
 
-  const manifestText = await fetchToCache(manifest, "manifest.json");
+  const objectMeta = readObjectMetaSidecar(OBJECT_META_PATH);
+  const prev = readMeta();
+  const force = process.env.STOCKTHEMES_BUILD_CACHE_REFRESH === "1";
+
+  const manifestText = await fetchToCache(`${base}/manifest.json`, "manifest.json", objectMeta);
   const manifestJson = JSON.parse(manifestText);
   const asOf = String(manifestJson.as_of || "");
   const buildId = String(manifestJson.build_id || "");
-  const prev = readMeta();
-  const force = process.env.STOCKTHEMES_BUILD_CACHE_REFRESH === "1";
+  const slugFp = themeSlugFingerprint(manifestJson);
+  const liveHomeTrendingAsOf = await fetchLiveHomeTrendingAsOf(base);
+  const publishChanged = !prev || prev.as_of !== asOf || prev.manifestUrl !== manifest;
+  const slugCatalogChanged = !prev || prev.theme_slug_fingerprint !== slugFp;
+  const homeTrendingChanged =
+    Boolean(liveHomeTrendingAsOf) &&
+    String(prev?.home_trending_as_of || "") !== liveHomeTrendingAsOf;
+
+  pruneOrphanDetailFiles(manifestJson);
+
   const allJobs = listWarmJobs(manifestJson, base);
   const themeCount = (manifestJson.themes || []).filter((t) => t?.slug).length;
   const missing = missingCacheRels(allJobs);
@@ -167,6 +255,8 @@ async function main() {
     prev &&
     prev.as_of === asOf &&
     prev.manifestUrl === manifest &&
+    prev.theme_slug_fingerprint === slugFp &&
+    !homeTrendingChanged &&
     missing.length === 0;
 
   const themeFilesOnDisk = fs.existsSync(cachePath("themes"))
@@ -186,30 +276,41 @@ async function main() {
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
       console.warn(
-        `sync-build-cache: as_of unchanged but ${missing.length} cached file(s) missing — re-warming`,
+        `sync-build-cache: as_of unchanged but ${missing.length} cached file(s) missing — filling gaps`,
       );
     }
-    const jobs =
-      missing.length > 0 && !force
-        ? allJobs.filter(({ rel }) => missing.includes(rel))
-        : allJobs;
+
+    const { jobs, skipped, metaChecks } = await selectJobsToDownload({
+      allJobs,
+      force,
+      publishChanged: force || publishChanged || slugCatalogChanged || homeTrendingChanged,
+      objectMeta,
+      cacheFileOk,
+    });
+
+    const detailJobs = jobs.filter((j) => isDetailJsonRel(j.rel));
+    const bundleJobs = jobs.filter((j) => isBundleRel(j.rel));
 
     console.log(
-      `sync-build-cache: warming ${jobs.length} objects (themes=${themeCount} groups=${(manifestJson.groups || []).length})`,
+      `sync-build-cache: download ${jobs.length}/${allJobs.length} objects ` +
+        `(skipped_unchanged=${skipped} meta_checks=${metaChecks} ` +
+        `themes=${detailJobs.filter((j) => j.rel.startsWith("themes/")).length} ` +
+        `groups=${detailJobs.filter((j) => j.rel.startsWith("groups/")).length} ` +
+        `bundles=${bundleJobs.length} publish_changed=${publishChanged} slug_fp_changed=${slugCatalogChanged})`,
     );
 
     let ok = 0;
     let fail = 0;
-    await pool(jobs, 12, async ({ rel, url }) => {
+    await pool(jobs, 12, async (job) => {
       try {
-        await fetchToCache(url, rel);
+        await fetchToCache(job.url, job.rel, objectMeta);
         ok += 1;
       } catch (e) {
         fail += 1;
-        console.warn(`sync-build-cache: failed ${rel}:`, e instanceof Error ? e.message : e);
+        console.warn(`sync-build-cache: failed ${job.rel}:`, e instanceof Error ? e.message : e);
       }
     });
-    console.log(`sync-build-cache: done ok=${ok} fail=${fail}`);
+    console.log(`sync-build-cache: done ok=${ok} fail=${fail} skipped=${skipped}`);
 
     const stillMissing = missingCacheRels(allJobs);
     const missingThemes = stillMissing.filter((r) => r.startsWith("themes/")).length;
@@ -223,7 +324,25 @@ async function main() {
       process.exit(1);
     }
 
-    writeMeta({ as_of: asOf, build_id: buildId, manifestUrl: manifest, warmedAt: new Date().toISOString() });
+    let homeTrendingAsOf = liveHomeTrendingAsOf;
+    if (!homeTrendingAsOf) {
+      try {
+        const ht = JSON.parse(fs.readFileSync(cachePath("home_trending.v0.json"), "utf8"));
+        homeTrendingAsOf = String(ht.as_of || "");
+      } catch {
+        /* optional */
+      }
+    }
+
+    writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
+    writeMeta({
+      as_of: asOf,
+      build_id: buildId,
+      manifestUrl: manifest,
+      theme_slug_fingerprint: slugFp,
+      home_trending_as_of: homeTrendingAsOf,
+      warmedAt: new Date().toISOString(),
+    });
   }
 
   const searchCached = cachePath("search_index.v0.json");

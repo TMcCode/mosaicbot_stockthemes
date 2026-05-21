@@ -1,5 +1,8 @@
 /**
  * CI: sync public JSON into .cache/stockthemes-public (optionally purge first).
+ *
+ * FULL_CACHE_REFRESH only on manual workflow input / force — not on routine publish bumps.
+ * Incremental sync uses GCS md5 / CDN ETag (see sync-build-cache.mjs).
  */
 import fs from "fs";
 import path from "path";

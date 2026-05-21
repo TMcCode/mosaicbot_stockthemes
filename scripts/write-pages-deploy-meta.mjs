@@ -5,6 +5,8 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import { themeSlugFingerprint } from "./lib/objectMeta.mjs";
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const CACHE_DIR = path.join(root, ".cache", "stockthemes-public");
@@ -25,9 +27,11 @@ function main() {
   const asOf = readAsOf(MANIFEST_CACHE);
   const homeTrendingAsOf = readAsOf(HOME_TRENDING_CACHE);
   let buildId = "";
+  let themeSlugFp = "";
   try {
     const manifest = JSON.parse(fs.readFileSync(MANIFEST_CACHE, "utf8"));
     buildId = String(manifest.build_id || "");
+    themeSlugFp = themeSlugFingerprint(manifest);
   } catch {
     console.warn("write-pages-deploy-meta: no cached manifest.json");
   }
@@ -40,6 +44,7 @@ function main() {
         as_of: asOf,
         home_trending_as_of: homeTrendingAsOf,
         build_id: buildId,
+        theme_slug_fingerprint: themeSlugFp,
         deployed_at: new Date().toISOString(),
       },
       null,

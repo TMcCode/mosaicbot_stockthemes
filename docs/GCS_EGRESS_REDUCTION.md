@@ -30,12 +30,15 @@ Production default manifest URL is now **`https://data.stockthemes.ai/manifest.j
 
 | Piece | Role |
 |-------|------|
-| `scripts/sync-build-cache.mjs` | Prebuild: 1 manifest fetch; full warm only when `manifest.as_of` changes |
+| `scripts/sync-build-cache.mjs` | Prebuild: manifest + small bundles; **theme/group JSON only when GCS md5 (or CDN ETag) changed** |
+| `.cache/stockthemes-public/_object_meta.json` | Per-object md5/generation from last successful download |
 | `.cache/stockthemes-public/` | On-disk mirror of bucket JSON |
 | `src/lib/stockthemesBuildCache.ts` | `next build` reads cache when `STOCKTHEMES_STATIC_PAGES=1` |
 | `deploy-pages.yml` | Restores/saves Actions cache for `.cache/stockthemes-public` |
 
-Force full re-download: `STOCKTHEMES_BUILD_CACHE_REFRESH=1 npm run build`
+Routine ETL bumps to `manifest.as_of` no longer purge or re-download all `themes/*.json` (MosaicBot ETL already skips unchanged theme uploads via content compare).
+
+Force full re-download: workflow_dispatch **refresh_cache**, or `STOCKTHEMES_BUILD_CACHE_REFRESH=1 npm run build`
 
 ---
 
@@ -62,6 +65,7 @@ Force full re-download: `STOCKTHEMES_BUILD_CACHE_REFRESH=1 npm run build`
 
 - Split `themes/<slug>.chart_1y.json` for smaller hydration payloads.
 - Rate-limit / WAF on CDN (`docs/SECURITY_SCALING_PLAYBOOK.md`).
+- `home_commentary.v0.json` sidecar for homepage commentary (no theme JSON involved).
 
 ---
 

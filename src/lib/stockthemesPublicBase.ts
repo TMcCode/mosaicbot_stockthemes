@@ -40,7 +40,8 @@ export function stockthemesPublicDataBase(): string | undefined {
 /**
  * `fetch()` options for stockthemes public JSON (manifest, theme/group detail, bundles).
  * Development defaults to `no-store` so local reflects freshly published ETL JSON immediately.
- * Set `STOCKTHEMES_DEV_REVALIDATE_SEC` (e.g. `60`) to opt into cache for faster local reloads.
+ * Set `STOCKTHEMES_DEV_REVALIDATE_SEC` (e.g. `120`) for Next fetch revalidate; disk cache uses the same TTL
+ * via `fetchPublicJsonText` in `stockthemesBuildCache.ts`. Use `STOCKTHEMES_DEV_NO_STORE=1` to skip disk cache.
  */
 export function stockthemesLiveFetchInit():
   | { cache: "no-store" }

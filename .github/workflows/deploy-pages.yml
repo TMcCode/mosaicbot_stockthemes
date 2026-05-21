@@ -3,7 +3,7 @@
 # Egress controls:
 # - Scheduled runs skip build when manifest/home_trending as_of unchanged.
 # - Code pushes rebuild static HTML but reuse CDN cache unless publish data changed.
-# - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs avoid full-catalog GCS pulls when as_of unchanged.
+# - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs use per-object md5/ETag (not full-catalog pulls on as_of bump).
 # - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no browser JSON fetches in production.
 # - Default manifest URL: https://data.stockthemes.ai (CDN Worker), not storage.googleapis.com.
 #

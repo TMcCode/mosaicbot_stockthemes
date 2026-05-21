@@ -113,3 +113,34 @@ export async function downloadGcsObject(objectPath) {
   }
   return res.text();
 }
+
+/**
+ * Lightweight object metadata for incremental build cache (md5 / generation).
+ * @param {string} objectPath e.g. themes/foo.json
+ * @returns {Promise<{ md5Hash?: string, generation?: string, updated?: string } | null>}
+ */
+export async function gcsObjectMetadata(objectPath) {
+  const sa = loadGcsServiceAccount();
+  if (!sa?.client_email || !sa?.private_key) {
+    return null;
+  }
+  const bucket = process.env.STOCKTHEMES_GCS_BUCKET?.trim() || DEFAULT_BUCKET;
+  const token = await getAccessToken(sa);
+  const url =
+    `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(objectPath)}?fields=md5Hash,generation,updated`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`GCS metadata ${res.status} gs://${bucket}/${objectPath}`);
+  }
+  const data = await res.json();
+  return {
+    md5Hash: data.md5Hash ? String(data.md5Hash) : undefined,
+    generation: data.generation != null ? String(data.generation) : undefined,
+    updated: data.updated ? String(data.updated) : undefined,
+  };
+}
