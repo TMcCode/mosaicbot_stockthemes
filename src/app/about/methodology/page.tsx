@@ -36,7 +36,7 @@ function toParagraphs(text: string): string[] {
 
 function renderParagraphs(text: string) {
   return toParagraphs(text).map((p, i) => (
-    <p key={`${p.slice(0, 24)}-${i}`} className={styles.introCopy}>
+    <p key={`methodology-p-${i}`} className={styles.introCopy}>
       {p}
     </p>
   ));

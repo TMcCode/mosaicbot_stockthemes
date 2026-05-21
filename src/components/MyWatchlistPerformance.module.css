@@ -184,5 +184,5 @@
 }
 
 :global(.st-theme[data-theme="light"]) .tabActive {
-  color: #064032;
+  color: var(--accent-strong, #3b4da1);
 }

@@ -11,6 +11,7 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 
+import { capturePostHog } from "@/lib/posthogClient";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -84,6 +85,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       if (_event === "SIGNED_IN" && s?.user) {
         posthogIdentify(s.user);
+        capturePostHog("sign_in");
       }
       if (_event === "SIGNED_OUT") {
         posthogReset();

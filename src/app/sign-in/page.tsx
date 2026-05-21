@@ -105,7 +105,7 @@ export default function SignInPage() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Sign in · Create account</p>
-          <h1>Add email to curate stockthemes.ai — up to 20 themes &amp; 20 tickers</h1>
+          <h1>Add email to curate stockthemes.ai — up to 20 themes</h1>
           <p className={styles.introCopy}>
             <strong>New here?</strong> Enter your email below — we&apos;ll send a one-time link. Opening it{" "}
             <strong>creates your free account</strong> (no separate sign-up form).

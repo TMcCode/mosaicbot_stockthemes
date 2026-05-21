@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 
 import styles from "./SiteFooter.module.css";
 
@@ -11,7 +12,7 @@ type Props = {
 
 export function SiteFooter({ dataAsOf }: Props) {
   const asOfIso = dataAsOf?.trim() || "";
-  const updatedLabel = asOfIso ? new Date(asOfIso).toLocaleString() : "";
+  const publishedLabel = asOfIso ? formatSiteDataPublished(asOfIso) : "";
 
   return (
     <footer className={styles.wrap}>
@@ -22,11 +23,14 @@ export function SiteFooter({ dataAsOf }: Props) {
         <div className={styles.metaBar}>
           <div className={styles.metaLead}>
             <span className={styles.copyright}>© {new Date().getFullYear()} stockthemes.ai</span>
-            {updatedLabel ? (
+            {publishedLabel ? (
               <>
                 {"\u2003"}
                 <span className={styles.dataAsOf}>
-                  Updated <time dateTime={asOfIso}>{updatedLabel}</time>
+                  Site data published{" "}
+                  <time dateTime={asOfIso} title="UTC">
+                    {publishedLabel} UTC
+                  </time>
                 </span>
               </>
             ) : null}

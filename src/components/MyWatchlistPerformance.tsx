@@ -14,12 +14,11 @@ import type {
   MyWatchlistCompareData,
   MyWatchlistCompareRow,
 } from "@/lib/prepareMyWatchlistCompareData";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { trendingColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
-
-type Tab = "themes" | "tickers";
 
 type SortState = { key: string; dir: "asc" | "desc" };
 
@@ -29,16 +28,6 @@ function fmtPct(v?: number): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
-function fmtAsOf(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-US", {
-    timeZone: "UTC",
-    dateStyle: "medium",
-    timeStyle: "short",
-  });
-}
-
 type Props = {
   email: string;
   compareData: MyWatchlistCompareData;
@@ -46,7 +35,6 @@ type Props = {
 
 export function MyWatchlistPerformance({ email, compareData }: Props) {
   const watchlist = useWatchlist();
-  const [tab, setTab] = useState<Tab>("themes");
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
   const [removing, setRemoving] = useState<string | null>(null);
 
@@ -92,11 +80,6 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
     return out;
   }, [watchlistRows, sorts]);
 
-  const savedTickers = useMemo(() => {
-    if (!watchlist?.ready) return [];
-    return [...watchlist.tickerKeys].sort((a, b) => a.localeCompare(b));
-  }, [watchlist]);
-
   const onHeaderClick = (key: string, shiftKey: boolean) => {
     setSorts((prev) => {
       const idx = prev.findIndex((s) => s.key === key);
@@ -124,183 +107,121 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
     [watchlist, removing],
   );
 
-  const onRemoveTicker = useCallback(
-    async (ticker: string) => {
-      if (!watchlist || removing) return;
-      setRemoving(ticker);
-      try {
-        await watchlist.toggle("ticker", ticker);
-      } finally {
-        setRemoving(null);
-      }
-    },
-    [watchlist, removing],
-  );
-
   return (
     <div className={localStyles.wrap}>
       <p className={localStyles.accountLine}>Signed in as {email}</p>
 
       <div className={localStyles.toolbar}>
-        <div className={localStyles.tabs} role="tablist" aria-label="Watchlist type">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "themes"}
-            className={tab === "themes" ? localStyles.tabActive : localStyles.tab}
-            onClick={() => setTab("themes")}
-          >
-            Themes ({watchlist?.themeCount ?? 0})
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "tickers"}
-            className={tab === "tickers" ? localStyles.tabActive : localStyles.tab}
-            onClick={() => setTab("tickers")}
-          >
-            Tickers ({watchlist?.tickerCount ?? 0})
-          </button>
-        </div>
         <p className={localStyles.limits}>
           {watchlist?.ready
-            ? `${watchlist.themeCount} of 20 themes · ${watchlist.tickerCount} of 20 tickers`
-            : "Up to 20 themes · 20 tickers"}
+            ? `${watchlist.themeCount} of 20 themes saved`
+            : "Up to 20 themes"}
         </p>
       </div>
 
-      {tab === "themes" ? (
-        <>
-          <section className={localStyles.addCard} aria-label="Add theme to watchlist">
-            <h2 className={localStyles.addCardTitle}>Add to watchlist</h2>
-            <WatchlistThemeAddCombobox embedded />
-            <p className={localStyles.addCardHint}>
-              Search by name, or save with ☆ on <Link href="/themes">theme pages</Link> and in site search.
-            </p>
-          </section>
+      <section className={localStyles.addCard} aria-label="Add theme to watchlist">
+        <h2 className={localStyles.addCardTitle}>Add to watchlist</h2>
+        <WatchlistThemeAddCombobox embedded />
+        <p className={localStyles.addCardHint}>
+          Search by name, or save with ☆ on <Link href="/themes">theme pages</Link> and in site search.
+        </p>
+      </section>
 
-          {loadError ? (
-            <p className={localStyles.emptyHint}>{loadError}</p>
-          ) : watchlistRows.length === 0 ? (
-            <p className={localStyles.emptyHint}>
-              No themes saved yet — use the search above or{" "}
-              <Link href="/themes">browse themes</Link>.
-            </p>
-          ) : (
-            <section className={localStyles.tableSection} aria-label="Watchlist performance">
-              <p className={localStyles.sortHint}>
-                Click a header to sort. Shift+click adds secondary sort.
-              </p>
-              <div className={tableStyles.scrollWrap}>
-                <div
-                  className={tableStyles.table}
-                  style={{
-                    gridTemplateColumns: `minmax(280px, max-content) repeat(${columns.length}, minmax(84px, max-content))`,
-                  }}
-                >
-                  <button
-                    type="button"
-                    className={`${tableStyles.head} ${tableStyles.sticky}`}
-                    onClick={(e) => onHeaderClick("Theme", e.shiftKey)}
-                  >
-                    Theme
-                  </button>
-                  {columns.map((col) => {
-                    const help = customDateHelpText(col, selectedDateByKey);
-                    return (
-                      <button
-                        key={`h-${col}`}
-                        type="button"
-                        className={tableStyles.head}
-                        onClick={(e) => onHeaderClick(col, e.shiftKey)}
-                        title={help || trendingColumnHeader(col)}
-                      >
-                        {trendingColumnHeader(col)}
-                        {help ? (
-                          <span
-                            className={styles.metricInfoAsterisk}
-                            title={help}
-                            aria-label={`${trendingColumnHeader(col)} explanation`}
-                          >
-                            *
-                          </span>
-                        ) : null}
-                      </button>
-                    );
-                  })}
-
-                  {sorted.flatMap((row) => {
-                    const keyBase = row.slug;
-                    const nameCell = (
-                      <div
-                        key={`${keyBase}-name`}
-                        className={`${tableStyles.themeCell} ${tableStyles.sticky}`}
-                      >
-                        <div className={localStyles.themeRowInner}>
-                          <button
-                            type="button"
-                            className={localStyles.removeBtn}
-                            disabled={removing === row.slug}
-                            onClick={() => void onRemoveTheme(row.slug)}
-                          >
-                            Remove
-                          </button>
-                          <Link href={`/themes/${row.slug}`} className={tableStyles.themeName}>
-                            {row.name}
-                          </Link>
-                        </div>
-                        {row.groupName ? (
-                          <div className={tableStyles.meta}>{row.groupName}</div>
-                        ) : null}
-                      </div>
-                    );
-                    const valueCells = columns.map((col) => {
-                      const v = valueForTrendingColumn(col, row.compareReturns ?? undefined, {});
-                      const heat =
-                        v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
-                      return (
-                        <div key={`${keyBase}-${col}`} className={tableStyles.value} style={heat}>
-                          {fmtPct(v)}
-                        </div>
-                      );
-                    });
-                    return [nameCell, ...valueCells];
-                  })}
-                </div>
-              </div>
-              {compareAsOf ? (
-                <p className={localStyles.asOfLine}>Returns as of {fmtAsOf(compareAsOf)}.</p>
-              ) : null}
-            </section>
-          )}
-        </>
+      {loadError ? (
+        <p className={localStyles.emptyHint}>{loadError}</p>
+      ) : watchlistRows.length === 0 ? (
+        <p className={localStyles.emptyHint}>
+          No themes saved yet — use the search above or{" "}
+          <Link href="/themes">browse themes</Link>.
+        </p>
       ) : (
-        <>
-          {savedTickers.length === 0 ? (
-            <p className={localStyles.emptyHint}>
-              No tickers saved yet. Use search and ☆ on a ticker row to add one.
-            </p>
-          ) : (
-            <div className={localStyles.tickerPills}>
-              {savedTickers.map((ticker) => (
-                <span key={ticker} className={localStyles.tickerPill}>
-                  {ticker}
-                  <button
-                    type="button"
-                    aria-label={`Remove ${ticker} from watchlist`}
-                    disabled={removing === ticker}
-                    onClick={() => void onRemoveTicker(ticker)}
-                  >
-                    ×
-                  </button>
-                </span>
-              ))}
-            </div>
-          )}
-          <p className={localStyles.emptyHint}>
-            Ticker performance columns will appear here once compare ticker data is published (Phase 4).
+        <section className={localStyles.tableSection} aria-label="Watchlist performance">
+          <p className={localStyles.sortHint}>
+            Click a header to sort. Shift+click adds secondary sort.
           </p>
-        </>
+          <div className={tableStyles.scrollWrap}>
+            <div
+              className={tableStyles.table}
+              style={{
+                gridTemplateColumns: `minmax(280px, max-content) repeat(${columns.length}, minmax(84px, max-content))`,
+              }}
+            >
+              <button
+                type="button"
+                className={`${tableStyles.head} ${tableStyles.sticky}`}
+                onClick={(e) => onHeaderClick("Theme", e.shiftKey)}
+              >
+                Theme
+              </button>
+              {columns.map((col) => {
+                const help = customDateHelpText(col, selectedDateByKey);
+                return (
+                  <button
+                    key={`h-${col}`}
+                    type="button"
+                    className={tableStyles.head}
+                    onClick={(e) => onHeaderClick(col, e.shiftKey)}
+                    title={help || trendingColumnHeader(col)}
+                  >
+                    {trendingColumnHeader(col)}
+                    {help ? (
+                      <span
+                        className={styles.metricInfoAsterisk}
+                        title={help}
+                        aria-label={`${trendingColumnHeader(col)} explanation`}
+                      >
+                        *
+                      </span>
+                    ) : null}
+                  </button>
+                );
+              })}
+
+              {sorted.flatMap((row) => {
+                const keyBase = row.slug;
+                const nameCell = (
+                  <div
+                    key={`${keyBase}-name`}
+                    className={`${tableStyles.themeCell} ${tableStyles.sticky}`}
+                  >
+                    <div className={localStyles.themeRowInner}>
+                      <button
+                        type="button"
+                        className={localStyles.removeBtn}
+                        disabled={removing === row.slug}
+                        onClick={() => void onRemoveTheme(row.slug)}
+                      >
+                        Remove
+                      </button>
+                      <Link href={`/themes/${row.slug}`} className={tableStyles.themeName}>
+                        {row.name}
+                      </Link>
+                    </div>
+                    {row.groupName ? (
+                      <div className={tableStyles.meta}>{row.groupName}</div>
+                    ) : null}
+                  </div>
+                );
+                const valueCells = columns.map((col) => {
+                  const v = valueForTrendingColumn(col, row.compareReturns ?? undefined, {});
+                  const heat =
+                    v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
+                  return (
+                    <div key={`${keyBase}-${col}`} className={tableStyles.value} style={heat}>
+                      {fmtPct(v)}
+                    </div>
+                  );
+                });
+                return [nameCell, ...valueCells];
+              })}
+            </div>
+          </div>
+          {compareAsOf ? (
+                <p className={localStyles.asOfLine}>
+                  Returns as of {formatSiteDataPublished(compareAsOf)} UTC (same publish as footer).
+                </p>
+          ) : null}
+        </section>
       )}
 
       <footer className={localStyles.siteFooter}>

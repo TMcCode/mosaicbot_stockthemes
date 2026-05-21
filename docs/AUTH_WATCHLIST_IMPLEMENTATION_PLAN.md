@@ -64,7 +64,8 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 
 ### PostHog (optional, console)
 
-- [ ] Funnel/insights for `sign_in`, `watchlist_add`, `my_view` after events exist in code
+- [x] Events in app: `sign_in`, `watchlist_add`, `my_view`, `account_view`, `theme_idea_submitted`
+- [ ] Create funnel in PostHog UI — see **`docs/POSTHOG_AUTH_FUNNEL.md`**
 
 ### Later — paid tier (not v1)
 
@@ -82,9 +83,9 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 | **Hosting** | GitHub Pages + `output: 'export'` + **Supabase** (browser client + RLS) |
 | **Product scope** | stockthemes watchlist only — **not** MosaicBot Dash |
 | **Public content** | All theme/group (and future stock) pages stay public |
-| **Watchlist** | Sign-in required; max **20 themes** + **20 tickers** per user |
+| **Watchlist** | Sign-in required; max **20 themes** per user (**ticker saves deferred** until `/stocks/[ticker]`) |
 | **Newsletter** | **Beehiiv iframe** on production (no API route on Pages) |
-| **v1 personalized UI** | `/my` table only (themes ↔ tickers toggle); links to public detail pages |
+| **v1 personalized UI** | `/my` theme performance table; links to public theme pages |
 
 ---
 
@@ -93,7 +94,7 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 | Route | Access | Purpose |
 |-------|--------|---------|
 | `/sign-in` | Public | Magic link (Supabase Auth) |
-| `/my` | Signed in | Watchlist performance table (themes or tickers) |
+| `/my` | Signed in | Theme watchlist performance table |
 | `/my` | Anonymous | CTA: sign in to save a watchlist |
 | `/themes/[slug]`, `/groups/...` | Public | Unchanged + **★ Save to watchlist** when signed in |
 | `/stocks/[ticker]` | Public | Stock lens (after ETL publishes stock JSON) |
@@ -282,7 +283,7 @@ Supabase Dashboard: add **Redirect URLs** for `/auth/callback` (apex + localhost
 
 - [ ] `watchlist_items` insert/delete/list
 - [ ] ★ on theme detail pages
-- [ ] Add ticker from site search (validate against search index)
+- [ ] ~~Add ticker from site search~~ — deferred (Phase 4; UI off via `WATCHLIST_TICKERS_UI_ENABLED`)
 - [ ] Enforce 20 + 20 limits with clear UI errors
 
 ### Phase 3 — `/my` theme tab
@@ -291,17 +292,21 @@ Supabase Dashboard: add **Redirect URLs** for `/auth/callback` (apex + localhost
 - [ ] Join to watchlist; render full column set
 - [ ] Footnotes for custom date columns (IRANWAR, LIBDAY)
 
-### Phase 4 — Ticker tab + public stocks
+### Phase 4 — Ticker watchlist + public stocks (deferred)
 
-- [ ] Ship `compare_tickers.v0.json` from ETL
-- [ ] Wire ticker tab on `/my`
+**Gate:** ship public `/stocks/[ticker]` first, then enable `WATCHLIST_TICKERS_UI_ENABLED` in `src/lib/watchlist/features.ts`.
+
 - [ ] Public `/stocks/[ticker]` minimal page
+- [ ] Ship `compare_tickers.v0.json` from ETL
+- [ ] Ticker tab on `/my` + ☆ on ticker rows in site search
 
 ### Phase 5 — Polish
 
-- [ ] Account page (email, sign out, delete account)
+- [x] Account page (`/account` — email, sign out, delete account via `delete_own_account` RPC)
 - [ ] Rate limits / captcha on auth if abuse appears
-- [ ] PostHog funnel: sign_in → watchlist_add → my_view
+- [x] PostHog events for funnel: `sign_in` → `watchlist_add` → `my_view` (configure insight in PostHog — `docs/POSTHOG_AUTH_FUNNEL.md`)
+- [x] `/account` — “Your submissions” list (`theme_idea_submissions`, status badges)
+- [x] Footer label: “Site data published … UTC” (manifest `as_of`; `/my` notes same publish)
 
 ### Phase 6 — Paid (later)
 

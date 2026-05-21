@@ -3,6 +3,7 @@
   --foreground: #0b0f12;
   --card-surface: rgba(12, 16, 20, 0.9);
   --card-border: rgba(38, 252, 214, 0.16);
+  --page-deco-opacity: 0.36;
 
   --text-primary: #eaf2f0;
   --text-secondary: #9aa8a6;
@@ -13,6 +14,7 @@
   --button-secondary-hover: rgba(255, 255, 255, 0.05);
   --button-secondary-border: rgba(255, 255, 255, 0.1);
 
+  position: relative;
   display: flex;
   flex: 1;
   justify-content: center;
@@ -27,7 +29,80 @@
     var(--background);
 }
 
+.pageBorderDeco {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.pageDecoImg {
+  position: absolute;
+  max-width: none;
+  height: auto;
+  opacity: var(--page-deco-opacity);
+  user-select: none;
+}
+
+/* Default SSR theme is light (ThemeRoot) */
+.pageDecoLight {
+  display: block;
+  filter: saturate(1.05);
+}
+
+.pageDecoDark {
+  display: none;
+  filter: saturate(1.12) brightness(1.06);
+}
+
+:global(.st-theme[data-theme="dark"]) .pageDecoLight {
+  display: none;
+}
+
+:global(.st-theme[data-theme="dark"]) .pageDecoDark {
+  display: block;
+}
+
+.pageDecoGalaxyTR {
+  top: 2%;
+  right: -4%;
+  width: min(420px, 38vw);
+}
+
+.pageDecoGalaxyBL {
+  bottom: 6%;
+  left: -6%;
+  width: min(300px, 28vw);
+  transform: rotate(180deg);
+  opacity: calc(var(--page-deco-opacity) * 0.85);
+}
+
+.pageDecoSpringTL {
+  top: 10%;
+  left: -5%;
+  width: min(340px, 32vw);
+}
+
+.pageDecoSpringBR {
+  right: -3%;
+  bottom: 4%;
+  width: min(280px, 26vw);
+  transform: scaleX(-1);
+  opacity: calc(var(--page-deco-opacity) * 0.9);
+}
+
+:global(.st-theme[data-theme="light"]) .page {
+  --page-deco-opacity: 0.38;
+}
+
+:global(.st-theme[data-theme="dark"]) .page {
+  --page-deco-opacity: 0.4;
+}
+
 .main {
+  position: relative;
+  z-index: 1;
   display: flex;
   width: 100%;
   max-width: 1320px;
@@ -47,15 +122,25 @@
 .heroGrid {
   width: 100%;
   display: grid;
-  grid-template-columns: 1fr 300px;
-  gap: 18px;
-  /* Prevent rails from stretching to match the tallest hero content block. */
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px;
   align-items: start;
 }
 
-/* Home page only: collapse hero to single column after removing right rail ad. */
+/* Home page only: single-column hero (ad sits in title row). */
 .heroGridSingle {
   grid-template-columns: 1fr;
+}
+
+.heroTitle {
+  margin: 0;
+  max-width: 720px;
+  font-size: 52px;
+  font-weight: 650;
+  line-height: 1.05;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+  color: var(--text-primary);
 }
 
 .heroMain {
@@ -66,9 +151,39 @@
 
 .titleRow {
   display: grid;
-  grid-template-columns: 1fr 210px;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 220px);
+  gap: 14px 16px;
   align-items: start;
+}
+
+/* Hero right rail: vertical stats (replaces former title-row ad width) */
+.statGridHero {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 220px;
+  max-width: 100%;
+  justify-self: end;
+}
+
+.statGridHero .statCard {
+  padding: 8px 10px;
+}
+
+.statGridHero .statCard strong {
+  font-size: 18px;
+}
+
+.statGridHero .statCard span {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.statGridHero .statMarketCap span {
+  white-space: normal;
 }
 
 .themeWatchlistAction {
@@ -221,6 +336,42 @@
   font-size: 12px;
 }
 
+/* Link wraps inner content only — layout unchanged (display: contents). */
+.statCardHit {
+  display: contents;
+  color: inherit;
+  text-decoration: none;
+}
+
+.statCardClickable {
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.statCardClickable:has(.statCardHit:hover),
+.statCardClickable:has(.statCardHit:focus-visible) {
+  border-color: rgba(38, 252, 214, 0.45);
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.statCardHit:focus-visible {
+  outline: none;
+}
+
+.statCardClickable:has(.statCardHit:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.homeFeedStack {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .directoryGrid {
   width: 100%;
   display: grid;
@@ -277,6 +428,10 @@
   width: 100%;
   min-width: 0;
   margin-top: 6px;
+}
+
+.sectionTightTop {
+  margin-top: 0;
 }
 
 .tightChartTop {
@@ -703,7 +858,7 @@ a.feedTitle:hover {
   gap: 22px;
 }
 
-.intro h1 {
+.intro h1:not(.heroTitle) {
   max-width: 780px;
   font-size: 52px;
   font-weight: 650;
@@ -761,6 +916,11 @@ a.feedTitle:hover {
   color: var(--text-primary);
 }
 
+.aboutProse h2[id],
+.intro h2[id] {
+  scroll-margin-top: 80px;
+}
+
 .aboutLead {
   max-width: 980px;
 }
@@ -780,14 +940,29 @@ a.feedTitle:hover {
     var(--surface-card);
 }
 
-.intro .introPunchline {
-  margin: 0 0 8px;
-  font-size: 32px;
-  line-height: 1.12;
+.introLead {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.5;
   font-weight: 500;
   color: var(--text-primary);
+  max-width: 860px;
+  text-wrap: balance;
+}
+
+.intro .introPunchline {
+  margin: 0;
+  font-size: clamp(22px, 2.6vw, 30px);
+  line-height: 1.2;
+  font-weight: 500;
+  color: var(--text-secondary);
   max-width: 920px;
   text-wrap: balance;
+}
+
+.introPunchlineLead {
+  color: var(--text-primary);
+  font-weight: 650;
 }
 
 .introMore {
@@ -801,11 +976,6 @@ a.feedTitle:hover {
   text-decoration: underline;
 }
 
-
-.intro a {
-  font-weight: 600;
-  color: var(--accent);
-}
 
 .ctas {
   display: flex;
@@ -830,10 +1000,14 @@ a.feedTitle:hover {
   font-weight: 600;
 }
 
-a.primary {
+.intro .ctas a.primary {
   background: var(--accent);
   color: #032320;
   gap: 8px;
+}
+
+.intro .ctas a.primary:hover {
+  color: #032320;
 }
 
 a.secondary {
@@ -843,9 +1017,15 @@ a.secondary {
 
 /* Enable hover only on non-touch devices */
 @media (hover: hover) and (pointer: fine) {
-  a.primary:hover {
+  .intro .ctas a.primary:hover {
     background: var(--button-primary-hover);
     border-color: transparent;
+    color: #032320;
+  }
+
+  :global(.st-theme[data-theme="light"]) .intro .ctas a.primary:hover,
+  :global(.st-theme[data-theme="light"]) a.primary:hover {
+    color: var(--button-primary-fg, #ffffff);
   }
 
   a.secondary:hover {
@@ -915,39 +1095,63 @@ a.secondary {
     padding: 10px;
   }
 
-  .titleRow {
+  .pageDecoGalaxyTR,
+  .pageDecoSpringBR {
+    width: min(220px, 42vw);
+    opacity: calc(var(--page-deco-opacity) * 0.75);
+  }
+
+  .pageDecoGalaxyBL,
+  .pageDecoSpringTL {
+    display: none;
+  }
+
+  :global(.st-theme[data-theme="dark"]) .pageDecoGalaxyBL.pageDecoDark,
+  :global(.st-theme[data-theme="dark"]) .pageDecoSpringTL.pageDecoDark {
+    display: none;
+  }
+
+  .heroGrid {
     grid-template-columns: 1fr;
   }
 
-  .statGrid {
+  .statGridHero {
+    width: 100%;
+    justify-self: stretch;
+    display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
-  .statGroups {
+  .statGridHero .statGroups {
     order: 1;
   }
 
-  .statThemes {
+  .statGridHero .statThemes {
     order: 2;
   }
 
-  .statTickers {
+  .statGridHero .statTickers {
     order: 3;
   }
 
-  .statMarketCap {
+  .statGridHero .statMarketCap {
     order: 4;
   }
 
-  .statMarketCap span {
+  .statGridHero .statMarketCap span {
     white-space: nowrap;
-    font-size: 11px;
+    font-size: 10px;
   }
 }
 
 @media (max-width: 1100px) {
   .heroGrid {
     grid-template-columns: 1fr;
+  }
+
+  .heroTitle {
+    font-size: clamp(28px, 7vw, 40px);
   }
 
   .directoryGrid {
@@ -999,8 +1203,8 @@ a.secondary {
 
 :global(.st-theme[data-theme="light"]) .main {
   box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.04) inset,
-    0 18px 48px rgba(12, 48, 42, 0.1);
+    0 0 0 1px rgba(59, 77, 161, 0.06) inset,
+    0 18px 48px rgba(59, 77, 161, 0.1);
 }
 
 :global(.st-theme[data-theme="light"]) .adSlot,
@@ -1019,6 +1223,12 @@ a.secondary {
   border-color: var(--button-secondary-border);
 }
 
+:global(.st-theme[data-theme="light"]) .statCardClickable:has(.statCardHit:hover),
+:global(.st-theme[data-theme="light"]) .statCardClickable:has(.statCardHit:focus-visible) {
+  background: var(--color-accent-subtle, rgba(59, 77, 161, 0.08));
+  border-color: rgba(59, 77, 161, 0.28);
+}
+
 :global(.st-theme[data-theme="light"]) .tableWrap {
   background: rgba(0, 0, 0, 0.02);
   border-color: var(--button-secondary-border);
@@ -1032,10 +1242,24 @@ a.secondary {
   background: rgba(0, 0, 0, 0.04);
 }
 
+:global(.st-theme[data-theme="light"]) .intro .ctas a.primary,
 :global(.st-theme[data-theme="light"]) a.primary {
-  color: #f8fffd;
+  background: var(--accent-strong, #3b4da1);
+  color: var(--button-primary-fg, #ffffff);
+}
+
+:global(.st-theme[data-theme="light"]) .intro .ctas a.primary:hover,
+:global(.st-theme[data-theme="light"]) a.primary:hover {
+  background: var(--button-primary-hover, #323f88);
+  color: var(--button-primary-fg, #ffffff);
 }
 
 :global(.st-theme[data-theme="light"]) .trendingSticky {
   box-shadow: 6px 0 14px -8px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pageBorderDeco {
+    display: none;
+  }
 }

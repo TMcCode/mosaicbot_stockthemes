@@ -5,18 +5,26 @@ import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
 import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
+import { HomePublisherIntro } from "@/components/HomePublisherIntro";
+import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
 import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
 import styles from "./page.module.css";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
+import { buildTopMoversTickerItems } from "@/lib/buildTopMoversTicker";
+import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getHomeTrendingCached } from "@/lib/getHomeTrendingCached";
+import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
+import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
 import { loadHomeCommentary } from "@/lib/loadHomeCommentary";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
+import { publicAssetPath } from "@/lib/siteUrl";
 import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
@@ -98,17 +106,22 @@ const HOME_FEED_MAX_DAYS = 10;
 
 export const metadata: Metadata = buildPageMetadata({
   title: "stockthemes.ai",
-  description: "Thematic equity intelligence for discovering stock narratives, groups, and theme exposure.",
+  description:
+    "Curated thematic equity research: hand-built theme baskets, group discovery, performance tables, and methodology-backed limitations—not investment advice.",
   path: "/",
 });
 
 export default async function Home() {
-  const [{ manifest, source }, homeTrendingRes, spyPerf, commentaryRes] = await Promise.all([
-    getManifestCached(),
-    getHomeTrendingCached(),
-    getSpyMarketPerfCached(),
-    loadHomeCommentary(),
-  ]);
+  const [{ manifest, source }, homeTrendingRes, compareRes, spyPerf, commentaryRes] =
+    await Promise.all([
+      getManifestCached(),
+      getHomeTrendingCached(),
+      getCompareThemesCached(),
+      getSpyMarketPerfCached(),
+      loadHomeCommentary(),
+    ]);
+  const topMoversTicker = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? []);
+  const homeJsonLd = buildHomePageJsonLd(homeSiteJsonDescription());
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
@@ -222,82 +235,151 @@ export default async function Home() {
 
   return (
     <div className={`st-surface ${styles.page}`}>
+      <div className={styles.pageBorderDeco} aria-hidden>
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoGalaxyTR}`}
+          src={publicAssetPath("/brand/home-deco-galaxy.svg")}
+          alt=""
+          width={420}
+          height={315}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoGalaxyTR}`}
+          src={publicAssetPath("/brand/home-deco-galaxy-dark.svg")}
+          alt=""
+          width={420}
+          height={315}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoGalaxyBL}`}
+          src={publicAssetPath("/brand/home-deco-galaxy.svg")}
+          alt=""
+          width={320}
+          height={240}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoGalaxyBL}`}
+          src={publicAssetPath("/brand/home-deco-galaxy-dark.svg")}
+          alt=""
+          width={320}
+          height={240}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoSpringTL}`}
+          src={publicAssetPath("/brand/home-deco-spring.svg")}
+          alt=""
+          width={360}
+          height={290}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoSpringTL}`}
+          src={publicAssetPath("/brand/home-deco-spring-dark.svg")}
+          alt=""
+          width={360}
+          height={290}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoLight} ${styles.pageDecoSpringBR}`}
+          src={publicAssetPath("/brand/home-deco-spring.svg")}
+          alt=""
+          width={300}
+          height={240}
+          decoding="async"
+        />
+        <img
+          className={`${styles.pageDecoImg} ${styles.pageDecoDark} ${styles.pageDecoSpringBR}`}
+          src={publicAssetPath("/brand/home-deco-spring-dark.svg")}
+          alt=""
+          width={300}
+          height={240}
+          decoding="async"
+        />
+      </div>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(homeJsonLd) }}
+      />
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={`${styles.heroGrid} ${styles.heroGridSingle}`}>
+          <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>{eyebrow}</p>
-              <div className={styles.titleRow}>
-                <h1>Thematic equity intelligence, organized for discovery</h1>
-                <AdPlacement
-                  placement="hero"
-                  className={styles.titleAdSmall}
-                  classNameWhenActive={styles.titleAdSmall}
-                  placeholderLabel="Ad Slot"
-                  format="horizontal"
-                />
-              </div>
-              <div className={styles.introCopyWrap}>
-                <p className={styles.introPunchline}>
-                  Discover and track stock market narratives better than ever before
-                </p>
-                <p className={styles.introMore}>
-                  <Link href="/about">Read about the methodology and background</Link>
-                </p>
-                <p className={styles.introMore}>
-                  <Link href="#newsletter-signup">Get our Den of Themes newsletter</Link>
-                </p>
-              </div>
-              <div className={styles.ctas}>
-                <Link className={styles.primary} href="/themes">
-                  Browse all themes
-                </Link>
-                <Link className={styles.primary} href="/groups">
-                  Browse all groups
-                </Link>
-              </div>
+              <h1 className={styles.heroTitle}>
+                Thematic equity intelligence, organized for discovery
+              </h1>
+              <p className={styles.introPunchline}>
+                <span className={styles.introPunchlineLead}>Understand</span> how the world is
+                moving by tracking stock market performance for hundreds of real-world themes and
+                narratives.
+              </p>
+              <p className={styles.introMore}>
+                <Link href="#newsletter-signup">Get the Den of Themes newsletter</Link>
+              </p>
             </div>
+            {stats ? (
+              <ul className={styles.statGridHero} aria-label="Site coverage stats">
+                {stats.total_tickers != null ? (
+                  <li className={`${styles.statCard} ${styles.statTickers}`}>
+                    <strong>{stats.total_tickers.toLocaleString()}</strong>
+                    <span>Public tickers tracked</span>
+                  </li>
+                ) : null}
+                {stats.total_groups != null ? (
+                  <li
+                    className={`${styles.statCard} ${styles.statGroups} ${styles.statCardClickable}`}
+                  >
+                    <Link href="/groups" className={styles.statCardHit}>
+                      <strong>{stats.total_groups}</strong>
+                      <span>Theme groups</span>
+                    </Link>
+                  </li>
+                ) : null}
+                {stats.total_themes != null ? (
+                  <li
+                    className={`${styles.statCard} ${styles.statThemes} ${styles.statCardClickable}`}
+                  >
+                    <Link href="/themes" className={styles.statCardHit}>
+                      <strong>{stats.total_themes}</strong>
+                      <span>Curated themes</span>
+                    </Link>
+                  </li>
+                ) : null}
+                <li className={`${styles.statCard} ${styles.statMarketCap}`}>
+                  <strong>
+                    {stats.total_market_cap_usd != null
+                      ? `$${(stats.total_market_cap_usd / 1e12).toFixed(1)}T`
+                      : "—"}
+                  </strong>
+                  <span>Aggregate market cap (USD)</span>
+                </li>
+              </ul>
+            ) : null}
           </div>
 
-          {stats ? (
-            <ul className={styles.statGrid}>
-              {stats.total_tickers != null ? (
-                <li className={`${styles.statCard} ${styles.statTickers}`}>
-                  <strong>{stats.total_tickers.toLocaleString()}</strong>
-                  <span>Public tickers tracked</span>
-                </li>
-              ) : null}
-              {stats.total_groups != null ? (
-                <li className={`${styles.statCard} ${styles.statGroups}`}>
-                  <strong>{stats.total_groups}</strong>
-                  <span>Theme groups</span>
-                </li>
-              ) : null}
-              {stats.total_themes != null ? (
-                <li className={`${styles.statCard} ${styles.statThemes}`}>
-                  <strong>{stats.total_themes}</strong>
-                  <span>Curated themes</span>
-                </li>
-              ) : null}
-              <li className={`${styles.statCard} ${styles.statMarketCap}`}>
-                <strong>
-                  {stats.total_market_cap_usd != null
-                    ? `$${(stats.total_market_cap_usd / 1e12).toFixed(1)}T`
-                    : "—"}
-                </strong>
-                <span>Aggregate market cap (USD)</span>
-              </li>
-            </ul>
-          ) : null}
-
-          <HomeCommentaryPreview
-            initialItems={commentaryRes?.commentary.items ?? []}
-            previewDays={commentaryRes?.commentary.preview_days ?? 7}
+          <HomeTopMoversTicker
+            items={topMoversTicker}
+            asOfLabel={
+              compareRes?.bundle?.as_of
+                ? formatSiteDataPublished(compareRes.bundle.as_of)
+                : undefined
+            }
           />
 
-          <div className={styles.directoryGrid}>
-            <section className={styles.section}>
-              <h2>Trending themes</h2>
+          <div className={styles.homeFeedStack}>
+            <HomeCommentaryPreview
+              initialItems={commentaryRes?.commentary.items ?? []}
+              previewDays={commentaryRes?.commentary.preview_days ?? 7}
+            />
+
+            <div className={styles.directoryGrid}>
+              <section className={`${styles.section} ${styles.sectionTightTop}`}>
+                <h2>Trending themes</h2>
               <HomeTrendingThemesTable
                 rows={rowsForTable}
                 columns={trendingColumns}
@@ -383,7 +465,10 @@ export default async function Home() {
                 </p>
               ) : null}
             </section>
+            </div>
           </div>
+
+          <HomePublisherIntro />
         </div>
       </main>
     </div>

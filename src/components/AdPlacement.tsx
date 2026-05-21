@@ -113,12 +113,32 @@ export function AdPlacement({
     const host = hostRef.current;
     if (!host || host.getBoundingClientRect().width < minAdWidthPx) return;
     pushedRef.current = true;
+    let cancelled = false;
     try {
       (window.adsbygoogle = window.adsbygoogle || []).push({});
     } catch {
-      pushedRef.current = false;
+      if (!cancelled) pushedRef.current = false;
     }
+    return () => {
+      cancelled = true;
+    };
   }, [active, minAdWidthPx, shouldRequest]);
+
+  /* Clear ad DOM before React unmounts — avoids adsbygoogle removeChild on detached nodes (HMR / route changes). */
+  useEffect(() => {
+    if (!active) return;
+    const host = hostRef.current;
+    return () => {
+      const node = hostRef.current ?? host;
+      if (!node) return;
+      try {
+        node.replaceChildren();
+      } catch {
+        /* ignore */
+      }
+      pushedRef.current = false;
+    };
+  }, [active]);
 
   useEffect(() => {
     if (!active || shouldRequest) return;

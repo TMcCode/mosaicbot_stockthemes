@@ -205,7 +205,8 @@
 
 :global(.st-theme[data-theme="light"]) .menuItem:hover,
 :global(.st-theme[data-theme="light"]) .menuItem:focus-visible {
-  background: rgba(0, 0, 0, 0.04);
+  background: rgba(59, 77, 161, 0.08);
+  color: var(--nav-accent, #3b4da1);
 }
 
 .navMuted {
@@ -272,8 +273,9 @@
 }
 
 :global(.st-theme[data-theme="light"]) .themeToggle:hover {
-  background: rgba(0, 0, 0, 0.06);
-  border-color: rgba(10, 155, 134, 0.4);
+  background: rgba(59, 77, 161, 0.08);
+  border-color: rgba(59, 77, 161, 0.28);
+  color: var(--nav-accent, #3b4da1);
 }
 
 @media (max-width: 600px) {

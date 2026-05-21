@@ -192,12 +192,12 @@
 }
 
 :global(.st-theme[data-theme="light"]) .themeTitleAccent {
-  color: #0d8874;
+  color: var(--accent, #2a9893);
 }
 
 :global(.st-theme[data-theme="light"]) .toggle button.active {
-  background: rgba(10, 155, 134, 0.18);
-  color: #064032;
+  background: var(--color-accent-muted, rgba(42, 207, 200, 0.14));
+  color: var(--accent-strong, #3b4da1);
 }
 
 :global(.st-theme[data-theme="light"]) .legendItemButton {

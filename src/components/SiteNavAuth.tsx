@@ -7,7 +7,7 @@ import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import styles from "./SiteNav.module.css";
 
 export function SiteNavAuth() {
-  const { configured, loading, user, signOut } = useSupabaseAuth();
+  const { configured, loading, user } = useSupabaseAuth();
 
   if (!configured) {
     return null;
@@ -20,9 +20,7 @@ export function SiteNavAuth() {
         <span className={styles.sep} aria-hidden="true">
           ·
         </span>
-        <button type="button" className={styles.navButton} onClick={() => void signOut()}>
-          Sign out
-        </button>
+        <Link href="/account">Account</Link>
       </span>
     );
   }

@@ -7,6 +7,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import posthog from "posthog-js";
 
 import { WatchlistStar } from "@/components/WatchlistStar";
+import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import type {
   SearchIndexGroupRowV0,
@@ -454,12 +455,14 @@ export function SiteSearch() {
                             )}
                           </div>
                         </div>
-                        <WatchlistStar
-                          compact
-                          itemType="ticker"
-                          itemKey={h.ref.ticker}
-                          label={h.ref.ticker}
-                        />
+                        {WATCHLIST_TICKERS_UI_ENABLED ? (
+                          <WatchlistStar
+                            compact
+                            itemType="ticker"
+                            itemKey={h.ref.ticker}
+                            label={h.ref.ticker}
+                          />
+                        ) : null}
                       </div>
                     ) : h.kind === "theme" ? (
                       <div

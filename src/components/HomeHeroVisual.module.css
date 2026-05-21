@@ -1,0 +1,80 @@
+.wrap {
+  position: relative;
+  width: 100%;
+  max-height: 220px;
+  aspect-ratio: 1024 / 585;
+  border-radius: 16px;
+  overflow: hidden;
+  background:
+    radial-gradient(120% 80% at 100% 100%, rgba(38, 252, 214, 0.12), transparent 55%),
+    rgba(255, 255, 255, 0.04);
+}
+
+.wrapFit {
+  height: 100%;
+  max-height: none;
+  aspect-ratio: unset;
+  min-height: 0;
+}
+
+.img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 72% 58%;
+}
+
+/* Blend graphic into the hero column (dark + light themes). */
+.wrap::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    var(--hero-visual-fade, rgba(12, 16, 20, 0.97)) 0%,
+    rgba(12, 16, 20, 0.35) 28%,
+    transparent 52%
+  );
+}
+
+:global(.st-theme[data-theme="light"]) .wrap {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:global(.st-theme[data-theme="light"]) .wrap::after {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.98) 0%,
+    rgba(255, 255, 255, 0.5) 30%,
+    transparent 55%
+  );
+}
+
+@media (max-width: 900px) {
+  .wrap:not(.wrapFit) {
+    max-height: 200px;
+    aspect-ratio: 16 / 9;
+  }
+
+  .wrapFit {
+    max-height: none;
+  }
+
+  .img {
+    object-position: 65% 50%;
+  }
+
+  .wrap::after {
+    background: linear-gradient(
+      180deg,
+      transparent 40%,
+      var(--hero-visual-fade, rgba(12, 16, 20, 0.85)) 100%
+    );
+  }
+
+  :global(.st-theme[data-theme="light"]) .wrap::after {
+    background: linear-gradient(180deg, transparent 45%, rgba(255, 255, 255, 0.92) 100%);
+  }
+}

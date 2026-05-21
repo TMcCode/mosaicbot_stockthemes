@@ -1,0 +1,120 @@
+.wrap {
+  max-width: 640px;
+}
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 20px 0 16px;
+}
+
+.tab,
+.tabActive {
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  cursor: pointer;
+}
+
+.tabActive {
+  background: rgba(38, 252, 214, 0.12);
+  border-color: rgba(38, 252, 214, 0.35);
+  color: var(--accent, #26fcd6);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.input,
+.textarea,
+.select {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.14));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #eaf2f0);
+  font-family: var(--font-geist-sans, system-ui, sans-serif);
+  font-size: 14px;
+}
+
+.textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.wordCount {
+  margin-top: 4px;
+  font-size: 11px;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.wordCountInvalid {
+  color: #f87171;
+}
+
+.submit {
+  margin-top: 8px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+:global(.st-theme[data-theme="light"]) .submit {
+  background: var(--accent-strong, #3b4da1);
+  color: var(--button-primary-fg, #ffffff);
+}
+
+.submit:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.messageOk {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--accent, #26fcd6);
+}
+
+.messageErr {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #f87171;
+}
+
+.honeypot {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}

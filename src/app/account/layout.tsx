@@ -4,13 +4,13 @@ import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = {
   ...buildPageMetadata({
-    title: "My watchlist",
-    description: "Your signed-in stockthemes.ai theme watchlist (free).",
-    path: "/my",
+    title: "Account",
+    description: "Your stockthemes.ai account — email, sign out, and delete account.",
+    path: "/account",
   }),
   robots: { index: false, follow: false },
 };
 
-export default function MyLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default function AccountLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return children;
 }

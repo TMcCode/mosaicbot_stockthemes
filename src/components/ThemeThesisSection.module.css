@@ -88,5 +88,6 @@
 }
 
 :global(.st-theme[data-theme="light"]) .signInBtn {
-  color: #064032;
+  background: var(--accent-strong, #3b4da1);
+  color: var(--button-primary-fg, #ffffff);
 }

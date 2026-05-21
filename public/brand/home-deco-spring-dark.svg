@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 340" fill="none" aria-hidden="true">
+  <defs>
+    <radialGradient id="sd1" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#26fcd6" stop-opacity="0.65" />
+      <stop offset="100%" stop-color="#26fcd6" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="sd2" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffb86b" stop-opacity="0.55" />
+      <stop offset="100%" stop-color="#ffb86b" stop-opacity="0" />
+    </radialGradient>
+    <radialGradient id="sd3" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#e63946" stop-opacity="0.35" />
+      <stop offset="100%" stop-color="#e63946" stop-opacity="0" />
+    </radialGradient>
+  </defs>
+  <ellipse cx="100" cy="90" rx="120" ry="85" fill="url(#sd1)" />
+  <ellipse cx="300" cy="260" rx="110" ry="75" fill="url(#sd2)" />
+  <ellipse cx="340" cy="80" rx="90" ry="60" fill="url(#sd3)" />
+  <circle cx="180" cy="200" r="28" fill="#26fcd6" fill-opacity="0.18" />
+  <circle cx="200" cy="180" r="22" fill="#ffb86b" fill-opacity="0.16" />
+  <circle cx="220" cy="205" r="18" fill="#2acfc8" fill-opacity="0.14" />
+  <path
+    d="M60 280 Q90 240 120 280 T180 280"
+    stroke="#26fcd6"
+    stroke-opacity="0.35"
+    stroke-width="2"
+    fill="none"
+    stroke-linecap="round"
+  />
+  <path
+    d="M280 40 Q310 70 340 45"
+    stroke="#ffb86b"
+    stroke-opacity="0.4"
+    stroke-width="1.5"
+    fill="none"
+    stroke-linecap="round"
+  />
+</svg>

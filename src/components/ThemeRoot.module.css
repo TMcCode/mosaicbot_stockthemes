@@ -1,4 +1,10 @@
 .root {
+  /* Logo palette (public/brand/logo-icon.svg) */
+  --brand-teal: #2acfc8;
+  --brand-indigo: #3b4da1;
+  --brand-violet: #6a5cfb;
+  --brand-coral: #e63946;
+  --brand-gold: #ffb86b;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -17,12 +23,12 @@
 
 .root[data-theme="light"] {
   color-scheme: light;
-  --background: #e6ecea;
-  --foreground: #0c1412;
-  --nav-fg: #0d1816;
-  --nav-muted: #4a5c58;
-  --nav-accent: #0a8f7a;
-  --nav-border: rgba(0, 0, 0, 0.12);
+  --background: #ebe9f2;
+  --foreground: #1e1c36;
+  --nav-fg: #252244;
+  --nav-muted: #5c5978;
+  --nav-accent: var(--brand-indigo);
+  --nav-border: rgba(59, 77, 161, 0.16);
 }
 
 /*
@@ -31,19 +37,28 @@
  * class under `.root[data-theme="light"]` so the main surface actually updates.
  */
 .root[data-theme="light"] :global(.st-surface) {
-  --background: #dfe8e5;
-  --foreground: #0a1010;
-  --card-surface: rgba(255, 255, 255, 0.92);
-  --card-border: rgba(10, 100, 88, 0.14);
-  --text-primary: #0d1816;
-  --text-secondary: #3d4f4c;
-  --text-muted: #5c6e6a;
-  --accent: #0a9b86;
-  --button-primary-hover: #088f7a;
-  --button-secondary-hover: rgba(0, 0, 0, 0.05);
-  --button-secondary-border: rgba(0, 0, 0, 0.1);
+  --background: #f8f7fc;
+  --foreground: #15132a;
+  --card-surface: rgba(255, 255, 255, 0.96);
+  --card-border: rgba(106, 92, 251, 0.14);
+  --text-primary: #1e1c36;
+  --text-secondary: #43405c;
+  --text-muted: #65627f;
+  /* Links, chips, bullets */
+  --accent: #2a9893;
+  /* Primary buttons — logo indigo blob */
+  --accent-strong: var(--brand-indigo);
+  --accent-strong-hover: #323f88;
+  --button-primary-fg: #ffffff;
+  --button-primary-hover: var(--accent-strong-hover);
+  --button-secondary-hover: rgba(59, 77, 161, 0.06);
+  --button-secondary-border: rgba(59, 77, 161, 0.12);
+  --color-accent-muted: rgba(42, 207, 200, 0.14);
+  --color-accent-subtle: rgba(59, 77, 161, 0.07);
   background:
-    radial-gradient(900px 520px at 15% -10%, rgba(38, 252, 214, 0.1), transparent 60%),
-    radial-gradient(1000px 560px at 100% -20%, rgba(53, 94, 251, 0.08), transparent 60%),
+    radial-gradient(900px 520px at 12% -8%, rgba(42, 207, 200, 0.16), transparent 62%),
+    radial-gradient(980px 560px at 98% -18%, rgba(106, 92, 251, 0.12), transparent 62%),
+    radial-gradient(720px 420px at 72% 108%, rgba(230, 57, 70, 0.07), transparent 58%),
+    radial-gradient(640px 380px at -5% 55%, rgba(59, 77, 161, 0.06), transparent 55%),
     var(--background);
 }
