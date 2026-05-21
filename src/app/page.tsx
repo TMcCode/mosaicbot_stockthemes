@@ -25,6 +25,7 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
+import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
@@ -229,10 +230,7 @@ export default async function Home() {
       return `${datePrefix}U.S. President Trump's Tariff 'Liberation Day' speech date`;
     return undefined;
   };
-  const eyebrow =
-    source === "live"
-      ? "stockthemes.ai · manifest v0 (live)"
-      : "stockthemes.ai · manifest v0 (local fixture)";
+  const eyebrow = homeEyebrowText(source);
 
   return (
     <PageSurface>

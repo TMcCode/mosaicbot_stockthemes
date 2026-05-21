@@ -6,6 +6,7 @@ import styles from "../page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
 import { getManifestCached } from "@/lib/getManifestCached";
+import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -16,7 +17,6 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default async function GroupsPage() {
   const { manifest, source } = await getManifestCached();
-  const label = source === "live" ? "live manifest" : "local fixture";
   const sectorOrder = [
     "Communication Services",
     "Consumer Discretionary",
@@ -65,7 +65,7 @@ export default async function GroupsPage() {
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
-              <p className={styles.eyebrow}>Groups · {label}</p>
+              <p className={styles.eyebrow}>{catalogEyebrowText("Groups", source)}</p>
               <h1>All groups</h1>
               <p>
                 {manifest.groups.length} groups · {manifest.stats?.total_themes ?? "—"} themes ·{" "}

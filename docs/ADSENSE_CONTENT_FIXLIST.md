@@ -95,6 +95,8 @@ Main gaps for “publisher quality”:
 
 ## 6. Remove or gate “developer-only” copy on public pages ✅ (implemented)
 
+**Implemented:** Missing-detail messages use user-facing copy in production (`StockthemesDetailUnavailable` + `stockthemesDevBuildHintsEnabled()`). **Eyebrows** that said `live manifest` / `live theme JSON` are **dev-only** in production builds (`detailEyebrowText`, `catalogEyebrowText`, `homeEyebrowText` in `src/lib/stockthemesBuildHints.ts`) — live theme pages show **Theme** only.
+
 **Issue:** Both theme and group pages can render messages about:
 
 - `themes/<slug>.json`, `groups/<slug>.json`

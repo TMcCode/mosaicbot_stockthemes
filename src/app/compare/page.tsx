@@ -6,6 +6,7 @@ import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
+import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 import { resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -24,7 +25,6 @@ export default async function ComparePage() {
     getManifestCached(),
     getCompareThemesCached(),
   ]);
-  const label = source === "live" ? "live manifest" : "local fixture";
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => [String(g.slug || "").trim(), String(g.name || "").trim()]),
   );
@@ -56,7 +56,7 @@ export default async function ComparePage() {
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
-              <p className={styles.eyebrow}>Compare · {label}</p>
+              <p className={styles.eyebrow}>{catalogEyebrowText("Compare", source)}</p>
               <h1>Compare all themes</h1>
               <p>
                 {rows.length} themes · {columns.length} metrics

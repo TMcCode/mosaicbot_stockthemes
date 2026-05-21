@@ -36,6 +36,7 @@ import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { publicAssetPath } from "@/lib/siteUrl";
+import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -396,9 +397,6 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   const loaded = await getThemeDetailCached(slug);
   const detail = loaded?.detail;
-  const detailLabel =
-    loaded?.source === "live" ? "live theme JSON" : loaded?.source === "fixture" ? "local fixture" : null;
-
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
   const treemapNodes = buildConstituentTreemapNodes(detail?.constituents);
@@ -587,8 +585,7 @@ export default async function ThemeDetailPage({ params }: Props) {
           <div className={`${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>
-                Theme · {source === "live" ? "live manifest" : "local fixture"}
-                {detailLabel ? ` · ${detailLabel}` : ""}
+                {detailEyebrowText("Theme", source, loaded?.source ?? null)}
               </p>
               <h1 style={{ margin: 0 }}>{theme.name}</h1>
               <div className={styles.themeWatchlistAction}>

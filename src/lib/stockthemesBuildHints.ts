@@ -3,6 +3,47 @@ export function stockthemesDevBuildHintsEnabled(): boolean {
   return process.env.NODE_ENV === "development";
 }
 
+type DataSource = "live" | "fixture";
+
+function manifestSourceLabel(source: DataSource): string {
+  return source === "live" ? "live manifest" : "local fixture";
+}
+
+function detailSourceLabel(source: DataSource, kind: "theme" | "group"): string {
+  return source === "live"
+    ? kind === "theme"
+      ? "live theme JSON"
+      : "live group JSON"
+    : "local fixture";
+}
+
+/** Index/compare eyebrows — production shows prefix only (AdSense §6). */
+export function catalogEyebrowText(prefix: string, manifestSource: DataSource): string {
+  if (!stockthemesDevBuildHintsEnabled()) return prefix;
+  return `${prefix} · ${manifestSourceLabel(manifestSource)}`;
+}
+
+/** Theme/group detail eyebrows — production shows “Theme” or “Group” only. */
+export function detailEyebrowText(
+  prefix: "Theme" | "Group",
+  manifestSource: DataSource,
+  detailSource?: DataSource | null,
+): string {
+  if (!stockthemesDevBuildHintsEnabled()) return prefix;
+  const kind = prefix === "Theme" ? "theme" : "group";
+  const base = `${prefix} · ${manifestSourceLabel(manifestSource)}`;
+  if (!detailSource) return base;
+  return `${base} · ${detailSourceLabel(detailSource, kind)}`;
+}
+
+/** Home hero eyebrow — production omits manifest/fixture labels. */
+export function homeEyebrowText(manifestSource: DataSource): string {
+  if (!stockthemesDevBuildHintsEnabled()) return "stockthemes.ai";
+  return manifestSource === "live"
+    ? "stockthemes.ai · manifest v0 (live)"
+    : "stockthemes.ai · manifest v0 (local fixture)";
+}
+
 export const THEME_DETAIL_UNAVAILABLE_COPY =
   "We’re refreshing this theme page. Holdings and charts should appear shortly—try again later or browse other themes.";
 

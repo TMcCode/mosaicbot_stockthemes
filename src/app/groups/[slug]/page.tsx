@@ -15,6 +15,7 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { buildGroupThemeChartMetaMap } from "@/lib/constituentMeta";
+import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { GroupDetailChildThemeV0 } from "@/types/group.detail.v0";
 import type { ManifestThemeSummaryV0 } from "@/types/manifest.v0";
@@ -94,9 +95,6 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const loaded = await getGroupDetailCached(slug);
   const detail = loaded?.detail;
-  const detailLabel =
-    loaded?.source === "live" ? "live group JSON" : loaded?.source === "fixture" ? "local fixture" : null;
-
   const themeBySlug = new Map(manifest.themes.map((t) => [t.slug, t]));
   const fromSlugs = group.theme_slugs
     ?.map((s) => themeBySlug.get(s))
@@ -153,8 +151,7 @@ export default async function GroupDetailPage({ params }: Props) {
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>
-                Group · {source === "live" ? "live manifest" : "local fixture"}
-                {detailLabel ? ` · ${detailLabel}` : ""}
+                {detailEyebrowText("Group", source, loaded?.source ?? null)}
               </p>
               <h1>{group.name}</h1>
               <p>

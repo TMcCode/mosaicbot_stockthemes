@@ -15,7 +15,7 @@ import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import styles from "./HomeTopMoversTicker.module.css";
 
 /** Wall-clock seconds for one full marquee loop (higher = slower). */
-const LOOP_SECONDS = 210;
+const LOOP_SECONDS = 250;
 const DRAG_THRESHOLD_PX = 5;
 const CLICK_SUPPRESS_MS = 400;
 

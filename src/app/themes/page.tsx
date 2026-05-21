@@ -6,6 +6,7 @@ import styles from "../page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
 import { getManifestCached } from "@/lib/getManifestCached";
+import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -16,7 +17,6 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default async function ThemesPage() {
   const { manifest, source } = await getManifestCached();
-  const label = source === "live" ? "live manifest" : "local fixture";
   const groupBySlug = new Map(manifest.groups.map((g) => [g.slug, g]));
   const themesSorted = [...manifest.themes].sort((a, b) =>
     a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
@@ -34,7 +34,7 @@ export default async function ThemesPage() {
         <div className={styles.intro}>
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
-              <p className={styles.eyebrow}>Themes · {label}</p>
+              <p className={styles.eyebrow}>{catalogEyebrowText("Themes", source)}</p>
               <h1>All themes</h1>
               <p>{themesSorted.length} themes, sorted alphabetically.</p>
             </div>
