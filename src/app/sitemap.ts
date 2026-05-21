@@ -30,6 +30,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "daily",
       priority: 0.9,
     },
+    {
+      url: `${base}/commentary`,
+      lastModified,
+      changeFrequency: "daily",
+      priority: 0.75,
+    },
   ];
 
   for (const g of manifest.groups) {

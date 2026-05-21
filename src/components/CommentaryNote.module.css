@@ -1,0 +1,46 @@
+.regular {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+}
+
+.markdown {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.markdown p,
+.markdown ul,
+.markdown ol {
+  margin: 0 0 0.45em;
+}
+
+.markdown p:last-child,
+.markdown ul:last-child,
+.markdown ol:last-child {
+  margin-bottom: 0;
+}
+
+.markdown ul,
+.markdown ol {
+  padding-left: 1.15em;
+}
+
+.markdown h1,
+.markdown h2,
+.markdown h3,
+.markdown h4 {
+  margin: 0.35em 0 0.25em;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.clamp {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

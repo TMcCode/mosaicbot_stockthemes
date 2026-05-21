@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
+import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
 import styles from "./page.module.css";
@@ -10,6 +11,7 @@ import styles from "./page.module.css";
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
 import { getHomeTrendingCached } from "@/lib/getHomeTrendingCached";
+import { loadHomeCommentary } from "@/lib/loadHomeCommentary";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
@@ -101,10 +103,11 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function Home() {
-  const [{ manifest, source }, homeTrendingRes, spyPerf] = await Promise.all([
+  const [{ manifest, source }, homeTrendingRes, spyPerf, commentaryRes] = await Promise.all([
     getManifestCached(),
     getHomeTrendingCached(),
     getSpyMarketPerfCached(),
+    loadHomeCommentary(),
   ]);
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
@@ -286,6 +289,11 @@ export default async function Home() {
               </li>
             </ul>
           ) : null}
+
+          <HomeCommentaryPreview
+            initialItems={commentaryRes?.commentary.items ?? []}
+            previewDays={commentaryRes?.commentary.preview_days ?? 7}
+          />
 
           <div className={styles.directoryGrid}>
             <section className={styles.section}>

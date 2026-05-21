@@ -14,6 +14,7 @@ const BUNDLE_RELS = new Set([
   "spy_snapshot.v0.json",
   "website_content.v0.json",
   "home_feed.v0.json",
+  "home_commentary.v0.json",
 ]);
 
 export function isDetailJsonRel(rel) {
