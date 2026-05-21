@@ -41,8 +41,11 @@ const BUNDLE_FILES = [
   "spy_snapshot.v0.json",
   "website_content.v0.json",
   "home_feed.v0.json",
-  "home_commentary.v0.json",
 ];
+
+/** Not required for CI — published from admin; seed fixture until first publish. */
+const OPTIONAL_BUNDLE_FILES = ["home_commentary.v0.json"];
+const COMMENTARY_FIXTURE = path.join(root, "public", "fixtures", "home_commentary.v0.json");
 
 function manifestUrl() {
   const explicit = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL;
@@ -103,6 +106,38 @@ function listWarmJobs(manifestJson, base) {
 
 function missingCacheRels(jobs) {
   return jobs.filter(({ rel }) => !cacheFileOk(rel)).map(({ rel }) => rel);
+}
+
+function seedHomeCommentaryFromFixture() {
+  const rel = "home_commentary.v0.json";
+  if (cacheFileOk(rel)) return;
+  if (!fs.existsSync(COMMENTARY_FIXTURE)) {
+    console.warn("sync-build-cache: no home_commentary.v0.json on bucket and no fixture to seed");
+    return;
+  }
+  const dest = cachePath(rel);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(COMMENTARY_FIXTURE, dest);
+  console.log(
+    "sync-build-cache: home_commentary.v0.json not on bucket yet — using empty fixture (publish from admin when ready)",
+  );
+}
+
+async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
+  for (const rel of OPTIONAL_BUNDLE_FILES) {
+    if (!force && cacheFileOk(rel)) continue;
+    try {
+      await fetchToCache(`${base}/${rel}`, rel, objectMeta);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("404")) {
+        if (rel === "home_commentary.v0.json") seedHomeCommentaryFromFixture();
+        continue;
+      }
+      console.warn(`sync-build-cache: optional ${rel} failed:`, msg);
+      if (rel === "home_commentary.v0.json") seedHomeCommentaryFromFixture();
+    }
+  }
 }
 
 function pruneOrphanDetailFiles(manifestJson) {
@@ -274,6 +309,7 @@ async function main() {
       );
       process.exit(1);
     }
+    await syncOptionalBundles(base, objectMeta);
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
       console.warn(
@@ -344,6 +380,8 @@ async function main() {
       home_trending_as_of: homeTrendingAsOf,
       warmedAt: new Date().toISOString(),
     });
+
+    await syncOptionalBundles(base, objectMeta, { force });
   }
 
   const searchCached = cachePath("search_index.v0.json");
