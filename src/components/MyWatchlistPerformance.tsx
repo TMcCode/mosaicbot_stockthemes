@@ -218,7 +218,7 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
           </div>
           {compareAsOf ? (
                 <p className={localStyles.asOfLine}>
-                  Returns as of {formatSiteDataPublished(compareAsOf)} UTC (same publish as footer).
+                  Returns as of {formatSiteDataPublished(compareAsOf)} (same publish as footer).
                 </p>
           ) : null}
         </section>

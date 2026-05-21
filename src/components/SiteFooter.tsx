@@ -28,8 +28,8 @@ export function SiteFooter({ dataAsOf }: Props) {
                 {"\u2003"}
                 <span className={styles.dataAsOf}>
                   Site data published{" "}
-                  <time dateTime={asOfIso} title="UTC">
-                    {publishedLabel} UTC
+                  <time dateTime={asOfIso} title="US Eastern (manifest as_of)">
+                    {publishedLabel}
                   </time>
                 </span>
               </>

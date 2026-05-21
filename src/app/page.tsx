@@ -7,6 +7,7 @@ import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
+import { HomeWatchlistCtaLink } from "@/components/HomeWatchlistCtaLink";
 import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
@@ -254,6 +255,10 @@ export default async function Home() {
               </p>
               <p className={styles.introMore}>
                 <Link href="#newsletter-signup">Get the Den of Themes newsletter</Link>
+                <span className={styles.introMoreSep} aria-hidden="true">
+                  {" · "}
+                </span>
+                <HomeWatchlistCtaLink />
               </p>
             </div>
             {stats ? (
@@ -299,9 +304,7 @@ export default async function Home() {
           <HomeTopMoversTicker
             items={topMoversTicker}
             asOfLabel={
-              compareRes?.bundle?.as_of
-                ? formatSiteDataPublished(compareRes.bundle.as_of)
-                : undefined
+              manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
           />
 

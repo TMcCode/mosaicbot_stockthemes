@@ -15,9 +15,14 @@ on:
   push:
     branches:
       - main
-  # Once daily after typical ETL manifest windows (UTC). Push always rebuilds; schedule checks as_of.
+  # Weekdays: rebuild when manifest.as_of changes (after market-hours manifest runs).
+  # Daily fallback UTC. Push always rebuilds; schedule skips if publish data unchanged.
   schedule:
     - cron: "0 13 * * *"
+    # ~30m after manifest 11:00 / 15:00 / 17:00 ET (EST → UTC+5)
+    - cron: "30 16,20,22 * * 1-5"
+    # ~30m after manifest (EDT → UTC+4)
+    - cron: "30 15,19,21 * * 1-5"
   workflow_dispatch:
     inputs:
       force_build:

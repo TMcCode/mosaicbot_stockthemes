@@ -935,6 +935,11 @@ a.feedTitle:hover {
   text-decoration: underline;
 }
 
+.introMoreSep {
+  color: var(--text-muted);
+  user-select: none;
+}
+
 
 .ctas {
   display: flex;
