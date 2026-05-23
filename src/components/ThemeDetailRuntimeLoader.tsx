@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import posthog from "posthog-js";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
@@ -133,11 +134,6 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
       {shouldShowThemeThesisUi(detail.theme_thesis) ? (
         <ThemeThesisBlock themeThesis={detail.theme_thesis} signInNext={`/themes/${slug}`} />
       ) : null}
-      {detail.seo_intro ? (
-        <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
-          {detail.seo_intro}
-        </p>
-      ) : null}
       <div className={styles.tightChartTop}>
         <Chart1yPanel
           chart1y={detail.chart_1y}
@@ -184,6 +180,11 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
       ) : (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
       )}
+      <DetailAboutIntro
+        heading="About this theme"
+        headingId="about-theme-heading-runtime"
+        intro={detail.seo_intro}
+      />
     </>
   );
 }

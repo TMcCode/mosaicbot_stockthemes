@@ -70,3 +70,25 @@ export function treemapHasReturnData(nodes: ConstituentTreemapNode[]): boolean {
     TREEMAP_RETURN_PERIODS.some(({ key }) => n.returns[key] != null),
   );
 }
+
+/** Default color-by period: whichever has the most cross-tile |return| (avoids all-gray 1D when 1D is 0). */
+export function pickDefaultTreemapPeriod(nodes: ConstituentTreemapNode[]): TreemapReturnColumn {
+  const available = TREEMAP_RETURN_PERIODS.filter(({ key }) =>
+    nodes.some((n) => n.returns[key] != null),
+  );
+  if (!available.length) return "1D";
+  let best = available[0].key;
+  let bestScore = -1;
+  for (const { key } of available) {
+    const score = nodes.reduce((sum, n) => {
+      const v = n.returns[key];
+      if (typeof v !== "number" || !Number.isFinite(v)) return sum;
+      return sum + Math.abs(v);
+    }, 0);
+    if (score > bestScore) {
+      bestScore = score;
+      best = key;
+    }
+  }
+  return best;
+}

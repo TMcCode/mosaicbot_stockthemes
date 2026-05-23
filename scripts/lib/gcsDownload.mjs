@@ -67,17 +67,31 @@ export function gcsSyncEnabled() {
   return false;
 }
 
+function formatFetchError(label, err) {
+  const base = err instanceof Error ? err.message : String(err);
+  const cause = err instanceof Error && err.cause ? err.cause : null;
+  const code =
+    cause && typeof cause === "object" && "code" in cause ? String(cause.code) : "";
+  const extra = code ? ` (${code})` : "";
+  return `${label}: ${base}${extra}`;
+}
+
 async function getAccessToken(sa) {
   const now = Math.floor(Date.now() / 1000);
   if (cachedToken.value && cachedToken.exp > now + 60) {
     return cachedToken.value;
   }
   const jwt = signJwt(sa.client_email, sa.private_key);
-  const res = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
-  });
+  let res;
+  try {
+    res = await fetch("https://oauth2.googleapis.com/token", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: `grant_type=urn:ietf:params:oauth:grant-type:jwt-bearer&assertion=${jwt}`,
+    });
+  } catch (err) {
+    throw new Error(formatFetchError("GCS OAuth token fetch failed", err));
+  }
   if (!res.ok) {
     const detail = await res.text();
     throw new Error(`GCS token exchange ${res.status}: ${detail.slice(0, 200)}`);
@@ -105,9 +119,14 @@ export async function downloadGcsObject(objectPath) {
   const token = await getAccessToken(sa);
   const url =
     `https://storage.googleapis.com/storage/v1/b/${bucket}/o/${encodeURIComponent(objectPath)}?alt=media`;
-  const res = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  let res;
+  try {
+    res = await fetch(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  } catch (err) {
+    throw new Error(formatFetchError(`GCS download fetch failed for gs://${bucket}/${objectPath}`, err));
+  }
   if (!res.ok) {
     throw new Error(`GCS ${res.status} gs://${bucket}/${objectPath}`);
   }

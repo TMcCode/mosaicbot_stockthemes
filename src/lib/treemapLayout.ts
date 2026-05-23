@@ -73,7 +73,8 @@ export function returnTileBackground(v: number | null | undefined): string | und
   if (n < 0) {
     return `linear-gradient(180deg, rgba(220,60,60,${alpha}) 0%, rgba(120,30,30,${alpha * 0.55}) 100%)`;
   }
-  return undefined;
+  /* Flat day (0%) — distinct from missing data (default cell gray). */
+  return "rgba(148, 163, 184, 0.16)";
 }
 
 export function formatReturnPct(v: number | null | undefined): string {

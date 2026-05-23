@@ -12,6 +12,7 @@ import {
 } from "@/lib/commentaryDisplay";
 import { homeCommentaryFetchUrl } from "@/lib/homeCommentaryUrl";
 import { stockthemesBrowserCacheBusterQuery, stockthemesBrowserFetchCache } from "@/lib/stockthemesCache";
+import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 import type { HomeCommentaryItemV0, HomeCommentaryV0 } from "@/types/home_commentary.v0";
 
 import styles from "./HomeCommentaryPreview.module.css";
@@ -25,11 +26,15 @@ type Props = {
 export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Props) {
   const [items, setItems] = useState<HomeCommentaryItemV0[]>(initialItems);
   const [totalCount, setTotalCount] = useState(initialItems.length);
-  const [loading, setLoading] = useState(Boolean(homeCommentaryFetchUrl()));
+  const skipClientFetch =
+    stockthemesLiveHydrationDisabled() ||
+    initialItems.length > 0 ||
+    !homeCommentaryFetchUrl();
+  const [loading, setLoading] = useState(!skipClientFetch);
 
   useEffect(() => {
     const url = homeCommentaryFetchUrl();
-    if (!url) {
+    if (!url || stockthemesLiveHydrationDisabled() || initialItems.length > 0) {
       setLoading(false);
       return;
     }

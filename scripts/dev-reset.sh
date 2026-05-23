@@ -1,21 +1,35 @@
 #!/usr/bin/env bash
 # Stop stray Next dev servers and remove a corrupted .next cache.
 # Use: npm run dev:clean   (or run this, then npm run dev)
-set -euo pipefail
+set -eo pipefail
 cd "$(dirname "$0")/.."
 
+echo "Stopping dev servers on ports 3000-3003..."
 for port in 3000 3001 3002 3003; do
-  if lsof -ti:"$port" >/dev/null 2>&1; then
-    echo "Killing process on port $port"
-    lsof -ti:"$port" | xargs kill -9 2>/dev/null || true
+  pids="$(lsof -nP -tiTCP:"$port" -sTCP:LISTEN 2>/dev/null || true)"
+  if [ -n "${pids}" ]; then
+    echo "  port ${port}: killing ${pids}"
+    while IFS= read -r pid; do
+      [ -n "${pid}" ] && kill -9 "${pid}" 2>/dev/null || true
+    done <<<"${pids}"
   fi
 done
 
-pkill -9 -f "next dev" 2>/dev/null || true
-pkill -9 -f "node.*mosaicbot_stockthemes.*next" 2>/dev/null || true
+if [ -e .next ]; then
+  aside=".next.trash.$(date +%s).$$"
+  echo "Moving .next aside -> ${aside} ..."
+  if mv .next "${aside}" 2>/dev/null; then
+    ( rm -rf "${aside}" 2>/dev/null & ) || true
+    echo "Removed .next (old cache deleting in background)"
+  else
+    echo "mv failed; run: rm -rf .next"
+    rm -rf .next 2>/dev/null || true
+    echo "Removed .next"
+  fi
+else
+  echo "No .next to remove"
+fi
 
-rm -rf .next
-echo "Removed .next"
 echo "Start: npm run dev   (or npm run dev:webpack if Turbopack HMR errors persist)"
 echo "After a clean reset: close old localhost tabs, then hard-refresh (Cmd+Shift+R)."
 node_major="$(node -p "process.versions.node.split('.')[0]" 2>/dev/null || echo 0)"

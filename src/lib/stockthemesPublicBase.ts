@@ -54,7 +54,8 @@ export function stockthemesLiveFetchInit():
         return { next: { revalidate: Math.floor(seconds) } };
       }
     }
-    return { cache: "no-store" };
+    // Default 120s revalidate in dev (was no-store) — faster repeat navigations when disk cache misses.
+    return { next: { revalidate: 120 } };
   }
   return { next: { revalidate: stockthemesRevalidateSeconds() } };
 }

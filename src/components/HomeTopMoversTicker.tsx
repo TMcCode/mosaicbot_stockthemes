@@ -9,7 +9,8 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-import type { TopMoverTickerItem } from "@/lib/buildTopMoversTicker";
+import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeTopMoversTicker.module.css";
@@ -19,13 +20,16 @@ const LOOP_SECONDS = 250;
 const DRAG_THRESHOLD_PX = 5;
 const CLICK_SUPPRESS_MS = 400;
 
-function fmtPct(v: number): string {
+function fmtPct(v: number | undefined): string {
+  if (v == null || !Number.isFinite(v)) return "—";
   const sign = v > 0 ? "+" : "";
   return `${sign}${v.toFixed(2)}%`;
 }
 
 type Props = {
   items: TopMoverTickerItem[];
+  /** 1D on weekdays (ET); 10D on Sat/Sun — set on server with `homeTopMoversTickerPeriod()`. */
+  period?: TopMoverTickerPeriod;
   /** Pre-formatted on the server to avoid locale hydration mismatches. */
   asOfLabel?: string;
 };
@@ -47,12 +51,19 @@ function TickerChip({
   item: TopMoverTickerItem;
   suppressClickUntil: React.RefObject<number>;
 }) {
-  const heat = trendingReturnHeatStyle(item.pct1d);
+  const heat =
+    item.returnPct != null && Number.isFinite(item.returnPct)
+      ? trendingReturnHeatStyle(item.returnPct)
+      : undefined;
   return (
     <Link
       href={`/themes/${encodeURIComponent(item.slug)}`}
       className={styles.chip}
-      style={{ backgroundColor: heat.backgroundColor, color: heat.color }}
+      style={
+        heat
+          ? { backgroundColor: heat.backgroundColor, color: heat.color }
+          : undefined
+      }
       draggable={false}
       onClick={(e) => {
         if (Date.now() < suppressClickUntil.current) {
@@ -64,13 +75,13 @@ function TickerChip({
         {item.tier === "top" ? `#${item.rank}` : `▼${item.rank}`}
       </span>
       <span className={styles.chipName}>{item.name}</span>
-      <span className={styles.chipPct}>{fmtPct(item.pct1d)}</span>
+      <span className={styles.chipPct}>{fmtPct(item.returnPct)}</span>
     </Link>
   );
 }
 
 /** Auto-scroll marquee with hover pause, wheel/drag scrub, and theme links. */
-export function HomeTopMoversTicker({ items, asOfLabel }: Props) {
+export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const suppressClickUntil = useRef(0);
   const dragRef = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
@@ -187,11 +198,14 @@ export function HomeTopMoversTicker({ items, asOfLabel }: Props) {
     }
   }, []);
 
-  if (items.length === 0) return null;
+  const safeItems = items.filter(
+    (i) => i.returnPct != null && Number.isFinite(i.returnPct),
+  );
+  if (safeItems.length === 0) return null;
 
   const renderSequence = (keyPrefix: string) => (
     <div className={styles.sequence}>
-      {items.map((item) => (
+      {safeItems.map((item) => (
         <TickerChip
           key={`${keyPrefix}-${item.tier}-${item.rank}-${item.slug}`}
           item={item}
@@ -201,8 +215,8 @@ export function HomeTopMoversTicker({ items, asOfLabel }: Props) {
     </div>
   );
 
-  const topCount = items.filter((i) => i.tier === "top").length;
-  const bottomCount = items.filter((i) => i.tier === "bottom").length;
+  const topCount = safeItems.filter((i) => i.tier === "top").length;
+  const bottomCount = safeItems.filter((i) => i.tier === "bottom").length;
 
   const viewportClass = [
     styles.viewport,
@@ -212,8 +226,13 @@ export function HomeTopMoversTicker({ items, asOfLabel }: Props) {
     .filter(Boolean)
     .join(" ");
 
+  const periodLabel = trendingColumnHeader(period);
+
   return (
-    <section className={styles.wrap} aria-label="Top movers today by 1 day percent change">
+    <section
+      className={styles.wrap}
+      aria-label={`Top movers today by ${period === "10D" ? "10 trading day" : "1 day"} percent change`}
+    >
       <div className={styles.header}>
         <div className={styles.headerStart}>
           <span className={styles.label}>Top movers today</span>
@@ -233,7 +252,7 @@ export function HomeTopMoversTicker({ items, asOfLabel }: Props) {
           ) : null}
         </div>
         <span className={styles.meta}>
-          1D % · {topCount} gainers · {bottomCount} losers
+          {periodLabel} · {topCount} gainers · {bottomCount} losers
           {asOfLabel ? ` · ${asOfLabel}` : ""}
         </span>
       </div>

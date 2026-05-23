@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
@@ -22,7 +23,10 @@ import {
   priceReturnMetric,
   type ConstituentPriceReturnColumn,
 } from "@/lib/constituentPriceReturns";
-import { buildConstituentTreemapNodes } from "@/lib/buildConstituentTreemapNodes";
+import {
+  buildConstituentTreemapNodes,
+  pickDefaultTreemapPeriod,
+} from "@/lib/buildConstituentTreemapNodes";
 import {
   buildCompositionMetaMap,
   formatUsdMarketCap,
@@ -37,6 +41,7 @@ import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
+import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -618,30 +623,30 @@ export default async function ThemeDetailPage({ params }: Props) {
                   signInNext={`/themes/${slug}`}
                 />
               ) : null}
-              {detail?.seo_intro ? (
-                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
-                  {detail.seo_intro}
-                </p>
-              ) : null}
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="theme" slug={slug} />
               ) : null}
+              <AdPlacement
+                placement="themeRail"
+                className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                placeholderLabel="Ad Slot · Theme detail"
+                format="horizontal"
+              />
             </div>
             <div className={styles.themeHeroRail}>
               {treemapNodes.length ? (
                 <ThemeHeroTreemap
                   nodes={treemapNodes}
                   themeName={theme.name}
-                  priceUpdatedAsOf={detail?.ticker_performance_as_of}
+                  defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                  asOfLabel={
+                    detail?.ticker_performance_as_of
+                      ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
+                      : undefined
+                  }
                 />
               ) : null}
-              <AdPlacement
-                placement="themeRail"
-                className={`${styles.adSlot} ${styles.groupsAdCompact}`}
-                classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
-                placeholderLabel="Ad Slot · Theme detail"
-                format="horizontal"
-              />
             </div>
           </div>
           {!detail && dataBaseUrl ? (
@@ -940,6 +945,11 @@ export default async function ThemeDetailPage({ params }: Props) {
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
           ) : null}
+          <DetailAboutIntro
+            heading="About this theme"
+            headingId="about-theme-heading"
+            intro={detail?.seo_intro}
+          />
           <p>
             <Link href="/themes" style={{ fontWeight: 500 }}>
               ← All themes

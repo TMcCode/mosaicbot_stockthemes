@@ -8,6 +8,43 @@
   "ticker_count": 180,
   "theme_slugs": ["ai-chips", "ai-software", "data-centers"],
   "seo_intro": "Artificial Intelligence groups related investment themes on stockthemes.ai. Themes include: AI Chips, AI Software, Data Centers — open each for constituents and weights.",
+  "theme_treemap": {
+    "weighting": "equal",
+    "returns_basis": "manual_theme_weights",
+    "source": "fixture",
+    "themes": [
+      {
+        "slug": "ai-chips",
+        "name": "AI Chips",
+        "weight": 0.33333333,
+        "compare_returns": {
+          "source": "fixture",
+          "columns": ["1D", "10D", "MTD", "YTD"],
+          "metrics": { "1D": 2.1, "10D": 5.4, "MTD": 8.2, "YTD": 12.5, "Period": 18.0 }
+        }
+      },
+      {
+        "slug": "ai-software",
+        "name": "AI Software",
+        "weight": 0.33333333,
+        "compare_returns": {
+          "source": "fixture",
+          "columns": ["1D", "10D", "MTD", "YTD"],
+          "metrics": { "1D": -0.8, "10D": 1.2, "MTD": 3.1, "YTD": 9.4, "Period": 14.2 }
+        }
+      },
+      {
+        "slug": "data-centers",
+        "name": "Data Centers",
+        "weight": 0.33333334,
+        "compare_returns": {
+          "source": "fixture",
+          "columns": ["1D", "10D", "MTD", "YTD"],
+          "metrics": { "1D": 1.4, "10D": 2.9, "MTD": 4.0, "YTD": 11.1, "Period": 16.8 }
+        }
+      }
+    ]
+  },
   "themes": [
     { "slug": "ai-chips", "name": "AI Chips", "ticker_count": 24, "group_slug": "artificial-intelligence" },
     { "slug": "ai-software", "name": "AI Software", "ticker_count": 55, "group_slug": "artificial-intelligence" },

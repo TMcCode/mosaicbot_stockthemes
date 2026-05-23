@@ -64,9 +64,9 @@
   align-items: start;
 }
 
-/* Theme detail: wide rail so the constituent map can use hero height. */
+/* Theme/group detail: wide rail for the hero treemap. */
 .heroGridThemeDetail {
-  grid-template-columns: minmax(0, 1fr) minmax(340px, 420px);
+  grid-template-columns: minmax(0, 1fr) minmax(400px, 520px);
   align-items: stretch;
 }
 
@@ -106,6 +106,14 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+}
+
+/* Group/theme detail: ad under left summary instead of under the treemap rail. */
+.heroMainAd {
+  margin-top: 4px;
+  width: 100%;
+  max-width: 280px;
+  align-self: flex-start;
 }
 
 .titleRow {
@@ -411,6 +419,14 @@
   font-size: 17px;
   font-weight: 600;
   color: var(--text-primary);
+}
+
+.detailAboutProse {
+  margin: 0;
+  max-width: 720px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-secondary, #9aa8a6);
 }
 
 .trendingScrollWrap {

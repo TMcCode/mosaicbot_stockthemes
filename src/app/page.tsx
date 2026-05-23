@@ -14,7 +14,10 @@ import styles from "./page.module.css";
 
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
-import { buildTopMoversTickerItems } from "@/lib/buildTopMoversTicker";
+import {
+  buildTopMoversTickerItems,
+  homeTopMoversTickerPeriod,
+} from "@/lib/buildTopMoversTicker";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getHomeTrendingCached } from "@/lib/getHomeTrendingCached";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
@@ -122,7 +125,7 @@ export default async function Home() {
       getSpyMarketPerfCached(),
       loadHomeCommentary(),
     ]);
-  const topMoversTicker = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? []);
+  const topMoversPeriod = homeTopMoversTickerPeriod();
   const homeJsonLd = buildHomePageJsonLd(homeSiteJsonDescription());
   const stats = manifest.stats;
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
@@ -138,6 +141,21 @@ export default async function Home() {
   const hasMoreFeed = homeFeedEvents.length > homeFeedDisplay.length;
   const homeBundle = homeTrendingRes?.bundle;
   const useHomeBundle = canUseHomeTrendingBundle(manifest, trendingNames, homeBundle ?? null);
+
+  /** Chart fallback for ticker when compare bundle omits 1D/10D (matches HomeTrendingThemesTable). */
+  const chartPerfBySlug = new Map<string, ChartPerfReturns>();
+  if (useHomeBundle && homeBundle) {
+    for (const row of homeBundle.rows) {
+      const slug = String(row.slug || "").trim();
+      if (!slug) continue;
+      chartPerfBySlug.set(slug, computePerfFromChartPerformance(row.chart_1y?.performance));
+    }
+  }
+
+  const topMoversTicker = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
+    period: topMoversPeriod,
+    chartPerfBySlug,
+  });
 
   /** Preserve manifest order; include rows even when name is missing from manifest.themes */
   const details: {
@@ -194,9 +212,10 @@ export default async function Home() {
     compare_returns: spyPerf?.compareReturns,
     marketBaseline: true,
   };
+  // Weekdays: 1D (matches ticker); Sat/Sun ET: 10D when markets are closed.
   const detailsSorted = [...details, marketRow].sort((a, b) => {
-    const va = valueForTrendingColumn("10D", a.compare_returns, a.chartPerf);
-    const vb = valueForTrendingColumn("10D", b.compare_returns, b.chartPerf);
+    const va = valueForTrendingColumn(topMoversPeriod, a.compare_returns, a.chartPerf);
+    const vb = valueForTrendingColumn(topMoversPeriod, b.compare_returns, b.chartPerf);
     const aOk = va != null && Number.isFinite(va);
     const bOk = vb != null && Number.isFinite(vb);
     if (aOk && bOk) return vb - va;
@@ -301,6 +320,7 @@ export default async function Home() {
 
           <HomeTopMoversTicker
             items={topMoversTicker}
+            period={topMoversPeriod}
             asOfLabel={
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }

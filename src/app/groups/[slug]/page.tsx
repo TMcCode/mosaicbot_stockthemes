@@ -3,12 +3,17 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
+import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import styles from "../../page.module.css";
 
+import { pickDefaultTreemapPeriod } from "@/lib/buildConstituentTreemapNodes";
+import { buildGroupThemeTreemapNodes } from "@/lib/buildGroupThemeTreemapNodes";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
@@ -108,6 +113,7 @@ export default async function GroupDetailPage({ params }: Props) {
     detail?.themes?.length ? detail.themes : childRowFromManifest(manifestChildren);
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
+  const groupTreemapNodes = buildGroupThemeTreemapNodes(detail?.theme_treemap);
   const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
   const spyPerf = await getSpyMarketPerfCached();
   const groupUrl = absoluteUrl(`/groups/${slug}`);
@@ -148,7 +154,9 @@ export default async function GroupDetailPage({ params }: Props) {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={styles.heroGrid}>
+          <div
+            className={`${styles.heroGrid} ${groupTreemapNodes.length ? styles.heroGridThemeDetail : ""}`}
+          >
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>
                 {detailEyebrowText("Group", source, loaded?.source ?? null)}
@@ -159,20 +167,28 @@ export default async function GroupDetailPage({ params }: Props) {
                 {group.theme_count != null && group.ticker_count != null ? " · " : ""}
                 {group.ticker_count != null ? `${group.ticker_count} tickers` : ""}
               </p>
-              {detail?.seo_intro ? (
-                <p style={{ fontSize: 16, color: "var(--text-secondary, #666)", maxWidth: 640 }}>
-                  {detail.seo_intro}
-                </p>
-              ) : null}
               {!detail ? <StockthemesDetailUnavailable kind="group" slug={slug} /> : null}
+              <AdPlacement
+                placement="groupRail"
+                className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                placeholderLabel="Ad Slot · Group detail"
+                format="horizontal"
+              />
             </div>
-            <AdPlacement
-              placement="groupRail"
-              className={`${styles.adSlot} ${styles.groupsAdCompact}`}
-              classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact}`}
-              placeholderLabel="Ad Slot · Group detail"
-              format="horizontal"
-            />
+            <div className={styles.themeHeroRail}>
+              {groupTreemapNodes.length ? (
+                <ThemeHeroTreemap
+                  nodes={groupTreemapNodes}
+                  themeName={group.name}
+                  tileMode="theme"
+                  defaultReturnPeriod={pickDefaultTreemapPeriod(groupTreemapNodes)}
+                  asOfLabel={
+                    detail?.as_of ? formatSiteDataPublished(detail.as_of) : undefined
+                  }
+                />
+              ) : null}
+            </div>
           </div>
           {detail && dataBaseUrl ? (
             <div className={styles.tightChartTop}>
@@ -243,6 +259,11 @@ export default async function GroupDetailPage({ params }: Props) {
               </table>
             </div>
           </section>
+          <DetailAboutIntro
+            heading="About this group"
+            headingId="about-group-heading"
+            intro={detail?.seo_intro}
+          />
           <p>
             <Link href="/groups" style={{ fontWeight: 500 }}>
               ← All groups

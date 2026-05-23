@@ -1,13 +1,14 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import {
   TREEMAP_RETURN_PERIODS,
+  pickDefaultTreemapPeriod,
   type ConstituentTreemapNode,
   type TreemapReturnColumn,
 } from "@/lib/buildConstituentTreemapNodes";
-import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
 import {
   buildTreemapRects,
   formatReturnPct,
@@ -20,8 +21,12 @@ import styles from "./ThemeHeroTreemap.module.css";
 type Props = {
   nodes: ConstituentTreemapNode[];
   themeName: string;
-  /** Intraday ETL completion (theme JSON `ticker_performance_as_of`). */
-  priceUpdatedAsOf?: string | null;
+  /** Pre-formatted ET timestamp (server-only); shown as small “As of …” below the map. */
+  asOfLabel?: string | null;
+  /** `theme` = group map tiles link to `/themes/<slug>`; `constituent` = ticker labels (default). */
+  tileMode?: "constituent" | "theme";
+  /** Initial color-by period (compute on server with `pickDefaultTreemapPeriod`). */
+  defaultReturnPeriod?: TreemapReturnColumn;
 };
 
 function weightLabel(weight: number, total: number): string {
@@ -29,14 +34,23 @@ function weightLabel(weight: number, total: number): string {
   return `${((Math.max(0, weight) / total) * 100).toFixed(1)}%`;
 }
 
-export function ThemeHeroTreemap({ nodes, themeName, priceUpdatedAsOf }: Props) {
+export function ThemeHeroTreemap({
+  nodes,
+  themeName,
+  asOfLabel,
+  tileMode = "constituent",
+  defaultReturnPeriod,
+}: Props) {
   const availablePeriods = useMemo(() => {
     return TREEMAP_RETURN_PERIODS.filter(({ key }) =>
       nodes.some((n) => n.returns[key] != null),
     );
   }, [nodes]);
 
-  const [period, setPeriod] = useState<TreemapReturnColumn>("1D");
+  const fallbackPeriod = useMemo(() => pickDefaultTreemapPeriod(nodes), [nodes]);
+  const [period, setPeriod] = useState<TreemapReturnColumn>(
+    () => defaultReturnPeriod ?? fallbackPeriod,
+  );
 
   const activePeriod: TreemapReturnColumn | null = availablePeriods.some((p) => p.key === period)
     ? period
@@ -87,18 +101,18 @@ export function ThemeHeroTreemap({ nodes, themeName, priceUpdatedAsOf }: Props) 
       ) : (
         <p className={styles.soloLabel}>By weight</p>
       )}
-      {priceUpdatedAsOf && availablePeriods.length > 0 ? (
-        <p className={styles.priceUpdated}>
-          Prices updated {formatTickerPerformanceAsOf(priceUpdatedAsOf)}
-        </p>
-      ) : null}
+      <div className={styles.mapWrap}>
       <div
         className={styles.map}
         role="img"
         aria-label={
-          periodLabel
-            ? `${themeName} constituent market map colored by ${periodLabel} percent change`
-            : `${themeName} constituent market map by weight`
+          tileMode === "theme"
+            ? periodLabel
+              ? `${themeName} theme market map colored by ${periodLabel} percent change`
+              : `${themeName} theme market map by equal weight`
+            : periodLabel
+              ? `${themeName} constituent market map colored by ${periodLabel} percent change`
+              : `${themeName} constituent market map by weight`
         }
       >
         {rects.map((r) => {
@@ -108,49 +122,79 @@ export function ThemeHeroTreemap({ nodes, themeName, priceUpdatedAsOf }: Props) 
           const top = r.y + gap / 2;
           const width = Math.max(2, r.w - gap);
           const height = Math.max(2, r.h - gap);
-          return (
+          const href =
+            tileMode === "theme" ? `/themes/${encodeURIComponent(n.ticker)}` : undefined;
+          const title =
+            periodLabel
+              ? `${n.name} · ${periodLabel}: ${formatReturnPct(ret)} · weight ${weightLabel(n.weight, totalWeight)}`
+              : `${n.name} · weight ${weightLabel(n.weight, totalWeight)}`;
+          const isThemeTile = tileMode === "theme";
+          const inner = (
             <div
-              key={n.ticker}
-              className={styles.cell}
-              style={{
-                left: `${left}%`,
-                top: `${top}%`,
-                width: `${width}%`,
-                height: `${height}%`,
-                background: returnTileBackground(ret),
-              }}
-              title={
-                periodLabel
-                  ? `${n.name} (${n.ticker}) · ${periodLabel}: ${formatReturnPct(ret)} · weight ${weightLabel(n.weight, totalWeight)}`
-                  : `${n.name} (${n.ticker}) · weight ${weightLabel(n.weight, totalWeight)}`
+              className={
+                isThemeTile ? `${styles.cellInner} ${styles.cellInnerTheme}` : styles.cellInner
               }
             >
-              <div className={styles.cellInner}>
-                {n.logo_url ? (
-                  // eslint-disable-next-line @next/next/no-img-element -- CDN logo URL from ETL when present
-                  <img src={n.logo_url} alt="" className={styles.logo} loading="lazy" decoding="async" />
-                ) : null}
-                <div className={styles.labelStack}>
+              {tileMode === "constituent" && n.logo_url ? (
+                // eslint-disable-next-line @next/next/no-img-element -- CDN logo URL from ETL when present
+                <img src={n.logo_url} alt="" className={styles.logo} loading="lazy" decoding="async" />
+              ) : null}
+              <div
+                className={
+                  isThemeTile ? `${styles.labelStack} ${styles.labelStackTheme}` : styles.labelStack
+                }
+              >
+                {tileMode === "constituent" ? (
                   <span className={styles.ticker}>{n.ticker}</span>
-                  {activePeriod != null ? (
-                    <span
-                      className={
-                        ret != null && ret > 0
-                          ? `${styles.returnPct} ${styles.returnPctUp}`
-                          : ret != null && ret < 0
-                            ? `${styles.returnPct} ${styles.returnPctDown}`
-                            : styles.returnPct
-                      }
-                    >
-                      {formatReturnPct(ret)}
-                    </span>
-                  ) : null}
-                  <span className={styles.weightPct}>{weightLabel(n.weight, totalWeight)}</span>
-                </div>
+                ) : (
+                  <span className={`${styles.ticker} ${styles.themeTileLabel}`}>{n.name}</span>
+                )}
+                {activePeriod != null ? (
+                  <span
+                    className={
+                      ret != null && ret > 0
+                        ? `${styles.returnPct} ${styles.returnPctUp}`
+                        : ret != null && ret < 0
+                          ? `${styles.returnPct} ${styles.returnPctDown}`
+                          : `${styles.returnPct} ${styles.returnPctFlat}`
+                    }
+                  >
+                    {formatReturnPct(ret)}
+                  </span>
+                ) : null}
+                <span className={styles.weightPct}>{weightLabel(n.weight, totalWeight)}</span>
               </div>
             </div>
           );
+          const style = {
+            left: `${left}%`,
+            top: `${top}%`,
+            width: `${width}%`,
+            height: `${height}%`,
+            background: returnTileBackground(ret),
+          };
+          return href ? (
+            <Link
+              key={n.ticker}
+              href={href}
+              className={`${styles.cell} ${styles.cellLink}`}
+              style={style}
+              title={title}
+            >
+              {inner}
+            </Link>
+          ) : (
+            <div key={n.ticker} className={styles.cell} style={style} title={title}>
+              {inner}
+            </div>
+          );
         })}
+      </div>
+      {asOfLabel ? (
+        <div className={styles.mapCaptionRow}>
+          <p className={styles.mapCaptionBelow}>As of {asOfLabel}</p>
+        </div>
+      ) : null}
       </div>
     </div>
   );

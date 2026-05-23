@@ -99,7 +99,13 @@ Expect: first request `cf-cache-status: MISS`, second `HIT`.
 
 ---
 
-## 6. Billing impact
+## 6. Purge after manifest (automated)
+
+MosaicBot `stockthemes_manifest.py` purges `https://data.stockthemes.ai/` after each publish when **`CLOUDFLARE_API_TOKEN`** and **`CLOUDFLARE_ZONE_ID`** are set on the Cloud Run job (Zone → Cache Purge permission). See `MosaicBotMain_Local_Dev/docs/STOCKTHEMES_MARKET_HOURS_PUBLISH.md`.
+
+Purge API calls are **free**; expect minor GCS egress when the CDN refetches (~$5–15/mo at 3×/weekday manifest).
+
+## 7. Billing impact
 
 Most repeat traffic should stop accruing **GCS Download Worldwide** charges. Direct  
 `https://storage.googleapis.com/stockthemes-public/...` links still bill GCS if used — avoid them in the app.
@@ -110,6 +116,6 @@ MosaicBot copy of this doc: `MosaicBotMain_Local_Dev/docs/stockthemes/CLOUDFLARE
 
 ---
 
-## 7. Private bucket (stop direct GCS egress)
+## 8. Private bucket (stop direct GCS egress)
 
 After the Worker works with public bucket, follow **`docs/PRIVATE_BUCKET_SETUP.md`** to remove `allUsers` access.
