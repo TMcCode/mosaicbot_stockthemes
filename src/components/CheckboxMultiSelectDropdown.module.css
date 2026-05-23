@@ -1,0 +1,133 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 170px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  background: var(--card-surface);
+  color: var(--text-primary);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.trigger:hover {
+  background: var(--button-secondary-hover, rgba(255, 255, 255, 0.05));
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--accent, #26fcd6);
+  outline-offset: 1px;
+}
+
+.triggerText {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chevron {
+  flex-shrink: 0;
+  font-size: 10px;
+  color: var(--text-muted);
+  line-height: 1;
+}
+
+.panel {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  background: var(--card-surface);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+
+.list {
+  margin: 0;
+  padding: 6px 0;
+  list-style: none;
+  overflow-y: auto;
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.option:hover {
+  background: var(--button-secondary-hover, rgba(255, 255, 255, 0.05));
+}
+
+.option input {
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--accent, #26fcd6);
+}
+
+.empty {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.bulkActions {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--button-secondary-border);
+  flex-shrink: 0;
+}
+
+.bulkBtn {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 5px 6px;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.bulkBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  background: var(--button-secondary-hover, rgba(255, 255, 255, 0.05));
+}
+
+.bulkBtn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}

@@ -10,24 +10,6 @@
   flex-wrap: wrap;
 }
 
-.control {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  font-size: 12px;
-  color: var(--text-secondary);
-}
-
-.control select {
-  min-width: 170px;
-  min-height: 86px;
-  border: 1px solid var(--button-secondary-border);
-  border-radius: 8px;
-  background: var(--card-surface);
-  color: var(--text-primary);
-  padding: 6px;
-}
-
 .hint {
   font-size: 11px;
   color: var(--text-muted);

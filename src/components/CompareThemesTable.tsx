@@ -10,6 +10,7 @@ import {
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
+import { CheckboxMultiSelectDropdown } from "./CheckboxMultiSelectDropdown";
 import styles from "./CompareThemesTable.module.css";
 
 type Row = {
@@ -41,23 +42,36 @@ function deriveYearTag(name: string): string | null {
 }
 
 export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }: Props) {
-  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
-  const [selectedYears, setSelectedYears] = useState<string[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
+  const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
 
   const filtered = useMemo(() => {
+    const filterGroups =
+      groupOptions.length > 0 &&
+      selectedGroups.length > 0 &&
+      selectedGroups.length < groupOptions.length;
+    const filterYears =
+      yearOptions.length > 0 &&
+      selectedYears.length > 0 &&
+      selectedYears.length < yearOptions.length;
+
     return rows.filter((r) => {
-      if (selectedGroups.length > 0) {
+      if (filterGroups) {
         const g = String(r.groupName || "");
         if (!selectedGroups.includes(g)) return false;
+      } else if (groupOptions.length > 0 && selectedGroups.length === 0) {
+        return false;
       }
-      if (selectedYears.length > 0) {
+      if (filterYears) {
         const y = deriveYearTag(r.name);
         if (!y || !selectedYears.includes(y)) return false;
+      } else if (yearOptions.length > 0 && selectedYears.length === 0) {
+        return false;
       }
       return true;
     });
-  }, [rows, selectedGroups, selectedYears]);
+  }, [rows, selectedGroups, selectedYears, groupOptions.length, yearOptions.length]);
 
   const sorted = useMemo(() => {
     const out = [...filtered];
@@ -97,38 +111,20 @@ export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }:
   return (
     <section className={styles.wrap}>
       <div className={styles.toolbar}>
-        <label className={styles.control}>
-          <span>Groups</span>
-          <select
-            multiple
-            value={selectedGroups}
-            onChange={(e) =>
-              setSelectedGroups(Array.from(e.target.selectedOptions).map((o) => o.value))
-            }
-          >
-            {groupOptions.map((g) => (
-              <option key={g} value={g}>
-                {g}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className={styles.control}>
-          <span>Years</span>
-          <select
-            multiple
-            value={selectedYears}
-            onChange={(e) =>
-              setSelectedYears(Array.from(e.target.selectedOptions).map((o) => o.value))
-            }
-          >
-            {yearOptions.map((y) => (
-              <option key={y} value={y}>
-                {y}
-              </option>
-            ))}
-          </select>
-        </label>
+        <CheckboxMultiSelectDropdown
+          label="Groups"
+          options={groupOptions}
+          selected={selectedGroups}
+          onChange={setSelectedGroups}
+          emptyLabel="All groups"
+        />
+        <CheckboxMultiSelectDropdown
+          label="Years"
+          options={yearOptions}
+          selected={selectedYears}
+          onChange={setSelectedYears}
+          emptyLabel="All years"
+        />
       </div>
 
       <div className={styles.hint}>Click a header to sort. Shift+click adds secondary sort.</div>
