@@ -21,12 +21,29 @@ export type ConstituentTreemapNode = {
   returns: Partial<Record<TreemapReturnColumn, number | null>>;
 };
 
-function constituentWeight(c: ThemeDetailConstituentV0): number {
-  const w = c.weight;
-  if (typeof w === "number" && Number.isFinite(w) && w > 0) return w;
+/** True when ETL/sheet published ``weight`` (ThemeWgt), including explicit 0% untracked rows. */
+function hasExplicitThemeWeights(constituents: ThemeDetailConstituentV0[]): boolean {
+  return constituents.some((c) => typeof c.weight === "number" && Number.isFinite(c.weight));
+}
+
+function constituentWeight(c: ThemeDetailConstituentV0, useThemeWeights: boolean): number {
+  if (useThemeWeights) {
+    const w = c.weight;
+    if (typeof w === "number" && Number.isFinite(w) && w > 0) return w;
+    return 0;
+  }
   const mcap = inferMarketCapUsd(c);
   if (mcap != null && mcap > 0) return mcap;
   return 0;
+}
+
+function normalizeNodeWeights(nodes: ConstituentTreemapNode[]): ConstituentTreemapNode[] {
+  const total = nodes.reduce((s, n) => s + n.weight, 0);
+  if (total <= 0) return [];
+  return nodes.map((n) => ({
+    ...n,
+    weight: (n.weight / total) * 100,
+  }));
 }
 
 function returnForColumn(
@@ -45,9 +62,10 @@ export function buildConstituentTreemapNodes(
   constituents: ThemeDetailConstituentV0[] | undefined,
 ): ConstituentTreemapNode[] {
   if (!constituents?.length) return [];
+  const useThemeWeights = hasExplicitThemeWeights(constituents);
   const nodes: ConstituentTreemapNode[] = [];
   for (const c of constituents) {
-    const weight = constituentWeight(c);
+    const weight = constituentWeight(c, useThemeWeights);
     if (weight <= 0) continue;
     const returns: Partial<Record<TreemapReturnColumn, number | null>> = {};
     for (const { key } of TREEMAP_RETURN_PERIODS) {
@@ -62,7 +80,7 @@ export function buildConstituentTreemapNodes(
       returns,
     });
   }
-  return nodes.sort((a, b) => b.weight - a.weight);
+  return normalizeNodeWeights(nodes).sort((a, b) => b.weight - a.weight);
 }
 
 export function treemapHasReturnData(nodes: ConstituentTreemapNode[]): boolean {

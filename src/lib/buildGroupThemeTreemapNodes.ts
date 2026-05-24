@@ -38,8 +38,12 @@ export function buildGroupThemeTreemapNodes(
 ): ConstituentTreemapNode[] {
   const themes = treemap?.themes;
   if (!Array.isArray(themes) || !themes.length) return [];
-  return themes
+  const nodes = themes
     .map(themeToNode)
-    .filter((n): n is ConstituentTreemapNode => n != null)
+    .filter((n): n is ConstituentTreemapNode => n != null);
+  const total = nodes.reduce((s, n) => s + n.weight, 0);
+  if (total <= 0) return [];
+  return nodes
+    .map((n) => ({ ...n, weight: (n.weight / total) * 100 }))
     .sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
 }

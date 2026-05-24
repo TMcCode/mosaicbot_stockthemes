@@ -5,16 +5,22 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
 
-import { STOCKTHEMES_THEME_STORAGE_KEY } from "@/lib/themeStorage";
+import {
+  applyThemeToDocument,
+  resolveThemePreference,
+  STOCKTHEMES_THEME_STORAGE_KEY,
+  type StockthemesTheme,
+} from "@/lib/themeStorage";
 
 import styles from "./ThemeRoot.module.css";
 
-export type StockthemesTheme = "light" | "dark";
+export type { StockthemesTheme };
 
 type ThemeContextValue = {
   theme: StockthemesTheme;
@@ -31,22 +37,22 @@ export function useStockthemesTheme(): ThemeContextValue {
   return ctx;
 }
 
-function readStoredTheme(): StockthemesTheme {
-  try {
-    const t = localStorage.getItem(STOCKTHEMES_THEME_STORAGE_KEY);
-    return t === "dark" ? "dark" : "light";
-  } catch {
-    return "light";
-  }
-}
-
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  // Keep first client render aligned with SSR to prevent hydration mismatches.
+  // Match SSR default; sync from layout init script + storage before paint (avoids hydration mismatch).
   const [theme, setTheme] = useState<StockthemesTheme>("light");
 
-  useEffect(() => {
-    setTheme(readStoredTheme());
+  useLayoutEffect(() => {
+    setTheme(resolveThemePreference());
   }, []);
+
+  useEffect(() => {
+    applyThemeToDocument(theme);
+    try {
+      localStorage.setItem(STOCKTHEMES_THEME_STORAGE_KEY, theme);
+    } catch {
+      /* private mode */
+    }
+  }, [theme]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
@@ -60,15 +66,7 @@ export function ThemeRoot({ children }: { children: ReactNode }) {
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => {
-      const next: StockthemesTheme = prev === "dark" ? "light" : "dark";
-      try {
-        localStorage.setItem(STOCKTHEMES_THEME_STORAGE_KEY, next);
-      } catch {
-        /* private mode */
-      }
-      return next;
-    });
+    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
   }, []);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);

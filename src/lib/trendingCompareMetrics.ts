@@ -12,7 +12,24 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
 
 const DEFAULT_COLUMN_ORDER = ["1D", "10D", "MTD", "YTD", "Period"] as const;
 
+/** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
+const COMPARE_COLUMN_ORDER = [
+  "1D",
+  "10D",
+  "MTD",
+  "LstRpt %",
+  "SinceLstRpt",
+  "YTD",
+  "Period",
+] as const;
+
 const STANDARD_METRIC_KEYS = new Set<string>(DEFAULT_COLUMN_ORDER);
+
+const COMPARE_STANDARD_KEYS = new Set<string>([
+  ...COMPARE_COLUMN_ORDER,
+  "1W",
+  "Premarket",
+]);
 
 /**
  * Parquet row column order can put ``Period`` (1Yr) first; homepage should show
@@ -25,6 +42,17 @@ export function normalizeTrendingColumnOrder(cols: string[]): string[] {
     if (cols.includes(k)) head.push(k);
   }
   const tail = cols.filter((c) => !STANDARD_METRIC_KEYS.has(c));
+  return [...head, ...tail];
+}
+
+/** Column order for the full /compare table (includes LstRpt / SinceLstRpt). */
+export function normalizeCompareColumnOrder(cols: string[]): string[] {
+  if (!cols.length) return [...COMPARE_COLUMN_ORDER];
+  const head: string[] = [];
+  for (const k of COMPARE_COLUMN_ORDER) {
+    if (cols.includes(k)) head.push(k);
+  }
+  const tail = cols.filter((c) => !COMPARE_STANDARD_KEYS.has(c) && !head.includes(c));
   return [...head, ...tail];
 }
 
@@ -50,6 +78,33 @@ export function trendingColumnHeader(key: string): string {
   };
   if (labels[key]) return labels[key];
   return key.includes("%") ? key : `${key} %`;
+}
+
+/** /compare table headers — no trailing % so labels stay on one line. */
+export function compareColumnHeader(key: string): string {
+  const labels: Record<string, string> = {
+    "1D": "1D",
+    "10D": "10D",
+    SinceLstRpt: "Since LstRpt",
+    "LstRpt %": "LstRpt",
+    MTD: "MTD",
+    YTD: "YTD",
+    Period: "1Yr",
+  };
+  if (labels[key]) return labels[key];
+  return String(key).replace(/\s*%+\s*$/, "").trim();
+}
+
+const COMPARE_COLUMN_TOOLTIPS: Record<string, string> = {
+  "LstRpt %":
+    "On average return since each ticker's last earnings report date.",
+  SinceLstRpt:
+    "On average returns for the two days after each ticker's last earnings date.",
+};
+
+/** Optional native tooltip for /compare metric headers. */
+export function compareColumnHeaderTooltip(key: string): string | undefined {
+  return COMPARE_COLUMN_TOOLTIPS[key];
 }
 
 export function valueForTrendingColumn(

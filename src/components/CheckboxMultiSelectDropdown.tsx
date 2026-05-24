@@ -10,6 +10,8 @@ type Props = {
   selected: string[];
   onChange: (next: string[]) => void;
   emptyLabel?: string;
+  /** Inline label + trigger on one row (compare hero filters). */
+  layout?: "stacked" | "inline";
 };
 
 function summaryLabel(selected: string[], options: string[], allLabel: string): string {
@@ -26,6 +28,7 @@ export function CheckboxMultiSelectDropdown({
   selected,
   onChange,
   emptyLabel = "All",
+  layout = "stacked",
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -54,8 +57,14 @@ export function CheckboxMultiSelectDropdown({
   };
 
   return (
-    <div className={styles.wrap} ref={wrapRef}>
-      <span className={styles.label} id={`${listId}-label`}>
+    <div
+      className={layout === "inline" ? `${styles.wrap} ${styles.wrapInline}` : styles.wrap}
+      ref={wrapRef}
+    >
+      <span
+        className={layout === "inline" ? `${styles.label} ${styles.labelInline}` : styles.label}
+        id={`${listId}-label`}
+      >
         {label}
       </span>
       <button

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
@@ -9,6 +10,7 @@ import { SiteNav } from "@/components/SiteNav";
 import { SupabaseAuthProvider } from "@/components/SupabaseAuthProvider";
 import { WatchlistProvider } from "@/components/WatchlistProvider";
 import { ThemeRoot } from "@/components/ThemeRoot";
+import { themeInitScriptContent } from "@/lib/themeStorage";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
@@ -71,6 +73,11 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body>
+        <Script
+          id="stockthemes-theme-init"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: themeInitScriptContent() }}
+        />
         <AdSenseGlobalScript />
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>

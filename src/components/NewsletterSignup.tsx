@@ -5,7 +5,6 @@ import Script from "next/script";
 import posthog from "posthog-js";
 
 import { useBeehiivApiConfigured } from "@/components/NewsletterRuntimeProvider";
-import { STOCKTHEMES_THEME_STORAGE_KEY } from "@/lib/themeStorage";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
 
 import styles from "./NewsletterSignup.module.css";
@@ -63,14 +62,6 @@ function beehiivEmbedConfigured(): boolean {
   return keys.some((v) => Boolean(v?.trim()));
 }
 
-function readStoredThemeForEmbed(): "light" | "dark" {
-  try {
-    return localStorage.getItem(STOCKTHEMES_THEME_STORAGE_KEY) === "dark" ? "dark" : "light";
-  } catch {
-    return "light";
-  }
-}
-
 /**
  * Iframe wins when any embed URL env is set (matches GitHub Pages + Beehiiv-styled forms).
  * Else API mode: `POST /api/newsletter/subscribe` + server `BEEHIIV_*` (local / serverful hosts only).
@@ -84,25 +75,17 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
   const [apiEmail, setApiEmail] = useState("");
   const [apiStatus, setApiStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [apiErrorMessage, setApiErrorMessage] = useState<string | null>(null);
-  /**
-   * ThemeRoot defaults to "light" on first paint; dual Beehiiv URLs would load the light (white) form
-   * before useEffect runs. Read localStorage in useLayoutEffect and mount the iframe only after the
-   * real theme is known so dark mode never flashes the wrong embed.
-   */
-  const [embedTheme, setEmbedTheme] = useState<"light" | "dark" | null>(null);
   const [narrowViewport, setNarrowViewport] = useState(false);
 
   useLayoutEffect(() => {
-    setEmbedTheme(readStoredThemeForEmbed());
     const mq = window.matchMedia(NEWSLETTER_NARROW_VIEWPORT_MQ);
     setNarrowViewport(mq.matches);
     const onChange = () => setNarrowViewport(mq.matches);
     mq.addEventListener("change", onChange);
     return () => mq.removeEventListener("change", onChange);
-  }, [theme]);
+  }, []);
 
-  const beehiivFormUrl =
-    embedTheme !== null ? getBeehiivFormUrl(embedTheme, narrowViewport) : undefined;
+  const beehiivFormUrl = getBeehiivFormUrl(theme, narrowViewport);
 
   function onPlaceholderSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -185,9 +168,9 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
         <Script src={BEEHIIV_EMBED_JS} strategy="lazyOnload" />
         <Script src={BEEHIIV_ATTRIBUTION_JS} strategy="lazyOnload" />
         <div className={styles.embedWrap} data-gtm="newsletter-signup-beehiiv">
-          {embedTheme !== null && beehiivFormUrl ? (
+          {beehiivFormUrl ? (
             <iframe
-              key={`${embedTheme}-${narrowViewport}-${beehiivFormUrl}`}
+              key={`${theme}-${narrowViewport}-${beehiivFormUrl}`}
               src={beehiivFormUrl}
               title="Subscribe to the Den of Themes newsletter"
               className={`beehiiv-embed ${styles.embedIframe}`}

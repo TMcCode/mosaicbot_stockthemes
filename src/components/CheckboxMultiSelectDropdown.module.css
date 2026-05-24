@@ -6,9 +6,23 @@
   min-width: 170px;
 }
 
+.wrapInline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .label {
   font-size: 12px;
   color: var(--text-secondary);
+}
+
+.labelInline {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  white-space: nowrap;
 }
 
 .trigger {
@@ -36,6 +50,12 @@
 .trigger:focus-visible {
   outline: 2px solid var(--accent, #26fcd6);
   outline-offset: 1px;
+}
+
+.wrapInline .trigger {
+  min-width: 148px;
+  padding: 9px 12px;
+  line-height: 1.25;
 }
 
 .triggerText {

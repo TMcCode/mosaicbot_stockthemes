@@ -47,7 +47,7 @@
   color: var(--text-muted);
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
   background: transparent;
   border: 0;
@@ -89,11 +89,11 @@
   padding: 3px 4px;
   border-radius: 5px;
   border: 1px solid rgba(0, 0, 0, 0.06);
-  text-align: right;
+  text-align: left;
   white-space: nowrap;
   line-height: 1.25;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
   box-sizing: border-box;
 }

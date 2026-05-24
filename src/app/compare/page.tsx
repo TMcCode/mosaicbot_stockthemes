@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 
 import styles from "@/app/page.module.css";
+import { ComparePageClient } from "@/components/ComparePageClient";
 import { PageSurface } from "@/components/PageSurface";
-import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
-import { resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
+import {
+  normalizeCompareColumnOrder,
+  resolveTrendingColumnOrder,
+} from "@/lib/trendingCompareMetrics";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Compare themes",
@@ -40,9 +43,11 @@ export default async function ComparePage() {
   const fallbackColumns = resolveTrendingColumnOrder(
     rows.map((r) => ({ compare_returns: r.compareReturns })),
   );
-  const columns = Array.isArray(compareRes?.bundle.columns) && compareRes?.bundle.columns.length
-    ? compareRes.bundle.columns
-    : fallbackColumns;
+  const rawColumns =
+    Array.isArray(compareRes?.bundle.columns) && compareRes?.bundle.columns.length
+      ? compareRes.bundle.columns
+      : fallbackColumns;
+  const columns = normalizeCompareColumnOrder(rawColumns);
   const groupOptions = Array.from(
     new Set(rows.map((r) => String(r.groupName || "").trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
@@ -54,23 +59,13 @@ export default async function ComparePage() {
     <PageSurface>
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={styles.heroGrid}>
-            <div className={styles.heroMain}>
-              <p className={styles.eyebrow}>{catalogEyebrowText("Compare", source)}</p>
-              <h1>Compare all themes</h1>
-              <p>
-                {rows.length} themes · {columns.length} metrics
-              </p>
-            </div>
-          </div>
-          <section className={styles.section}>
-            <CompareThemesTable
-              rows={rows}
-              columns={columns}
-              groupOptions={groupOptions}
-              yearOptions={yearOptions}
-            />
-          </section>
+          <ComparePageClient
+            eyebrow={catalogEyebrowText("Compare", source)}
+            rows={rows}
+            columns={columns}
+            groupOptions={groupOptions}
+            yearOptions={yearOptions}
+          />
         </div>
       </main>
     </PageSurface>

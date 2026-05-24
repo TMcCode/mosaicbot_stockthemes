@@ -29,9 +29,8 @@ type Props = {
   defaultReturnPeriod?: TreemapReturnColumn;
 };
 
-function weightLabel(weight: number, total: number): string {
-  if (total > 1.5) return `${Math.max(0, weight).toFixed(1)}%`;
-  return `${((Math.max(0, weight) / total) * 100).toFixed(1)}%`;
+function weightLabel(weight: number): string {
+  return `${Math.max(0, weight).toFixed(1)}%`;
 }
 
 export function ThemeHeroTreemap({
@@ -67,7 +66,6 @@ export function ThemeHeroTreemap({
     [layoutNodes],
   );
 
-  const totalWeight = nodes.reduce((s, n) => s + Math.max(0, n.weight), 0) || 1;
   const gap = 0.35;
   const periodLabel = activePeriod
     ? (TREEMAP_RETURN_PERIODS.find((p) => p.key === activePeriod)?.label ?? activePeriod)
@@ -126,8 +124,8 @@ export function ThemeHeroTreemap({
             tileMode === "theme" ? `/themes/${encodeURIComponent(n.ticker)}` : undefined;
           const title =
             periodLabel
-              ? `${n.name} · ${periodLabel}: ${formatReturnPct(ret)} · weight ${weightLabel(n.weight, totalWeight)}`
-              : `${n.name} · weight ${weightLabel(n.weight, totalWeight)}`;
+              ? `${n.name} · ${periodLabel}: ${formatReturnPct(ret)} · weight ${weightLabel(n.weight)}`
+              : `${n.name} · weight ${weightLabel(n.weight)}`;
           const isThemeTile = tileMode === "theme";
           const inner = (
             <div
@@ -162,7 +160,7 @@ export function ThemeHeroTreemap({
                     {formatReturnPct(ret)}
                   </span>
                 ) : null}
-                <span className={styles.weightPct}>{weightLabel(n.weight, totalWeight)}</span>
+                <span className={styles.weightPct}>{weightLabel(n.weight)}</span>
               </div>
             </div>
           );

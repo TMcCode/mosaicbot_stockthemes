@@ -1,0 +1,147 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+.toolbarLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border);
+  background: rgba(255, 255, 255, 0.02);
+  padding: 3px;
+}
+
+.toggle button {
+  flex: 1 1 auto;
+  min-width: 2.4rem;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 6px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.toggleActive {
+  background: rgba(38, 252, 214, 0.14) !important;
+  color: var(--text-primary) !important;
+}
+
+.headlineBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.headlineRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.median {
+  font-size: 28px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.medianLabel {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+
+.breadth {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.breadthUp {
+  color: #3dd68c;
+}
+
+.breadthDown {
+  color: #f07178;
+}
+
+.meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.detailList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+}
+
+.detailList li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: baseline;
+}
+
+.detailLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.detailValue {
+  font-variant-numeric: tabular-nums;
+}
+
+.detailLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.detailLink:hover {
+  text-decoration: underline;
+}
+
+.detailLinkMuted {
+  color: var(--text-muted);
+}

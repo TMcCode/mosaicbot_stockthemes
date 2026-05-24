@@ -70,6 +70,28 @@
   align-items: stretch;
 }
 
+.heroGridCompare {
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
+  align-items: start;
+  gap: 16px 20px;
+}
+
+.heroMainCompare {
+  gap: 12px;
+}
+
+.compareHeroFilters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  padding-top: 2px;
+}
+
+.compareSectionTight {
+  margin-top: 12px;
+}
+
 .themeHeroRail {
   display: flex;
   flex-direction: column;

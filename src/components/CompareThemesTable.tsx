@@ -4,13 +4,13 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import {
-  trendingColumnHeader,
+  compareColumnHeader,
+  compareColumnHeaderTooltip,
   valueForTrendingColumn,
 } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
-import { CheckboxMultiSelectDropdown } from "./CheckboxMultiSelectDropdown";
 import styles from "./CompareThemesTable.module.css";
 
 type Row = {
@@ -26,8 +26,6 @@ type SortState = { key: string; dir: "asc" | "desc" };
 type Props = {
   rows: Row[];
   columns: string[];
-  groupOptions: string[];
-  yearOptions: string[];
 };
 
 function fmtPct(v?: number): string {
@@ -36,45 +34,11 @@ function fmtPct(v?: number): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
-function deriveYearTag(name: string): string | null {
-  const m = String(name || "").match(/'(\d{2})\b/);
-  return m ? m[1] : null;
-}
-
-export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }: Props) {
-  const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
-  const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
+export function CompareThemesTable({ rows, columns }: Props) {
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
 
-  const filtered = useMemo(() => {
-    const filterGroups =
-      groupOptions.length > 0 &&
-      selectedGroups.length > 0 &&
-      selectedGroups.length < groupOptions.length;
-    const filterYears =
-      yearOptions.length > 0 &&
-      selectedYears.length > 0 &&
-      selectedYears.length < yearOptions.length;
-
-    return rows.filter((r) => {
-      if (filterGroups) {
-        const g = String(r.groupName || "");
-        if (!selectedGroups.includes(g)) return false;
-      } else if (groupOptions.length > 0 && selectedGroups.length === 0) {
-        return false;
-      }
-      if (filterYears) {
-        const y = deriveYearTag(r.name);
-        if (!y || !selectedYears.includes(y)) return false;
-      } else if (yearOptions.length > 0 && selectedYears.length === 0) {
-        return false;
-      }
-      return true;
-    });
-  }, [rows, selectedGroups, selectedYears, groupOptions.length, yearOptions.length]);
-
   const sorted = useMemo(() => {
-    const out = [...filtered];
+    const out = [...rows];
     out.sort((a, b) => {
       for (const s of sorts) {
         if (s.key === "Theme") {
@@ -92,7 +56,9 @@ export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }:
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
     return out;
-  }, [filtered, sorts]);
+  }, [rows, sorts]);
+
+  const gridTemplateColumns = `minmax(240px, max-content) repeat(${columns.length}, minmax(76px, max-content))`;
 
   const onHeaderClick = (key: string, shiftKey: boolean) => {
     setSorts((prev) => {
@@ -110,32 +76,10 @@ export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }:
 
   return (
     <section className={styles.wrap}>
-      <div className={styles.toolbar}>
-        <CheckboxMultiSelectDropdown
-          label="Groups"
-          options={groupOptions}
-          selected={selectedGroups}
-          onChange={setSelectedGroups}
-          emptyLabel="All groups"
-        />
-        <CheckboxMultiSelectDropdown
-          label="Years"
-          options={yearOptions}
-          selected={selectedYears}
-          onChange={setSelectedYears}
-          emptyLabel="All years"
-        />
-      </div>
-
       <div className={styles.hint}>Click a header to sort. Shift+click adds secondary sort.</div>
 
       <div className={styles.scrollWrap}>
-        <div
-          className={styles.table}
-          style={{
-            gridTemplateColumns: `minmax(260px, max-content) repeat(${columns.length}, minmax(84px, max-content))`,
-          }}
-        >
+        <div className={styles.table} style={{ gridTemplateColumns }}>
           <button
             type="button"
             className={`${styles.head} ${styles.sticky}`}
@@ -149,9 +93,9 @@ export function CompareThemesTable({ rows, columns, groupOptions, yearOptions }:
               type="button"
               className={styles.head}
               onClick={(e) => onHeaderClick(col, e.shiftKey)}
-              title={trendingColumnHeader(col)}
+              title={compareColumnHeaderTooltip(col) ?? compareColumnHeader(col)}
             >
-              {trendingColumnHeader(col)}
+              {compareColumnHeader(col)}
             </button>
           ))}
 
