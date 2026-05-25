@@ -1,12 +1,12 @@
 /**
  * Warms `.cache/stockthemes-public/` before `next build` so CI/static export
- * reuses JSON across runs (cuts GCS egress). Also writes `public/search_index.v0.json`.
+ * reuses JSON across runs. Also writes `public/search_index.v0.json`.
  *
  * Skips when STOCKTHEMES_USE_FIXTURES=1 or manifest URL is empty.
  * Set STOCKTHEMES_BUILD_CACHE_REFRESH=1 to force re-download all objects.
  *
- * When manifest.as_of changes, theme/group JSON is refreshed incrementally via GCS md5
- * (or CDN ETag) — unchanged objects are not re-downloaded.
+ * When manifest.as_of changes, theme/group JSON is refreshed incrementally via
+ * R2/Cdn ETag — unchanged objects are not re-downloaded.
  */
 import fs from "fs";
 import path from "path";
@@ -24,6 +24,7 @@ import {
   writeObjectMetaSidecar,
 } from "./lib/objectMeta.mjs";
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
@@ -32,7 +33,7 @@ const META_PATH = path.join(CACHE_DIR, "_build_cache_meta.json");
 const OBJECT_META_PATH = path.join(CACHE_DIR, "_object_meta.json");
 const SEARCH_OUT = path.join(root, "public", "search_index.v0.json");
 
-const DEFAULT_MANIFEST = "https://data.stockthemes.ai/manifest.json";
+const DEFAULT_MANIFEST = STOCKTHEMES_PUBLIC_MANIFEST_URL;
 
 const BUNDLE_FILES = [
   "search_index.v0.json",
@@ -201,7 +202,7 @@ async function fetchToCache(url, rel, objectMeta) {
     if (!res.ok) {
       const sa = loadGcsServiceAccount();
       if (res.status === 403 && sa) {
-        console.warn(`sync-build-cache: CDN 403 for ${rel} — falling back to GCS`);
+        console.warn(`sync-build-cache: public URL 403 for ${rel} — falling back to authenticated R2`);
         text = await downloadGcsObject(rel);
       } else {
         throw new Error(`HTTP ${res.status} ${url}`);
@@ -260,9 +261,9 @@ async function main() {
   fs.mkdirSync(CACHE_DIR, { recursive: true });
 
   if (gcsSyncEnabled()) {
-    console.log("sync-build-cache: using authenticated GCS (STOCKTHEMES_SYNC_VIA_GCS=1)");
+    console.log("sync-build-cache: using authenticated R2 (STOCKTHEMES_SYNC_VIA_R2=1)");
   } else {
-    console.log("sync-build-cache: incremental checks via CDN HEAD (md5 requires GCS in CI)");
+    console.log("sync-build-cache: incremental checks via public R2 HEAD");
   }
 
   const objectMeta = readObjectMetaSidecar(OBJECT_META_PATH);

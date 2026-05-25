@@ -1,9 +1,9 @@
 ## stockthemes.ai (frontend)
 
-Next.js app for **stockthemes.ai**. **Data, ETL, and the full product spec live in the MosaicBot repo** — this repo only renders UI and reads **public JSON from GCS** (once wired).
+Next.js app for **stockthemes.ai**. **Data, ETL, and the full product spec live in the MosaicBot repo** — this repo only renders UI and reads **public JSON from Cloudflare R2**.
 
 - **Canonical spec & step-by-step plan:** `docs/STOCKTHEMES_AI_SPEC.md` in **MosaicBot** (e.g. `MosaicBotMain_Local_Dev` on your machine). Open that folder in the same Cursor workspace as this project when building features.
-- **Data owner:** MosaicBot `FetchEODData/` + admin dashboard → GCS; do not duplicate Python/Parquet logic here.
+- **Data owner:** MosaicBot `FetchEODData/` + admin dashboard → R2; do not duplicate Python/Parquet logic here.
 
 ---
 
@@ -25,11 +25,11 @@ bun dev
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Live manifest from GCS
+### Live Manifest From R2
 
 Copy `.env.local.example` to `.env.local` and set:
 
-`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=https://data.stockthemes.ai/manifest.json` (Path A CDN; see `docs/CLOUDFLARE_CDN_SETUP.md`)
+`NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=https://storage.stockthemes.ai/manifest.json` (R2 custom domain; see `docs/R2_MIGRATION.md`)
 
 Restart `npm run dev`. The home page shows **manifest v0 (live)** and your real group/theme counts. Without this file, it uses `public/fixtures/manifest.json`.
 
@@ -56,7 +56,7 @@ Workflow: **`.github/workflows/deploy-pages.yml`**. On every push to **`main`** 
 
    | Name | Example value | Notes |
    |------|----------------|--------|
-   | `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` | `https://data.stockthemes.ai/manifest.json` | Path A CDN; see `docs/CLOUDFLARE_CDN_SETUP.md`. |
+   | `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL` | `https://storage.stockthemes.ai/manifest.json` | Public R2 custom domain; see `docs/R2_MIGRATION.md`. |
    | `NEXT_PUBLIC_SITE_URL` | `https://tmccode.github.io/mosaicbot_stockthemes` | Your real **GitHub username** + **repo name**; **no** trailing slash. |
    | `NEXT_PUBLIC_BASE_PATH` | `/mosaicbot_stockthemes` | **Must** match the repo name segment in the URL (leading `/`). |
 

@@ -6,8 +6,8 @@ import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
 
 /** Default dev disk cache TTL when STOCKTHEMES_DEV_REVALIDATE_SEC is unset (seconds). */
 const DEV_DISK_CACHE_DEFAULT_SEC = 120;
-/** With STOCKTHEMES_DEV_VIA_GCS=1, default longer TTL so UI work does not re-auth to GCS every 2 min. */
-const DEV_DISK_CACHE_GCS_DEFAULT_SEC = 600;
+/** With STOCKTHEMES_DEV_VIA_R2=1, default longer TTL so UI work does not re-auth to R2 every 2 min. */
+const DEV_DISK_CACHE_R2_DEFAULT_SEC = 600;
 
 /** Relative paths under `.cache/stockthemes-public/` mirror public bucket keys. */
 export const STOCKTHEMES_BUILD_CACHE_DIR = ".cache/stockthemes-public";
@@ -44,8 +44,13 @@ function devDiskCacheDisabled(): boolean {
 function devViaGcsEnabled(): boolean {
   return (
     process.env.NODE_ENV === "development" &&
-    process.env.STOCKTHEMES_DEV_VIA_GCS === "1" &&
-    Boolean(process.env.STOCKTHEMES_GCS_SA_JSON_FILE?.trim() || process.env.STOCKTHEMES_GCS_SA_JSON?.trim())
+    (process.env.STOCKTHEMES_DEV_VIA_R2 === "1" || process.env.STOCKTHEMES_DEV_VIA_GCS === "1") &&
+    Boolean(
+      process.env.R2_ENDPOINT_URL?.trim() ||
+        process.env.r2_endpoint?.trim() ||
+        process.env.S3_ENDPOINT_API?.trim() ||
+        process.env.S3_endpoint_API?.trim(),
+    )
   );
 }
 
@@ -54,7 +59,7 @@ function isDetailJsonRel(relPath: string): boolean {
   return /^themes\/[^/]+\.json$/.test(rel) || /^groups\/[^/]+\.json$/.test(rel);
 }
 
-/** Manifest/theme/group JSON must come from GCS in dev when enabled (no stale CDN fallback). */
+/** Manifest/theme/group JSON must come from R2 in dev when enabled (no stale CDN fallback). */
 function devRequireGcsForRel(relPath: string): boolean {
   if (!devViaGcsEnabled()) return false;
   const rel = relPath.replace(/^\/+/, "");
@@ -115,7 +120,7 @@ function devDiskCacheMaxAgeMs(): number {
       return seconds * 1000;
     }
   }
-  const defaultSec = devViaGcsEnabled() ? DEV_DISK_CACHE_GCS_DEFAULT_SEC : DEV_DISK_CACHE_DEFAULT_SEC;
+  const defaultSec = devViaGcsEnabled() ? DEV_DISK_CACHE_R2_DEFAULT_SEC : DEV_DISK_CACHE_DEFAULT_SEC;
   return defaultSec * 1000;
 }
 
@@ -146,7 +151,7 @@ async function writeDevDiskCache(relPath: string, text: string): Promise<void> {
 }
 
 /**
- * Fetch public JSON during static export / CI, preferring a on-disk cache to cut GCS egress.
+ * Fetch public JSON during static export / CI, preferring an on-disk cache.
  * In `next dev`, also reads/writes `.cache/stockthemes-public/` (see STOCKTHEMES_DEV_REVALIDATE_SEC).
  * Browser runtime does not use this module.
  */
@@ -163,7 +168,7 @@ export async function fetchPublicJsonText(
     }
   }
 
-  // Dev disk cache (default 120s) — used even with STOCKTHEMES_DEV_VIA_GCS=1; GCS only on miss/stale.
+  // Dev disk cache (default 120s) — used even with STOCKTHEMES_DEV_VIA_R2=1; R2 only on miss/stale.
   if (process.env.NODE_ENV === "development" && !devDiskCacheDisabled()) {
     let devCached = await readDevDiskCache(cacheRelPath);
     if (devCached !== null && isDetailJsonRel(cacheRelPath) && (await devDetailOlderThanCachedManifest(devCached))) {
@@ -185,11 +190,11 @@ export async function fetchPublicJsonText(
         process.env.STOCKTHEMES_DEV_GCS_STRICT === "1" && devRequireGcsForRel(cacheRelPath);
       if (strict) {
         throw new Error(
-          `[stockthemes] STOCKTHEMES_DEV_VIA_GCS=1 (strict) but GCS fetch failed for ${cacheRelPath}: ${msg}`,
+          `[stockthemes] STOCKTHEMES_DEV_VIA_R2=1 (strict) but R2 fetch failed for ${cacheRelPath}: ${msg}`,
         );
       }
       console.warn(
-        `[stockthemes] GCS fetch failed for ${cacheRelPath} (${msg}); trying CDN (${url}).`,
+        `[stockthemes] R2 fetch failed for ${cacheRelPath} (${msg}); trying public URL (${url}).`,
       );
     }
   }

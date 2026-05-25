@@ -11,6 +11,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { downloadR2Object, r2SyncEnabled } from "./lib/r2Download.mjs";
+import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
@@ -19,7 +21,7 @@ const DEPLOY_META = path.join(root, ".cache", "stockthemes-public", "_pages_depl
 const MANIFEST_URL =
   process.env.MANIFEST_URL?.trim() ||
   process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim() ||
-  "https://data.stockthemes.ai/manifest.json";
+  STOCKTHEMES_PUBLIC_MANIFEST_URL;
 
 function writeOutputs({ shouldBuild, fullCacheRefresh, reason }) {
   const out = process.env.GITHUB_OUTPUT;
@@ -43,6 +45,11 @@ function readDeployedMeta() {
 }
 
 async function fetchJsonAsOf(url, label) {
+  if (r2SyncEnabled()) {
+    const objectPath = label === "manifest" ? "manifest.json" : `${label}.v0.json`;
+    const data = JSON.parse(await downloadR2Object(objectPath));
+    return String(data.as_of || "");
+  }
   const res = await fetch(url, { cache: "no-store" });
   if (!res.ok) {
     throw new Error(`${label} HTTP ${res.status} from ${url}`);

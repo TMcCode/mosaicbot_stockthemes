@@ -1,7 +1,7 @@
 /**
  * Derive public JSON base URL from a manifest URL.
- * https://data.stockthemes.ai/manifest.json → https://data.stockthemes.ai
- * https://storage.googleapis.com/stockthemes-public/manifest.json → https://storage.googleapis.com/stockthemes-public
+ * https://storage.stockthemes.ai/manifest.json → https://storage.stockthemes.ai
+ * https://legacy.example/stockthemes-public/manifest.json → https://legacy.example/stockthemes-public
  */
 export function publicDataBaseFromManifest(manifest) {
   try {

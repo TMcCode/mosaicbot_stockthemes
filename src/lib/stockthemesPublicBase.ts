@@ -4,10 +4,10 @@ import { normalizePublicDataBase } from "@/lib/stockthemesClientConfig";
 
 /**
  * Derive public data base URL from the manifest URL, e.g.
- * https://data.stockthemes.ai/manifest.json → https://data.stockthemes.ai (Path A CDN)
+ * https://storage.stockthemes.ai/manifest.json → https://storage.stockthemes.ai
  *
  * Set `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=` (empty) in `.env.local` to skip the public bucket
- * during static preview — avoids browser fetches to GCS when CORS is not configured for localhost.
+ * during static preview — avoids browser fetches when CORS is not configured for localhost.
  */
 export function stockthemesPublicDataBase(): string | undefined {
   if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
@@ -59,4 +59,3 @@ export function stockthemesLiveFetchInit():
   }
   return { next: { revalidate: stockthemesRevalidateSeconds() } };
 }
-

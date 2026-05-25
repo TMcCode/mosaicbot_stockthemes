@@ -2,13 +2,13 @@
 #
 # Egress controls:
 # - Scheduled runs skip build when manifest/home_trending as_of unchanged.
-# - Code pushes rebuild static HTML but reuse CDN cache unless publish data changed.
-# - Actions cache key stockthemes-public-v3 is stable across as_of bumps (incremental GCS sync).
-# - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs use per-object md5/ETag (not full-catalog pulls on as_of bump).
+# - Code pushes rebuild static HTML but reuse public R2/cache unless publish data changed.
+# - Actions cache key stockthemes-public-v4 is stable across as_of bumps (incremental R2 sync).
+# - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs use per-object ETag (not full-catalog pulls on as_of bump).
 # - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no browser JSON fetches in production.
-# - Default manifest URL: https://data.stockthemes.ai (CDN Worker), not storage.googleapis.com.
+# - Default manifest URL: https://storage.stockthemes.ai (R2 custom domain), not storage.googleapis.com.
 #
-# See docs/GCS_EGRESS_REDUCTION.md and docs/CLOUDFLARE_CDN_SETUP.md
+# See docs/R2_MIGRATION.md
 
 name: Deploy to GitHub Pages
 
@@ -59,9 +59,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .cache/stockthemes-public
-          # Fixed key: do not tie to _pages_deploy_meta.json (new as_of invalidates cache → full GCS re-sync).
-          key: stockthemes-public-v3
+          # Fixed key: do not tie to _pages_deploy_meta.json (new as_of invalidates cache → full R2 re-sync).
+          key: stockthemes-public-v4
           restore-keys: |
+            stockthemes-public-v4
             stockthemes-public-v3
             stockthemes-public-v2-
             stockthemes-gcs-
@@ -72,7 +73,10 @@ jobs:
           GITHUB_EVENT_NAME: ${{ github.event_name }}
           FORCE_BUILD: ${{ github.event.inputs.force_build }}
           REFRESH_CACHE: ${{ github.event.inputs.refresh_cache }}
-          MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
+          STOCKTHEMES_SYNC_VIA_R2: "1"
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
         run: node scripts/ci-should-build.mjs
 
   build:
@@ -89,12 +93,13 @@ jobs:
           node-version: "20"
           cache: npm
 
-      - name: Restore GCS build cache
+      - name: Restore R2 build cache
         uses: actions/cache@v4
         with:
           path: .cache/stockthemes-public
-          key: stockthemes-public-v3
+          key: stockthemes-public-v4
           restore-keys: |
+            stockthemes-public-v4
             stockthemes-public-v3
             stockthemes-public-v2-
             stockthemes-gcs-
@@ -106,19 +111,23 @@ jobs:
         run: node scripts/sync-public-json-ci.mjs
         env:
           STOCKTHEMES_BUILD_CACHE: "1"
-          # Private bucket: CI cannot use anonymous CDN; read GCS with cdn-reader SA (GitHub secret).
-          STOCKTHEMES_SYNC_VIA_GCS: "1"
-          STOCKTHEMES_GCS_SA_JSON: ${{ secrets.STOCKTHEMES_GCS_SA_JSON }}
+          STOCKTHEMES_SYNC_VIA_R2: "1"
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
-          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
 
       - name: Build static export
         run: npm run build && node scripts/write-pages-deploy-meta.mjs
         env:
           STOCKTHEMES_STATIC_PAGES: "1"
           STOCKTHEMES_BUILD_CACHE: "1"
+          STOCKTHEMES_SYNC_VIA_R2: "1"
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE: "1"
-          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL || 'https://data.stockthemes.ai/manifest.json' }}
+          NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}
           NEXT_PUBLIC_BASE_PATH: ${{ vars.NEXT_PUBLIC_BASE_PATH }}

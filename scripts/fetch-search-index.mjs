@@ -1,6 +1,6 @@
 /**
  * Writes public/search_index.v0.json before static export so the browser loads search
- * from the same origin (avoids blocked third-party fetches to storage.googleapis.com).
+ * from the same origin.
  *
  * Resolution order matches src/lib/stockthemesPublicBase.ts + searchIndexUrl.ts:
  * - NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL — use as-is
@@ -13,12 +13,28 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outPath = path.join(root, "public", "search_index.v0.json");
 
-const DEFAULT_MANIFEST = "https://data.stockthemes.ai/manifest.json";
+const DEFAULT_MANIFEST = STOCKTHEMES_PUBLIC_MANIFEST_URL;
+
+function loadLocalEnv() {
+  for (const name of [".env.local", ".env"]) {
+    const p = path.join(root, name);
+    if (!fs.existsSync(p)) continue;
+    for (const line of fs.readFileSync(p, "utf8").split(/\r?\n/)) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+      const [key, ...rest] = trimmed.split("=");
+      if (key && process.env[key] === undefined) {
+        process.env[key] = rest.join("=").trim().replace(/^["']|["']$/g, "");
+      }
+    }
+  }
+}
 
 function searchIndexUpstreamUrl() {
   const override = process.env.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL?.trim();
@@ -41,7 +57,14 @@ function searchIndexUpstreamUrl() {
 }
 
 async function main() {
-  if (fs.existsSync(outPath) && process.env.STOCKTHEMES_STATIC_PAGES === "1") {
+  loadLocalEnv();
+
+  if (
+    fs.existsSync(outPath) &&
+    (process.env.STOCKTHEMES_STATIC_PAGES === "1" ||
+      process.env.STOCKTHEMES_BUILD_CACHE === "1" ||
+      process.env.STOCKTHEMES_SYNC_VIA_R2 === "1")
+  ) {
     console.log("fetch-search-index: skip (sync-build-cache already wrote public/search_index.v0.json)");
     return;
   }
