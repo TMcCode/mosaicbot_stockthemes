@@ -127,7 +127,10 @@ function seedHomeCommentaryFromFixture() {
 
 async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
   for (const rel of OPTIONAL_BUNDLE_FILES) {
-    if (!force && cacheFileOk(rel)) continue;
+    // Admin-published; always refresh in CI so Pages does not bake a stale cached copy.
+    const alwaysRefresh =
+      rel === "home_commentary.v0.json" && process.env.CI === "true";
+    if (!force && !alwaysRefresh && cacheFileOk(rel)) continue;
     try {
       await fetchToCache(`${base}/${rel}`, rel, objectMeta);
     } catch (e) {
