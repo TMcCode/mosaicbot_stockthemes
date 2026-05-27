@@ -134,6 +134,56 @@ function formatFetchError(label, err) {
   return `${label}: ${base}${extra}`;
 }
 
+const RETRYABLE = new Set([
+  "UND_ERR_CONNECT_TIMEOUT",
+  "UND_ERR_HEADERS_TIMEOUT",
+  "UND_ERR_SOCKET",
+  "ETIMEDOUT",
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "EAI_AGAIN",
+  "ENOTFOUND",
+]);
+
+function isRetryableFetchError(err) {
+  if (!(err instanceof Error)) return false;
+  const cause = err.cause;
+  if (cause && typeof cause === "object" && "code" in cause && RETRYABLE.has(String(cause.code))) {
+    return true;
+  }
+  const msg = err.message;
+  return (
+    msg.includes("fetch failed") ||
+    msg.includes("Connect Timeout") ||
+    msg.includes("network")
+  );
+}
+
+function retryDelayMs(attempt) {
+  return Math.min(8000, 400 * 2 ** attempt);
+}
+
+async function fetchWithRetry(url, init, { label = "R2 fetch" } = {}) {
+  const maxAttempts = Number(process.env.R2_FETCH_MAX_ATTEMPTS || 4);
+  let lastErr;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      return await fetch(url, init);
+    } catch (err) {
+      lastErr = err;
+      if (!isRetryableFetchError(err) || attempt >= maxAttempts - 1) {
+        throw err;
+      }
+      const wait = retryDelayMs(attempt);
+      console.warn(
+        `${label}: retry ${attempt + 2}/${maxAttempts} after ${wait}ms (${err instanceof Error ? err.message : err})`,
+      );
+      await new Promise((r) => setTimeout(r, wait));
+    }
+  }
+  throw lastErr;
+}
+
 export function r2SyncEnabled() {
   loadLocalEnv();
   if (process.env.STOCKTHEMES_SYNC_VIA_R2 === "1") return true;
@@ -152,7 +202,9 @@ export async function downloadR2Object(objectPath) {
   const req = signedRequest("GET", objectPath);
   let res;
   try {
-    res = await fetch(req.url, { headers: req.headers });
+    res = await fetchWithRetry(req.url, { headers: req.headers }, {
+      label: `R2 GET s3://${req.bucket}/${objectPath}`,
+    });
   } catch (err) {
     throw new Error(formatFetchError(`R2 download fetch failed for s3://${req.bucket}/${objectPath}`, err));
   }
@@ -164,7 +216,11 @@ export async function downloadR2Object(objectPath) {
 
 export async function r2ObjectMetadata(objectPath) {
   const req = signedRequest("HEAD", objectPath);
-  const res = await fetch(req.url, { method: "HEAD", headers: req.headers });
+  const res = await fetchWithRetry(
+    req.url,
+    { method: "HEAD", headers: req.headers },
+    { label: `R2 HEAD s3://${req.bucket}/${objectPath}` },
+  );
   if (res.status === 404) {
     return null;
   }

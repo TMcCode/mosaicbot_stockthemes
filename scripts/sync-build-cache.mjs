@@ -338,17 +338,40 @@ async function main() {
         `bundles=${bundleJobs.length} publish_changed=${publishChanged} slug_fp_changed=${slugCatalogChanged})`,
     );
 
+    const syncConcurrency = Math.max(
+      1,
+      Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)),
+    );
+    const failedJobs = [];
     let ok = 0;
-    let fail = 0;
-    await pool(jobs, 12, async (job) => {
+    await pool(jobs, syncConcurrency, async (job) => {
       try {
         await fetchToCache(job.url, job.rel, objectMeta);
         ok += 1;
       } catch (e) {
-        fail += 1;
+        failedJobs.push({ job, err: e });
         console.warn(`sync-build-cache: failed ${job.rel}:`, e instanceof Error ? e.message : e);
       }
     });
+    if (failedJobs.length > 0) {
+      console.warn(`sync-build-cache: retrying ${failedJobs.length} failed object(s) (sequential)`);
+      for (const { job, err: firstErr } of failedJobs) {
+        try {
+          await fetchToCache(job.url, job.rel, objectMeta);
+          ok += 1;
+          console.log(`sync-build-cache: retry ok ${job.rel}`);
+        } catch (e) {
+          console.warn(
+            `sync-build-cache: retry failed ${job.rel}:`,
+            e instanceof Error ? e.message : e,
+          );
+          if (firstErr !== e) {
+            console.warn(`sync-build-cache: first error ${job.rel}:`, firstErr instanceof Error ? firstErr.message : firstErr);
+          }
+        }
+      }
+    }
+    const fail = jobs.length - ok;
     console.log(`sync-build-cache: done ok=${ok} fail=${fail} skipped=${skipped}`);
 
     const stillMissing = missingCacheRels(allJobs);
