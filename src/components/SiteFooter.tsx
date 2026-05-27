@@ -41,6 +41,7 @@ export function SiteFooter({ dataAsOf }: Props) {
               <Link href="/cookie-policy#manage-cookies">Manage cookies</Link>
               <Link href="/terms">Terms of Service</Link>
               <Link href="/about">About</Link>
+              <Link href="/contact">Contact</Link>
               <a
                 href="https://www.tradingview.com/"
                 target="_blank"

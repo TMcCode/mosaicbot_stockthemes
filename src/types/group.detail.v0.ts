@@ -1,5 +1,5 @@
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
-import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
+import type { ThemeCompareReturnsV0, ThemeRank10dV0 } from "@/types/theme.detail.v0";
 
 export type GroupDetailThemeTreemapThemeV0 = {
   slug: string;
@@ -25,6 +25,12 @@ export type GroupDetailChildThemeV0 = {
   name: string;
   ticker_count?: number;
   group_slug?: string;
+  /** Mean constituent USD market cap (theme ETL `constituent_table_stats.average`). */
+  avg_market_cap_usd?: number;
+  /** Sum of constituent USD market caps. */
+  total_market_cap_usd?: number;
+  /** Theme-level compare metrics (same columns as `/compare`). */
+  compare_returns?: ThemeCompareReturnsV0;
   /** First few constituents (ETL); `tickers_preview_more` = additional count. */
   tickers_preview?: string[];
   tickers_preview_more?: number;
@@ -45,4 +51,6 @@ export type GroupDetailV0 = {
   chart_1y?: ThemeChart1yV0;
   /** Equal-weight theme market map (manual-weight compare_returns per theme). */
   theme_treemap?: GroupDetailThemeTreemapV0;
+  /** 10D rank vs all groups (manifest ETL). */
+  rank_10d?: ThemeRank10dV0;
 };

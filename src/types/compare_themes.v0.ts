@@ -1,4 +1,4 @@
-import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
+import type { ThemeCompareReturnsV0, ThemeRank10dV0 } from "@/types/theme.detail.v0";
 
 export type CompareThemesRowV0 = {
   slug: string;
@@ -9,6 +9,7 @@ export type CompareThemesRowV0 = {
   updated_at?: string | null;
   manual_weights_updated_at?: string | null;
   compare_returns?: ThemeCompareReturnsV0 | null;
+  rank_10d?: ThemeRank10dV0 | null;
 };
 
 export type CompareThemesV0 = {

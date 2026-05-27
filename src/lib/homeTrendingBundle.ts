@@ -3,6 +3,7 @@ import type { HomeTrendingV0 } from "@/types/home_trending.v0";
 
 /**
  * True when the pre-built bundle matches manifest trending order and as_of (same publish).
+ * @deprecated Homepage uses {@link resolveHomeTrendingRows} (name/slug merge, no per-theme JSON).
  */
 export function canUseHomeTrendingBundle(
   manifest: ManifestV0,

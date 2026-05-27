@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { buildPageMetadata } from "@/lib/seoMetadata";
+import { HELLO_EMAIL, mailtoHref, SUPPORT_EMAIL } from "@/lib/contactEmails";
 import styles from "../page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
@@ -87,8 +88,11 @@ export default function PrivacyPage() {
 
             <h3>Contact</h3>
             <p className={styles.introCopy}>
-              Questions about this policy can be sent through the site contact channels listed on the
-              About page.
+              Questions about this policy:{" "}
+              <a href={mailtoHref(HELLO_EMAIL, "Privacy policy question")}>{HELLO_EMAIL}</a>. For site
+              help, use{" "}
+              <a href={mailtoHref(SUPPORT_EMAIL, "stockthemes.ai support")}>{SUPPORT_EMAIL}</a> or see
+              our <Link href="/contact">contact page</Link>.
             </p>
           </section>
 

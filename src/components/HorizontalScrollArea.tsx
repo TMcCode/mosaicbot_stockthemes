@@ -5,13 +5,13 @@ import { useRef } from "react";
 type Props = {
   className?: string;
   children: React.ReactNode;
-};
+} & Omit<React.ComponentPropsWithoutRef<"div">, "children" | "className">;
 
 /**
  * Enables drag-to-scroll for horizontally overflowing content, including desktop
  * device emulation where touch gestures are not always forwarded.
  */
-export function HorizontalScrollArea({ className, children }: Props) {
+export function HorizontalScrollArea({ className, children, ...rest }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const pointerIdRef = useRef<number | null>(null);
@@ -23,6 +23,7 @@ export function HorizontalScrollArea({ className, children }: Props) {
     <div
       ref={hostRef}
       className={className}
+      {...rest}
       onPointerDown={(evt) => {
         const host = hostRef.current;
         if (!host) return;

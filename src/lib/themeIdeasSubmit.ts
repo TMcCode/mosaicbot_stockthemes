@@ -1,5 +1,7 @@
 /** Inbox for theme / group suggestions (FormSubmit.co on static Pages). */
-export const THEME_IDEAS_EMAIL = "themeideas@stockthemes.ai";
+import { THEME_IDEAS_EMAIL } from "@/lib/contactEmails";
+
+export { THEME_IDEAS_EMAIL };
 
 export type {
   ThemeIdeaKind,
@@ -72,7 +74,7 @@ async function sendThemeIdeaEmail(
   const msg =
     typeof data.message === "string" && data.message.trim()
       ? data.message.trim()
-      : "Could not send your suggestion. Try again or email themeideas@stockthemes.ai directly.";
+      : `Could not send your suggestion. Try again or email ${THEME_IDEAS_EMAIL} directly.`;
   return { ok: false, error: msg };
 }
 

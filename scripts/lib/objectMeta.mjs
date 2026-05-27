@@ -10,6 +10,7 @@ const BUNDLE_RELS = new Set([
   "manifest.json",
   "search_index.v0.json",
   "home_trending.v0.json",
+  "home_top_movers.v0.json",
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
   "website_content.v0.json",

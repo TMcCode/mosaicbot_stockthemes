@@ -175,10 +175,6 @@
   white-space: normal;
 }
 
-.themeWatchlistAction {
-  margin: 10px 0 6px;
-}
-
 .adSlot {
   border: 1px dashed rgba(255, 255, 255, 0.22);
   border-radius: 14px;
@@ -439,6 +435,33 @@
 .section h2 {
   margin: 0 0 10px;
   font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.contactList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.contactItem {
+  margin: 0;
+  padding: 0 0 20px;
+  border-bottom: 1px solid var(--button-secondary-border);
+}
+
+.contactItem:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.contactItemTitle {
+  margin: 0 0 6px;
+  font-size: 1rem;
   font-weight: 600;
   color: var(--text-primary);
 }
@@ -720,12 +743,44 @@ a.feedTitle:hover {
 .tableWrap {
   position: relative;
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
+  max-width: 100%;
+  min-width: 0;
   margin-top: 6px;
   border: 1px solid var(--button-secondary-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.constituentsTableSizer {
+  display: inline-block;
+  width: max-content;
+  min-width: 100%;
+  vertical-align: top;
+}
+
+.constituentsScrollWrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  cursor: grab;
+  padding-bottom: 4px;
+}
+
+.tableScrollHint {
+  margin: 0 0 8px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.constituentsScrollWrap:active {
+  cursor: grabbing;
 }
 
 .tableWatermark {
@@ -746,28 +801,46 @@ a.feedTitle:hover {
 .dataTable {
   position: relative;
   z-index: 1;
-  width: 100%;
+  width: max-content;
   border-collapse: collapse;
-  font-size: 13px;
-  line-height: 1.4;
+  font-size: 12px;
+  line-height: 1.35;
   color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
 }
 
 .dataTable th,
 .dataTable td {
-  text-align: left;
-  padding: 10px 12px;
+  padding: 8px 10px;
   border-bottom: 1px solid var(--button-secondary-border);
   vertical-align: middle;
+  white-space: nowrap;
+}
+
+.dataTable th:first-child,
+.dataTable td:first-child {
+  text-align: left;
+  white-space: normal;
+  min-width: 140px;
+  max-width: 220px;
+}
+
+.dataTable th:not(:first-child),
+.dataTable td:not(:first-child) {
+  text-align: right;
 }
 
 .dataTable th {
   font-weight: 600;
   color: var(--text-primary);
-  font-size: 12px;
-  letter-spacing: 0.06em;
+  font-size: 10px;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.dataTable th[title] {
+  cursor: help;
 }
 
 .companyCell {
@@ -780,10 +853,8 @@ a.feedTitle:hover {
 .companyName {
   min-width: 0;
   flex: 1 1 auto;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
   color: var(--text-primary);
+  line-height: 1.35;
 }
 
 .list {
@@ -852,6 +923,7 @@ a.feedTitle:hover {
   align-items: flex-start;
   text-align: left;
   width: 100%;
+  min-width: 0;
   gap: 22px;
 }
 

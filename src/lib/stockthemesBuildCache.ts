@@ -1,7 +1,8 @@
-import { mkdir, readFile, stat, writeFile } from "fs/promises";
+import { mkdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { pathToFileURL } from "url";
 
+import { hasJsonPayloadStart } from "@/lib/parseJsonPayload";
 import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
 
 /** Default dev disk cache TTL when STOCKTHEMES_DEV_REVALIDATE_SEC is unset (seconds). */
@@ -145,10 +146,31 @@ async function writeDevDiskCache(relPath: string, text: string): Promise<void> {
   if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
     return;
   }
+  if (!hasJsonPayloadStart(text)) {
+    console.warn(`[stockthemes] Skipping dev disk cache for ${relPath}: response is not JSON.`);
+    return;
+  }
   const abs = cachePathForRel(relPath);
   await mkdir(path.dirname(abs), { recursive: true });
   await writeFile(abs, text, "utf-8");
 }
+
+/** Drop a corrupted dev cache entry (e.g. after a failed parse). */
+export async function invalidateDevDiskCache(relPath: string): Promise<void> {
+  if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
+    return;
+  }
+  try {
+    await unlink(cachePathForRel(relPath));
+  } catch {
+    /* missing */
+  }
+}
+
+export type FetchPublicJsonOptions = {
+  /** Skip `.cache/stockthemes-public/` read (still writes on successful CDN/GCS fetch). */
+  bypassDevCache?: boolean;
+};
 
 /**
  * Fetch public JSON during static export / CI, preferring an on-disk cache.
@@ -158,6 +180,7 @@ async function writeDevDiskCache(relPath: string, text: string): Promise<void> {
 export async function fetchPublicJsonText(
   url: string,
   cacheRelPath: string,
+  options?: FetchPublicJsonOptions,
 ): Promise<string> {
   const abs = cachePathForRel(cacheRelPath);
   if (stockthemesBuildCacheEnabled()) {
@@ -169,8 +192,12 @@ export async function fetchPublicJsonText(
   }
 
   // Dev disk cache (default 120s) — used even with STOCKTHEMES_DEV_VIA_R2=1; R2 only on miss/stale.
-  if (process.env.NODE_ENV === "development" && !devDiskCacheDisabled()) {
+  if (process.env.NODE_ENV === "development" && !devDiskCacheDisabled() && !options?.bypassDevCache) {
     let devCached = await readDevDiskCache(cacheRelPath);
+    if (devCached !== null && !hasJsonPayloadStart(devCached)) {
+      await invalidateDevDiskCache(cacheRelPath);
+      devCached = null;
+    }
     if (devCached !== null && isDetailJsonRel(cacheRelPath) && (await devDetailOlderThanCachedManifest(devCached))) {
       devCached = null;
     }
@@ -206,9 +233,13 @@ export async function fetchPublicJsonText(
       throw new Error(`fetch failed ${res.status}: ${url}`);
     }
     text = await res.text();
+    if (!hasJsonPayloadStart(text)) {
+      throw new Error(`fetch returned non-JSON body: ${url}`);
+    }
   } catch (cdnErr) {
-    const stale = await readDevDiskCacheRaw(cacheRelPath);
-    if (stale && process.env.NODE_ENV === "development") {
+    const stale =
+      !options?.bypassDevCache && (await readDevDiskCacheRaw(cacheRelPath));
+    if (stale && hasJsonPayloadStart(stale) && process.env.NODE_ENV === "development") {
       const msg = cdnErr instanceof Error ? cdnErr.message : String(cdnErr);
       console.warn(
         `[stockthemes] CDN fetch failed for ${cacheRelPath} (${msg}); using stale disk cache.`,

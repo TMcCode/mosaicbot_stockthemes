@@ -1,0 +1,108 @@
+.block {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin: 0;
+}
+
+.item {
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.item strong {
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.sep {
+  margin: 0 10px;
+  color: var(--text-muted);
+  font-size: 13px;
+  line-height: 1;
+  user-select: none;
+}
+
+.rankRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  gap: 10px;
+}
+
+/* Shared pill — label + rank chips use the same box model */
+.rankPill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border);
+  background: rgba(255, 255, 255, 0.03);
+  font-size: 14px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.rankPillTag {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.rankValue {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.rankMuted {
+  font-size: 14px;
+  font-weight: 450;
+  color: var(--text-muted);
+}
+
+.rankPill a {
+  font-weight: 650;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.rankPill a:hover {
+  color: var(--accent);
+}
+
+.groupOnly {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.groupOnly a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.groupOnly a:hover {
+  color: var(--accent);
+}
+
+:global(.st-theme[data-theme="light"]) .rankPill {
+  background: rgba(0, 0, 0, 0.02);
+}

@@ -130,37 +130,25 @@ Example pattern: “No theme detail JSON at build time…” in `src/app/themes/
 
 - Add static entries for the above (lower `priority` than home is fine). This helps search engines **and** reinforces that these are first-class pages, not afterthoughts.
 
----
-
-## 8. Privacy policy contact (`src/app/privacy/page.tsx`)
-
-**Issue:** Contact section says questions can go through “contact channels listed on the About page,” but **About has no `/contact` route**—only optional email wiring via `home_intro` in `getWebsiteContentCached`.
-
-**Fixes (editorial + code):**
-
-- Add **`/contact`** with: `mailto:hello@stockthemes.ai`, expected response time, and (if applicable) a physical/jurisdiction line for legal notices.
-- Link **`/contact`** from footer + About + Privacy.
-- Put the **same email** as a visible `mailto:` in the Privacy **Contact** section (not only “see About”).
+**Done (2026-05):** `sitemap.xml` only (no public HTML sitemap page — avoids a scrape-friendly URL index). Includes hubs, trust/legal, `/feed`, `/commentary`, `/compare`.
 
 ---
 
-## 9. Primary navigation (`src/components/SiteNav.tsx`)
+## 8. Privacy policy contact (`src/app/privacy/page.tsx`) ✅ (implemented)
 
-**Issue:** No link to **Full feed** (`/feed` exists with its own metadata). Feed is a reasonable “fresh content” hub but is orphaned from main nav.
-
-**Fixes (code / IA):**
-
-- Add **Feed** (or “Updates”) next to About, or under a small “More” pattern if you want to keep the bar minimal.
+**Implemented:** `/contact` lists `hello@`, `support@`, and `themeideas@` (with link to `/account/suggest`). Privacy **Contact** section uses direct `mailto:` links; footer links **Contact**.
 
 ---
 
-## 10. Feed page (`src/app/feed/page.tsx`)
+## 9. Primary navigation (`src/components/SiteNav.tsx`) ✅ (feed + commentary)
 
-**Issue:** Likely reads as an **automated changelog** (valuable to users, thin for “publisher” signals if there’s no surrounding explanation).
+**Implemented:** Browse menu includes **Theme activity feed** (`/feed`) and **Market commentary** (`/commentary`).
 
-**Fixes (editorial):**
+---
 
-- Add intro copy: what events appear (new theme, weights, thesis updates), how often the manifest updates, how this relates to the newsletter.
+## 10. Feed page (`src/app/feed/page.tsx`) ✅ (intro)
+
+**Implemented:** Crawlable intro (`src/lib/feedPageCopy.ts`) explains event types, ETL/manifest cadence, link to `/commentary`, and manifest `as_of` when available.
 
 ---
 

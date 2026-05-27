@@ -1,6 +1,12 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
+import {
+  FEED_PAGE_INTRO_LEAD,
+  FEED_PAGE_TITLE,
+  feedPageMetadataDescription,
+} from "@/lib/feedPageCopy";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { mergeHomeFeedEvents, prioritizeLifecycleFeedFull } from "@/lib/mergeHomeFeedEvents";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -10,8 +16,8 @@ import styles from "./page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Full feed",
-  description: "Complete activity feed for new, updated, and thesis-updated themes.",
+  title: FEED_PAGE_TITLE,
+  description: feedPageMetadataDescription(),
   path: "/feed",
 });
 
@@ -82,6 +88,8 @@ export default async function FeedPage() {
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
   const etl = Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : [];
   const events = prioritizeLifecycleFeedFull(mergeHomeFeedEvents(manifest, themeByName, etl));
+  const asOfIso = manifest.as_of?.trim() || "";
+  const publishedLabel = asOfIso ? formatSiteDataPublished(asOfIso) : null;
 
   return (
     <PageSurface>
@@ -89,7 +97,27 @@ export default async function FeedPage() {
         <p className={styles.backLink}>
           <Link href="/">Back to home</Link>
         </p>
-        <h1>Full Feed</h1>
+        <h1>{FEED_PAGE_TITLE}</h1>
+        <div className={styles.intro}>
+          {FEED_PAGE_INTRO_LEAD.map((paragraph) => (
+            <p key={paragraph.slice(0, 48)} className={styles.introCopy}>
+              {paragraph}
+            </p>
+          ))}
+          <p className={styles.introCopy}>
+            For editorial market notes (not basket changelog entries), see{" "}
+            <Link href="/commentary">market commentary</Link>.
+          </p>
+          {publishedLabel ? (
+            <p className={styles.introMeta}>
+              Manifest last published{" "}
+              <time dateTime={asOfIso} title="US Eastern (manifest as_of)">
+                {publishedLabel}
+              </time>
+              . New feed rows appear after the next data publish.
+            </p>
+          ) : null}
+        </div>
         {events.length === 0 ? (
           <p className={styles.empty}>No feed events available.</p>
         ) : (

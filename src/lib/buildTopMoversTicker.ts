@@ -28,7 +28,7 @@ export function homeTopMoversTickerPeriod(at: Date = new Date()): TopMoverTicker
 
 /**
  * Rank themes for the home marquee: top 50 gainers, then bottom 50 losers.
- * Uses compare_themes bundle only (no per-theme detail fetches).
+ * Prefer {@link pickHomeTopMovers} from ETL `home_top_movers.v0.json`; this scans compare_themes as fallback.
  */
 export function buildTopMoversTickerItems(
   rows: CompareThemesRowV0[],

@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { PageSurface } from "@/components/PageSurface";
 import styles from "../page.module.css";
+import { HELLO_EMAIL, mailtoHref, SUPPORT_EMAIL } from "@/lib/contactEmails";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
@@ -26,7 +27,7 @@ export default async function AboutPage() {
     "A theme basket is a curated set of public stocks connected by a common narrative, such as AI infrastructure, obesity treatment, or grid modernization.";
 
   const renderIntroParagraph = (p: string, i: number) => {
-    const email = "hello@stockthemes.ai";
+    const email = HELLO_EMAIL;
     if (!p.includes(email)) {
       return (
         <p key={`about-${i}`} className={styles.introCopy}>
@@ -104,6 +105,9 @@ export default async function AboutPage() {
               .
             </p>
           </section>
+          <p className={styles.introCopy}>
+            Questions or feedback? See our <Link href="/contact">contact page</Link>.
+          </p>
           <p>
             <Link href="/" style={{ fontWeight: 500 }}>
               ← Back to home

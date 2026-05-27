@@ -7,9 +7,11 @@ import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
+import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { TickerBadge } from "@/components/TickerBadge";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
+import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
@@ -33,8 +35,11 @@ import {
   inferMarketCapUsd,
   sortConstituentsByMarketCapDesc,
 } from "@/lib/constituentMeta";
+import { CONSTITUENT_EARNINGS_COLUMNS } from "@/lib/constituentEarningsColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
+import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { computeTheme10DRanks, rank10dFromPayload } from "@/lib/themeCompareRank";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { loadManifest } from "@/lib/loadManifest";
@@ -65,11 +70,11 @@ function clipDescription(s: string, max = 158): string {
 const ET_TIMEZONE = "America/New_York";
 const ET_YMD_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: ET_TIMEZONE });
 const ET_MONTH_FORMATTER = new Intl.DateTimeFormat("en-US", { timeZone: ET_TIMEZONE, month: "numeric" });
-const ET_DISPLAY_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+const ET_COMPACT_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
   timeZone: ET_TIMEZONE,
-  month: "2-digit",
-  day: "2-digit",
-  year: "numeric",
+  month: "numeric",
+  day: "numeric",
+  year: "2-digit",
 });
 const ET_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
   timeZone: ET_TIMEZONE,
@@ -80,13 +85,6 @@ const ET_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
   minute: "numeric",
   hour12: false,
 });
-const REPORT_PENDING_FALLBACK_DAY_BY_QUARTER: Record<number, string> = {
-  1: "06/30",
-  2: "09/30",
-  3: "12/31",
-  4: "03/31",
-};
-
 function parseIsoDate(value: string | undefined): Date | null {
   if (!value) return null;
   const s = value.trim();
@@ -114,14 +112,8 @@ function quarterForMonth(month: number): 1 | 2 | 3 | 4 {
   return 4;
 }
 
-function fallbackDateWithYearForQuarter(
-  quarter: 1 | 2 | 3 | 4,
-  nowEtYear: number,
-): string {
-  const mmdd = REPORT_PENDING_FALLBACK_DAY_BY_QUARTER[quarter];
-  const [mm, dd] = mmdd.split("/");
-  const year = nowEtYear;
-  return `${mm}/${dd}/${year}`;
+function fallbackDateWithYearForQuarter(quarter: 1 | 2 | 3 | 4, nowEtYear: number): string {
+  return ET_COMPACT_DATE_FORMATTER.format(quarterEndDateEt(quarter, nowEtYear));
 }
 
 function quarterEndDateEt(quarter: 1 | 2 | 3 | 4, year: number): Date {
@@ -159,7 +151,7 @@ function formatQuarterReportDate(
   isBmoTodayPartial: boolean,
 ): string {
   if (!reportDate) return fallbackMmdd ?? "—";
-  const label = ET_DISPLAY_DATE_FORMATTER.format(reportDate);
+  const label = ET_COMPACT_DATE_FORMATTER.format(reportDate);
   const bam = String(bamRaw || "").toUpperCase();
   const bamLabel = bam === "AFTERMARKET" ? "AMC" : bam === "BEFOREMARKET" ? "BMO" : bam;
   const bamPart = bamLabel ? ` (${bamLabel}${isBmoTodayPartial ? "*" : ""})` : "";
@@ -400,8 +392,17 @@ export default async function ThemeDetailPage({ params }: Props) {
     ? manifest.groups.find((g) => g.slug === theme.group_slug)
     : undefined;
 
-  const loaded = await getThemeDetailCached(slug);
+  const [loaded, compareRes] = await Promise.all([
+    getThemeDetailCached(slug),
+    getCompareThemesCached(),
+  ]);
   const detail = loaded?.detail;
+  const rank10d =
+    rank10dFromPayload(detail?.rank_10d) ??
+    rank10dFromPayload(theme.rank_10d) ??
+    (compareRes
+      ? computeTheme10DRanks(slug, theme.group_slug, compareRes.bundle.rows)
+      : null);
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
   const treemapNodes = buildConstituentTreemapNodes(detail?.constituents);
@@ -592,31 +593,24 @@ export default async function ThemeDetailPage({ params }: Props) {
               <p className={styles.eyebrow}>
                 {detailEyebrowText("Theme", source, loaded?.source ?? null)}
               </p>
-              <h1 style={{ margin: 0 }}>{theme.name}</h1>
-              <div className={styles.themeWatchlistAction}>
+              <h1 className={styles.heroTitle}>
+                {theme.name}
+                {"\u00a0"}
                 <WatchlistStar
-                  prominent
+                  inline
                   itemType="theme"
                   itemKey={slug}
                   label={theme.name}
                   signInNext={`/themes/${slug}`}
                 />
-              </div>
-              {theme.ticker_count != null || hasTotalMarketCap ? (
-                <p>
-                  {theme.ticker_count != null ? `${theme.ticker_count} tickers` : null}
-                  {theme.ticker_count != null && hasTotalMarketCap ? " · " : null}
-                  {hasTotalMarketCap ? `${formatUsdMarketCap(totalMarketCapUsd)} total market cap` : null}
-                </p>
-              ) : null}
-              {theme.group_slug ? (
-                <p>
-                  Group:{" "}
-                  <Link href={`/groups/${theme.group_slug}`} style={{ fontWeight: 600 }}>
-                    {group?.name ?? "Group"}
-                  </Link>
-                </p>
-              ) : null}
+              </h1>
+              <ThemeHeroMeta
+                tickerCount={theme.ticker_count ?? detail?.constituents?.length}
+                totalMarketCapUsd={hasTotalMarketCap ? totalMarketCapUsd : undefined}
+                rank10d={rank10d}
+                groupSlug={theme.group_slug}
+                groupName={group?.name}
+              />
               {shouldShowThemeThesisUi(detail?.theme_thesis) ? (
                 <ThemeThesisBlock
                   themeThesis={detail?.theme_thesis}
@@ -700,6 +694,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   Build <code className={styles.code}>{detail.build_id}</code>
                 </p>
               ) : null}
+              <p className={styles.tableScrollHint}>Scroll or drag sideways to view all columns.</p>
               <div className={styles.tableWrap}>
                 <div className={styles.tableWatermark} aria-hidden="true">
                   <img
@@ -709,6 +704,13 @@ export default async function ThemeDetailPage({ params }: Props) {
                     decoding="async"
                   />
                 </div>
+                <HorizontalScrollArea
+                  className={styles.constituentsScrollWrap}
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Constituents table — scroll horizontally to see all columns"
+                >
+                <div className={styles.constituentsTableSizer}>
                 <table className={styles.dataTable}>
                   <thead>
                     <tr>
@@ -720,14 +722,13 @@ export default async function ThemeDetailPage({ params }: Props) {
                             </th>
                           ))
                         : null}
-                      <th scope="col">Previous Quarter Report Date</th>
-                      <th scope="col">Next Expected Report Date</th>
-                      <th scope="col">Last Quarter Earnings Move %</th>
-                      <th scope="col">Earnings Move %</th>
-                      <th scope="col">Intra-Quarter Move %</th>
-                      <th scope="col">Since Last Report %</th>
-                      {hasMcap ? <th scope="col">Market cap</th> : null}
-                      {hasWeight ? <th scope="col">Weight</th> : null}
+                      {CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
+                        <th key={col.id} scope="col" title={col.tooltip}>
+                          {col.label}
+                        </th>
+                      ))}
+                      {hasMcap ? <th scope="col">Mkt Cap</th> : null}
+                      {hasWeight ? <th scope="col">Wgt</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -935,7 +936,9 @@ export default async function ThemeDetailPage({ params }: Props) {
                     </tr>
                   </tbody>
                 </table>
-                <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8 }}>
+                </div>
+                </HorizontalScrollArea>
+                <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8, padding: "0 10px 10px" }}>
                   * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
                   EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
                 </p>

@@ -61,6 +61,35 @@
   gap: 4px;
 }
 
+.wrapInline {
+  display: inline-flex;
+  vertical-align: middle;
+  flex-shrink: 0;
+  margin-left: 0.12em;
+  transform: translateY(-0.06em);
+}
+
+.starInline,
+.signInLinkInline {
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  font-size: 0.72em;
+  line-height: 1;
+  border-radius: 8px;
+}
+
+.starInline:hover:not(:disabled),
+.signInLinkInline:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border: none;
+}
+
+:global(.st-theme[data-theme="light"]) .starInline:hover:not(:disabled),
+:global(.st-theme[data-theme="light"]) .signInLinkInline:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
 .starProminent {
   width: 100%;
   justify-content: flex-start;

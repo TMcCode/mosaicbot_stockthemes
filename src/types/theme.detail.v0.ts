@@ -14,6 +14,16 @@ export type ThemeCompareReturnsV0 = {
   columns?: string[];
 };
 
+/** 10D rank vs all themes and within group (manifest ETL → themes/<slug>.json). */
+export type ThemeRank10dV0 = {
+  period?: "10D" | string;
+  return_pct?: number;
+  universe_rank?: number;
+  universe_total?: number;
+  group_rank?: number | null;
+  group_total?: number | null;
+};
+
 /**
  * Mirrors docs/stockthemes/schemas/theme.detail.v0.schema.json in MosaicBot.
  */
@@ -80,4 +90,5 @@ export type ThemeDetailV0 = {
   constituents: ThemeDetailConstituentV0[];
   chart_1y?: ThemeChart1yV0;
   compare_returns?: ThemeCompareReturnsV0;
+  rank_10d?: ThemeRank10dV0;
 };

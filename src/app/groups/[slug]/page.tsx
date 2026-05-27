@@ -8,14 +8,25 @@ import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnav
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
+import { GroupHeroMeta } from "@/components/GroupHeroMeta";
+import { GroupThemesTable } from "@/components/GroupThemesTable";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import styles from "../../page.module.css";
 
 import { pickDefaultTreemapPeriod } from "@/lib/buildConstituentTreemapNodes";
 import { buildGroupThemeTreemapNodes } from "@/lib/buildGroupThemeTreemapNodes";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
+import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
+import {
+  computeGroup10DRanks,
+  rank10dFromGroupPayload,
+} from "@/lib/groupCompareRank";
+import {
+  mergeGroupThemeTableRows,
+  resolveGroupThemesMetricColumns,
+} from "@/lib/groupThemesTable";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
@@ -98,8 +109,15 @@ export default async function GroupDetailPage({ params }: Props) {
     notFound();
   }
 
-  const loaded = await getGroupDetailCached(slug);
+  const [loaded, compareRes] = await Promise.all([
+    getGroupDetailCached(slug),
+    getCompareThemesCached(),
+  ]);
   const detail = loaded?.detail;
+  const rank10d =
+    rank10dFromGroupPayload(detail?.rank_10d) ??
+    rank10dFromGroupPayload(group.rank_10d) ??
+    (compareRes ? computeGroup10DRanks(slug, compareRes.bundle.rows) : null);
   const themeBySlug = new Map(manifest.themes.map((t) => [t.slug, t]));
   const fromSlugs = group.theme_slugs
     ?.map((s) => themeBySlug.get(s))
@@ -111,6 +129,11 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const tableRows: GroupDetailChildThemeV0[] =
     detail?.themes?.length ? detail.themes : childRowFromManifest(manifestChildren);
+  const groupThemeTableRows = mergeGroupThemeTableRows(
+    tableRows,
+    compareRes?.bundle.rows,
+  );
+  const groupThemeMetricColumns = resolveGroupThemesMetricColumns(groupThemeTableRows);
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const groupTreemapNodes = buildGroupThemeTreemapNodes(detail?.theme_treemap);
@@ -161,12 +184,12 @@ export default async function GroupDetailPage({ params }: Props) {
               <p className={styles.eyebrow}>
                 {detailEyebrowText("Group", source, loaded?.source ?? null)}
               </p>
-              <h1>{group.name}</h1>
-              <p>
-                {group.theme_count != null ? `${group.theme_count} themes` : ""}
-                {group.theme_count != null && group.ticker_count != null ? " · " : ""}
-                {group.ticker_count != null ? `${group.ticker_count} tickers` : ""}
-              </p>
+              <h1 className={styles.heroTitle}>{group.name}</h1>
+              <GroupHeroMeta
+                themeCount={group.theme_count ?? detail?.theme_count}
+                tickerCount={group.ticker_count ?? detail?.ticker_count}
+                rank10d={rank10d}
+              />
               {!detail ? <StockthemesDetailUnavailable kind="group" slug={slug} /> : null}
               <AdPlacement
                 placement="groupRail"
@@ -236,28 +259,11 @@ export default async function GroupDetailPage({ params }: Props) {
                 Build <code className={styles.code}>{detail.build_id}</code>
               </p>
             ) : null}
-            <div className={styles.tableWrap}>
-              <table className={styles.dataTable}>
-                <thead>
-                  <tr>
-                    <th scope="col">Theme</th>
-                    <th scope="col">Tickers</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableRows.map((t) => (
-                    <tr key={t.slug}>
-                      <td>
-                        <Link href={`/themes/${t.slug}`} className={styles.name} prefetch={false}>
-                          {t.name}
-                        </Link>
-                      </td>
-                      <td>{t.ticker_count != null ? t.ticker_count : "—"}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <GroupThemesTable
+              rows={groupThemeTableRows}
+              metricColumns={groupThemeMetricColumns}
+              selectedDates={manifest.selected_dates}
+            />
           </section>
           <DetailAboutIntro
             heading="About this group"

@@ -2,6 +2,8 @@
  * Mirrors docs/stockthemes/schemas/manifest.v0.schema.json in MosaicBot.
  * ETL will emit the real file; this app only consumes JSON.
  */
+import type { ThemeRank10dV0 } from "@/types/theme.detail.v0";
+
 export type ManifestNewThemeEventV0 = {
   name: string;
   first_seen_at: string;
@@ -70,6 +72,8 @@ export type ManifestGroupSummaryV0 = {
   theme_count?: number;
   ticker_count?: number;
   theme_slugs?: string[];
+  /** Precomputed 10D rank vs all groups (manifest ETL). */
+  rank_10d?: ThemeRank10dV0;
 };
 
 export type ManifestThemeSummaryV0 = {
@@ -84,4 +88,5 @@ export type ManifestThemeSummaryV0 = {
   updated_at?: string;
   /** ISO 8601 UTC when manual ThemeWgt edits last published (Theme_Metadata.manual_weights_updated_at) */
   manual_weights_updated_at?: string;
+  rank_10d?: ThemeRank10dV0;
 };

@@ -12,21 +12,20 @@ import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
 
-import type { ChartPerfReturns } from "@/lib/computeThemePerf";
-import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
 import {
   buildTopMoversTickerItems,
   homeTopMoversTickerPeriod,
 } from "@/lib/buildTopMoversTicker";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
+import { getHomeTopMoversCached } from "@/lib/getHomeTopMoversCached";
 import { getHomeTrendingCached } from "@/lib/getHomeTrendingCached";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
 import { loadHomeCommentary } from "@/lib/loadHomeCommentary";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
-import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
-import { canUseHomeTrendingBundle } from "@/lib/homeTrendingBundle";
+import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
+import { resolveHomeTrendingRows } from "@/lib/resolveHomeTrendingRows";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -34,7 +33,6 @@ import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendi
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
-import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 function fmtFeedDate(iso?: string): string {
   if (!iso) return "";
@@ -117,11 +115,12 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function Home() {
-  const [{ manifest, source }, homeTrendingRes, compareRes, spyPerf, commentaryRes] =
+  const [{ manifest, source }, homeTrendingRes, compareRes, topMoversRes, spyPerf, commentaryRes] =
     await Promise.all([
       getManifestCached(),
       getHomeTrendingCached(),
       getCompareThemesCached(),
+      getHomeTopMoversCached(),
       getSpyMarketPerfCached(),
       loadHomeCommentary(),
     ]);
@@ -139,71 +138,20 @@ export default async function Home() {
   );
   /** Full merged list (including outside the 10-day window) is on `/feed`; show link if anything is left off the home strip. */
   const hasMoreFeed = homeFeedEvents.length > homeFeedDisplay.length;
-  const homeBundle = homeTrendingRes?.bundle;
-  const useHomeBundle = canUseHomeTrendingBundle(manifest, trendingNames, homeBundle ?? null);
+  const precomputedTopMovers = pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
+  const topMoversTicker =
+    precomputedTopMovers.length > 0
+      ? precomputedTopMovers
+      : buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
+          period: topMoversPeriod,
+        });
 
-  /** Chart fallback for ticker when compare bundle omits 1D/10D (matches HomeTrendingThemesTable). */
-  const chartPerfBySlug = new Map<string, ChartPerfReturns>();
-  if (useHomeBundle && homeBundle) {
-    for (const row of homeBundle.rows) {
-      const slug = String(row.slug || "").trim();
-      if (!slug) continue;
-      chartPerfBySlug.set(slug, computePerfFromChartPerformance(row.chart_1y?.performance));
-    }
-  }
-
-  const topMoversTicker = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
-    period: topMoversPeriod,
-    chartPerfBySlug,
-  });
-
-  /** Preserve manifest order; include rows even when name is missing from manifest.themes */
-  const details: {
-    slug: string | null;
-    name: string;
-    chart1y: ThemeChart1yV0 | undefined;
-    chartPerf: ChartPerfReturns;
-    compare_returns?: ThemeCompareReturnsV0;
-    marketBaseline?: boolean;
-  }[] = useHomeBundle && homeBundle
-    ? homeBundle.rows.map((row, i) => {
-        const nameFromManifest = String(trendingNames[i] || "").trim();
-        const t = nameFromManifest ? themeByName.get(nameFromManifest) : undefined;
-        const slug = (row.slug ?? t?.slug ?? null) as string | null;
-        const name = row.name || t?.name || nameFromManifest || "—";
-        const chart1y = row.chart_1y ?? undefined;
-        return {
-          slug,
-          name,
-          chart1y,
-          chartPerf: computePerfFromChartPerformance(chart1y?.performance),
-          compare_returns: row.compare_returns ?? undefined,
-        };
-      })
-    : await Promise.all(
-        trendingNames.map(async (rawName) => {
-          const name = String(rawName || "").trim();
-          const t = name ? themeByName.get(name) : undefined;
-          if (!t) {
-            return {
-              slug: null as string | null,
-              name: name || "—",
-              chart1y: undefined,
-              chartPerf: {},
-              compare_returns: undefined,
-            };
-          }
-          const detailRes = await getThemeDetailCached(t.slug);
-          const chartPerf = computePerfFromChartPerformance(detailRes?.detail?.chart_1y?.performance);
-          return {
-            slug: t.slug,
-            name: t.name,
-            chart1y: detailRes?.detail?.chart_1y,
-            chartPerf,
-            compare_returns: detailRes?.detail?.compare_returns,
-          };
-        }),
-      );
+  const details = resolveHomeTrendingRows(
+    trendingNames,
+    manifest,
+    homeTrendingRes?.bundle,
+    compareRes?.bundle?.rows,
+  );
   const marketRow = {
     slug: null as string | null,
     name: "S&P 500",

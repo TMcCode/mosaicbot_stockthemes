@@ -38,6 +38,7 @@ const DEFAULT_MANIFEST = STOCKTHEMES_PUBLIC_MANIFEST_URL;
 const BUNDLE_FILES = [
   "search_index.v0.json",
   "home_trending.v0.json",
+  "home_top_movers.v0.json",
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
   "website_content.v0.json",

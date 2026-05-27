@@ -1,6 +1,7 @@
 import type { MetadataRoute } from "next";
 
 import { loadManifest } from "@/lib/loadManifest";
+import { SITEMAP_STATIC_PATHS } from "@/lib/sitemapStaticPages";
 import { siteBaseUrl } from "@/lib/siteUrl";
 
 /** Required for `output: "export"` — sitemap is generated at build time from the manifest. */
@@ -11,32 +12,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const { manifest } = await loadManifest();
   const lastModified = manifest.as_of ? new Date(manifest.as_of) : new Date();
 
-  const entries: MetadataRoute.Sitemap = [
-    {
-      url: `${base}/`,
-      lastModified,
-      changeFrequency: "daily",
-      priority: 1,
-    },
-    {
-      url: `${base}/groups`,
-      lastModified,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${base}/themes`,
-      lastModified,
-      changeFrequency: "daily",
-      priority: 0.9,
-    },
-    {
-      url: `${base}/commentary`,
-      lastModified,
-      changeFrequency: "daily",
-      priority: 0.75,
-    },
-  ];
+  const entries: MetadataRoute.Sitemap = SITEMAP_STATIC_PATHS.map((p) => ({
+    url: `${base}${p.path === "/" ? "" : p.path}`,
+    lastModified,
+    changeFrequency: p.changeFrequency,
+    priority: p.priority,
+  }));
 
   for (const g of manifest.groups) {
     entries.push({

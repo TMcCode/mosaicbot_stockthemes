@@ -28,6 +28,7 @@ import {
 } from "@/lib/stockthemesBuildHints";
 import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 import styles from "@/app/page.module.css";
+import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 
 type Props = {
   slug: string;
@@ -151,6 +152,8 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
             </p>
           ) : null}
           <div className={styles.tableWrap}>
+            <HorizontalScrollArea className={styles.constituentsScrollWrap}>
+            <div className={styles.constituentsTableSizer}>
             <table className={styles.dataTable}>
               <thead>
                 <tr>
@@ -175,6 +178,8 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
                 ))}
               </tbody>
             </table>
+            </div>
+            </HorizontalScrollArea>
           </div>
         </section>
       ) : (

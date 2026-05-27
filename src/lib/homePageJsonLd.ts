@@ -1,3 +1,4 @@
+import { HELLO_EMAIL } from "@/lib/contactEmails";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
 import { siteBaseUrl } from "@/lib/siteUrl";
 
@@ -22,7 +23,7 @@ export function buildHomePageJsonLd(extraDescription?: string): Record<string, u
         name: "stockthemes.ai",
         url,
         description,
-        email: "hello@stockthemes.ai",
+        email: HELLO_EMAIL,
       },
     ],
   };

@@ -45,6 +45,12 @@ export function SiteNav() {
               <Link href="/compare" className={styles.menuItem} role="menuitem">
                 Compare theme performance
               </Link>
+              <Link href="/feed" className={styles.menuItem} role="menuitem">
+                Theme activity feed
+              </Link>
+              <Link href="/commentary" className={styles.menuItem} role="menuitem">
+                Market commentary
+              </Link>
             </div>
           </div>
           <span className={styles.sep} aria-hidden="true">

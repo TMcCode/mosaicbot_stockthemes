@@ -18,11 +18,21 @@ type Props = {
   compact?: boolean;
   /** Theme detail hero: larger button, full label, left-aligned under title. */
   prominent?: boolean;
+  /** Icon-only star aligned beside a page title (no pill border). */
+  inline?: boolean;
   signInNext?: string;
 };
 
-export function WatchlistStar({ itemType, itemKey, label, compact, prominent, signInNext }: Props) {
-  const showLabel = !compact || prominent;
+export function WatchlistStar({
+  itemType,
+  itemKey,
+  label,
+  compact,
+  prominent,
+  inline,
+  signInNext,
+}: Props) {
+  const showLabel = (!compact || prominent) && !inline;
   const { configured, user } = useSupabaseAuth();
   const watchlist = useWatchlist();
   const [busy, setBusy] = useState(false);
@@ -50,12 +60,21 @@ export function WatchlistStar({ itemType, itemKey, label, compact, prominent, si
 
   const signInHref = signInNext ? `/sign-in?next=${encodeURIComponent(signInNext)}` : "/sign-in";
 
+  const wrapClass = [
+    styles.wrap,
+    prominent ? styles.wrapProminent : "",
+    inline ? styles.wrapInline : "",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  const Wrap = inline ? "span" : "div";
+
   if (!user) {
     return (
-      <div className={`${styles.wrap} ${prominent ? styles.wrapProminent : ""}`}>
+      <Wrap className={wrapClass}>
         <Link
           href={signInHref}
-          className={`${styles.signInLink} ${compact ? styles.signInLinkCompact : ""} ${prominent ? styles.signInLinkProminent : ""}`}
+          className={`${styles.signInLink} ${compact ? styles.signInLinkCompact : ""} ${prominent ? styles.signInLinkProminent : ""} ${inline ? styles.signInLinkInline : ""}`}
           title={`Sign in to save ${label} to your watchlist`}
           aria-label={`Sign in to save ${label} to your watchlist`}
           onClick={(e) => e.stopPropagation()}
@@ -63,15 +82,19 @@ export function WatchlistStar({ itemType, itemKey, label, compact, prominent, si
           ☆
           {showLabel ? <span>Save to Watchlist</span> : null}
         </Link>
-      </div>
+      </Wrap>
     );
   }
 
+  const actionTitle =
+    message ||
+    (saved ? `Remove ${label} from watchlist` : `Save ${label} to watchlist`);
+
   return (
-    <div className={`${styles.wrap} ${prominent ? styles.wrapProminent : ""}`}>
+    <Wrap className={wrapClass}>
       <button
         type="button"
-        className={`${styles.star} ${compact ? styles.starCompact : ""} ${prominent ? styles.starProminent : ""} ${saved ? styles.starSaved : ""}`}
+        className={`${styles.star} ${compact ? styles.starCompact : ""} ${prominent ? styles.starProminent : ""} ${inline ? styles.starInline : ""} ${saved ? styles.starSaved : ""}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -80,18 +103,18 @@ export function WatchlistStar({ itemType, itemKey, label, compact, prominent, si
         disabled={busy || !watchlist?.ready}
         aria-pressed={saved}
         aria-busy={busy || undefined}
-        title={saved ? `Remove ${label} from watchlist` : `Save ${label} to watchlist`}
+        title={actionTitle}
       >
         {saved ? "★" : "☆"}
         {showLabel ? (
           <span>{saved ? "Saved to Watchlist" : "Save to Watchlist"}</span>
         ) : null}
       </button>
-      {message ? (
+      {message && !inline ? (
         <p className={`${styles.hint} ${styles.hintError}`} role="status">
           {message}
         </p>
       ) : null}
-    </div>
+    </Wrap>
   );
 }

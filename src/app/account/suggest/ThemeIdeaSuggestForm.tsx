@@ -7,6 +7,7 @@ import styles from "@/app/page.module.css";
 import formStyles from "@/app/account/suggest/ThemeIdeaSuggestForm.module.css";
 
 import { capturePostHog } from "@/lib/posthogClient";
+import { THEME_IDEAS_EMAIL } from "@/lib/contactEmails";
 import { parseThemeNameList, parseTickerList } from "@/lib/parseTickerList";
 import { submitThemeIdea, type ThemeIdeaKind } from "@/lib/themeIdeasSubmit";
 import { countWords, wordCountInRange } from "@/lib/wordCount";
@@ -130,7 +131,7 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
   return (
     <div className={formStyles.wrap}>
       <p className={styles.introCopy}>
-        Suggestions go to <strong>themeideas@stockthemes.ai</strong>. We read every submission; not all
+        Suggestions go to <strong>{THEME_IDEAS_EMAIL}</strong>. We read every submission; not all
         ideas are published.
       </p>
 
