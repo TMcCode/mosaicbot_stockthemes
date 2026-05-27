@@ -19,7 +19,10 @@ const GROUP_COMPARE_SKIP = new Set<string>([
 /** Column order for group child-theme metrics (calendar returns → custom dates → earnings). */
 export function normalizeGroupThemesColumnOrder(cols: string[]): string[] {
   if (!cols.length) return [...GROUP_RETURN_HEAD, ...GROUP_EARNINGS_TAIL];
-  const head = GROUP_RETURN_HEAD.filter((c) => cols.includes(c));
+  const head: string[] = [];
+  for (const k of GROUP_RETURN_HEAD) {
+    if (cols.includes(k)) head.push(k);
+  }
   const custom = cols.filter((c) => !GROUP_COMPARE_SKIP.has(c) && !head.includes(c));
   const tail = GROUP_EARNINGS_TAIL.filter((c) => cols.includes(c));
   return [...head, ...custom, ...tail];
