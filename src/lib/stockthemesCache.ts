@@ -1,6 +1,9 @@
 /** Default ISR / browser cache bucket for public GCS JSON (seconds). */
 const DEFAULT_REVALIDATE_SEC = 120 * 60;
 
+/** Commentary live fetch window (seconds). Matches R2 object max-age (~300s). */
+const DEFAULT_COMMENTARY_REVALIDATE_SEC = 300;
+
 /**
  * Seconds before build-time Next fetch cache rolls (manifest, theme JSON at build).
  * Override with STOCKTHEMES_REVALIDATE_SEC or NEXT_PUBLIC_STOCKTHEMES_REVALIDATE_SEC.
@@ -33,5 +36,30 @@ export function stockthemesBrowserCacheBusterQuery(): string {
 
 /** Browser fetch cache mode for live GCS hydration (production allows HTTP cache). */
 export function stockthemesBrowserFetchCache(): RequestCache {
+  return process.env.NODE_ENV === "development" ? "no-store" : "default";
+}
+
+export function commentaryRevalidateSeconds(): number {
+  const raw =
+    process.env.NEXT_PUBLIC_STOCKTHEMES_COMMENTARY_REVALIDATE_SEC?.trim() ||
+    String(DEFAULT_COMMENTARY_REVALIDATE_SEC);
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.floor(seconds);
+  }
+  return DEFAULT_COMMENTARY_REVALIDATE_SEC;
+}
+
+/** Time-bucket query for commentary-only client fetches (short window, low egress). */
+export function commentaryBrowserCacheBusterQuery(): string {
+  if (process.env.NODE_ENV === "development") {
+    return `ts=${Date.now()}`;
+  }
+  const windowMs = commentaryRevalidateSeconds() * 1000;
+  const bucket = Math.floor(Date.now() / windowMs);
+  return `ts=${bucket}`;
+}
+
+export function commentaryBrowserFetchCache(): RequestCache {
   return process.env.NODE_ENV === "development" ? "no-store" : "default";
 }

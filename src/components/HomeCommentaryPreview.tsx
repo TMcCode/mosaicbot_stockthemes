@@ -10,10 +10,11 @@ import {
   HOME_COMMENTARY_PREVIEW_COUNT,
   truncateCommentaryNote,
 } from "@/lib/commentaryDisplay";
-import { homeCommentaryFetchUrl } from "@/lib/homeCommentaryUrl";
-import { stockthemesBrowserCacheBusterQuery, stockthemesBrowserFetchCache } from "@/lib/stockthemesCache";
-import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
-import type { HomeCommentaryItemV0, HomeCommentaryV0 } from "@/types/home_commentary.v0";
+import {
+  fetchHomeCommentaryLive,
+  stockthemesCommentaryLiveEnabled,
+} from "@/lib/commentaryLiveFetch";
+import type { HomeCommentaryItemV0 } from "@/types/home_commentary.v0";
 
 import styles from "./HomeCommentaryPreview.module.css";
 
@@ -26,28 +27,19 @@ type Props = {
 export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Props) {
   const [items, setItems] = useState<HomeCommentaryItemV0[]>(initialItems);
   const [totalCount, setTotalCount] = useState(initialItems.length);
-  const skipClientFetch =
-    stockthemesLiveHydrationDisabled() ||
-    initialItems.length > 0 ||
-    !homeCommentaryFetchUrl();
-  const [loading, setLoading] = useState(!skipClientFetch);
+  const liveEnabled = stockthemesCommentaryLiveEnabled();
+  const [loading, setLoading] = useState(liveEnabled);
 
   useEffect(() => {
-    const url = homeCommentaryFetchUrl();
-    if (!url || stockthemesLiveHydrationDisabled() || initialItems.length > 0) {
+    if (!liveEnabled) {
       setLoading(false);
       return;
     }
-    const fullUrl = `${url}?${stockthemesBrowserCacheBusterQuery()}`;
     let cancelled = false;
-    void fetch(fullUrl, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
-      .then((res) => {
-        if (!res.ok) throw new Error(String(res.status));
-        return res.json() as Promise<HomeCommentaryV0>;
-      })
+    void fetchHomeCommentaryLive()
       .then((data) => {
-        if (cancelled) return;
-        const all = Array.isArray(data.items) ? data.items : [];
+        if (cancelled || !data) return;
+        const all = data.items;
         const days = Number(data.preview_days) > 0 ? Number(data.preview_days) : previewDays;
         setTotalCount(all.length);
         setItems(commentaryItemsForPreview(all, days, HOME_COMMENTARY_PREVIEW_COUNT));
@@ -65,7 +57,7 @@ export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Pr
     return () => {
       cancelled = true;
     };
-  }, [initialItems, previewDays]);
+  }, [initialItems, previewDays, liveEnabled]);
 
   const preview = commentaryItemsForPreview(items, previewDays, HOME_COMMENTARY_PREVIEW_COUNT);
   const hasMore = totalCount > preview.length;

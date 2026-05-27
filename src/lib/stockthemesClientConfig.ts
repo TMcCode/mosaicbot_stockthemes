@@ -13,5 +13,9 @@ export function normalizePublicDataBase(base: string | undefined): string | unde
   if (base.includes("storage.googleapis.com")) {
     return STOCKTHEMES_CDN_ORIGIN;
   }
+  // Legacy Worker hostname may still origin GCS; public JSON is on R2 custom domain.
+  if (base.includes("data.stockthemes.ai")) {
+    return STOCKTHEMES_CDN_ORIGIN;
+  }
   return base.replace(/\/$/, "");
 }
