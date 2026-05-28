@@ -12,33 +12,32 @@ const SiteSearchDynamic = dynamic(
 );
 
 export function LazySiteSearch() {
-  if (process.env.NODE_ENV !== "production") {
-    return <SiteSearch />;
-  }
-
+  const isProd = process.env.NODE_ENV === "production";
   const [active, setActive] = useState(false);
   const idleHandleRef = useRef<number | null>(null);
-  const timeoutRef = useRef<number | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    if (active) return;
+    if (!isProd || active) return;
     const onIdle = () => setActive(true);
-    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
-      idleHandleRef.current = (window as Window & { requestIdleCallback: (cb: () => void) => number }).requestIdleCallback(
-        onIdle,
-      );
+    if (typeof requestIdleCallback === "function") {
+      idleHandleRef.current = requestIdleCallback(onIdle);
     } else {
-      timeoutRef.current = window.setTimeout(onIdle, 1500);
+      timeoutRef.current = setTimeout(onIdle, 1500);
     }
     return () => {
-      if (idleHandleRef.current != null && "cancelIdleCallback" in window) {
-        (window as Window & { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(idleHandleRef.current);
+      if (idleHandleRef.current != null && typeof cancelIdleCallback === "function") {
+        cancelIdleCallback(idleHandleRef.current);
       }
       if (timeoutRef.current != null) {
-        window.clearTimeout(timeoutRef.current);
+        clearTimeout(timeoutRef.current);
       }
     };
-  }, [active]);
+  }, [active, isProd]);
+
+  if (!isProd) {
+    return <SiteSearch />;
+  }
 
   if (active) return <SiteSearchDynamic />;
 
@@ -57,4 +56,3 @@ export function LazySiteSearch() {
     </div>
   );
 }
-

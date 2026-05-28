@@ -58,7 +58,7 @@ function leaderboardRowsForFactor(bucket: unknown): Array<{ slug?: string | null
         total: Number.isFinite(totalNum) && totalNum > 0 ? Math.floor(totalNum) : totalFallback,
       };
     })
-    .filter((x): x is { slug?: string | null; rank: number; total: number } => Boolean(x));
+    .filter((x): x is { slug: string | null; rank: number; total: number } => x != null);
 }
 
 function enrichEntryFromLeaderboards(
