@@ -18,6 +18,8 @@ type Row = {
   name: string;
   groupSlug?: string | null;
   groupName?: string | null;
+  /** Comma-separated tickers (+N); same ETL as group composition legend. */
+  tickersPreview?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
@@ -110,7 +112,11 @@ export function CompareThemesTable({ rows, columns }: Props) {
                 ) : (
                   <span className={styles.themeName}>{row.name}</span>
                 )}
-                {row.groupName ? <div className={styles.meta}>{row.groupName}</div> : null}
+                {row.tickersPreview ? (
+                  <div className={styles.meta}>{row.tickersPreview}</div>
+                ) : row.groupName ? (
+                  <div className={styles.meta}>{row.groupName}</div>
+                ) : null}
               </div>
             );
             const valueCells = columns.map((col) => {

@@ -4,6 +4,7 @@ import styles from "@/app/page.module.css";
 import { ComparePageClient } from "@/components/ComparePageClient";
 import { PageSurface } from "@/components/PageSurface";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
+import { getGroupTickersPreviewMapCached } from "@/lib/getGroupTickersPreviewMapCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
@@ -24,22 +25,27 @@ function deriveYearTag(name: string): string | null {
 }
 
 export default async function ComparePage() {
-  const [{ manifest, source }, compareRes] = await Promise.all([
+  const [{ manifest, source }, compareRes, previewBySlug] = await Promise.all([
     getManifestCached(),
     getCompareThemesCached(),
+    getGroupTickersPreviewMapCached(),
   ]);
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => [String(g.slug || "").trim(), String(g.name || "").trim()]),
   );
-  const rows = (compareRes?.bundle.rows || []).map((r) => ({
-    slug: String(r.slug || "").trim(),
-    name: String(r.name || "").trim(),
-    groupSlug: r.group_slug ?? null,
-    groupName:
-      String(r.group_name || "").trim() ||
-      (r.group_slug ? (groupBySlug.get(String(r.group_slug || "").trim()) ?? "") : ""),
-    compareReturns: r.compare_returns ?? undefined,
-  }));
+  const rows = (compareRes?.bundle.rows || []).map((r) => {
+    const slug = String(r.slug || "").trim();
+    return {
+      slug,
+      name: String(r.name || "").trim(),
+      groupSlug: r.group_slug ?? null,
+      groupName:
+        String(r.group_name || "").trim() ||
+        (r.group_slug ? (groupBySlug.get(String(r.group_slug || "").trim()) ?? "") : ""),
+      tickersPreview: previewBySlug.get(slug) ?? null,
+      compareReturns: r.compare_returns ?? undefined,
+    };
+  });
   const fallbackColumns = resolveTrendingColumnOrder(
     rows.map((r) => ({ compare_returns: r.compareReturns })),
   );

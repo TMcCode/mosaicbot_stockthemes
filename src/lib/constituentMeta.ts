@@ -69,15 +69,44 @@ export function sortCompositionSeriesByMarketCapDesc(
   });
 }
 
-function formatTickersPreviewLine(t: GroupDetailChildThemeV0): string | undefined {
-  const raw = t.tickers_preview;
-  if (!Array.isArray(raw) || raw.length === 0) return undefined;
-  const parts = raw.map((x) => String(x).trim().toUpperCase()).filter(Boolean);
+/** Max tickers shown before `+N` (group legend + compare subheader). */
+export const TICKERS_PREVIEW_DISPLAY_MAX = 6;
+
+/** Comma-separated tickers with optional `+N` suffix (group legend + compare table). */
+export function formatTickersPreviewFromParts(
+  tickers?: string[] | null,
+  more?: number | null,
+): string | undefined {
+  if (!Array.isArray(tickers) || tickers.length === 0) return undefined;
+  const parts = tickers.map((x) => String(x).trim().toUpperCase()).filter(Boolean);
   if (!parts.length) return undefined;
-  const more = pickNumber(t.tickers_preview_more);
-  const head = parts.join(", ");
-  if (more != null && more > 0) return `${head} +${more}`;
+  const extra = pickNumber(more) ?? 0;
+  const total = parts.length + extra;
+  const shown = parts.slice(0, TICKERS_PREVIEW_DISPLAY_MAX);
+  const head = shown.join(", ");
+  const remaining = total - shown.length;
+  if (remaining > 0) return `${head} +${remaining}`;
   return head;
+}
+
+/** Flatten `groups/*.json` child-theme previews (same source as group composition legend). */
+export function buildThemeTickersPreviewMapFromGroups(
+  groups: Array<{ themes?: GroupDetailChildThemeV0[] } | null | undefined>,
+): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const g of groups) {
+    for (const t of g?.themes ?? []) {
+      const slug = String(t.slug || "").trim();
+      if (!slug || out.has(slug)) continue;
+      const preview = formatTickersPreviewFromParts(t.tickers_preview, t.tickers_preview_more);
+      if (preview) out.set(slug, preview);
+    }
+  }
+  return out;
+}
+
+function formatTickersPreviewLine(t: GroupDetailChildThemeV0): string | undefined {
+  return formatTickersPreviewFromParts(t.tickers_preview, t.tickers_preview_more);
 }
 
 /** Map theme slug → display name (+ optional ticker preview) for group composition chart legend. */

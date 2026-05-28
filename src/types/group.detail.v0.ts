@@ -31,7 +31,7 @@ export type GroupDetailChildThemeV0 = {
   total_market_cap_usd?: number;
   /** Theme-level compare metrics (same columns as `/compare`). */
   compare_returns?: ThemeCompareReturnsV0;
-  /** First few constituents (ETL); `tickers_preview_more` = additional count. */
+  /** First few constituents (ETL); ordered weight desc then mcap desc; `tickers_preview_more` = additional count. */
   tickers_preview?: string[];
   tickers_preview_more?: number;
 };

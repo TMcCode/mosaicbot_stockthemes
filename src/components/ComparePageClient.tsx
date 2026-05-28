@@ -18,6 +18,7 @@ type Row = {
   name: string;
   groupSlug?: string | null;
   groupName?: string | null;
+  tickersPreview?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
