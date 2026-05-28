@@ -200,7 +200,22 @@ async function fetchToCache(url, rel, objectMeta) {
   let text;
 
   if (gcsSyncEnabled()) {
-    text = await downloadGcsObject(rel);
+    try {
+      text = await downloadGcsObject(rel);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      // Manifest can list new groups before group JSON finishes uploading (ETL publishes manifest early).
+      if (msg.includes("404") && url) {
+        console.warn(`sync-build-cache: R2 404 for ${rel} — falling back to public CDN`);
+        const res = await fetch(url, { cache: "no-store" });
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status} ${url} (after R2 404)`);
+        }
+        text = await res.text();
+      } else {
+        throw e;
+      }
+    }
   } else {
     const res = await fetch(url);
     if (!res.ok) {
