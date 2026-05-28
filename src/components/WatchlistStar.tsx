@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useCallback, useState } from "react";
 
-import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { useWatchlist } from "@/components/WatchlistProvider";
 
 import type { WatchlistItemType } from "@/lib/watchlist/types";
@@ -20,6 +20,8 @@ type Props = {
   prominent?: boolean;
   /** Icon-only star aligned beside a page title (no pill border). */
   inline?: boolean;
+  /** Large theme/group hero: baseline-aligned with multi-line titles. */
+  titleAdjacent?: boolean;
   signInNext?: string;
 };
 
@@ -30,10 +32,12 @@ export function WatchlistStar({
   compact,
   prominent,
   inline,
+  titleAdjacent,
   signInNext,
 }: Props) {
   const showLabel = (!compact || prominent) && !inline;
-  const { configured, user } = useSupabaseAuth();
+  const titleStar = Boolean(inline && titleAdjacent);
+  const { configured, user } = useOptionalSupabaseAuth();
   const watchlist = useWatchlist();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -64,6 +68,7 @@ export function WatchlistStar({
     styles.wrap,
     prominent ? styles.wrapProminent : "",
     inline ? styles.wrapInline : "",
+    titleStar ? styles.wrapTitle : "",
   ]
     .filter(Boolean)
     .join(" ");
@@ -74,7 +79,11 @@ export function WatchlistStar({
       <Wrap className={wrapClass}>
         <Link
           href={signInHref}
-          className={`${styles.signInLink} ${compact ? styles.signInLinkCompact : ""} ${prominent ? styles.signInLinkProminent : ""} ${inline ? styles.signInLinkInline : ""}`}
+          className={
+            titleStar
+              ? styles.signInLinkTitle
+              : `${styles.signInLink} ${compact ? styles.signInLinkCompact : ""} ${prominent ? styles.signInLinkProminent : ""} ${inline ? styles.signInLinkInline : ""}`
+          }
           title={`Sign in to save ${label} to your watchlist`}
           aria-label={`Sign in to save ${label} to your watchlist`}
           onClick={(e) => e.stopPropagation()}
@@ -94,7 +103,11 @@ export function WatchlistStar({
     <Wrap className={wrapClass}>
       <button
         type="button"
-        className={`${styles.star} ${compact ? styles.starCompact : ""} ${prominent ? styles.starProminent : ""} ${inline ? styles.starInline : ""} ${saved ? styles.starSaved : ""}`}
+        className={
+          titleStar
+            ? `${styles.starTitle} ${saved ? styles.starTitleSaved : ""}`
+            : `${styles.star} ${compact ? styles.starCompact : ""} ${prominent ? styles.starProminent : ""} ${inline ? styles.starInline : ""} ${saved ? styles.starSaved : ""}`
+        }
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();

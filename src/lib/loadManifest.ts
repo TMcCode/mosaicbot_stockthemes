@@ -42,7 +42,23 @@ export async function loadManifest(): Promise<ManifestLoadResult> {
   const url = manifestUrl();
   if (url) {
     const raw = await fetchPublicJsonText(url, "manifest.json");
-    const manifest = parseManifest(raw);
+    let manifest = parseManifest(raw);
+
+    // In local dev, if manifest looks stale, force one live refresh bypassing disk cache.
+    if (process.env.NODE_ENV === "development") {
+      const asOfTs = Date.parse(String(manifest.as_of || ""));
+      const ageMs = Number.isFinite(asOfTs) ? Date.now() - asOfTs : 0;
+      const staleMs = 36 * 60 * 60 * 1000; // 36h
+      if (ageMs > staleMs) {
+        try {
+          const freshRaw = await fetchPublicJsonText(url, "manifest.json", { bypassDevCache: true });
+          manifest = parseManifest(freshRaw);
+        } catch {
+          // Keep the previously loaded manifest; do not fail hard on transient fetch errors.
+        }
+      }
+    }
+
     return { manifest, source: "live" };
   }
 

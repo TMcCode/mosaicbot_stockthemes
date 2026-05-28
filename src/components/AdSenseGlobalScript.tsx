@@ -10,8 +10,7 @@ import { useEffect } from "react";
  */
 export function AdSenseGlobalScript() {
   const client = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-  const adsEnabled =
-    process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_ADS_IN_DEV === "true";
+  const adsEnabled = process.env.NODE_ENV === "production";
   const validClient = Boolean(client && /^ca-pub-\d+$/i.test(client));
   const src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(client || "")}`;
   const scriptId = "st-adsense-loader";

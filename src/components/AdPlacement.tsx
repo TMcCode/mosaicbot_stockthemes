@@ -23,8 +23,9 @@ export type AdPlacementId =
   | "themesIndexStrip";
 
 const AD_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
-const ADS_ENABLED =
-  process.env.NODE_ENV === "production" || process.env.NEXT_PUBLIC_ENABLE_ADS_IN_DEV === "true";
+// Keep AdSense execution to production only.
+// In local dev/HMR, adsbygoogle can throw teardown races (e.g. parentNode.removeChild on detached nodes).
+const ADS_ENABLED = process.env.NODE_ENV === "production";
 
 function slotFor(placement: AdPlacementId): string | undefined {
   switch (placement) {

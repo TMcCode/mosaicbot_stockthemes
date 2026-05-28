@@ -1,7 +1,7 @@
 import Link from "next/link";
 
+import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { SiteNavAuth } from "@/components/SiteNavAuth";
-import { SiteSearch } from "@/components/SiteSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { publicAssetPath } from "@/lib/siteUrl";
 
@@ -25,7 +25,7 @@ export function SiteNav() {
             stockthemes.ai
           </span>
         </Link>
-        <SiteSearch />
+        <LazySiteSearch />
         <div className={styles.links}>
           <div className={styles.browseMenu}>
             <button type="button" className={styles.menuTrigger} aria-haspopup="menu" aria-expanded={false}>
@@ -45,11 +45,8 @@ export function SiteNav() {
               <Link href="/compare" className={styles.menuItem} role="menuitem">
                 Compare theme performance
               </Link>
-              <Link href="/feed" className={styles.menuItem} role="menuitem">
-                Theme activity feed
-              </Link>
-              <Link href="/commentary" className={styles.menuItem} role="menuitem">
-                Market commentary
+              <Link href="/factors" className={styles.menuItem} role="menuitem">
+                Theme Factor Rankings
               </Link>
             </div>
           </div>

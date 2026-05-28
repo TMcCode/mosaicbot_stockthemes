@@ -62,21 +62,70 @@
 }
 
 .wrapInline {
-  display: inline-flex;
+  display: inline;
   vertical-align: middle;
-  flex-shrink: 0;
-  margin-left: 0.12em;
-  transform: translateY(-0.06em);
+  margin-left: 0.2em;
+  white-space: nowrap;
+}
+
+.wrapTitle {
+  vertical-align: middle;
+  margin-left: 0.22em;
 }
 
 .starInline,
 .signInLinkInline {
+  display: inline;
+  vertical-align: middle;
   padding: 2px 4px;
   border: none;
   background: transparent;
   font-size: 0.72em;
   line-height: 1;
   border-radius: 8px;
+}
+
+/* Theme/group hero titles — no pill chrome; optically centered on last line. */
+.starTitle,
+.signInLinkTitle {
+  display: inline-block;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  font: inherit;
+  font-size: 0.46em;
+  font-weight: 400;
+  line-height: 1;
+  vertical-align: middle;
+  color: var(--nav-muted, #9aa8a6);
+  text-decoration: none;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s ease;
+}
+
+.starTitle:hover:not(:disabled),
+.signInLinkTitle:hover {
+  color: var(--nav-accent, #26fcd6);
+  background: transparent;
+  border: none;
+}
+
+.starTitle:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.starTitleSaved {
+  color: #f5c842;
+  border: none;
+  background: transparent;
+}
+
+.starTitleSaved:hover:not(:disabled) {
+  color: #ffe08a;
 }
 
 .starInline:hover:not(:disabled),

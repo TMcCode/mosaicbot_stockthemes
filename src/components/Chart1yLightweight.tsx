@@ -505,7 +505,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       }
       ro?.disconnect();
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
-      chart?.remove();
+      // Lightweight charts can throw in dev/HMR if teardown runs after node detaches.
+      try {
+        chart?.remove();
+      } catch {
+        // no-op
+      }
       chartRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp come from chart1y

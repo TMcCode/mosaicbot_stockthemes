@@ -102,6 +102,19 @@
   align-self: stretch;
 }
 
+.heroGridThemeDetail .heroMain {
+  min-height: 100%;
+}
+
+.heroGridThemeDetail .heroFactorSlot {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+
 .themeHeroRail .groupsAdCompact {
   width: 100%;
   max-width: 100%;
@@ -122,6 +135,17 @@
   letter-spacing: -0.03em;
   text-wrap: balance;
   color: var(--text-primary);
+}
+
+/* Watchlist star stays on the last line of the title (balance on h1 alone breaks inline children). */
+.heroTitleWithStar {
+  text-wrap: wrap;
+  line-height: 1.08;
+}
+
+.heroTitleText {
+  text-wrap: balance;
+  vertical-align: middle;
 }
 
 .heroMain {
@@ -439,6 +463,18 @@
   color: var(--text-primary);
 }
 
+.sectionHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+}
+
 .contactList {
   margin: 0;
   padding: 0;
@@ -717,13 +753,18 @@ a.feedTitle:hover {
 }
 
 .feedMoreLink {
-  margin: 8px 0 0;
-  font-size: 10px;
+  margin: 0;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 .feedMoreLink a {
-  font-size: 10px;
+  font-size: 13px;
   color: var(--accent);
+  text-decoration: none;
+}
+
+.feedMoreLink a:hover {
   text-decoration: underline;
 }
 

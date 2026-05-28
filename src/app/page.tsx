@@ -137,7 +137,6 @@ export default async function Home() {
     HOME_FEED_MAX_DAYS,
   );
   /** Full merged list (including outside the 10-day window) is on `/feed`; show link if anything is left off the home strip. */
-  const hasMoreFeed = homeFeedEvents.length > homeFeedDisplay.length;
   const precomputedTopMovers = pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
   const topMoversTicker =
     precomputedTopMovers.length > 0
@@ -313,7 +312,12 @@ export default async function Home() {
             />
 
             <section className={styles.section}>
-              <h2>Feed</h2>
+              <div className={styles.sectionHeader}>
+                <h2>Feed</h2>
+                <p className={styles.feedMoreLink}>
+                  <Link href="/feed">See all</Link>
+                </p>
+              </div>
               <div className={styles.feedList}>
                 {homeFeedDisplay.map((evt, idx) => {
                   const slug = String(evt.theme_slug || "").trim();
@@ -362,11 +366,6 @@ export default async function Home() {
                   );
                 })}
               </div>
-              {hasMoreFeed ? (
-                <p className={styles.feedMoreLink}>
-                  <Link href="/feed">View full feed</Link>
-                </p>
-              ) : null}
             </section>
             </div>
           </div>

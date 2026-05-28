@@ -33,6 +33,20 @@ export function useSupabaseAuth(): SupabaseAuthContextValue {
   return ctx;
 }
 
+export function useOptionalSupabaseAuth(): SupabaseAuthContextValue {
+  const ctx = useContext(SupabaseAuthContext);
+  if (!ctx) {
+    return {
+      configured: false,
+      loading: false,
+      session: null,
+      user: null,
+      signOut: async () => {},
+    };
+  }
+  return ctx;
+}
+
 function posthogIdentify(user: User) {
   if (typeof window === "undefined") return;
   void import("posthog-js")

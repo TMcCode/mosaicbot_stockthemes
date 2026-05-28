@@ -8,6 +8,12 @@ function lifecycleFeedKey(evt: ManifestHomeFeedEventV0): string {
   return `${evt.kind}:${normThemeName(evt.theme_name)}`;
 }
 
+function parseTs(iso: string | undefined): number | null {
+  if (!iso) return null;
+  const ts = Date.parse(iso);
+  return Number.isFinite(ts) ? ts : null;
+}
+
 /** Exclude noisy LLM batch Group Overview lines from the public feed (matches ETL filter). */
 function isGroupOverviewTextTableNoise(e: ManifestHomeFeedEventV0): boolean {
   if (e.kind !== "text_table_update") return false;
@@ -93,6 +99,51 @@ export function mergeHomeFeedEvents(
   });
 
   const combined = [...mergedLifecycle, ...orphanLifecycle, ...nonLifecycle];
+
+  // Fallback feed synthesis: if ETL home_feed_events lags, derive recent events from manifest theme timestamps.
+  const dedupe = new Set(combined.map(lifecycleFeedKey));
+  const now = Date.now();
+  const recentWindowMs = 45 * 24 * 60 * 60 * 1000;
+  for (const t of manifest.themes ?? []) {
+    const themeName = String(t.name || "").trim();
+    if (!themeName) continue;
+    const themeSlug = String(t.slug || "").trim() || (themeByName.get(themeName)?.slug ?? "");
+
+    const contentTs = parseTs(t.updated_at);
+    if (contentTs && now - contentTs >= 0 && now - contentTs <= recentWindowMs) {
+      const evt: ManifestHomeFeedEventV0 = {
+        kind: "theme_updated",
+        event_at: String(t.updated_at),
+        title: `${themeName} - theme updated`,
+        summary: "",
+        theme_name: themeName,
+        theme_slug: themeSlug,
+      };
+      const k = lifecycleFeedKey(evt);
+      if (!dedupe.has(k)) {
+        combined.push(evt);
+        dedupe.add(k);
+      }
+    }
+
+    const weightsTs = parseTs(t.manual_weights_updated_at);
+    if (weightsTs && now - weightsTs >= 0 && now - weightsTs <= recentWindowMs) {
+      const evt: ManifestHomeFeedEventV0 = {
+        kind: "theme_weights_updated",
+        event_at: String(t.manual_weights_updated_at),
+        title: `${themeName} - theme weights updated`,
+        summary: "",
+        theme_name: themeName,
+        theme_slug: themeSlug,
+      };
+      const k = lifecycleFeedKey(evt);
+      if (!dedupe.has(k)) {
+        combined.push(evt);
+        dedupe.add(k);
+      }
+    }
+  }
+
   combined.sort((a, b) => String(b.event_at).localeCompare(String(a.event_at)));
   return combined;
 }

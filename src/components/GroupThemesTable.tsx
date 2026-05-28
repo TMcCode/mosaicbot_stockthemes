@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useMemo, useState } from "react";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
@@ -6,7 +9,6 @@ import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import type { GroupThemeTableRow } from "@/lib/groupThemesTable";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import {
-  compareColumnHeader,
   compareColumnHeaderTooltip,
   trendingColumnHeader,
   valueForTrendingColumn,
@@ -14,12 +16,17 @@ import {
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import styles from "@/app/page.module.css";
+import localStyles from "@/components/GroupThemesTable.module.css";
 
 type Props = {
   rows: GroupThemeTableRow[];
   metricColumns: string[];
   selectedDates?: ManifestSelectedDateV0[];
 };
+
+type SortState = { key: string; dir: "asc" | "desc" };
+
+const DEFAULT_SORTS: SortState[] = [{ key: "10D", dir: "desc" }];
 
 function fmtPct(v?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
@@ -34,12 +41,76 @@ function metricHeaderTooltip(
   return compareColumnHeaderTooltip(col) ?? customDateHelpText(col, selectedDateByKey);
 }
 
+function metricHeaderLabel(col: string): string {
+  return col === "Period" ? "1Yr %" : trendingColumnHeader(col);
+}
+
+function numericField(
+  row: GroupThemeTableRow,
+  key: string,
+): number | null | undefined {
+  if (key === "Tickers") return row.ticker_count;
+  if (key === "Avg MCap") return row.avg_market_cap_usd;
+  if (key === "Total MCap") return row.total_market_cap_usd;
+  return valueForTrendingColumn(key, row.compare_returns ?? undefined, {});
+}
+
+function compareRows(a: GroupThemeTableRow, b: GroupThemeTableRow, sorts: SortState[]): number {
+  for (const s of sorts) {
+    if (s.key === "Theme") {
+      const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      if (cmp !== 0) return s.dir === "asc" ? cmp : -cmp;
+      continue;
+    }
+    const va = numericField(a, s.key);
+    const vb = numericField(b, s.key);
+    const aOk = va != null && Number.isFinite(va);
+    const bOk = vb != null && Number.isFinite(vb);
+    if (aOk && bOk && va !== vb) return s.dir === "asc" ? va - vb : vb - va;
+    if (aOk !== bOk) return aOk ? -1 : 1;
+  }
+  return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+}
+
 export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) {
+  const [sorts, setSorts] = useState<SortState[]>(DEFAULT_SORTS);
   const selectedDateByKey = buildSelectedDateLookup(selectedDates);
+
+  const sortedRows = useMemo(() => {
+    const out = [...rows];
+    out.sort((a, b) => compareRows(a, b, sorts));
+    return out;
+  }, [rows, sorts]);
+
+  const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
+
+  const onHeaderClick = (key: string, shiftKey: boolean) => {
+    setSorts((prev) => {
+      const idx = prev.findIndex((s) => s.key === key);
+      const nextDir = idx >= 0 && prev[idx].dir === "desc" ? "asc" : "desc";
+      if (!shiftKey) return [{ key, dir: nextDir }];
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { key, dir: nextDir };
+        return copy;
+      }
+      return [...prev, { key, dir: nextDir }];
+    });
+  };
+
+  const renderSortHead = (key: string, label: string, title?: string) => (
+    <button
+      type="button"
+      className={`${localStyles.sortHead} ${activeSortKeys.has(key) ? localStyles.sortHeadActive : ""}`}
+      onClick={(e) => onHeaderClick(key, e.shiftKey)}
+      title={title}
+    >
+      {label}
+    </button>
+  );
 
   return (
     <>
-      <p className={styles.tableScrollHint}>Scroll or drag sideways to view all columns.</p>
       <div className={styles.tableWrap}>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
@@ -51,23 +122,27 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
             <table className={styles.dataTable}>
               <thead>
                 <tr>
-                  <th scope="col">Theme</th>
-                  <th scope="col">Tickers</th>
-                  <th scope="col">Avg MCap</th>
-                  <th scope="col">Total MCap</th>
+                  <th scope="col">{renderSortHead("Theme", "Theme")}</th>
+                  <th scope="col">{renderSortHead("Tickers", "Tickers")}</th>
+                  <th scope="col">{renderSortHead("Avg MCap", "Avg MCap")}</th>
+                  <th scope="col">{renderSortHead("Total MCap", "Total MCap")}</th>
                   {metricColumns.map((col) => (
                     <th
                       key={col}
                       scope="col"
                       title={metricHeaderTooltip(col, selectedDateByKey)}
                     >
-                      {col === "Period" ? "1Yr %" : trendingColumnHeader(col)}
+                      {renderSortHead(
+                        col,
+                        metricHeaderLabel(col),
+                        metricHeaderTooltip(col, selectedDateByKey),
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => (
+                {sortedRows.map((row) => (
                   <tr key={row.slug}>
                     <td>
                       <Link href={`/themes/${row.slug}`} className={styles.name} prefetch={false}>
@@ -98,6 +173,9 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
           </div>
         </HorizontalScrollArea>
       </div>
+      <p className={localStyles.sortHint}>
+        Default: 10D ↓ · Click headers to sort · Shift+click secondary
+      </p>
     </>
   );
 }

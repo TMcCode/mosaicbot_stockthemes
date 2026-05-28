@@ -14,6 +14,7 @@ import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
+import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import styles from "../../page.module.css";
@@ -593,11 +594,11 @@ export default async function ThemeDetailPage({ params }: Props) {
               <p className={styles.eyebrow}>
                 {detailEyebrowText("Theme", source, loaded?.source ?? null)}
               </p>
-              <h1 className={styles.heroTitle}>
-                {theme.name}
-                {"\u00a0"}
+              <h1 className={`${styles.heroTitle} ${styles.heroTitleWithStar}`}>
+                <span className={styles.heroTitleText}>{theme.name}</span>
                 <WatchlistStar
                   inline
+                  titleAdjacent
                   itemType="theme"
                   itemKey={slug}
                   label={theme.name}
@@ -620,13 +621,23 @@ export default async function ThemeDetailPage({ params }: Props) {
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="theme" slug={slug} />
               ) : null}
-              <AdPlacement
-                placement="themeRail"
-                className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
-                classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
-                placeholderLabel="Ad Slot · Theme detail"
-                format="horizontal"
-              />
+              {dataBaseUrl ? (
+                <div className={treemapNodes.length ? styles.heroFactorSlot : undefined}>
+                  <ThemeFactorProfile
+                    slug={slug}
+                    dataBaseUrl={dataBaseUrl}
+                    fillRail={treemapNodes.length > 0}
+                  />
+                </div>
+              ) : (
+                <AdPlacement
+                  placement="themeRail"
+                  className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                  classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                  placeholderLabel="Ad Slot · Theme detail"
+                  format="horizontal"
+                />
+              )}
             </div>
             <div className={styles.themeHeroRail}>
               {treemapNodes.length ? (
@@ -651,7 +662,7 @@ export default async function ThemeDetailPage({ params }: Props) {
             />
           ) : null}
           {detail && dataBaseUrl ? (
-            <DeferRender minHeight={460} rootMargin="360px 0px">
+            <DeferRender minHeight={340} rootMargin="360px 0px">
               <div className={styles.tightChartTop}>
                 <ThemeChartLiveHydrate
                   key={slug}
@@ -666,7 +677,7 @@ export default async function ThemeDetailPage({ params }: Props) {
             </DeferRender>
           ) : null}
           {detail && !dataBaseUrl ? (
-            <DeferRender minHeight={460} rootMargin="360px 0px">
+            <DeferRender minHeight={340} rootMargin="360px 0px">
               <div className={styles.tightChartTop}>
                 <Chart1yPanel
                   chart1y={detail.chart_1y}
