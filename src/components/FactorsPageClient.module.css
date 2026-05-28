@@ -1,6 +1,39 @@
-.controls {
-  margin: 0 0 12px;
-  max-width: 72rem;
+.factorsRoot {
+  width: 100%;
+  min-width: 0;
+}
+
+.chartSection {
+  margin: 0 0 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.chartSectionTop {
+  display: grid;
+  grid-template-columns: minmax(0, max-content) minmax(0, 1fr);
+  align-items: start;
+  gap: 10px 16px;
+  margin-bottom: 8px;
+}
+
+.factorSelectBlock,
+.factorExplainerBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
+.factorSelectBlock {
+  width: fit-content;
+  max-width: min(520px, 100%);
+}
+
+.factorExplainerBlock {
+  width: 100%;
+  align-items: stretch;
 }
 
 .fieldRow {
@@ -12,40 +45,224 @@
 
 .label {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-secondary, #9aa8a6);
 }
 
-.select {
-  min-width: 300px;
-  max-width: 100%;
-  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+/* Matches HomeHighlightedThemes theme picker — compact width on /factors */
+.factorSelectWrap {
+  width: 100%;
+  min-width: min(280px, 100%);
+  max-width: 520px;
+}
+
+.factorSelect {
+  width: 100%;
+  min-height: 40px;
+  padding: 0 36px 0 12px;
   border-radius: 8px;
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  background-color: rgba(255, 255, 255, 0.02);
   color: var(--text-primary, #e8edec);
-  padding: 7px 10px;
-  font-size: 14px;
+  font-size: 13px;
+  font-family: inherit;
+  line-height: 1.25;
+  cursor: pointer;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--text-muted, #8c9a98) 50%),
+    linear-gradient(135deg, var(--text-muted, #8c9a98) 50%, transparent 50%);
+  background-position: calc(100% - 18px) calc(50% - 3px), calc(100% - 12px) calc(50% - 3px);
+  background-size: 6px 6px, 6px 6px;
+  background-repeat: no-repeat;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+
+.factorSelect:hover {
+  border-color: var(--accent, #26fcd6);
+}
+
+.factorSelect:focus-visible {
+  outline: 2px solid var(--accent, #26fcd6);
+  outline-offset: 2px;
+}
+
+:global(.st-theme[data-theme="light"]) .factorSelect {
+  background-color: rgba(0, 0, 0, 0.02);
+  border-color: var(--button-secondary-border);
+}
+
+.rankingToolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px 12px;
+  flex-wrap: wrap;
+  width: 100%;
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.rankingToolbarMain {
+  display: grid;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.rankingToolbarLabel {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #9aa8a6);
+  white-space: nowrap;
+}
+
+.scoreModeSwitch {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: stretch;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+  gap: 2px;
+}
+
+.scoreModeOption {
+  appearance: none;
+  border: 0;
+  margin: 0;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 12px;
+  font-weight: 600;
   line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scoreModeOption:hover {
+  color: var(--text-primary, #e8edec);
+}
+
+.scoreModeOptionActive {
+  background: rgba(38, 252, 214, 0.14);
+  color: var(--accent, #26fcd6);
+  box-shadow: inset 0 0 0 1px rgba(38, 252, 214, 0.28);
+}
+
+.scoreModeOption:focus-visible {
+  outline: 2px solid rgba(38, 252, 214, 0.45);
+  outline-offset: 1px;
+}
+
+.rankingToolbarHint {
+  min-width: 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.rankingToolbarMeta {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary, #9aa8a6);
+  white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+  .chartSectionTop {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .factorSelectBlock {
+    max-width: 100%;
+    width: 100%;
+  }
+
+  .factorSelectWrap {
+    max-width: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .rankingToolbarMain {
+    grid-template-columns: auto auto 1fr;
+    grid-template-areas:
+      "label switch ."
+      "hint hint hint"
+      "meta meta meta";
+  }
+
+  .rankingToolbarLabel {
+    grid-area: label;
+  }
+
+  .scoreModeSwitch {
+    grid-area: switch;
+  }
+
+  .rankingToolbarHint {
+    grid-area: hint;
+  }
+
+  .rankingToolbarMeta {
+    grid-area: meta;
+    justify-self: end;
+  }
 }
 
 .meta {
   display: none;
 }
 
-.explainer {
-  margin: 8px 0 0;
-  max-width: 90ch;
-  font-size: 11px;
-  line-height: 1.45;
+.factorExplainerBox {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 6px 10px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Outside .intro — reset in case a parent reintroduces .intro p rules */
+.factorExplainerBox .factorExplainerText {
+  margin: 0;
+  display: block;
+  width: 100%;
+  max-width: none;
+  font-size: 9px;
+  line-height: 1.4;
   font-style: italic;
+  text-wrap: wrap;
   color: var(--text-secondary, #9aa8a6);
 }
 
+:global(.st-theme[data-theme="light"]) .factorExplainerBox {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--button-secondary-border);
+}
+
 .chartWrap {
-  margin: 0 0 10px;
+  margin: 0;
+  width: 100%;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
@@ -222,6 +439,12 @@
   font-variant-numeric: tabular-nums;
 }
 
+.altScoreCell {
+  font-variant-numeric: tabular-nums;
+  font-size: 12px;
+  color: var(--text-secondary, #9aa8a6);
+}
+
 .rankCell {
   font-weight: 600;
   color: var(--text-primary, #e8edec);
@@ -229,44 +452,47 @@
 
 .table th:first-child,
 .table td:first-child {
-  width: 52px;
-  min-width: 52px;
-  max-width: 52px;
+  width: 1%;
   white-space: nowrap;
+  padding-right: 10px;
 }
 
 .table th:nth-child(2),
 .table td:nth-child(2) {
-  width: 90px;
-  min-width: 90px;
-  max-width: 90px;
+  width: 1%;
   white-space: nowrap;
+  padding-right: 12px;
 }
 
 .table th:nth-child(3),
 .table td:nth-child(3) {
   width: auto;
+  min-width: 0;
   text-align: left;
 }
 
 .table th:nth-child(4),
-.table td:nth-child(4) {
-  width: 88px;
-  min-width: 88px;
+.table td:nth-child(4),
+.table th:nth-child(5),
+.table td:nth-child(5) {
+  width: 1%;
+  white-space: nowrap;
+  text-align: right;
+  padding-left: 12px;
 }
 
 .table {
   width: 100%;
-  table-layout: fixed;
+  table-layout: auto;
   border-collapse: collapse;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-secondary, #9aa8a6);
 }
 
 .table th,
 .table td {
   border-bottom: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
-  padding: 7px 8px;
+  padding: 8px 10px;
   vertical-align: middle;
 }
 
@@ -278,18 +504,68 @@
   color: var(--text-primary, #e8edec);
 }
 
+.thRight {
+  text-align: right;
+}
+
+.sortBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sortBtn:hover {
+  color: var(--accent, #26fcd6);
+}
+
+.sortBtn:focus-visible {
+  outline: 2px solid rgba(38, 252, 214, 0.45);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+.sortBtnActive {
+  color: var(--accent, #26fcd6);
+}
+
+.sortIndicator {
+  font-size: 10px;
+  line-height: 1;
+  opacity: 0.55;
+}
+
+.sortBtnActive .sortIndicator {
+  opacity: 1;
+}
+
+.thRight .sortBtn {
+  margin-left: auto;
+}
+
 .rankingGrid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
+  gap: 12px;
+  width: 100%;
 }
 
 .panel {
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
-  padding: 8px;
+  padding: 10px;
   min-width: 0;
+  width: 100%;
 }
 
 .panelTitle {
@@ -303,6 +579,7 @@
 }
 
 .tableWrap {
+  width: 100%;
   max-height: 700px;
   overflow: auto;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));

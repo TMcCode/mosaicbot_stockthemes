@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { FactorsPageClient } from "@/components/FactorsPageClient";
+import { FactorsPageGate } from "@/components/FactorsPageGate";
 import { PageSurface } from "@/components/PageSurface";
 import { loadFactorMethodology } from "@/lib/loadFactorMethodology";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -23,19 +23,17 @@ export default async function FactorsPage() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Factor rankings</p>
-          <h1>Rank themes by factor exposure</h1>
-          <p className={styles.introLead}>
-            Choose a factor and view every theme ranked by exposure score. Higher rank means stronger positive
-            exposure to that factor.
-          </p>
+          <div className={localStyles.introHeadingGroup}>
+            <h1>Rank themes by factor exposure</h1>
+            <p className={styles.introLead}>Choose a factor and view every theme ranked by exposure score.</p>
+          </div>
           {!dataBaseUrl ? (
             <p className={styles.introLead}>Public factor data source is unavailable in this environment.</p>
-          ) : (
-            <section className={`${styles.section} ${localStyles.content}`}>
-              <FactorsPageClient dataBaseUrl={dataBaseUrl} factorMethodology={factorMethodology} />
-            </section>
-          )}
+          ) : null}
         </div>
+        {dataBaseUrl ? (
+          <FactorsPageGate dataBaseUrl={dataBaseUrl} factorMethodology={factorMethodology} />
+        ) : null}
       </main>
     </PageSurface>
   );

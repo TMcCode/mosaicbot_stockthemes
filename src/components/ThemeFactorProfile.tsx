@@ -3,13 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import {
   enrichFactorProfileRanks,
   factorLeaderboardsUrl,
   factorProfileHasContent,
+  factorProfileNeedsLeaderboardEnrich,
   factorProfileUiAllowed,
   formatFactorRankLabel,
+  formatThemeFactorDisplayRank,
+  parseFactorLeaderboards,
   parseThemeFactorProfile,
+  themeFactorDisplayScore,
   themeFactorProfileUrl,
 } from "@/lib/themeFactorProfile";
 import { factorTooltipSummaryForId } from "@/lib/factorTooltipSummaries";
@@ -18,7 +23,6 @@ import {
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
 import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
-import type { FactorLeaderboardsV0 } from "@/types/factor_leaderboards.v0";
 import type { ThemeFactorProfileV0, ThemeFactorScoreEntryV0 } from "@/types/theme.factor_profile.v0";
 
 import styles from "./ThemeFactorProfile.module.css";
@@ -28,19 +32,13 @@ type Props = {
   dataBaseUrl: string;
   /** Stretch panel to align bottom with hero treemap rail. */
   fillRail?: boolean;
+  /** Return path after sign-in (e.g. `/themes/my-slug`). */
+  signInNext?: string;
 };
 
-function parseLeaderboards(raw: string): FactorLeaderboardsV0 {
-  const data = JSON.parse(raw) as FactorLeaderboardsV0;
-  if (data.schema_version !== "factor_leaderboards.v0" || !data.factors) {
-    throw new Error("Invalid factor_leaderboards.v0");
-  }
-  return data;
-}
-
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
-  const score = Math.max(0, Math.min(100, entry.score));
-  const rankLabel = formatFactorRankLabel(entry);
+  const displayScore = themeFactorDisplayScore(entry);
+  const rankLabel = formatThemeFactorDisplayRank(entry);
   const tooltipSummary = factorTooltipSummaryForId(entry.id);
   return (
     <li className={styles.row}>
@@ -56,12 +54,12 @@ function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant
           </span>
           {rankLabel ? <span className={styles.rank}>({rankLabel})</span> : null}
         </div>
-        <span className={styles.score}>{score}</span>
+        <span className={styles.score}>{displayScore}</span>
       </div>
       <div className={styles.barTrack} aria-hidden="true">
         <div
           className={`${styles.barFill} ${variant === "neg" ? styles.barFillNeg : ""}`}
-          style={{ width: `${score}%` }}
+          style={{ width: `${displayScore}%` }}
         />
       </div>
     </li>
@@ -118,7 +116,8 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
 /**
  * Factor profile card (client fetch). Default placement: theme hero under title.
  */
-export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false }: Props) {
+export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signInNext }: Props) {
+  const { configured, loading: authLoading, user } = useSupabaseAuth();
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "absent" }
@@ -128,6 +127,7 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false }: Prop
   >({ status: "loading" });
 
   useEffect(() => {
+    if (!configured || !user) return;
     if (stockthemesLiveHydrationDisabled()) {
       setState({ status: "absent" });
       return;
@@ -136,54 +136,60 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false }: Prop
     let cancelled = false;
     const buster = stockthemesBrowserCacheBusterQuery();
     const profileUrl = `${themeFactorProfileUrl(dataBaseUrl, slug)}?${buster}`;
-    const boardsUrl = `${factorLeaderboardsUrl(dataBaseUrl)}?${buster}`;
 
-    const loadProfile = fetch(profileUrl, {
-      credentials: "omit",
-      cache: stockthemesBrowserFetchCache(),
-    }).then((res) => {
-      if (res.status === 404) return null;
-      if (!res.ok) throw new Error(`profile HTTP ${res.status}`);
-      return res.text();
-    });
+    const applyProfile = (profile: ThemeFactorProfileV0) => {
+      if (!factorProfileHasContent(profile)) {
+        setState({ status: "absent" });
+        return;
+      }
+      if (!factorProfileUiAllowed(profile)) {
+        setState({ status: "low_confidence", profile });
+        return;
+      }
+      setState({ status: "ok", profile });
+    };
 
-    const loadBoards = fetch(boardsUrl, {
+    fetch(profileUrl, {
       credentials: "omit",
       cache: stockthemesBrowserFetchCache(),
     })
-      .then((res) => (res.ok ? res.text() : null))
-      .catch(() => null);
-
-    Promise.all([loadProfile, loadBoards])
-      .then(([profileRaw, boardsRaw]) => {
+      .then((res) => {
+        if (res.status === 404) return null;
+        if (!res.ok) throw new Error(`profile HTTP ${res.status}`);
+        return res.text();
+      })
+      .then(async (profileRaw) => {
         if (cancelled) return;
         if (!profileRaw) {
           setState({ status: "absent" });
           return;
         }
-        try {
-          let profile = parseThemeFactorProfile(profileRaw);
-          let leaderboards: FactorLeaderboardsV0 | null = null;
+        let profile = parseThemeFactorProfile(profileRaw);
+        if (factorProfileNeedsLeaderboardEnrich(profile)) {
+          const boardsUrl = `${factorLeaderboardsUrl(dataBaseUrl)}?${buster}`;
+          let boardsRaw: string | null = null;
+          try {
+            const boardsRes = await fetch(boardsUrl, {
+              credentials: "omit",
+              cache: stockthemesBrowserFetchCache(),
+            });
+            boardsRaw = boardsRes.ok ? await boardsRes.text() : null;
+          } catch {
+            boardsRaw = null;
+          }
+          if (cancelled) return;
+          let leaderboards = null;
           if (boardsRaw) {
             try {
-              leaderboards = parseLeaderboards(boardsRaw);
+              leaderboards = parseFactorLeaderboards(boardsRaw);
             } catch {
               leaderboards = null;
             }
           }
           profile = enrichFactorProfileRanks(profile, slug, leaderboards);
-          if (!factorProfileHasContent(profile)) {
-            setState({ status: "absent" });
-            return;
-          }
-          if (!factorProfileUiAllowed(profile)) {
-            setState({ status: "low_confidence", profile });
-            return;
-          }
-          setState({ status: "ok", profile });
-        } catch {
-          setState({ status: "error" });
         }
+        if (cancelled) return;
+        applyProfile(profile);
       })
       .catch(() => {
         if (!cancelled) setState({ status: "error" });
@@ -194,14 +200,57 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false }: Prop
     };
   }, [slug, dataBaseUrl]);
 
-  if (state.status === "absent" || state.status === "error") {
+  }, [slug, dataBaseUrl, configured, user]);
+
+  if (!configured) {
     return null;
   }
 
   const wrapClass = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
+  const signInHref = signInNext
+    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
+    : "/sign-in";
+
+  if (authLoading) {
+    return null;
+  }
+
+  if (!user) {
+    return (
+      <div className={wrapClass} aria-labelledby="factor-profile-heading">
+        <div className={styles.heroHead}>
+          <h2 id="factor-profile-heading" className={styles.heroTitle}>
+            Factor Profile
+          </h2>
+        </div>
+        <div className={styles.panel}>
+          <div className={styles.locked}>
+            <p className={styles.lockedTitle}>Sign in to view factor exposure</p>
+            <p className={styles.lockedCopy}>
+              See how this theme ranks on market, sector, and narrative factors — free with an account.
+            </p>
+            <div className={styles.lockedActions}>
+              <Link href={signInHref} className={styles.signInBtn}>
+                Sign in free
+              </Link>
+              <Link href="/factors" className={styles.secondaryLink}>
+                About factor rankings
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (state.status === "absent" || state.status === "error") {
+    return null;
+  }
+
+  const wrapClassAuthed = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
 
   return (
-    <div className={wrapClass} aria-labelledby="factor-profile-heading">
+    <div className={wrapClassAuthed} aria-labelledby="factor-profile-heading">
       <div className={styles.heroHead}>
         <h2 id="factor-profile-heading" className={styles.heroTitle}>
           Factor Profile

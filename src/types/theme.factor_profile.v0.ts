@@ -3,9 +3,13 @@
 export type ThemeFactorScoreEntryV0 = {
   id: string;
   label: string;
+  /** Incremental exposure score (multivariate). */
   score: number;
+  /** Co-movement score (univariate vs factor alone). */
+  score_standalone?: number | null;
   confidence?: number | null;
   rank?: number | null;
+  rank_standalone?: number | null;
   total?: number | null;
 };
 

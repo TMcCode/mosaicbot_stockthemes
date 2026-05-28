@@ -181,6 +181,29 @@
   color: var(--text-primary, #e8edec);
 }
 
+.scoreBlock {
+  flex-shrink: 0;
+}
+
+.scorePair {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-variant-numeric: tabular-nums;
+}
+
+.scorePrimary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.scoreSecondary {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-secondary, #9aa8a6);
+}
+
 .barTrack {
   height: 4px;
   border-radius: 2px;
@@ -233,4 +256,57 @@
   margin: 0;
   font-size: 13px;
   color: var(--text-secondary, #9aa8a6);
+}
+
+.locked {
+  margin: 0;
+}
+
+.lockedTitle {
+  margin: 0 0 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.lockedCopy {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.lockedActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+
+.signInBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signInBtn:hover {
+  filter: brightness(1.05);
+}
+
+.secondaryLink {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.secondaryLink:hover {
+  text-decoration: underline;
 }

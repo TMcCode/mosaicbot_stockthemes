@@ -4,6 +4,8 @@ export type ChartPerformanceV0 = {
   aggregation?: string;
   value_basis?: string;
   source?: string;
+  /** Set by ETL when short-theme chart inversion was applied to `values`. */
+  short_display_inverted?: boolean;
   dates: string[];
   values: number[];
 };

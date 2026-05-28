@@ -627,6 +627,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                     slug={slug}
                     dataBaseUrl={dataBaseUrl}
                     fillRail={treemapNodes.length > 0}
+                    signInNext={`/themes/${slug}`}
                   />
                 </div>
               ) : (

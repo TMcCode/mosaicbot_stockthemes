@@ -38,7 +38,41 @@ export function factorLeaderboardsUrl(dataBaseUrl: string): string {
   return `${base}/factor_leaderboards.v0.json`;
 }
 
-function leaderboardRowsForFactor(bucket: unknown): Array<{ slug?: string | null; rank: number; total: number }> {
+export function parseFactorLeaderboards(raw: string): FactorLeaderboardsV0 {
+  const data = JSON.parse(raw) as FactorLeaderboardsV0;
+  if (data.schema_version !== "factor_leaderboards.v0" || !data.factors) {
+    throw new Error("Invalid factor_leaderboards.v0");
+  }
+  return data;
+}
+
+function entryNeedsLeaderboardEnrich(entry: ThemeFactorScoreEntryV0): boolean {
+  if (entry.rank == null || !Number.isFinite(entry.rank)) return true;
+  if (entry.total == null || !Number.isFinite(entry.total)) return true;
+  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
+    if (entry.rank_standalone == null || !Number.isFinite(entry.rank_standalone)) return true;
+  }
+  return false;
+}
+
+/** True when sidecar is missing rank/total (or standalone rank) and needs leaderboards fallback. */
+export function factorProfileNeedsLeaderboardEnrich(profile: ThemeFactorProfileV0): boolean {
+  for (const entry of [...(profile.factors_positive ?? []), ...(profile.factors_negative ?? [])]) {
+    if (entryNeedsLeaderboardEnrich(entry)) return true;
+  }
+  if (profile.dominant_sector && entryNeedsLeaderboardEnrich(profile.dominant_sector)) return true;
+  return false;
+}
+
+function leaderboardRowsForFactor(
+  bucket: unknown,
+): Array<{
+  slug?: string | null;
+  rank: number;
+  rank_standalone?: number | null;
+  total: number;
+  score_standalone?: number | null;
+}> {
   if (!bucket) return [];
   const rawEntries = Array.isArray((bucket as { entries?: unknown }).entries)
     ? ((bucket as { entries: unknown[] }).entries ?? [])
@@ -51,14 +85,19 @@ function leaderboardRowsForFactor(bucket: unknown): Array<{ slug?: string | null
       if (!raw || typeof raw !== "object") return null;
       const row = raw as Record<string, unknown>;
       const rankNum = Number(row.rank);
+      const rankStandaloneNum = Number(row.rank_standalone);
       const totalNum = Number(row.total);
+      const scoreStandaloneNum = Number(row.score_standalone);
       return {
         slug: typeof row.slug === "string" ? row.slug : null,
         rank: Number.isFinite(rankNum) && rankNum > 0 ? Math.floor(rankNum) : idx + 1,
+        rank_standalone:
+          Number.isFinite(rankStandaloneNum) && rankStandaloneNum > 0 ? Math.floor(rankStandaloneNum) : null,
         total: Number.isFinite(totalNum) && totalNum > 0 ? Math.floor(totalNum) : totalFallback,
+        score_standalone: Number.isFinite(scoreStandaloneNum) ? scoreStandaloneNum : null,
       };
     })
-    .filter((x): x is { slug: string | null; rank: number; total: number } => x != null);
+    .filter((x): x is NonNullable<typeof x> => x != null);
 }
 
 function enrichEntryFromLeaderboards(
@@ -66,12 +105,20 @@ function enrichEntryFromLeaderboards(
   slug: string,
   leaderboards: FactorLeaderboardsV0 | null,
 ): ThemeFactorScoreEntryV0 {
-  if (entry.rank != null && entry.total != null) return entry;
   if (!leaderboards?.factors) return entry;
   const rows = leaderboardRowsForFactor(leaderboards.factors[entry.id]);
   const match = rows.find((r) => r.slug === slug);
   if (!match) return entry;
-  return { ...entry, rank: match.rank, total: match.total };
+  const next: ThemeFactorScoreEntryV0 = { ...entry };
+  if (next.rank == null) next.rank = match.rank;
+  if (next.total == null) next.total = match.total;
+  if (next.rank_standalone == null && match.rank_standalone != null) {
+    next.rank_standalone = match.rank_standalone;
+  }
+  if (next.score_standalone == null && match.score_standalone != null) {
+    next.score_standalone = Math.round(match.score_standalone);
+  }
+  return next;
 }
 
 /** Fill missing rank/total on sidecar entries using factor_leaderboards.v0.json. */
@@ -92,6 +139,27 @@ export function formatFactorRankLabel(entry: ThemeFactorScoreEntryV0): string | 
   if (entry.rank == null || entry.total == null) return null;
   if (!Number.isFinite(entry.rank) || !Number.isFinite(entry.total)) return null;
   return `#${entry.rank} of ${entry.total.toLocaleString()} themes`;
+}
+
+export function formatFactorRankLabelStandalone(entry: ThemeFactorScoreEntryV0): string | null {
+  if (entry.rank_standalone == null || entry.total == null) return null;
+  if (!Number.isFinite(entry.rank_standalone) || !Number.isFinite(entry.total)) return null;
+  return `#${entry.rank_standalone} of ${entry.total.toLocaleString()} themes`;
+}
+
+/** Theme pages: co-movement score when published, else incremental. */
+export function themeFactorDisplayScore(entry: ThemeFactorScoreEntryV0): number {
+  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
+    return Math.max(0, Math.min(100, Math.round(entry.score_standalone)));
+  }
+  return Math.max(0, Math.min(100, Math.round(entry.score)));
+}
+
+export function formatThemeFactorDisplayRank(entry: ThemeFactorScoreEntryV0): string | null {
+  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
+    return formatFactorRankLabelStandalone(entry);
+  }
+  return formatFactorRankLabel(entry);
 }
 
 export function formatFactorAsOf(iso?: string): string | null {

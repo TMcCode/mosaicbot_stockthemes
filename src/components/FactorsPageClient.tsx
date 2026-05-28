@@ -8,7 +8,13 @@ import type { FactorMethodologyItem } from "@/lib/loadFactorMethodology";
 import { loadFactorIndex } from "@/lib/loadFactorIndex";
 import { loadFactorRows } from "@/lib/loadFactorRows";
 import { loadFactorTimeseries } from "@/lib/loadFactorTimeseries";
+import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { publicAssetPath } from "@/lib/siteUrl";
+import {
+  stockthemesBrowserCacheBusterQuery,
+  stockthemesBrowserFetchCache,
+} from "@/lib/stockthemesCache";
+import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { FactorIndexV0 } from "@/types/factor_index.v0";
 import type { FactorTimeseriesV0 } from "@/types/factor_timeseries.v0";
 import styles from "@/components/FactorsPageClient.module.css";
@@ -27,21 +33,119 @@ function factorOptions(payload: FactorIndexV0): Array<{ id: string; label: strin
     .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 }
 
+type ScoreMode = "standalone" | "incremental";
+
+const SCORE_MODE_COPY: Record<
+  ScoreMode,
+  { label: string; description: string; scoreColumnTooltip: string }
+> = {
+  standalone: {
+    label: "Co-movement",
+    description:
+      "Higher rank means stronger positive exposure. Ranks by how closely a theme’s daily returns track this factor’s ETF spread on its own—no adjustment for market, growth, sector, or other factors. Matches the chart compare line.",
+    scoreColumnTooltip:
+      "Co-movement score (0–100): how closely the theme’s daily returns track this factor’s ETF spread on its own. Higher = stronger positive exposure.",
+  },
+  incremental: {
+    label: "Incremental",
+    description:
+      "Higher rank means stronger positive exposure. Ranks by exposure that remains after the model removes overlap with the broad market, growth, sectors, and other factors—how much this theme still leans this factor beyond those drivers.",
+    scoreColumnTooltip:
+      "Incremental score (0–100): exposure left after market, growth, sector, and other factors are removed. Higher = stronger positive exposure.",
+  },
+};
+
 type DisplayRow = {
   theme: string;
   slug?: string | null;
   rank: number;
+  rankStandalone?: number | null;
   total: number;
   score?: number | null;
+  scoreStandalone?: number | null;
   confidence?: number | null;
+  corr63d?: number | null;
+  corr252d?: number | null;
 };
+
+function rowRank(row: DisplayRow, mode: ScoreMode): number {
+  if (mode === "standalone" && row.rankStandalone != null && Number.isFinite(row.rankStandalone)) {
+    return row.rankStandalone;
+  }
+  return row.rank;
+}
+
+function rowScore(row: DisplayRow, mode: ScoreMode): number | null {
+  if (mode === "standalone" && row.scoreStandalone != null && Number.isFinite(row.scoreStandalone)) {
+    return row.scoreStandalone;
+  }
+  return row.score ?? null;
+}
+
+type SortColumn = "rank" | "theme" | "score" | "altScore";
+type SortDir = "asc" | "desc";
+type TableSort = { column: SortColumn; direction: SortDir };
+
+function altScore(row: DisplayRow, mode: ScoreMode): number | null {
+  if (mode === "standalone") return row.score ?? null;
+  return row.scoreStandalone ?? null;
+}
+
+function compareNullableNumbers(a: number | null, b: number | null): number {
+  if (a == null && b == null) return 0;
+  if (a == null) return 1;
+  if (b == null) return -1;
+  return a - b;
+}
+
+function sortDisplayRows(rows: DisplayRow[], sort: TableSort, mode: ScoreMode): DisplayRow[] {
+  const dir = sort.direction === "asc" ? 1 : -1;
+  return [...rows].sort((a, b) => {
+    let cmp = 0;
+    switch (sort.column) {
+      case "rank":
+        cmp = rowRank(a, mode) - rowRank(b, mode);
+        break;
+      case "theme":
+        cmp = a.theme.localeCompare(b.theme, undefined, { sensitivity: "base" });
+        break;
+      case "score":
+        cmp = compareNullableNumbers(rowScore(a, mode), rowScore(b, mode));
+        break;
+      case "altScore":
+        cmp = compareNullableNumbers(altScore(a, mode), altScore(b, mode));
+        break;
+    }
+    if (cmp !== 0) return cmp * dir;
+    return a.theme.localeCompare(b.theme, undefined, { sensitivity: "base" });
+  });
+}
+
+function nextTableSort(column: SortColumn, current: TableSort): TableSort {
+  if (current.column === column) {
+    return { column, direction: current.direction === "asc" ? "desc" : "asc" };
+  }
+  const defaultDir: SortDir =
+    column === "theme" || column === "rank" ? "asc" : "desc";
+  return { column, direction: defaultDir };
+}
+
+function sortAriaLabel(column: SortColumn, sort: TableSort, label: string): string {
+  if (sort.column !== column) return `Sort by ${label}`;
+  return `Sort by ${label}, currently ${sort.direction === "asc" ? "ascending" : "descending"}`;
+}
 
 type ThemeChartSeries = {
   slug: string;
   theme: string;
   dates: string[];
   values: number[];
+  /** Bust client cache when compare transform logic changes. */
+  _transformVersion?: number;
 };
+
+/** Bump to refetch theme compare lines (e.g. short-theme inversion fix). */
+const THEME_COMPARE_TRANSFORM_VERSION = 2;
 
 const COMPARE_COLORS = [
   "#7c9cff",
@@ -261,13 +365,22 @@ function normalizeRows(rawEntries: unknown[]): DisplayRow[] {
       const totalNum = Number(row.total);
       const scoreNum = Number(row.score);
       const confNum = Number(row.confidence);
+      const rankStandaloneNum = Number(row.rank_standalone);
+      const scoreStandaloneNum = Number(row.score_standalone);
+      const corr63Num = Number(row.corr_63d);
+      const corr252Num = Number(row.corr_252d);
       return {
         theme,
         slug: typeof row.slug === "string" ? row.slug : null,
         rank: Number.isFinite(rankNum) && rankNum > 0 ? Math.floor(rankNum) : idx + 1,
+        rankStandalone:
+          Number.isFinite(rankStandaloneNum) && rankStandaloneNum > 0 ? Math.floor(rankStandaloneNum) : null,
         total: Number.isFinite(totalNum) && totalNum > 0 ? Math.floor(totalNum) : totalFallback,
         score: Number.isFinite(scoreNum) ? scoreNum : null,
+        scoreStandalone: Number.isFinite(scoreStandaloneNum) ? scoreStandaloneNum : null,
         confidence: Number.isFinite(confNum) ? confNum : null,
+        corr63d: Number.isFinite(corr63Num) ? corr63Num : null,
+        corr252d: Number.isFinite(corr252Num) ? corr252Num : null,
       } as DisplayRow;
     })
     .filter((x): x is DisplayRow => Boolean(x));
@@ -276,6 +389,132 @@ function normalizeRows(rawEntries: unknown[]): DisplayRow[] {
 function scoreText(score?: number | null): string {
   if (score == null || !Number.isFinite(score)) return "—";
   return String(Math.round(score));
+}
+
+type FactorRankingTableProps = {
+  tableKey: string;
+  rows: DisplayRow[];
+  sort: TableSort;
+  onSortChange: (sort: TableSort) => void;
+  effectiveScoreMode: ScoreMode;
+  hasStandaloneScores: boolean;
+  selectedFactorId: string;
+  compareCap: number;
+  selectedCompareCount: number;
+  isSelectedTheme: (slug?: string | null) => boolean;
+  onToggleTheme: (row: DisplayRow) => void;
+};
+
+function SortHeader({
+  label,
+  column,
+  sort,
+  onSortChange,
+  align = "left",
+  title,
+}: {
+  label: string;
+  column: SortColumn;
+  sort: TableSort;
+  onSortChange: (sort: TableSort) => void;
+  align?: "left" | "right";
+  title?: string;
+}) {
+  const active = sort.column === column;
+  return (
+    <th scope="col" className={align === "right" ? styles.thRight : undefined} title={title}>
+      <button
+        type="button"
+        className={`${styles.sortBtn} ${active ? styles.sortBtnActive : ""}`}
+        aria-label={sortAriaLabel(column, sort, label)}
+        title={title}
+        onClick={() => onSortChange(nextTableSort(column, sort))}
+      >
+        <span>{label}</span>
+        <span className={styles.sortIndicator} aria-hidden="true">
+          {active ? (sort.direction === "asc" ? "↑" : "↓") : "↕"}
+        </span>
+      </button>
+    </th>
+  );
+}
+
+function FactorRankingTable({
+  tableKey,
+  rows,
+  sort,
+  onSortChange,
+  effectiveScoreMode,
+  hasStandaloneScores,
+  selectedFactorId,
+  compareCap,
+  selectedCompareCount,
+  isSelectedTheme,
+  onToggleTheme,
+}: FactorRankingTableProps) {
+  const modeCopy = SCORE_MODE_COPY[effectiveScoreMode];
+  const altMode: ScoreMode = effectiveScoreMode === "standalone" ? "incremental" : "standalone";
+  const altLabel = altMode === "standalone" ? "Co-move" : "Inc.";
+  return (
+    <table className={styles.table}>
+      <thead>
+        <tr>
+          <th scope="col">Cmp</th>
+          <SortHeader label="Rank" column="rank" sort={sort} onSortChange={onSortChange} />
+          <SortHeader label="Theme" column="theme" sort={sort} onSortChange={onSortChange} />
+          <SortHeader
+            label="Score"
+            column="score"
+            sort={sort}
+            onSortChange={onSortChange}
+            align="right"
+            title={modeCopy.scoreColumnTooltip}
+          />
+          {hasStandaloneScores ? (
+            <SortHeader
+              label={altLabel}
+              column="altScore"
+              sort={sort}
+              onSortChange={onSortChange}
+              align="right"
+              title={SCORE_MODE_COPY[altMode].scoreColumnTooltip}
+            />
+          ) : null}
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((row) => (
+          <tr key={`${tableKey}-${selectedFactorId}-${row.theme}`}>
+            <td>
+              <input
+                type="checkbox"
+                aria-label={`Compare ${row.theme}`}
+                checked={isSelectedTheme(row.slug)}
+                disabled={!row.slug || (!isSelectedTheme(row.slug) && selectedCompareCount >= compareCap)}
+                onChange={() => onToggleTheme(row)}
+              />
+            </td>
+            <td className={`${styles.scoreCell} ${styles.rankCell}`}>#{rowRank(row, effectiveScoreMode)}</td>
+            <td>
+              {row.slug ? (
+                <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
+                  {row.theme}
+                </Link>
+              ) : (
+                row.theme
+              )}
+            </td>
+            <td className={styles.scoreCell}>{scoreText(rowScore(row, effectiveScoreMode))}</td>
+            {hasStandaloneScores ? (
+              <td className={styles.altScoreCell}>
+                {effectiveScoreMode === "standalone" ? scoreText(row.score) : scoreText(row.scoreStandalone)}
+              </td>
+            ) : null}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
 }
 
 export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
@@ -288,7 +527,12 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   const [isMobileCompare, setIsMobileCompare] = useState(false);
   const [visibleClosestCount, setVisibleClosestCount] = useState(50);
   const [visibleLeastCount, setVisibleLeastCount] = useState(50);
+  const [scoreMode, setScoreMode] = useState<ScoreMode>("standalone");
+  const [closestSort, setClosestSort] = useState<TableSort>({ column: "rank", direction: "asc" });
+  const [leastSort, setLeastSort] = useState<TableSort>({ column: "rank", direction: "desc" });
   const [status, setStatus] = useState<"loading" | "ok" | "empty" | "error">("loading");
+  const themeSeriesCacheRef = useRef(themeSeriesCache);
+  themeSeriesCacheRef.current = themeSeriesCache;
 
   useEffect(() => {
     let cancelled = false;
@@ -315,18 +559,21 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    if (!selectedFactorId || rowsCache[selectedFactorId]) return;
+    if (!selectedFactorId) return;
     loadFactorRows(dataBaseUrl, selectedFactorId)
       .then((res) => {
         if (cancelled || !res?.entries) return;
         const nextRows = normalizeRows(res.entries as unknown[]);
-        setRowsCache((prev) => ({ ...prev, [selectedFactorId]: nextRows }));
+        setRowsCache((prev) => {
+          if (prev[selectedFactorId]) return prev;
+          return { ...prev, [selectedFactorId]: nextRows };
+        });
       })
       .catch(() => {});
     return () => {
       cancelled = true;
     };
-  }, [dataBaseUrl, rowsCache, selectedFactorId]);
+  }, [dataBaseUrl, selectedFactorId]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -345,24 +592,38 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
 
   useEffect(() => {
     let cancelled = false;
-    const missing = selectedThemes.filter((t) => themeSeriesCache[t.slug] === undefined);
+    const missing = selectedThemes.filter((t) => {
+      const hit = themeSeriesCacheRef.current[t.slug];
+      return hit === undefined || hit?._transformVersion !== THEME_COMPARE_TRANSFORM_VERSION;
+    });
     if (!missing.length) return;
     Promise.all(
       missing.map(async (item) => {
         try {
-          const res = await fetch(`${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(item.slug)}.json`, {
-            cache: "force-cache",
-          });
+          const base = dataBaseUrl.replace(/\/$/, "");
+          const url = `${base}/themes/${encodeURIComponent(item.slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
+          const res = await fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() });
           if (!res.ok) return [item.slug, null] as const;
           const payload = (await res.json()) as {
-            chart_1y?: { performance?: { dates?: unknown; values?: unknown } };
+            name?: string;
+            chart_1y?: { performance?: ChartPerformanceV0 };
           };
-          const datesRaw = payload?.chart_1y?.performance?.dates;
-          const valuesRaw = payload?.chart_1y?.performance?.values;
+          const perf = payload?.chart_1y?.performance;
+          const datesRaw = perf?.dates;
+          const valuesRaw = perf?.values;
           const dates = Array.isArray(datesRaw) ? datesRaw.filter((v): v is string => typeof v === "string") : [];
-          const values = Array.isArray(valuesRaw) ? valuesRaw.map((v) => Number(v)).filter((v) => Number.isFinite(v)) : [];
-          if (!dates.length || !values.length || dates.length !== values.length) return [item.slug, null] as const;
-          return [item.slug, { ...item, dates, values }] as const;
+          const valuesParsed = Array.isArray(valuesRaw)
+            ? valuesRaw.map((v) => Number(v)).filter((v) => Number.isFinite(v))
+            : [];
+          if (!dates.length || !valuesParsed.length || dates.length !== valuesParsed.length) {
+            return [item.slug, null] as const;
+          }
+          const themeName = item.theme.trim() || (typeof payload?.name === "string" ? payload.name.trim() : "");
+          const values = applyShortThemePerformanceDisplay(themeName, valuesParsed, perf);
+          return [
+            item.slug,
+            { ...item, dates, values, _transformVersion: THEME_COMPARE_TRANSFORM_VERSION },
+          ] as const;
         } catch {
           return [item.slug, null] as const;
         }
@@ -371,21 +632,37 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
       if (cancelled) return;
       setThemeSeriesCache((prev) => {
         const next = { ...prev };
-        for (const [slug, series] of pairs) next[slug] = series;
+        for (const [slug, series] of pairs) {
+          next[slug] = series;
+        }
         return next;
       });
     });
     return () => {
       cancelled = true;
     };
-  }, [dataBaseUrl, selectedThemes, themeSeriesCache]);
+  }, [dataBaseUrl, selectedThemes]);
 
   const options = useMemo(() => (indexPayload ? factorOptions(indexPayload) : []), [indexPayload]);
   const rows = rowsCache[selectedFactorId] ?? [];
-  const closestRows = useMemo(() => rows.slice(0, visibleClosestCount), [rows, visibleClosestCount]);
+  const hasStandaloneScores = useMemo(
+    () => rows.some((r) => r.scoreStandalone != null && Number.isFinite(r.scoreStandalone)),
+    [rows],
+  );
+  const effectiveScoreMode: ScoreMode = hasStandaloneScores ? scoreMode : "incremental";
+
+  useEffect(() => {
+    setClosestSort({ column: "rank", direction: "asc" });
+    setLeastSort({ column: "rank", direction: "desc" });
+  }, [selectedFactorId, effectiveScoreMode]);
+
+  const closestRows = useMemo(
+    () => sortDisplayRows(rows, closestSort, effectiveScoreMode).slice(0, visibleClosestCount),
+    [rows, closestSort, effectiveScoreMode, visibleClosestCount],
+  );
   const leastRows = useMemo(
-    () => [...rows].sort((a, b) => b.rank - a.rank).slice(0, visibleLeastCount),
-    [rows, visibleLeastCount],
+    () => sortDisplayRows(rows, leastSort, effectiveScoreMode).slice(0, visibleLeastCount),
+    [rows, leastSort, effectiveScoreMode, visibleLeastCount],
   );
   const selectedMethod = selectedFactorId ? factorMethodology[selectedFactorId] : null;
   const series = selectedFactorId ? timeseries?.factors?.[selectedFactorId] : null;
@@ -445,41 +722,45 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   if (status === "error" || !indexPayload) return <p className={styles.empty}>Could not load factor rankings.</p>;
 
   return (
-    <>
-      <div className={styles.controls}>
-        <div className={styles.fieldRow}>
-          <label htmlFor="factor-select" className={styles.label}>
-            Factor
-          </label>
-          <select
-            id="factor-select"
-            className={styles.select}
-            value={selectedFactorId}
-            onChange={(e) => {
-              setSelectedFactorId(e.target.value);
-              setVisibleClosestCount(50);
-              setVisibleLeastCount(50);
-            }}
-          >
-            {options.map((opt) => (
-              <option key={opt.id} value={opt.id}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
+    <div className={styles.factorsRoot}>
+      <div className={styles.chartSection}>
+        <div className={styles.chartSectionTop}>
+          <div className={styles.factorSelectBlock}>
+            <label htmlFor="factor-select" className={styles.label}>
+              Factor
+            </label>
+            <div className={styles.factorSelectWrap}>
+              <select
+                id="factor-select"
+                className={styles.factorSelect}
+                value={selectedFactorId}
+                onChange={(e) => {
+                  setSelectedFactorId(e.target.value);
+                  setVisibleClosestCount(50);
+                  setVisibleLeastCount(50);
+                }}
+              >
+                {options.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+          {selectedMethod ? (
+            <div className={styles.factorExplainerBlock}>
+              <span id="factor-explainer-heading" className={styles.label}>
+                Explanation
+              </span>
+              <aside className={styles.factorExplainerBox} aria-labelledby="factor-explainer-heading">
+                <p className={styles.factorExplainerText}>{selectedMethod.summary}</p>
+              </aside>
+            </div>
+          ) : null}
         </div>
-        <p className={styles.meta}>
-          {totalRows ? totalRows.toLocaleString() : "—"} ranked themes
-          {indexPayload.as_of ? ` · As of ${indexPayload.as_of.slice(0, 10)}` : ""}
-        </p>
-        {selectedMethod ? (
-          <p className={styles.explainer} aria-live="polite">
-            {selectedMethod.summary}
-          </p>
-        ) : null}
-      </div>
-      {series?.values?.length ? (
-        <div className={styles.chartWrap}>
+        {series?.values?.length ? (
+          <div className={styles.chartWrap}>
           <div className={styles.chartHead}>
             <p className={styles.chartTitle}>
               {series.label} factor trend (1Y)
@@ -512,47 +793,60 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
             ))}
           </div>
         </div>
+        ) : null}
+      </div>
+      {hasStandaloneScores ? (
+        <div className={styles.rankingToolbar}>
+          <div className={styles.rankingToolbarMain}>
+            <span className={styles.rankingToolbarLabel}>Rank by</span>
+            <div className={styles.scoreModeSwitch} role="group" aria-label="Rank by score type">
+              <button
+                type="button"
+                className={`${styles.scoreModeOption} ${effectiveScoreMode === "standalone" ? styles.scoreModeOptionActive : ""}`}
+                aria-pressed={effectiveScoreMode === "standalone"}
+                onClick={() => setScoreMode("standalone")}
+              >
+                Co-movement
+              </button>
+              <button
+                type="button"
+                className={`${styles.scoreModeOption} ${effectiveScoreMode === "incremental" ? styles.scoreModeOptionActive : ""}`}
+                aria-pressed={effectiveScoreMode === "incremental"}
+                onClick={() => setScoreMode("incremental")}
+              >
+                Incremental
+              </button>
+            </div>
+            <span className={styles.rankingToolbarHint}>
+              {SCORE_MODE_COPY[effectiveScoreMode].description}
+            </span>
+            <span className={styles.rankingToolbarMeta}>
+              {totalRows ? `${totalRows.toLocaleString()} themes` : null}
+              {indexPayload.as_of ? ` · ${indexPayload.as_of.slice(0, 10)}` : null}
+            </span>
+          </div>
+        </div>
       ) : null}
       <div className={styles.rankingGrid}>
         <section className={styles.panel} aria-label="Closest themes">
-          <h3 className={styles.panelTitle}>Closest (Top {Math.min(visibleClosestCount, 250)})</h3>
+          <h3 className={styles.panelTitle}>
+            {SCORE_MODE_COPY[effectiveScoreMode].label} (Top{" "}
+            {Math.min(visibleClosestCount, 250)})
+          </h3>
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">Cmp</th>
-                  <th scope="col">Rank</th>
-                  <th scope="col">Theme</th>
-                  <th scope="col">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {closestRows.map((row) => (
-                  <tr key={`${selectedFactorId}-${row.rank}-${row.theme}`}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Compare ${row.theme}`}
-                        checked={isSelectedTheme(row.slug)}
-                        disabled={!row.slug || (!isSelectedTheme(row.slug) && selectedThemes.length >= compareCap)}
-                        onChange={() => toggleThemeSelection(row)}
-                      />
-                    </td>
-                    <td className={`${styles.scoreCell} ${styles.rankCell}`}>#{row.rank}</td>
-                    <td>
-                      {row.slug ? (
-                        <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
-                          {row.theme}
-                        </Link>
-                      ) : (
-                        row.theme
-                      )}
-                    </td>
-                    <td className={styles.scoreCell}>{scoreText(row.score)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <FactorRankingTable
+              tableKey="closest"
+              rows={closestRows}
+              sort={closestSort}
+              onSortChange={setClosestSort}
+              effectiveScoreMode={effectiveScoreMode}
+              hasStandaloneScores={hasStandaloneScores}
+              selectedFactorId={selectedFactorId}
+              compareCap={compareCap}
+              selectedCompareCount={selectedThemes.length}
+              isSelectedTheme={isSelectedTheme}
+              onToggleTheme={toggleThemeSelection}
+            />
           </div>
           {visibleClosestCount < 250 ? (
             <div className={styles.panelActions}>
@@ -568,45 +862,24 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
         </section>
         <section className={styles.panel} aria-label="Least close themes">
           <h3 className={styles.panelTitle}>
-            Least close (Bottom {Math.min(visibleLeastCount, 250)}{totalRows ? ` of ${totalRows.toLocaleString()}` : ""})
+            Lowest {SCORE_MODE_COPY[effectiveScoreMode].label.toLowerCase()} (Bottom{" "}
+            {Math.min(visibleLeastCount, 250)}
+            {totalRows ? ` of ${totalRows.toLocaleString()}` : ""})
           </h3>
           <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">Cmp</th>
-                  <th scope="col">Rank</th>
-                  <th scope="col">Theme</th>
-                  <th scope="col">Score</th>
-                </tr>
-              </thead>
-              <tbody>
-                {leastRows.map((row) => (
-                  <tr key={`${selectedFactorId}-least-${row.rank}-${row.theme}`}>
-                    <td>
-                      <input
-                        type="checkbox"
-                        aria-label={`Compare ${row.theme}`}
-                        checked={isSelectedTheme(row.slug)}
-                        disabled={!row.slug || (!isSelectedTheme(row.slug) && selectedThemes.length >= compareCap)}
-                        onChange={() => toggleThemeSelection(row)}
-                      />
-                    </td>
-                    <td className={`${styles.scoreCell} ${styles.rankCell}`}>#{row.rank}</td>
-                    <td>
-                      {row.slug ? (
-                        <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
-                          {row.theme}
-                        </Link>
-                      ) : (
-                        row.theme
-                      )}
-                    </td>
-                    <td className={styles.scoreCell}>{scoreText(row.score)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <FactorRankingTable
+              tableKey="least"
+              rows={leastRows}
+              sort={leastSort}
+              onSortChange={setLeastSort}
+              effectiveScoreMode={effectiveScoreMode}
+              hasStandaloneScores={hasStandaloneScores}
+              selectedFactorId={selectedFactorId}
+              compareCap={compareCap}
+              selectedCompareCount={selectedThemes.length}
+              isSelectedTheme={isSelectedTheme}
+              onToggleTheme={toggleThemeSelection}
+            />
           </div>
           {visibleLeastCount < 250 ? (
             <div className={styles.panelActions}>
@@ -625,6 +898,6 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
         {totalRows ? totalRows.toLocaleString() : "—"} ranked themes
         {indexPayload.as_of ? ` · As of ${indexPayload.as_of.slice(0, 10)}` : ""}
       </p>
-    </>
+    </div>
   );
 }

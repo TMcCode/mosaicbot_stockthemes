@@ -22,6 +22,7 @@ import {
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
+import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
 
@@ -622,6 +623,17 @@ export function Chart1yLightweight({
     return { ...chart1y, composition_indexed: { ...c, series } };
   }, [chart1y, compositionMetaByTicker]);
 
+  /** Short themes: same display inversion as /factors compare (CDN vs dev disk cache can differ). */
+  const chart1yForRender = useMemo(() => {
+    const base = chart1ySorted;
+    const p = base?.performance;
+    if (!base || !p?.values?.length) return base;
+    const title = performanceTitle?.trim() ?? "";
+    const values = applyShortThemePerformanceDisplay(title, p.values, p);
+    if (values === p.values) return base;
+    return { ...base, performance: { ...p, values } };
+  }, [chart1ySorted, performanceTitle]);
+
   const [view, setView] = useState<"performance" | "composition">(
     () => (hasPerf ? "performance" : "composition"),
   );
@@ -700,7 +712,7 @@ export function Chart1yLightweight({
         ) : null}
       </div>
       <Chart1yCanvas
-        chart1y={chart1ySorted}
+        chart1y={chart1yForRender}
         benchmarkPerformance={benchmarkPerformance}
         activeView={activeView}
         lineApisRef={lineApisRef}
