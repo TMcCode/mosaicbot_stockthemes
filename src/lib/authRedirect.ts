@@ -3,6 +3,9 @@
  * Call from the browser only (after magic link submission).
  */
 
+/** Where to send users after sign-in when no `?next=` path is provided. */
+export const AUTH_DEFAULT_NEXT_PATH = "/";
+
 export function sanitizeAuthNextPath(raw: string | null | undefined): string | null {
   if (
     !raw ||
@@ -14,6 +17,10 @@ export function sanitizeAuthNextPath(raw: string | null | undefined): string | n
     return null;
   }
   return raw;
+}
+
+export function resolveAuthNextPath(raw: string | null | undefined): string {
+  return sanitizeAuthNextPath(raw) ?? AUTH_DEFAULT_NEXT_PATH;
 }
 
 export function authCallbackAbsoluteUrl(nextPath?: string | null): string {

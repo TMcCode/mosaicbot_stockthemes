@@ -7,7 +7,7 @@ import { useEffect, useState } from "react";
 import styles from "@/app/page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
-import { sanitizeAuthNextPath } from "@/lib/authRedirect";
+import { AUTH_DEFAULT_NEXT_PATH, resolveAuthNextPath } from "@/lib/authRedirect";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 import { exchangePkceCodeOnce } from "@/lib/supabase/exchangePkceCodeOnce";
 
@@ -29,13 +29,13 @@ export default function AuthCallbackPage() {
       try {
         const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
         const code = url?.searchParams.get("code");
-        const next = sanitizeAuthNextPath(url?.searchParams.get("next") ?? null) ?? "/my";
+        const next = resolveAuthNextPath(url?.searchParams.get("next") ?? null);
 
         if (code) {
           const { data: before } = await client.auth.getSession();
           if (before.session) {
             if (!cancelled) {
-              router.replace(next.startsWith("/") ? next : "/my");
+              router.replace(next);
             }
             return;
           }
@@ -54,7 +54,7 @@ export default function AuthCallbackPage() {
         }
 
         if (!cancelled) {
-          router.replace(next.startsWith("/") ? next : "/my");
+          router.replace(next);
         }
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));

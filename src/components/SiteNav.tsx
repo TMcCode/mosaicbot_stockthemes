@@ -46,7 +46,7 @@ export function SiteNav() {
                 Compare theme performance
               </Link>
               <Link href="/factors" className={styles.menuItem} role="menuitem">
-                Theme Factor Rankings
+                Theme factor exposure
               </Link>
             </div>
           </div>

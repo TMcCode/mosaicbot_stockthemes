@@ -198,8 +198,6 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signIn
     return () => {
       cancelled = true;
     };
-  }, [slug, dataBaseUrl]);
-
   }, [slug, dataBaseUrl, configured, user]);
 
   if (!configured) {

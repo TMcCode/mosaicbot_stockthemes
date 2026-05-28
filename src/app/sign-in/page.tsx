@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import styles from "@/app/page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
-import { authCallbackAbsoluteUrl, sanitizeAuthNextPath } from "@/lib/authRedirect";
+import { authCallbackAbsoluteUrl, AUTH_DEFAULT_NEXT_PATH, sanitizeAuthNextPath } from "@/lib/authRedirect";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -19,7 +19,7 @@ export default function SignInPage() {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [returnPath, setReturnPath] = useState("/my");
+  const [returnPath, setReturnPath] = useState(AUTH_DEFAULT_NEXT_PATH);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
