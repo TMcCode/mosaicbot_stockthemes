@@ -48,5 +48,8 @@ Each section:
 ## MEME_RETAIL - Meme / Retail Speculation Exposure
 - **Summary:** This reflects retail-driven, high-hype trading—the kind of sharp moves often seen in popular speculative ETFs. We use ARKK versus the broad market (SPY) as a guide. Higher scores mean the theme has tended to behave more like that speculative, attention-driven corner of the market.
 
+## MEME_SENSITIVITY - Meme Sensitivity
+- **Summary:** This measures how closely a theme tracks dedicated meme-stock risk. We compare the Roundhill Meme Stock ETF (MEME) to the broad market (SPY). Higher scores mean the theme has tended to rise and fall alongside that meme-stock basket rather than the overall market.
+
 ## UNPROFITABLE_GROWTH - Unprofitable Growth Exposure
 - **Summary:** This measures tilt toward fast-growing companies that may not yet be profitable—story stocks rather than steady earners. We compare speculative growth (ARKK) to broad growth (IWF). Higher scores mean the theme moves more in line with that unprofitable-growth style.

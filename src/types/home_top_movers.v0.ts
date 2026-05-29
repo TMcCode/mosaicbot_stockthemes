@@ -4,6 +4,8 @@ export type HomeTopMoverItemV0 = {
   return_pct: number;
   tier: "top" | "bottom";
   rank: number;
+  /** Set when ETL already sign-flipped return_pct for short themes. */
+  short_display_inverted?: boolean;
 };
 
 export type HomeTopMoversV0 = {

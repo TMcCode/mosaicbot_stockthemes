@@ -22,7 +22,6 @@ import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
-import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
 import type { ThemeFactorProfileV0, ThemeFactorScoreEntryV0 } from "@/types/theme.factor_profile.v0";
 
 import styles from "./ThemeFactorProfile.module.css";
@@ -30,11 +29,30 @@ import styles from "./ThemeFactorProfile.module.css";
 type Props = {
   slug: string;
   dataBaseUrl: string;
+  /** Baked at static build from CDN/build cache — used in production without client fetch. */
+  initialProfile?: ThemeFactorProfileV0 | null;
   /** Stretch panel to align bottom with hero treemap rail. */
   fillRail?: boolean;
   /** Return path after sign-in (e.g. `/themes/my-slug`). */
   signInNext?: string;
 };
+
+type ProfileState =
+  | { status: "loading" }
+  | { status: "absent" }
+  | { status: "low_confidence"; profile: ThemeFactorProfileV0 }
+  | { status: "ok"; profile: ThemeFactorProfileV0 }
+  | { status: "error" };
+
+function resolveProfileState(profile: ThemeFactorProfileV0): ProfileState {
+  if (!factorProfileHasContent(profile)) {
+    return { status: "absent" };
+  }
+  if (!factorProfileUiAllowed(profile)) {
+    return { status: "low_confidence", profile };
+  }
+  return { status: "ok", profile };
+}
 
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
   const displayScore = themeFactorDisplayScore(entry);
@@ -63,6 +81,30 @@ function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant
         />
       </div>
     </li>
+  );
+}
+
+function FactorSignInPrompt({ signInNext }: { signInNext?: string }) {
+  const signInHref = signInNext
+    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
+    : "/sign-in";
+
+  return (
+    <div className={styles.locked} aria-label="Factor profile sign-in prompt">
+      <p className={styles.lockedTitle}>Sign in to view factor exposure</p>
+      <p className={styles.lockedCopy}>
+        Free account — see how this theme ranks on market, sector, and narrative factors, and browse
+        full factor leaderboards.
+      </p>
+      <div className={styles.lockedActions}>
+        <Link href={signInHref} className={styles.signInBtn}>
+          Sign in free
+        </Link>
+        <Link href="/factors" className={styles.secondaryLink}>
+          About factor rankings
+        </Link>
+      </div>
+    </div>
   );
 }
 
@@ -113,41 +155,81 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
   );
 }
 
+function FactorProfileBody({ state }: { state: ProfileState }) {
+  if (state.status === "loading") {
+    return (
+      <div className={styles.panel}>
+        <p className={styles.loading}>Loading factor profile…</p>
+      </div>
+    );
+  }
+  if (state.status === "absent") {
+    return (
+      <div className={styles.panel}>
+        <p className={styles.lowConf}>Factor profile data is not available for this theme yet.</p>
+      </div>
+    );
+  }
+  if (state.status === "error") {
+    return (
+      <div className={styles.panel}>
+        <p className={styles.lowConf}>Could not load factor profile. Try refreshing the page.</p>
+      </div>
+    );
+  }
+  if (state.status === "low_confidence") {
+    return (
+      <div className={styles.panel}>
+        <p className={styles.lowConf}>
+          Factor estimates are low confidence for this theme — rankings may be noisy until more return
+          history builds.
+        </p>
+      </div>
+    );
+  }
+  return <FactorProfileCard profile={state.profile} />;
+}
+
 /**
- * Factor profile card (client fetch). Default placement: theme hero under title.
+ * Factor profile card (build-time embed + optional dev client refresh).
  */
-export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signInNext }: Props) {
+export function ThemeFactorProfile({
+  slug,
+  dataBaseUrl,
+  initialProfile = null,
+  fillRail = false,
+  signInNext,
+}: Props) {
   const { configured, loading: authLoading, user } = useSupabaseAuth();
-  const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "absent" }
-    | { status: "low_confidence"; profile: ThemeFactorProfileV0 }
-    | { status: "ok"; profile: ThemeFactorProfileV0 }
-    | { status: "error" }
-  >({ status: "loading" });
+  const [state, setState] = useState<ProfileState>({ status: "loading" });
 
   useEffect(() => {
     if (!configured || !user) return;
-    if (stockthemesLiveHydrationDisabled()) {
-      setState({ status: "absent" });
+
+    let cancelled = false;
+
+    const applyProfile = (profile: ThemeFactorProfileV0) => {
+      if (cancelled) return;
+      setState(resolveProfileState(profile));
+    };
+
+    if (initialProfile) {
+      applyProfile(initialProfile);
+    }
+
+    const shouldLiveFetch =
+      Boolean(dataBaseUrl.trim()) &&
+      (process.env.NODE_ENV === "development" || !initialProfile);
+
+    if (!shouldLiveFetch) {
+      if (!initialProfile) {
+        setState({ status: "absent" });
+      }
       return;
     }
 
-    let cancelled = false;
     const buster = stockthemesBrowserCacheBusterQuery();
     const profileUrl = `${themeFactorProfileUrl(dataBaseUrl, slug)}?${buster}`;
-
-    const applyProfile = (profile: ThemeFactorProfileV0) => {
-      if (!factorProfileHasContent(profile)) {
-        setState({ status: "absent" });
-        return;
-      }
-      if (!factorProfileUiAllowed(profile)) {
-        setState({ status: "low_confidence", profile });
-        return;
-      }
-      setState({ status: "ok", profile });
-    };
 
     fetch(profileUrl, {
       credentials: "omit",
@@ -161,7 +243,7 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signIn
       .then(async (profileRaw) => {
         if (cancelled) return;
         if (!profileRaw) {
-          setState({ status: "absent" });
+          if (!initialProfile) setState({ status: "absent" });
           return;
         }
         let profile = parseThemeFactorProfile(profileRaw);
@@ -192,22 +274,19 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signIn
         applyProfile(profile);
       })
       .catch(() => {
-        if (!cancelled) setState({ status: "error" });
+        if (!cancelled && !initialProfile) setState({ status: "error" });
       });
 
     return () => {
       cancelled = true;
     };
-  }, [slug, dataBaseUrl, configured, user]);
+  }, [slug, dataBaseUrl, configured, user, initialProfile]);
+
+  const wrapClass = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
 
   if (!configured) {
     return null;
   }
-
-  const wrapClass = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
-  const signInHref = signInNext
-    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
-    : "/sign-in";
 
   if (authLoading) {
     return null;
@@ -215,34 +294,12 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signIn
 
   if (!user) {
     return (
-      <div className={wrapClass} aria-labelledby="factor-profile-heading">
-        <div className={styles.heroHead}>
-          <h2 id="factor-profile-heading" className={styles.heroTitle}>
-            Factor Profile
-          </h2>
-        </div>
-        <div className={styles.panel}>
-          <div className={styles.locked}>
-            <p className={styles.lockedTitle}>Sign in to view factor exposure</p>
-            <p className={styles.lockedCopy}>
-              See how this theme ranks on market, sector, and narrative factors — free with an account.
-            </p>
-            <div className={styles.lockedActions}>
-              <Link href={signInHref} className={styles.signInBtn}>
-                Sign in free
-              </Link>
-              <Link href="/factors" className={styles.secondaryLink}>
-                About factor rankings
-              </Link>
-            </div>
-          </div>
+      <div className={wrapClass}>
+        <div className={styles.block}>
+          <FactorSignInPrompt signInNext={signInNext} />
         </div>
       </div>
     );
-  }
-
-  if (state.status === "absent" || state.status === "error") {
-    return null;
   }
 
   const wrapClassAuthed = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
@@ -257,20 +314,7 @@ export function ThemeFactorProfile({ slug, dataBaseUrl, fillRail = false, signIn
           Browse all factor rankings
         </Link>
       </div>
-      {state.status === "loading" ? (
-        <div className={styles.panel}>
-          <p className={styles.loading}>Loading factor profile…</p>
-        </div>
-      ) : state.status === "low_confidence" ? (
-        <div className={styles.panel}>
-          <p className={styles.lowConf}>
-            Factor estimates are low confidence for this theme — rankings may be noisy until more return
-            history builds.
-          </p>
-        </div>
-      ) : (
-        <FactorProfileCard profile={state.profile} />
-      )}
+      <FactorProfileBody state={state} />
     </div>
   );
 }

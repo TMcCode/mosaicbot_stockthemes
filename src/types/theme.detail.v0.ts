@@ -12,6 +12,8 @@ export type ThemeCompareReturnsV0 = {
   source?: string;
   metrics?: Record<string, number | null>;
   columns?: string[];
+  /** Set by ETL or client when short-theme metrics were sign-flipped for display. */
+  short_display_inverted?: boolean;
 };
 
 /** 10D rank vs all themes and within group (manifest ETL → themes/<slug>.json). */

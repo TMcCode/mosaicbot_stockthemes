@@ -52,7 +52,7 @@ function numericField(
   if (key === "Tickers") return row.ticker_count;
   if (key === "Avg MCap") return row.avg_market_cap_usd;
   if (key === "Total MCap") return row.total_market_cap_usd;
-  return valueForTrendingColumn(key, row.compare_returns ?? undefined, {});
+  return valueForTrendingColumn(key, row.compare_returns ?? undefined, {}, row.name);
 }
 
 function compareRows(a: GroupThemeTableRow, b: GroupThemeTableRow, sorts: SortState[]): number {
@@ -157,6 +157,7 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
                         col,
                         row.compare_returns ?? undefined,
                         {},
+                        row.name,
                       );
                       const heat =
                         v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;

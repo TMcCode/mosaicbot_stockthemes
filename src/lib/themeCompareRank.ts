@@ -62,7 +62,12 @@ export function computeTheme10DRanks(
   for (const row of rows) {
     const rowSlug = String(row.slug || "").trim();
     if (!rowSlug) continue;
-    const returnPct = valueForTrendingColumn(RANK_PERIOD, row.compare_returns ?? undefined, {});
+    const returnPct = valueForTrendingColumn(
+      RANK_PERIOD,
+      row.compare_returns ?? undefined,
+      {},
+      String(row.name || ""),
+    );
     if (returnPct == null || !Number.isFinite(returnPct)) continue;
     scored.push({
       slug: rowSlug,

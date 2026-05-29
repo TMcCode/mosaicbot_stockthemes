@@ -1,4 +1,5 @@
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
+import { applyShortThemeCompareReturnsDisplay } from "@/lib/shortThemeChart";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 /** Map Compare parquet column → chart fallback field (when compare_returns missing). */
@@ -111,8 +112,13 @@ export function valueForTrendingColumn(
   columnKey: string,
   compare: ThemeCompareReturnsV0 | undefined,
   chartFallback: ChartPerfReturns,
+  themeName?: string,
 ): number | undefined {
-  const m = compare?.metrics;
+  const displayCompare =
+    themeName && compare
+      ? applyShortThemeCompareReturnsDisplay(compare, themeName)
+      : compare;
+  const m = displayCompare?.metrics;
   if (m && Object.prototype.hasOwnProperty.call(m, columnKey)) {
     const v = m[columnKey];
     if (typeof v === "number" && Number.isFinite(v)) return v;

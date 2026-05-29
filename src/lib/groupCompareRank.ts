@@ -27,7 +27,7 @@ export function group10dReturnPctFromDetail(detail: GroupDetailV0 | undefined): 
   if (Array.isArray(themes) && themes.length > 0) {
     const vals: number[] = [];
     for (const t of themes) {
-      const v = valueForTrendingColumn("10D", t.compare_returns ?? undefined, {});
+      const v = valueForTrendingColumn("10D", t.compare_returns ?? undefined, {}, String(t.name || ""));
       if (v != null && Number.isFinite(v)) vals.push(v);
     }
     if (vals.length > 0) {
@@ -55,7 +55,12 @@ export function computeGroup10DRanks(
   for (const row of rows) {
     const gslug = String(row.group_slug || "").trim();
     if (!gslug) continue;
-    const returnPct = valueForTrendingColumn(RANK_PERIOD, row.compare_returns ?? undefined, {});
+    const returnPct = valueForTrendingColumn(
+      RANK_PERIOD,
+      row.compare_returns ?? undefined,
+      {},
+      String(row.name || ""),
+    );
     if (returnPct == null || !Number.isFinite(returnPct)) continue;
     const prev = sums.get(gslug) ?? { sum: 0, count: 0 };
     prev.sum += returnPct;

@@ -3,13 +3,16 @@ import {
   type ConstituentTreemapNode,
   type TreemapReturnColumn,
 } from "@/lib/buildConstituentTreemapNodes";
+import { applyShortThemeCompareReturnsDisplay } from "@/lib/shortThemeChart";
 import type { GroupDetailThemeTreemapV0, GroupDetailThemeTreemapThemeV0 } from "@/types/group.detail.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 function compareMetricsToReturns(
   compare: ThemeCompareReturnsV0 | undefined,
+  themeName: string,
 ): Partial<Record<TreemapReturnColumn, number | null>> {
-  const m = compare?.metrics;
+  const display = applyShortThemeCompareReturnsDisplay(compare, themeName);
+  const m = display?.metrics;
   if (!m) return {};
   const out: Partial<Record<TreemapReturnColumn, number | null>> = {};
   for (const { key } of TREEMAP_RETURN_PERIODS) {
@@ -28,7 +31,7 @@ function themeToNode(t: GroupDetailThemeTreemapThemeV0): ConstituentTreemapNode 
     ticker: slug,
     name,
     weight,
-    returns: compareMetricsToReturns(t.compare_returns ?? undefined),
+    returns: compareMetricsToReturns(t.compare_returns ?? undefined, name),
   };
 }
 

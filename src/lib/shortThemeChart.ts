@@ -28,6 +28,33 @@ export type ShortThemePerformanceMeta = {
   short_display_inverted?: boolean;
 };
 
+export type ShortThemeCompareReturns = {
+  metrics?: Record<string, number | null>;
+  short_display_inverted?: boolean;
+};
+
+/** Negate compare-table metrics for explicit short themes (matches manifest ETL). */
+export function applyShortThemeCompareReturnsDisplay<T extends ShortThemeCompareReturns>(
+  block: T | null | undefined,
+  themeName: string,
+): T | undefined {
+  if (!block?.metrics || !isShortThemeName(themeName)) {
+    return block ?? undefined;
+  }
+  if (block.short_display_inverted === true) {
+    return block;
+  }
+  const metrics: Record<string, number | null> = {};
+  for (const [key, val] of Object.entries(block.metrics)) {
+    if (typeof val === "number" && Number.isFinite(val)) {
+      metrics[key] = Math.round(-val * 10_000) / 10_000;
+    } else {
+      metrics[key] = val ?? null;
+    }
+  }
+  return { ...block, metrics, short_display_inverted: true };
+}
+
 /**
  * Return display values for a theme performance series on charts.
  * Skips when ETL already set `short_display_inverted: true`.

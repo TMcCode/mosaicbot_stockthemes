@@ -161,8 +161,8 @@ export default async function Home() {
   };
   // Weekdays: 1D (matches ticker); Sat/Sun ET: 10D when markets are closed.
   const detailsSorted = [...details, marketRow].sort((a, b) => {
-    const va = valueForTrendingColumn(topMoversPeriod, a.compare_returns, a.chartPerf);
-    const vb = valueForTrendingColumn(topMoversPeriod, b.compare_returns, b.chartPerf);
+    const va = valueForTrendingColumn(topMoversPeriod, a.compare_returns, a.chartPerf, a.name);
+    const vb = valueForTrendingColumn(topMoversPeriod, b.compare_returns, b.chartPerf, b.name);
     const aOk = va != null && Number.isFinite(va);
     const bOk = vb != null && Number.isFinite(vb);
     if (aOk && bOk) return vb - va;

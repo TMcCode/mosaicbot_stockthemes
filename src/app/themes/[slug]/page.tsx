@@ -43,6 +43,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { computeTheme10DRanks, rank10dFromPayload } from "@/lib/themeCompareRank";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
+import { getThemeFactorProfileCached } from "@/lib/loadThemeFactorProfile";
 import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { publicAssetPath } from "@/lib/siteUrl";
@@ -393,9 +394,10 @@ export default async function ThemeDetailPage({ params }: Props) {
     ? manifest.groups.find((g) => g.slug === theme.group_slug)
     : undefined;
 
-  const [loaded, compareRes] = await Promise.all([
+  const [loaded, compareRes, factorProfile] = await Promise.all([
     getThemeDetailCached(slug),
     getCompareThemesCached(),
+    getThemeFactorProfileCached(slug),
   ]);
   const detail = loaded?.detail;
   const rank10d =
@@ -621,16 +623,16 @@ export default async function ThemeDetailPage({ params }: Props) {
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="theme" slug={slug} />
               ) : null}
-              {dataBaseUrl ? (
-                <div className={treemapNodes.length ? styles.heroFactorSlot : undefined}>
-                  <ThemeFactorProfile
-                    slug={slug}
-                    dataBaseUrl={dataBaseUrl}
-                    fillRail={treemapNodes.length > 0}
-                    signInNext={`/themes/${slug}`}
-                  />
-                </div>
-              ) : (
+              <div className={treemapNodes.length ? styles.heroFactorSlot : undefined}>
+                <ThemeFactorProfile
+                  slug={slug}
+                  dataBaseUrl={dataBaseUrl ?? ""}
+                  initialProfile={factorProfile}
+                  fillRail={treemapNodes.length > 0}
+                  signInNext={`/themes/${slug}`}
+                />
+              </div>
+              {!dataBaseUrl ? (
                 <AdPlacement
                   placement="themeRail"
                   className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
@@ -638,7 +640,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   placeholderLabel="Ad Slot · Theme detail"
                   format="horizontal"
                 />
-              )}
+              ) : null}
             </div>
             <div className={styles.themeHeroRail}>
               {treemapNodes.length ? (

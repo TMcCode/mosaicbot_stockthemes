@@ -61,7 +61,7 @@ function groupMedians(rows: SummaryRow[], period: CompareSummaryPeriod): Compare
   const byGroup = new Map<string, { values: number[]; slug: string }>();
   for (const row of rows) {
     const group = String(row.groupName || "").trim() || "Other";
-    const v = valueForTrendingColumn(period, row.compareReturns ?? undefined, {});
+    const v = valueForTrendingColumn(period, row.compareReturns ?? undefined, {}, row.name);
     if (v == null || !Number.isFinite(v)) continue;
     let bucket = byGroup.get(group);
     if (!bucket) {
@@ -89,7 +89,7 @@ export function computeComparePeriodSummary(
 ): ComparePeriodSummary {
   const entries: { row: SummaryRow; value: number }[] = [];
   for (const row of rows) {
-    const value = valueForTrendingColumn(period, row.compareReturns ?? undefined, {});
+    const value = valueForTrendingColumn(period, row.compareReturns ?? undefined, {}, row.name);
     if (value != null && Number.isFinite(value)) entries.push({ row, value });
   }
 

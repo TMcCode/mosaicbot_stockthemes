@@ -125,6 +125,40 @@ function seedHomeCommentaryFromFixture() {
   );
 }
 
+async function syncFactorProfileSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
+  if (!themeSlugs.length) return;
+
+  let ok = 0;
+  let missing = 0;
+  const concurrency = Math.max(1, Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)));
+  await pool(themeSlugs, concurrency, async (slug) => {
+    const rel = `themes/${slug}.factor_profile.v0.json`;
+    if (!force && cacheFileOk(rel)) {
+      ok += 1;
+      return;
+    }
+    try {
+      await fetchToCache(
+        `${base}/themes/${encodeURIComponent(slug)}.factor_profile.v0.json`,
+        rel,
+        objectMeta,
+      );
+      ok += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("404")) {
+        missing += 1;
+        return;
+      }
+      console.warn(`sync-build-cache: factor profile ${rel} failed:`, msg);
+    }
+  });
+  console.log(
+    `sync-build-cache: factor profiles ok=${ok} missing=${missing} total=${themeSlugs.length}`,
+  );
+}
+
 async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
   for (const rel of OPTIONAL_BUNDLE_FILES) {
     // Admin-published; always refresh in CI so Pages does not bake a stale cached copy.
@@ -330,6 +364,7 @@ async function main() {
       process.exit(1);
     }
     await syncOptionalBundles(base, objectMeta);
+    await syncFactorProfileSidecars(manifestJson, base, objectMeta);
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
       console.warn(
@@ -425,6 +460,7 @@ async function main() {
     });
 
     await syncOptionalBundles(base, objectMeta, { force });
+    await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
   }
 
   const searchCached = cachePath("search_index.v0.json");

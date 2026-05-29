@@ -52,6 +52,7 @@ export function buildTopMoversTickerItems(
       column,
       row.compare_returns ?? undefined,
       chartFallback,
+      name,
     );
     if (returnPct == null || !Number.isFinite(returnPct)) continue;
     scored.push({ slug, name, returnPct });

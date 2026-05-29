@@ -102,7 +102,7 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp }: Props) {
               </div>
             );
           const cells = columns.map((col) => {
-            const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf);
+            const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf, row.name);
             const heat =
               v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
             return (

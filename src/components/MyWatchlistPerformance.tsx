@@ -68,8 +68,8 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
           if (cmp !== 0) return s.dir === "asc" ? cmp : -cmp;
           continue;
         }
-        const va = valueForTrendingColumn(s.key, a.compareReturns ?? undefined, {});
-        const vb = valueForTrendingColumn(s.key, b.compareReturns ?? undefined, {});
+        const va = valueForTrendingColumn(s.key, a.compareReturns ?? undefined, {}, a.name);
+        const vb = valueForTrendingColumn(s.key, b.compareReturns ?? undefined, {}, b.name);
         const aOk = va != null && Number.isFinite(va);
         const bOk = vb != null && Number.isFinite(vb);
         if (aOk && bOk && va !== vb) return s.dir === "asc" ? va - vb : vb - va;
@@ -203,7 +203,7 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
                   </div>
                 );
                 const valueCells = columns.map((col) => {
-                  const v = valueForTrendingColumn(col, row.compareReturns ?? undefined, {});
+                  const v = valueForTrendingColumn(col, row.compareReturns ?? undefined, {}, row.name);
                   const heat =
                     v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
                   return (
