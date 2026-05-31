@@ -74,6 +74,9 @@
   grid-template-columns: minmax(0, 1fr) minmax(340px, 430px);
   align-items: start;
   gap: 16px 20px;
+  /* Filter dropdowns extend below the hero; stack above the returns table. */
+  position: relative;
+  z-index: 2;
 }
 
 .heroMainCompare {

@@ -41,9 +41,10 @@ export function OverlaySectorEtfControls({
   const nameToTicker = new Map(options.map((t) => [optionLabel(t), t]));
 
   const onNamesChange = (names: string[]) => {
-    const tickers = names
-      .map((n) => nameToTicker.get(n))
-      .filter((t): t is string => Boolean(t));
+    const tickers: string[] = names.flatMap((n) => {
+      const t = nameToTicker.get(n);
+      return t ? [t] : [];
+    });
     const capped = tickers.slice(0, Math.max(0, maxSelectable));
     onSelectedTickersChange(capped);
   };
