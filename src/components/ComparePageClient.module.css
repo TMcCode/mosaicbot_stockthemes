@@ -1,0 +1,16 @@
+.benchmarkToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.benchmarkToggle input {
+  margin: 0;
+  accent-color: var(--accent, #26fcd6);
+}

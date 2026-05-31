@@ -3,12 +3,15 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import pageStyles from "@/app/page.module.css";
 import {
-  compareColumnHeader,
-  compareColumnHeaderTooltip,
-  valueForTrendingColumn,
-} from "@/lib/trendingCompareMetrics";
+  buildSelectedDateLookup,
+  metricColumnHeaderTooltip,
+} from "@/lib/customDateColumnHelp";
+import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 import styles from "./CompareThemesTable.module.css";
@@ -23,12 +26,20 @@ type Row = {
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
+type DisplayRow = Row | CompareBenchmarkRow;
+
 type SortState = { key: string; dir: "asc" | "desc" };
 
 type Props = {
+  benchmarkRows?: CompareBenchmarkRow[];
   rows: Row[];
   columns: string[];
+  selectedDates?: ManifestSelectedDateV0[];
 };
+
+function isBenchmarkRow(row: DisplayRow): row is CompareBenchmarkRow {
+  return "marketBaseline" in row && row.marketBaseline === true;
+}
 
 function fmtPct(v?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
@@ -36,11 +47,20 @@ function fmtPct(v?: number): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
-export function CompareThemesTable({ rows, columns }: Props) {
+export function CompareThemesTable({
+  benchmarkRows = [],
+  rows,
+  columns,
+  selectedDates,
+}: Props) {
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
+  const selectedDateByKey = useMemo(
+    () => buildSelectedDateLookup(selectedDates),
+    [selectedDates],
+  );
 
-  const sorted = useMemo(() => {
-    const out = [...rows];
+  const displayRows = useMemo(() => {
+    const out: DisplayRow[] = [...benchmarkRows, ...rows];
     out.sort((a, b) => {
       for (const s of sorts) {
         if (s.key === "Theme") {
@@ -58,7 +78,7 @@ export function CompareThemesTable({ rows, columns }: Props) {
       return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
     });
     return out;
-  }, [rows, sorts]);
+  }, [benchmarkRows, rows, sorts]);
 
   const gridTemplateColumns = `minmax(240px, max-content) repeat(${columns.length}, minmax(76px, max-content))`;
 
@@ -89,21 +109,43 @@ export function CompareThemesTable({ rows, columns }: Props) {
           >
             Theme
           </button>
-          {columns.map((col) => (
-            <button
-              key={`h-${col}`}
-              type="button"
-              className={styles.head}
-              onClick={(e) => onHeaderClick(col, e.shiftKey)}
-              title={compareColumnHeaderTooltip(col) ?? compareColumnHeader(col)}
-            >
-              {compareColumnHeader(col)}
-            </button>
-          ))}
+          {columns.map((col) => {
+            const help = metricColumnHeaderTooltip(col, selectedDateByKey);
+            return (
+              <button
+                key={`h-${col}`}
+                type="button"
+                className={styles.head}
+                onClick={(e) => onHeaderClick(col, e.shiftKey)}
+                title={help ?? compareColumnHeader(col)}
+              >
+                {compareColumnHeader(col)}
+                {help ? (
+                  <span
+                    className={pageStyles.metricInfoAsterisk}
+                    title={help}
+                    aria-label={`${compareColumnHeader(col)} explanation`}
+                  >
+                    *
+                  </span>
+                ) : null}
+              </button>
+            );
+          })}
 
-          {sorted.flatMap((row) => {
+          {displayRows.flatMap((row) => {
+            const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
-            const nameCell = (
+            const nameCell = isBenchmark ? (
+              <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
+                <span className={styles.benchmarkName} title={row.name}>
+                  {row.name}
+                </span>
+                {row.ticker ? (
+                  <div className={styles.benchmarkMeta}>Benchmark · {row.ticker}</div>
+                ) : null}
+              </div>
+            ) : (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 {row.slug ? (
                   <Link href={`/themes/${row.slug}`} className={styles.themeName}>
@@ -120,10 +162,20 @@ export function CompareThemesTable({ rows, columns }: Props) {
               </div>
             );
             const valueCells = columns.map((col) => {
-              const v = valueForTrendingColumn(col, row.compareReturns ?? undefined, {}, row.name);
-              const style = v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
+              const v =
+                isBenchmark && isCompareEarningsColumn(col)
+                  ? undefined
+                  : valueForTrendingColumn(col, row.compareReturns ?? undefined, {}, row.name);
+              const style =
+                !isBenchmark && v != null && Number.isFinite(v)
+                  ? trendingReturnHeatStyle(v)
+                  : undefined;
               return (
-                <div key={`${keyBase}-${col}`} className={styles.value} style={style}>
+                <div
+                  key={`${keyBase}-${col}`}
+                  className={`${styles.value} ${isBenchmark ? styles.benchmarkValue : ""}`}
+                  style={style}
+                >
                   {fmtPct(v)}
                 </div>
               );

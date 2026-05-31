@@ -2,6 +2,18 @@
   "schema_version": 0,
   "as_of": "2026-03-27T18:00:00Z",
   "build_id": "example-local-dev",
+  "selected_dates": [
+    {
+      "day_name": "IranWar",
+      "date": "2026-02-27",
+      "long_name": "Start of U.S. War with Iran"
+    },
+    {
+      "day_name": "LibDay",
+      "date": "2025-04-01",
+      "long_name": "U.S. President Trump's Tariff 'Liberation Day' speech date"
+    }
+  ],
   "trending_themes": ["AI Chips", "Data Centers"],
   "stats": {
     "total_tickers": 2140,

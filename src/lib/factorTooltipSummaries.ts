@@ -29,6 +29,8 @@ export const FACTOR_TOOLTIP_SUMMARIES: Record<string, string> = {
     "Shows retail-speculation behavior. Higher means this theme has tended to move more like hype-driven, high-volatility retail trades.",
   MEME_SENSITIVITY:
     "Shows meme-stock sensitivity. Higher means this theme has tended to move more with the Roundhill Meme Stock ETF (MEME) versus the broad market.",
+  OIL_SENSITIVITY:
+    "Shows crude-oil price sensitivity. Higher means this theme has tended to move more with the United States Oil Fund (USO) versus the broad market.",
   UNPROFITABLE_GROWTH:
     "Shows unprofitable-growth tilt. Higher means this theme acts more like fast-growing but less-profitable story stocks.",
 };

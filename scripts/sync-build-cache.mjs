@@ -41,6 +41,7 @@ const BUNDLE_FILES = [
   "home_top_movers.v0.json",
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
+  "etf_benchmarks.v0.json",
   "website_content.v0.json",
   "home_feed.v0.json",
 ];
@@ -179,6 +180,11 @@ async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
   }
 }
 
+function themeSidecarBaseSlug(filename) {
+  const m = String(filename || "").match(/^(.+)\.(factor_profile\.v0|chart\.v0)\.json$/);
+  return m ? m[1] : null;
+}
+
 function pruneOrphanDetailFiles(manifestJson) {
   const themeSlugs = new Set(
     (manifestJson.themes || []).map((t) => String(t?.slug || "").trim()).filter(Boolean),
@@ -191,7 +197,17 @@ function pruneOrphanDetailFiles(manifestJson) {
   if (fs.existsSync(themesDir)) {
     for (const file of fs.readdirSync(themesDir)) {
       if (!file.endsWith(".json")) continue;
-      const slug = file.replace(/\.json$/, "");
+      const sidecarSlug = themeSidecarBaseSlug(file);
+      if (sidecarSlug) {
+        if (!themeSlugs.has(sidecarSlug)) {
+          fs.unlinkSync(path.join(themesDir, file));
+          removed += 1;
+        }
+        continue;
+      }
+      if (!file.endsWith(".json")) continue;
+      const slug = file.slice(0, -".json".length);
+      if (slug.includes(".")) continue;
       if (!themeSlugs.has(slug)) {
         fs.unlinkSync(path.join(themesDir, file));
         removed += 1;
@@ -202,7 +218,8 @@ function pruneOrphanDetailFiles(manifestJson) {
   if (fs.existsSync(groupsDir)) {
     for (const file of fs.readdirSync(groupsDir)) {
       if (!file.endsWith(".json")) continue;
-      const slug = file.replace(/\.json$/, "");
+      const slug = file.slice(0, -".json".length);
+      if (slug.includes(".")) continue;
       if (!groupSlugs.has(slug)) {
         fs.unlinkSync(path.join(groupsDir, file));
         removed += 1;

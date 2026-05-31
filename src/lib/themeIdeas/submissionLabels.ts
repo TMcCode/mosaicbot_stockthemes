@@ -16,11 +16,18 @@ export function submissionTitle(row: ThemeIdeaSubmissionRow): string {
   if (row.kind === "new_group" && row.proposed_group_name) {
     return `New group: ${row.proposed_group_name}`;
   }
+  if (row.kind === "theme_edit" && row.proposed_theme_name) {
+    return `Edit theme: ${row.proposed_theme_name}`;
+  }
   if (row.proposed_theme_name) {
     const group = row.group_name ? ` (${row.group_name})` : "";
     return `Theme: ${row.proposed_theme_name}${group}`;
   }
-  return row.kind === "new_group" ? "New group suggestion" : "Theme suggestion";
+  return row.kind === "new_group"
+    ? "New group suggestion"
+    : row.kind === "theme_edit"
+      ? "Theme edit suggestion"
+      : "Theme suggestion";
 }
 
 export function submissionDateUtc(iso: string): string {

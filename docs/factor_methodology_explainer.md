@@ -51,5 +51,8 @@ Each section:
 ## MEME_SENSITIVITY - Meme Sensitivity
 - **Summary:** This measures how closely a theme tracks dedicated meme-stock risk. We compare the Roundhill Meme Stock ETF (MEME) to the broad market (SPY). Higher scores mean the theme has tended to rise and fall alongside that meme-stock basket rather than the overall market.
 
+## OIL_SENSITIVITY - Oil Sensitivity
+- **Summary:** This measures how closely a theme tracks crude oil prices. We compare the United States Oil Fund (USO) to the broad market (SPY). Higher scores mean the theme has tended to rise and fall with oil rather than the overall market—distinct from Energy sector exposure (XLE).
+
 ## UNPROFITABLE_GROWTH - Unprofitable Growth Exposure
 - **Summary:** This measures tilt toward fast-growing companies that may not yet be profitable—story stocks rather than steady earners. We compare speculative growth (ARKK) to broad growth (IWF). Higher scores mean the theme moves more in line with that unprofitable-growth style.

@@ -25,7 +25,20 @@ export async function recordThemeIdeaSubmission(
           theme_names: payload.themeNames,
           group_note: payload.groupNote,
         })
-      : supabase.from("theme_idea_submissions").insert({
+      : payload.kind === "theme_edit"
+        ? supabase.from("theme_idea_submissions").insert({
+            user_id: userId,
+            kind: "theme_edit",
+            submitter_email: payload.submitterEmail,
+            status: "submitted",
+            theme_slug: payload.themeSlug,
+            proposed_theme_name: payload.themeName,
+            tickers_to_remove:
+              payload.tickersToRemove.length > 0 ? payload.tickersToRemove : null,
+            weight_changes: payload.weightChanges.trim() || null,
+            theme_reasoning: payload.themeReasoning,
+          })
+        : supabase.from("theme_idea_submissions").insert({
           user_id: userId,
           kind: "theme_in_group",
           submitter_email: payload.submitterEmail,
@@ -42,7 +55,7 @@ export async function recordThemeIdeaSubmission(
   if (error) {
     const hint =
       error.code === "42P01"
-        ? " Run supabase/migrations/003_theme_idea_submissions.sql in the Supabase SQL editor."
+        ? " Run supabase/migrations/003_theme_idea_submissions.sql and 004_theme_idea_theme_edit.sql in the Supabase SQL editor."
         : "";
     return {
       ok: false,

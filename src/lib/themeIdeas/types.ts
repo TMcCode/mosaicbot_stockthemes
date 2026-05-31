@@ -7,7 +7,7 @@ export type ThemeIdeaSubmissionStatus =
 
 export type ThemeIdeaSubmissionRow = {
   id: string;
-  kind: "new_group" | "theme_in_group";
+  kind: "new_group" | "theme_in_group" | "theme_edit";
   status: ThemeIdeaSubmissionStatus;
   proposed_group_name: string | null;
   proposed_theme_name: string | null;

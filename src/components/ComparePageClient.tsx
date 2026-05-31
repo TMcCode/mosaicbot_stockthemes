@@ -11,7 +11,11 @@ import {
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
 import { filterCompareRows } from "@/lib/filterCompareRows";
+import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
+
+import styles from "./ComparePageClient.module.css";
 
 type Row = {
   slug: string;
@@ -24,21 +28,26 @@ type Row = {
 
 type Props = {
   eyebrow: string;
+  benchmarkRows: CompareBenchmarkRow[];
   rows: Row[];
   columns: string[];
   groupOptions: string[];
   yearOptions: string[];
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
 export function ComparePageClient({
   eyebrow,
+  benchmarkRows,
   rows,
   columns,
   groupOptions,
   yearOptions,
+  selectedDates,
 }: Props) {
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
+  const [showBenchmarks, setShowBenchmarks] = useState(true);
   const availablePeriods = useMemo(() => availableCompareSummaryPeriods(columns), [columns]);
   const [summaryPeriod, setSummaryPeriod] = useState<CompareSummaryPeriod>(() => {
     if (availablePeriods.includes("10D")) return "10D";
@@ -61,7 +70,7 @@ export function ComparePageClient({
       <div className={`${pageStyles.heroGrid} ${pageStyles.heroGridCompare}`}>
         <div className={`${pageStyles.heroMain} ${pageStyles.heroMainCompare}`}>
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
-          <h1>Compare all themes</h1>
+          <h1>Theme returns table</h1>
           <p className={pageStyles.introLead}>
             Rank every theme by return across daily, calendar, and earnings horizons—plus custom
             date windows. Filter by group or vintage year; click a column to sort, shift-click for
@@ -87,6 +96,16 @@ export function ComparePageClient({
               emptyLabel="All years"
               layout="inline"
             />
+            {benchmarkRows.length > 0 ? (
+              <label className={styles.benchmarkToggle}>
+                <input
+                  type="checkbox"
+                  checked={showBenchmarks}
+                  onChange={(e) => setShowBenchmarks(e.target.checked)}
+                />
+                Sector ETFs
+              </label>
+            ) : null}
           </div>
         </div>
         <CompareSummaryPanel
@@ -97,7 +116,12 @@ export function ComparePageClient({
         />
       </div>
       <section className={`${pageStyles.section} ${pageStyles.compareSectionTight}`}>
-        <CompareThemesTable rows={filtered} columns={columns} />
+        <CompareThemesTable
+          benchmarkRows={showBenchmarks ? benchmarkRows : []}
+          rows={filtered}
+          columns={columns}
+          selectedDates={selectedDates}
+        />
       </section>
     </>
   );

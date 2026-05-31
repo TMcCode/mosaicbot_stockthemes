@@ -83,6 +83,27 @@
   color: var(--text-muted);
 }
 
+.benchmarkName {
+  display: block;
+  color: var(--text-muted, #6b7280);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  white-space: nowrap;
+}
+
+.benchmarkMeta {
+  font-size: 11px;
+  color: var(--text-muted, #6b7280);
+  opacity: 0.85;
+}
+
+.benchmarkValue {
+  color: var(--text-muted, #6b7280);
+  border-color: rgba(255, 255, 255, 0.04);
+  background: transparent;
+}
+
 .value {
   font-size: 12px;
   font-variant-numeric: tabular-nums;

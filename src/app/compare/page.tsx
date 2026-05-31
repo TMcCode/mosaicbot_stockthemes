@@ -4,8 +4,11 @@ import styles from "@/app/page.module.css";
 import { ComparePageClient } from "@/components/ComparePageClient";
 import { PageSurface } from "@/components/PageSurface";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
+import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
 import { getGroupTickersPreviewMapCached } from "@/lib/getGroupTickersPreviewMapCached";
+import { mapEtfBenchmarksToCompareRows, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 import {
@@ -14,7 +17,7 @@ import {
 } from "@/lib/trendingCompareMetrics";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Compare themes",
+  title: "Theme returns table",
   description: "Compare all theme returns with multi-sort and filters.",
   path: "/compare",
 });
@@ -25,10 +28,13 @@ function deriveYearTag(name: string): string | null {
 }
 
 export default async function ComparePage() {
-  const [{ manifest, source }, compareRes, previewBySlug] = await Promise.all([
+  const [{ manifest, source }, compareRes, previewBySlug, benchmarksRes, spyPerf] =
+    await Promise.all([
     getManifestCached(),
     getCompareThemesCached(),
     getGroupTickersPreviewMapCached(),
+    getEtfBenchmarksCached(),
+    getSpyMarketPerfCached(),
   ]);
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => [String(g.slug || "").trim(), String(g.name || "").trim()]),
@@ -54,6 +60,22 @@ export default async function ComparePage() {
       ? compareRes.bundle.columns
       : fallbackColumns;
   const columns = normalizeCompareColumnOrder(rawColumns);
+  const benchmarkRows: CompareBenchmarkRow[] = (() => {
+    const fromBundle = mapEtfBenchmarksToCompareRows(benchmarksRes?.bundle);
+    if (fromBundle.length > 0) return fromBundle;
+    if (spyPerf?.compareReturns) {
+      return [
+        {
+          slug: "benchmark:SPY",
+          name: "S&P 500 (SPY)",
+          ticker: "SPY",
+          marketBaseline: true,
+          compareReturns: spyPerf.compareReturns,
+        },
+      ];
+    }
+    return [];
+  })();
   const groupOptions = Array.from(
     new Set(rows.map((r) => String(r.groupName || "").trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
@@ -66,11 +88,13 @@ export default async function ComparePage() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <ComparePageClient
-            eyebrow={catalogEyebrowText("Compare", source)}
+            eyebrow={catalogEyebrowText("Theme returns table", source)}
+            benchmarkRows={benchmarkRows}
             rows={rows}
             columns={columns}
             groupOptions={groupOptions}
             yearOptions={yearOptions}
+            selectedDates={manifest.selected_dates}
           />
         </div>
       </main>

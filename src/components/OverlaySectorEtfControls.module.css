@@ -1,0 +1,26 @@
+.wrap {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px 10px;
+  flex: 0 1 auto;
+  min-width: 0;
+  position: relative;
+  z-index: 2;
+}
+
+.enableToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-muted, #a6abb9);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.capHint {
+  font-size: 10px;
+  color: var(--color-text-muted, #a6abb9);
+  white-space: nowrap;
+}

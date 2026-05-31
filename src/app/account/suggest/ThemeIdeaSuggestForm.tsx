@@ -13,19 +13,22 @@ import { submitThemeIdea, type ThemeIdeaKind } from "@/lib/themeIdeasSubmit";
 import { countWords, wordCountInRange } from "@/lib/wordCount";
 
 export type GroupOption = { slug: string; name: string };
+export type ThemeOption = { slug: string; name: string; groupName?: string };
 
 type Props = {
   userId: string;
   submitterEmail: string;
   groups: GroupOption[];
+  themes: ThemeOption[];
 };
 
 const MIN_THEMES = 2;
 const MIN_TICKERS = 6;
 const MIN_WORDS = 20;
 const MAX_WORDS = 300;
+const MIN_WEIGHT_CHANGES_CHARS = 5;
 
-export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) {
+export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups, themes }: Props) {
   const [kind, setKind] = useState<ThemeIdeaKind>("new_group");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -40,11 +43,19 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
   const [tickersRaw, setTickersRaw] = useState("");
   const [themeReasoning, setThemeReasoning] = useState("");
 
+  const [editThemeSlug, setEditThemeSlug] = useState(themes[0]?.slug ?? "");
+  const [removeTickersRaw, setRemoveTickersRaw] = useState("");
+  const [weightChangesRaw, setWeightChangesRaw] = useState("");
+  const [editReasoning, setEditReasoning] = useState("");
+
   const groupNoteWords = useMemo(() => countWords(groupNote), [groupNote]);
   const reasoningWords = useMemo(() => countWords(themeReasoning), [themeReasoning]);
+  const editReasoningWords = useMemo(() => countWords(editReasoning), [editReasoning]);
   const themeNames = useMemo(() => parseThemeNameList(themeNamesRaw), [themeNamesRaw]);
   const tickers = useMemo(() => parseTickerList(tickersRaw), [tickersRaw]);
+  const tickersToRemove = useMemo(() => parseTickerList(removeTickersRaw), [removeTickersRaw]);
   const selectedGroup = groups.find((g) => g.slug === groupSlug);
+  const selectedEditTheme = themes.find((t) => t.slug === editThemeSlug);
 
   async function onSubmit(ev: FormEvent) {
     ev.preventDefault();
@@ -85,44 +96,86 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
       return;
     }
 
-    if (!groupSlug || !selectedGroup) {
-      setError("Choose a group.");
+    if (kind === "theme_in_group") {
+      if (!groupSlug || !selectedGroup) {
+        setError("Choose a group.");
+        return;
+      }
+      if (!themeName.trim()) {
+        setError("Enter a theme name.");
+        return;
+      }
+      if (tickers.length < MIN_TICKERS) {
+        setError(`Include at least ${MIN_TICKERS} tickers (comma or line-separated).`);
+        return;
+      }
+      if (!wordCountInRange(themeReasoning, MIN_WORDS, MAX_WORDS)) {
+        setError(`Reasoning must be ${MIN_WORDS}–${MAX_WORDS} words (currently ${reasoningWords}).`);
+        return;
+      }
+
+      setBusy(true);
+      const result = await submitThemeIdea(userId, {
+        kind: "theme_in_group",
+        submitterEmail,
+        groupSlug,
+        groupName: selectedGroup.name,
+        themeName: themeName.trim(),
+        tickers,
+        themeReasoning: themeReasoning.trim(),
+      });
+      setBusy(false);
+      if (result.ok) {
+        capturePostHog("theme_idea_submitted", {
+          kind: "theme_in_group",
+          group_slug: groupSlug,
+          submission_id: result.submissionId,
+        });
+        setMessage("Thanks — your theme suggestion was sent to the stockthemes team.");
+        setThemeName("");
+        setTickersRaw("");
+        setThemeReasoning("");
+      } else {
+        setError(result.error);
+      }
       return;
     }
-    if (!themeName.trim()) {
-      setError("Enter a theme name.");
+
+    if (!editThemeSlug || !selectedEditTheme) {
+      setError("Choose a theme to edit.");
       return;
     }
-    if (tickers.length < MIN_TICKERS) {
-      setError(`Include at least ${MIN_TICKERS} tickers (comma or line-separated).`);
+    const weightChanges = weightChangesRaw.trim();
+    if (tickersToRemove.length === 0 && weightChanges.length < MIN_WEIGHT_CHANGES_CHARS) {
+      setError("Add tickers to remove and/or describe weight changes (at least one is required).");
       return;
     }
-    if (!wordCountInRange(themeReasoning, MIN_WORDS, MAX_WORDS)) {
-      setError(`Reasoning must be ${MIN_WORDS}–${MAX_WORDS} words (currently ${reasoningWords}).`);
+    if (!wordCountInRange(editReasoning, MIN_WORDS, MAX_WORDS)) {
+      setError(`Reasoning must be ${MIN_WORDS}–${MAX_WORDS} words (currently ${editReasoningWords}).`);
       return;
     }
 
     setBusy(true);
     const result = await submitThemeIdea(userId, {
-      kind: "theme_in_group",
+      kind: "theme_edit",
       submitterEmail,
-      groupSlug,
-      groupName: selectedGroup.name,
-      themeName: themeName.trim(),
-      tickers,
-      themeReasoning: themeReasoning.trim(),
+      themeSlug: editThemeSlug,
+      themeName: selectedEditTheme.name,
+      tickersToRemove,
+      weightChanges,
+      themeReasoning: editReasoning.trim(),
     });
     setBusy(false);
     if (result.ok) {
       capturePostHog("theme_idea_submitted", {
-        kind: "theme_in_group",
-        group_slug: groupSlug,
+        kind: "theme_edit",
+        theme_slug: editThemeSlug,
         submission_id: result.submissionId,
       });
-      setMessage("Thanks — your theme suggestion was sent to the stockthemes team.");
-      setThemeName("");
-      setTickersRaw("");
-      setThemeReasoning("");
+      setMessage("Thanks — your theme edit suggestion was sent to the stockthemes team.");
+      setRemoveTickersRaw("");
+      setWeightChangesRaw("");
+      setEditReasoning("");
     } else {
       setError(result.error);
     }
@@ -152,7 +205,16 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
           className={kind === "theme_in_group" ? formStyles.tabActive : formStyles.tab}
           onClick={() => setKind("theme_in_group")}
         >
-          Theme in existing group
+          Theme in group
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={kind === "theme_edit"}
+          className={kind === "theme_edit" ? formStyles.tabActive : formStyles.tab}
+          onClick={() => setKind("theme_edit")}
+        >
+          Edit theme
         </button>
       </div>
 
@@ -214,7 +276,7 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
               </span>
             </p>
           </>
-        ) : (
+        ) : kind === "theme_in_group" ? (
           <>
             <p className={formStyles.field}>
               <label htmlFor="group-slug">Existing group</label>
@@ -276,6 +338,84 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
               </span>
             </p>
           </>
+        ) : (
+          <>
+            <p className={formStyles.field}>
+              <label htmlFor="edit-theme-slug">Existing theme</label>
+              <select
+                id="edit-theme-slug"
+                className={formStyles.select}
+                value={editThemeSlug}
+                onChange={(e) => setEditThemeSlug(e.target.value)}
+                required
+                disabled={themes.length === 0}
+              >
+                {themes.length === 0 ? (
+                  <option value="">No themes loaded</option>
+                ) : (
+                  themes.map((t) => (
+                    <option key={t.slug} value={t.slug}>
+                      {t.groupName ? `${t.name} (${t.groupName})` : t.name}
+                    </option>
+                  ))
+                )}
+              </select>
+              {selectedEditTheme ? (
+                <span className={formStyles.hint}>
+                  <Link href={`/themes/${encodeURIComponent(selectedEditTheme.slug)}`}>
+                    View current theme page
+                  </Link>
+                </span>
+              ) : null}
+            </p>
+            <p className={formStyles.field}>
+              <label htmlFor="remove-tickers">Tickers to remove (optional)</label>
+              <textarea
+                id="remove-tickers"
+                className={formStyles.textarea}
+                value={removeTickersRaw}
+                onChange={(e) => setRemoveTickersRaw(e.target.value)}
+                placeholder="TICK, ER"
+                style={{ minHeight: 72 }}
+              />
+              <span className={formStyles.hint}>
+                Comma or line-separated. {tickersToRemove.length} ticker
+                {tickersToRemove.length === 1 ? "" : "s"} parsed.
+              </span>
+            </p>
+            <p className={formStyles.field}>
+              <label htmlFor="weight-changes">Weight changes (optional)</label>
+              <textarea
+                id="weight-changes"
+                className={formStyles.textarea}
+                value={weightChangesRaw}
+                onChange={(e) => setWeightChangesRaw(e.target.value)}
+                placeholder={
+                  "NVDA 12\nAMD 8\n\nOr describe changes in prose: reduce SMCI, increase VRT…"
+                }
+                style={{ minHeight: 100 }}
+              />
+              <span className={formStyles.hint}>
+                One ticker + target weight per line, or a short prose description. Provide this
+                and/or tickers to remove.
+              </span>
+            </p>
+            <p className={formStyles.field}>
+              <label htmlFor="edit-reasoning">Why these edits</label>
+              <textarea
+                id="edit-reasoning"
+                className={formStyles.textarea}
+                value={editReasoning}
+                onChange={(e) => setEditReasoning(e.target.value)}
+                required
+              />
+              <span
+                className={`${formStyles.wordCount} ${editReasoningWords < MIN_WORDS || editReasoningWords > MAX_WORDS ? formStyles.wordCountInvalid : ""}`}
+              >
+                {editReasoningWords} / {MIN_WORDS}–{MAX_WORDS} words
+              </span>
+            </p>
+          </>
         )}
 
         <button type="submit" className={formStyles.submit} disabled={busy}>
@@ -290,6 +430,8 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups }: Props) 
         <Link href="/account">← Account</Link>
         {" · "}
         <Link href="/groups">Browse groups</Link>
+        {" · "}
+        <Link href="/themes">Browse themes</Link>
       </p>
     </div>
   );

@@ -1,6 +1,5 @@
 "use client";
 
-import type Fuse from "fuse.js";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
@@ -8,180 +7,14 @@ import posthog from "posthog-js";
 
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
-import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
-import type {
-  SearchIndexGroupRowV0,
-  SearchIndexThemeRowV0,
-  SearchIndexTickerRowV0,
-  SearchIndexV0,
-} from "@/types/search_index.v0";
+import {
+  collectSiteSearchHits,
+  loadSiteSearchEngine,
+  type SiteSearchEngine,
+  type SiteSearchHit,
+} from "@/lib/siteSearchHits";
 
 import styles from "./SiteSearch.module.css";
-
-type FuseRow =
-  | { kind: "ticker"; text: string; ref: SearchIndexTickerRowV0 }
-  | { kind: "theme"; text: string; ref: SearchIndexThemeRowV0 }
-  | { kind: "group"; text: string; ref: SearchIndexGroupRowV0 };
-
-function parseSearchIndex(raw: string): SearchIndexV0 {
-  const data = JSON.parse(raw) as SearchIndexV0;
-  if (data.schema_version !== 0) {
-    throw new Error(`Unsupported search index schema_version: ${data.schema_version}`);
-  }
-  if (!Array.isArray(data.tickers) || !Array.isArray(data.themes) || !Array.isArray(data.groups)) {
-    throw new Error("Invalid search index JSON");
-  }
-  return data;
-}
-
-function buildFuseRows(index: SearchIndexV0): FuseRow[] {
-  const rows: FuseRow[] = [];
-  for (const t of index.tickers) {
-    const parts = [
-      t.ticker,
-      t.name ?? "",
-      ...(t.theme_names ?? []),
-      ...(t.aliases ?? []),
-    ];
-    rows.push({ kind: "ticker", text: parts.join(" ").trim(), ref: t });
-  }
-  for (const t of index.themes) {
-    const parts = [
-      t.name,
-      t.slug,
-      t.group_name ?? "",
-      ...(t.aliases ?? []),
-    ];
-    rows.push({ kind: "theme", text: parts.join(" ").trim(), ref: t });
-  }
-  for (const g of index.groups) {
-    const parts = [
-      g.name,
-      g.slug,
-      g.spy_sector ?? "",
-      g.blurb_snippet ?? "",
-      ...(g.aliases ?? []),
-    ];
-    rows.push({ kind: "group", text: parts.join(" ").trim(), ref: g });
-  }
-  return rows;
-}
-
-type Hit =
-  | { kind: "ticker"; ref: SearchIndexTickerRowV0; key: string }
-  | { kind: "theme"; ref: SearchIndexThemeRowV0; key: string }
-  | { kind: "group"; ref: SearchIndexGroupRowV0; key: string };
-
-function collectHits(index: SearchIndexV0, fuse: Fuse<FuseRow>, query: string): Hit[] {
-  const q = query.trim();
-  if (!q) {
-    return [];
-  }
-  const qLower = q.toLowerCase();
-
-  const lettersOnly = q.replace(/[^a-zA-Z]/g, "");
-  const upper = lettersOnly.toUpperCase();
-  const compact = q.replace(/\s/g, "");
-  const tickerish =
-    lettersOnly.length > 0 &&
-    lettersOnly.length === compact.length &&
-    /^[A-Za-z]{1,5}$/.test(lettersOnly);
-
-  const seen = new Set<string>();
-  const out: Hit[] = [];
-
-  if (tickerish && upper.length >= 1) {
-    const matches = index.tickers.filter((t) => t.ticker.startsWith(upper));
-    matches.sort((a, b) => {
-      const ex = a.ticker === upper ? 0 : 1;
-      const ey = b.ticker === upper ? 0 : 1;
-      if (ex !== ey) {
-        return ex - ey;
-      }
-      return a.ticker.localeCompare(b.ticker);
-    });
-    for (const t of matches.slice(0, 10)) {
-      const key = `ticker:${t.ticker}`;
-      if (!seen.has(key)) {
-        seen.add(key);
-        out.push({ kind: "ticker", ref: t, key });
-      }
-    }
-  }
-
-  if (q.length < 2 && !tickerish) {
-    return out.slice(0, 12);
-  }
-
-  // Guarantee obvious group-name matches are surfaced even when ticker/theme rows dominate fuzzy ranks.
-  const directGroupMatches = index.groups
-    .filter((g) => {
-      const name = g.name.toLowerCase();
-      const slug = g.slug.toLowerCase();
-      return name.includes(qLower) || slug.includes(qLower);
-    })
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 2);
-  for (const g of directGroupMatches) {
-    const key = `group:${g.slug}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      out.push({ kind: "group", ref: g, key });
-    }
-  }
-
-  const fuzzy = fuse.search(q, { limit: 20 });
-  const fuzzyHits: Hit[] = [];
-  for (const r of fuzzy) {
-    const row = r.item;
-    let key: string;
-    if (row.kind === "ticker") {
-      key = `ticker:${row.ref.ticker}`;
-    } else if (row.kind === "theme") {
-      key = `theme:${row.ref.slug}`;
-    } else {
-      key = `group:${row.ref.slug}`;
-    }
-    if (seen.has(key)) {
-      continue;
-    }
-    seen.add(key);
-    fuzzyHits.push(
-      row.kind === "ticker"
-        ? { kind: "ticker", ref: row.ref, key }
-        : row.kind === "theme"
-          ? { kind: "theme", ref: row.ref, key }
-          : { kind: "group", ref: row.ref, key },
-    );
-  }
-
-  // Ensure search results include discovery entities (groups/themes) when they match.
-  const MAX_HITS = 14;
-  const reservedGroups = fuzzyHits.filter((h) => h.kind === "group").slice(0, 2);
-  const reservedThemes = fuzzyHits.filter((h) => h.kind === "theme").slice(0, 2);
-  const promotedKeys = new Set<string>();
-  for (const h of [...reservedGroups, ...reservedThemes]) {
-    if (out.length >= MAX_HITS || promotedKeys.has(h.key)) {
-      continue;
-    }
-    promotedKeys.add(h.key);
-    out.push(h);
-  }
-
-  for (const h of fuzzyHits) {
-    if (out.length >= MAX_HITS) {
-      break;
-    }
-    if (promotedKeys.has(h.key)) {
-      continue;
-    }
-    out.push(h);
-  }
-
-  return out;
-}
-
-type SearchEngine = { index: SearchIndexV0; fuse: Fuse<FuseRow> };
 
 export function SiteSearch() {
   const router = useRouter();
@@ -192,7 +25,7 @@ export function SiteSearch() {
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [engine, setEngine] = useState<SearchEngine | null>(null);
+  const [engine, setEngine] = useState<SiteSearchEngine | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [loadBusy, setLoadBusy] = useState(false);
   const [open, setOpen] = useState(false);
@@ -213,41 +46,8 @@ export function SiteSearch() {
     loadInflight.current = true;
     setLoadBusy(true);
     setLoadError(null);
-    const urls = searchIndexFetchUrls();
-    Promise.all([
-      import("fuse.js"),
-      (async () => {
-        let lastErr: unknown;
-        for (const url of urls) {
-          try {
-            const res = await fetch(url, {
-              credentials: "omit",
-              ...(process.env.NODE_ENV === "development" ? { cache: "no-store" as const } : {}),
-            });
-            if (!res.ok) {
-              lastErr = new Error(`HTTP ${res.status}`);
-              continue;
-            }
-            return await res.text();
-          } catch (e) {
-            lastErr = e;
-          }
-        }
-        throw lastErr instanceof Error ? lastErr : new Error("Failed to load search index");
-      })(),
-    ])
-      .then(([fuseMod, raw]) => {
-        const FuseCtor = fuseMod.default;
-        const parsed = parseSearchIndex(raw);
-        const fuse = new FuseCtor(buildFuseRows(parsed), {
-          keys: ["text"],
-          threshold: 0.38,
-          ignoreLocation: true,
-          minMatchCharLength: 1,
-          includeScore: true,
-        }) as Fuse<FuseRow>;
-        setEngine({ index: parsed, fuse });
-      })
+    void loadSiteSearchEngine()
+      .then(setEngine)
       .catch((e: unknown) => {
         setLoadError(e instanceof Error ? e.message : "Failed to load search index");
         setEngine(null);
@@ -262,7 +62,7 @@ export function SiteSearch() {
     if (!engine || !debounced.trim()) {
       return [];
     }
-    return collectHits(engine.index, engine.fuse, debounced);
+    return collectSiteSearchHits(engine.index, engine.fuse, debounced);
   }, [engine, debounced]);
 
   useEffect(() => {
@@ -294,7 +94,7 @@ export function SiteSearch() {
   }, [engine, debounced, hits]);
 
   const goToHit = useCallback(
-    (h: Hit) => {
+    (h: SiteSearchHit) => {
       const slug = h.kind === "ticker" ? h.ref.theme_slugs[0] ?? null : h.ref.slug;
       posthog.capture("search_result_clicked", {
         query: query.trim(),

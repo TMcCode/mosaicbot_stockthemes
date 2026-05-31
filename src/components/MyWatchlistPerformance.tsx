@@ -228,7 +228,7 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
         <nav className={localStyles.footerNav} aria-label="Watchlist page links">
           <Link href="/themes">Browse themes</Link>
           {" · "}
-          <Link href="/compare">Compare all themes</Link>
+          <Link href="/compare">Theme returns table</Link>
           {" · "}
           <Link href="/">Home</Link>
         </nav>

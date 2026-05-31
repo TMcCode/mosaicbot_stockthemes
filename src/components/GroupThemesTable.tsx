@@ -4,12 +4,11 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
-import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
+import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import type { GroupThemeTableRow } from "@/lib/groupThemesTable";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import {
-  compareColumnHeaderTooltip,
   trendingColumnHeader,
   valueForTrendingColumn,
 } from "@/lib/trendingCompareMetrics";
@@ -32,13 +31,6 @@ function fmtPct(v?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
   const sign = v > 0 ? "+" : "";
   return `${sign}${v.toFixed(2)}%`;
-}
-
-function metricHeaderTooltip(
-  col: string,
-  selectedDateByKey: Map<string, ManifestSelectedDateV0>,
-): string | undefined {
-  return compareColumnHeaderTooltip(col) ?? customDateHelpText(col, selectedDateByKey);
 }
 
 function metricHeaderLabel(col: string): string {
@@ -130,12 +122,12 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
                     <th
                       key={col}
                       scope="col"
-                      title={metricHeaderTooltip(col, selectedDateByKey)}
+                      title={metricColumnHeaderTooltip(col, selectedDateByKey)}
                     >
                       {renderSortHead(
                         col,
                         metricHeaderLabel(col),
-                        metricHeaderTooltip(col, selectedDateByKey),
+                        metricColumnHeaderTooltip(col, selectedDateByKey),
                       )}
                     </th>
                   ))}

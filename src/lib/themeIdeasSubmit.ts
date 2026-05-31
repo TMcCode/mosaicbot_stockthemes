@@ -7,6 +7,7 @@ export type {
   ThemeIdeaKind,
   NewGroupPayload,
   ThemeInGroupPayload,
+  ThemeEditPayload,
   ThemeIdeaPayload,
 } from "@/lib/themeIdeas/payload";
 
@@ -16,6 +17,9 @@ import type { ThemeIdeaPayload } from "@/lib/themeIdeas/payload";
 function subjectFor(payload: ThemeIdeaPayload): string {
   if (payload.kind === "new_group") {
     return `[stockthemes] New group: ${payload.groupName}`;
+  }
+  if (payload.kind === "theme_edit") {
+    return `[stockthemes] Edit theme: ${payload.themeName}`;
   }
   return `[stockthemes] Theme in ${payload.groupName}: ${payload.themeName}`;
 }
@@ -29,6 +33,19 @@ function bodyFields(payload: ThemeIdeaPayload): Record<string, string> {
       themes_included: payload.themeNames.join("\n"),
       theme_count: String(payload.themeNames.length),
       group_note: payload.groupNote,
+    };
+  }
+  if (payload.kind === "theme_edit") {
+    return {
+      submission_type: "Edit existing theme",
+      submitter_email: payload.submitterEmail,
+      theme_slug: payload.themeSlug,
+      theme_name: payload.themeName,
+      tickers_to_remove:
+        payload.tickersToRemove.length > 0 ? payload.tickersToRemove.join(", ") : "(none)",
+      remove_count: String(payload.tickersToRemove.length),
+      weight_changes: payload.weightChanges.trim() || "(none)",
+      edit_reasoning: payload.themeReasoning,
     };
   }
   return {

@@ -27,8 +27,9 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import { resolveHomeTrendingRows } from "@/lib/resolveHomeTrendingRows";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
-import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
+import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
 import { buildPageMetadata } from "@/lib/seoMetadata";
+import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
 import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
@@ -39,13 +40,6 @@ function fmtFeedDate(iso?: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return d.toLocaleDateString(undefined, { month: "short", day: "2-digit" });
-}
-
-function normalizeEventKey(value: string): string {
-  return String(value || "")
-    .trim()
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, "");
 }
 
 function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
@@ -177,25 +171,9 @@ export default async function Home() {
   const trendingColumns = resolveTrendingColumnOrder(detailsSorted).filter(
     (col) => col !== "LstRpt %" && col !== "SinceLstRpt",
   );
-  const selectedDateRows = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
-  const selectedDateByKey = new Map(
-    selectedDateRows.map((r) => [normalizeEventKey(String(r.day_name || "")), r]),
+  const selectedDateByKey = buildSelectedDateLookup(
+    Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [],
   );
-  const fmtSlashDate = (iso?: string): string => {
-    if (!iso) return "";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return String(iso);
-    return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
-  };
-  const customDateHelpText = (col: string): string | undefined => {
-    const key = normalizeEventKey(col);
-    const row = selectedDateByKey.get(key);
-    const datePrefix = row?.date ? `${fmtSlashDate(row.date)}: ` : "";
-    if (key === "IRANWAR") return `${datePrefix}Start of U.S. War with Iran`;
-    if (key === "LIBDAY")
-      return `${datePrefix}U.S. President Trump's Tariff 'Liberation Day' speech date`;
-    return undefined;
-  };
   const eyebrow = homeEyebrowText(source);
 
   return (
@@ -286,7 +264,7 @@ export default async function Home() {
                 rows={rowsForTable}
                 columns={trendingColumns}
                 columnHelp={Object.fromEntries(
-                  trendingColumns.map((col) => [col, customDateHelpText(col)]),
+                  trendingColumns.map((col) => [col, customDateHelpText(col, selectedDateByKey)]),
                 )}
               />
             </section>

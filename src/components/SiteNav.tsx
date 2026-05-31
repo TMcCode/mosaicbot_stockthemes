@@ -43,7 +43,10 @@ export function SiteNav() {
               </Link>
               <div className={styles.menuDivider} role="separator" />
               <Link href="/compare" className={styles.menuItem} role="menuitem">
-                Compare theme performance
+                Theme returns table
+              </Link>
+              <Link href="/overlay" className={styles.menuItem} role="menuitem">
+                Theme compare chart
               </Link>
               <Link href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure

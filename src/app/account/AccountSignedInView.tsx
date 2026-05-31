@@ -97,12 +97,14 @@ export function AccountSignedInView({
         <div className={accountStyles.card}>
           <h2 className={accountStyles.cardTitle}>Suggest a group or theme</h2>
           <p className={accountStyles.cardLead}>
-            Propose a new group (with sub-themes) or add a theme to an existing group. Submissions are
-            reviewed by the stockthemes team.
+            Propose a new group, add a theme to an existing group, or suggest edits to a published
+            theme (remove tickers or change weights). Submissions are reviewed by the stockthemes
+            team.
           </p>
           <ul className={accountStyles.cardList}>
             <li>New group: name, ≥2 themes, 20–300 word rationale</li>
             <li>Existing group: pick group, theme name, ≥6 tickers, 20–300 word reasoning</li>
+            <li>Edit theme: pick theme, tickers to remove and/or weight changes, 20–300 word reasoning</li>
           </ul>
           <Link href="/account/suggest" className={`${accountStyles.btn} ${accountStyles.btnPrimary}`}>
             Open suggestion form

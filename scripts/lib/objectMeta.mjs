@@ -13,6 +13,7 @@ const BUNDLE_RELS = new Set([
   "home_top_movers.v0.json",
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
+  "etf_benchmarks.v0.json",
   "website_content.v0.json",
   "home_feed.v0.json",
   "home_commentary.v0.json",

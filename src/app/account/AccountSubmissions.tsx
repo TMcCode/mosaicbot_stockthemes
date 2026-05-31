@@ -64,7 +64,7 @@ export function AccountSubmissions({ userId }: Props) {
         Your submissions
       </h2>
       <p className={accountStyles.cardLead}>
-        Group and theme ideas you sent via the suggestion form. When we publish one, status becomes{" "}
+        Group, theme, and edit suggestions you sent via the suggestion form. When we publish one, status becomes{" "}
         <strong>Accepted</strong> and links to the live theme.
       </p>
 

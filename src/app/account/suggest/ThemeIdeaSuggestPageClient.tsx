@@ -7,14 +7,16 @@ import { PageSurface } from "@/components/PageSurface";
 import {
   ThemeIdeaSuggestForm,
   type GroupOption,
+  type ThemeOption,
 } from "@/app/account/suggest/ThemeIdeaSuggestForm";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 
 type Props = {
   groups: GroupOption[];
+  themes: ThemeOption[];
 };
 
-export function ThemeIdeaSuggestPageClient({ groups }: Props) {
+export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
   const { configured, loading, user } = useSupabaseAuth();
 
   if (!configured) {
@@ -64,6 +66,7 @@ export function ThemeIdeaSuggestPageClient({ groups }: Props) {
             userId={user.id}
             submitterEmail={user.email ?? ""}
             groups={groups}
+            themes={themes}
           />
         </div>
       </main>

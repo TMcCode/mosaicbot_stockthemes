@@ -1,4 +1,4 @@
-export type ThemeIdeaKind = "new_group" | "theme_in_group";
+export type ThemeIdeaKind = "new_group" | "theme_in_group" | "theme_edit";
 
 export type NewGroupPayload = {
   kind: "new_group";
@@ -18,4 +18,14 @@ export type ThemeInGroupPayload = {
   themeReasoning: string;
 };
 
-export type ThemeIdeaPayload = NewGroupPayload | ThemeInGroupPayload;
+export type ThemeEditPayload = {
+  kind: "theme_edit";
+  submitterEmail: string;
+  themeSlug: string;
+  themeName: string;
+  tickersToRemove: string[];
+  weightChanges: string;
+  themeReasoning: string;
+};
+
+export type ThemeIdeaPayload = NewGroupPayload | ThemeInGroupPayload | ThemeEditPayload;

@@ -4,6 +4,7 @@
   flex-direction: column;
   gap: 4px;
   min-width: 170px;
+  isolation: isolate;
 }
 
 .wrapInline {
@@ -58,6 +59,25 @@
   line-height: 1.25;
 }
 
+.wrapInlineCompact {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.wrapInlineCompact .trigger {
+  width: auto;
+  min-width: 0;
+  max-width: 108px;
+  padding: 6px 8px;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.wrapInlineCompact .panel {
+  right: auto;
+  min-width: 240px;
+}
+
 .triggerText {
   min-width: 0;
   overflow: hidden;
@@ -74,7 +94,7 @@
 
 .panel {
   position: absolute;
-  z-index: 30;
+  z-index: 50;
   top: calc(100% + 4px);
   left: 0;
   right: 0;
@@ -83,8 +103,9 @@
   flex-direction: column;
   border-radius: 8px;
   border: 1px solid var(--button-secondary-border);
-  background: var(--card-surface);
+  background: var(--card-surface, #151820);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  pointer-events: auto;
 }
 
 .list {

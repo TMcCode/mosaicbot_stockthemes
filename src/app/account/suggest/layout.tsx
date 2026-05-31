@@ -5,7 +5,7 @@ import { buildPageMetadata } from "@/lib/seoMetadata";
 export const metadata: Metadata = {
   ...buildPageMetadata({
     title: "Suggest a group or theme",
-    description: "Submit a new theme group or theme idea to stockthemes.ai.",
+    description: "Submit a new theme group, theme idea, or edits to an existing theme on stockthemes.ai.",
     path: "/account/suggest",
   }),
   robots: { index: false, follow: false },
