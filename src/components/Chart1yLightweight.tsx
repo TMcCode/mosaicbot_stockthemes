@@ -171,6 +171,18 @@ function toPoints(dates: string[], values: (number | string)[]) {
   return out;
 }
 
+function slicePointsToRange(
+  points: { time: string; value: number }[],
+  startIso?: string,
+  endIso?: string,
+): { time: string; value: number }[] {
+  if (!points.length) return points;
+  const start = startIso?.trim().slice(0, 10) || "";
+  const end = endIso?.trim().slice(0, 10) || "";
+  if (!start && !end) return points;
+  return points.filter((p) => (!start || p.time >= start) && (!end || p.time <= end));
+}
+
 type Chart1yCanvasProps = {
   chart1y: ThemeChart1yV0 | undefined;
   benchmarkPerformance?: ChartPerformanceV0;
@@ -285,8 +297,30 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       benchmarkPerformance?.dates ?? [],
       benchmarkPerformance?.values ?? [],
     );
+    const perfStartIso = perfPoints?.[0]?.time;
+    const perfEndIso = perfPoints?.[perfPoints.length - 1]?.time;
+    const compRange = (() => {
+      if (activeView !== "composition" || !comp?.series?.length) return null;
+      let start = "";
+      let end = "";
+      for (const s of comp.series) {
+        if (!s.dates?.length || !s.values?.length) continue;
+        const pts = toPoints(s.dates, s.values);
+        if (!pts.length) continue;
+        const sStart = pts[0]?.time || "";
+        const sEnd = pts[pts.length - 1]?.time || "";
+        if (!start || (sStart && sStart < start)) start = sStart;
+        if (!end || (sEnd && sEnd > end)) end = sEnd;
+      }
+      return start && end ? { start, end } : null;
+    })();
+    const benchmarkAligned = slicePointsToRange(
+      benchmarkPointsRaw,
+      activeView === "performance" ? perfStartIso : compRange?.start,
+      activeView === "performance" ? perfEndIso : compRange?.end,
+    );
     const benchmarkPoints =
-      benchmarkPointsRaw && benchmarkPointsRaw.length >= 20 ? benchmarkPointsRaw : null;
+      benchmarkAligned && benchmarkAligned.length >= 20 ? benchmarkAligned : null;
     const perfHasPoints = Boolean(perfPoints && perfPoints.length);
 
     const seriesIdByApi = new Map<ISeriesApi<"Line">, string>();
