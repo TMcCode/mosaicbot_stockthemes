@@ -8,6 +8,9 @@ import {
   feedPageMetadataDescription,
 } from "@/lib/feedPageCopy";
 import { getManifestCached } from "@/lib/getManifestCached";
+import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
+import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
+import { buildTickerToThemeNamesMap } from "@/lib/loadSearchIndex";
 import { mergeHomeFeedEvents, prioritizeLifecycleFeedFull } from "@/lib/mergeHomeFeedEvents";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
@@ -84,10 +87,18 @@ function feedChangesText(evt: ManifestHomeFeedEventV0): string {
 }
 
 export default async function FeedPage() {
-  const { manifest } = await getManifestCached();
+  const [{ manifest }, searchIndexRes] = await Promise.all([
+    getManifestCached(),
+    getSearchIndexCached().catch(() => null),
+  ]);
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
   const etl = Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : [];
-  const events = prioritizeLifecycleFeedFull(mergeHomeFeedEvents(manifest, themeByName, etl));
+  const tickerToThemeNames = searchIndexRes
+    ? buildTickerToThemeNamesMap(searchIndexRes.index)
+    : undefined;
+  const events = prioritizeLifecycleFeedFull(
+    mergeHomeFeedEvents(manifest, themeByName, etl, { tickerToThemeNames }),
+  );
   const asOfIso = manifest.as_of?.trim() || "";
   const publishedLabel = asOfIso ? formatSiteDataPublished(asOfIso) : null;
 
@@ -124,7 +135,12 @@ export default async function FeedPage() {
           <div className={styles.feedList}>
             {events.map((evt, idx) => {
               const slug = String(evt.theme_slug || "").trim();
+              const linkThemeSlug = evt.kind === "text_table_update" ? "" : slug;
               const displayTitle = cleanFeedTitle(evt);
+              const showThesisThemes =
+                evt.kind === "text_table_update" &&
+                (Boolean(evt.thesis_themes?.length) ||
+                  String(evt.summary || "").trim().startsWith("Themes:"));
               const changesText = feedChangesText(evt);
               const noteText = String(evt.note || "").trim();
               const isThemeLifecycle =
@@ -146,8 +162,8 @@ export default async function FeedPage() {
                   <div className={styles.feedDate}>{fmtFeedDate(evt.event_at)}</div>
                   <div className={styles.feedBody}>
                     <div className={styles.feedTitleRow}>
-                      {slug ? (
-                        <Link href={`/themes/${slug}`} className={styles.feedTitle}>
+                      {linkThemeSlug ? (
+                        <Link href={`/themes/${linkThemeSlug}`} className={styles.feedTitle}>
                           {displayTitle}
                         </Link>
                       ) : (
@@ -157,7 +173,8 @@ export default async function FeedPage() {
                     </div>
                     <div className={styles.feedMeta}>
                       {changesText ? <span className={styles.feedSummary}>{changesText}</span> : null}
-                      {!changesText && evt.summary && !isThemeLifecycle ? (
+                      {!changesText && showThesisThemes ? <FeedThesisThemesSummary evt={evt} /> : null}
+                      {!changesText && !showThesisThemes && evt.summary && !isThemeLifecycle ? (
                         <span className={styles.feedSummary}>{evt.summary}</span>
                       ) : null}
                     </div>

@@ -31,6 +31,9 @@ import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateCol
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
 import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
+import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
+import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
+import { buildTickerToThemeNamesMap } from "@/lib/loadSearchIndex";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
@@ -109,9 +112,10 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function Home() {
-  const [{ manifest, source }, homeTrendingRes, compareRes, topMoversRes, spyPerf, commentaryRes] =
+  const [{ manifest, source }, searchIndexRes, homeTrendingRes, compareRes, topMoversRes, spyPerf, commentaryRes] =
     await Promise.all([
       getManifestCached(),
+      getSearchIndexCached().catch(() => null),
       getHomeTrendingCached(),
       getCompareThemesCached(),
       getHomeTopMoversCached(),
@@ -124,7 +128,10 @@ export default async function Home() {
   const trendingNames = Array.isArray(manifest.trending_themes) ? manifest.trending_themes : [];
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
   const etlFeed = Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : [];
-  const homeFeedEvents = mergeHomeFeedEvents(manifest, themeByName, etlFeed);
+  const tickerToThemeNames = searchIndexRes
+    ? buildTickerToThemeNamesMap(searchIndexRes.index)
+    : undefined;
+  const homeFeedEvents = mergeHomeFeedEvents(manifest, themeByName, etlFeed, { tickerToThemeNames });
   const homeFeedDisplay = prioritizeLifecycleHomeFeed(
     homeFeedEvents,
     HOME_FEED_RENDER_LIMIT,
@@ -299,7 +306,13 @@ export default async function Home() {
               <div className={styles.feedList}>
                 {homeFeedDisplay.map((evt, idx) => {
                   const slug = String(evt.theme_slug || "").trim();
+                  const linkThemeSlug =
+                    evt.kind === "text_table_update" ? "" : slug;
                   const displayTitle = cleanFeedTitle(evt);
+                  const showThesisThemes =
+                    evt.kind === "text_table_update" &&
+                    (Boolean(evt.thesis_themes?.length) ||
+                      String(evt.summary || "").trim().startsWith("Themes:"));
                   const dateLabel = fmtFeedDate(evt.event_at);
                   const changesText = feedChangesText(evt);
                   const noteText = String(evt.note || "").trim();
@@ -317,8 +330,8 @@ export default async function Home() {
                           : evt.kind === "text_table_update"
                             ? "Thesis update"
                             : "Theme change";
-                  const titleNode = slug ? (
-                    <Link href={`/themes/${slug}`} className={styles.feedTitle}>
+                  const titleNode = linkThemeSlug ? (
+                    <Link href={`/themes/${linkThemeSlug}`} className={styles.feedTitle}>
                       {displayTitle}
                     </Link>
                   ) : (
@@ -334,7 +347,8 @@ export default async function Home() {
                         </div>
                         <div className={styles.feedMeta}>
                           {changesText ? <span className={styles.feedSummary}>{changesText}</span> : null}
-                          {!changesText && evt.summary && !isThemeLifecycle ? (
+                          {!changesText && showThesisThemes ? <FeedThesisThemesSummary evt={evt} /> : null}
+                          {!changesText && !showThesisThemes && evt.summary && !isThemeLifecycle ? (
                             <span className={styles.feedSummary}>{evt.summary}</span>
                           ) : null}
                         </div>

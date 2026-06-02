@@ -15,6 +15,12 @@ export type ManifestUpdatedThemeEventV0 = {
   last_content_change_at: string;
 };
 
+/** Theme membership for a ticker thesis-update feed row (links on site). */
+export type ManifestHomeFeedThesisThemeV0 = {
+  name: string;
+  slug: string;
+};
+
 export type ManifestHomeFeedEventV0 = {
   kind: "theme_new" | "theme_updated" | "theme_weights_updated" | "text_table_update" | "theme_change";
   event_at: string;
@@ -25,6 +31,9 @@ export type ManifestHomeFeedEventV0 = {
   changes_more_count?: number;
   theme_name?: string;
   theme_slug?: string;
+  /** Populated for text_table_update rows; up to 6 themes with slugs for linking. */
+  thesis_themes?: ManifestHomeFeedThesisThemeV0[];
+  thesis_themes_more_count?: number;
 };
 
 export type ManifestV0 = {

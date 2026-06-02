@@ -748,6 +748,24 @@ a.feedTitle:hover {
   line-height: 1.25;
 }
 
+.feedThemesLabel {
+  color: var(--text-secondary);
+}
+
+.feedThemeLink {
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.feedThemeLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.feedThemesMore {
+  color: var(--text-muted);
+}
+
 .feedNote {
   margin-top: 1px;
   color: var(--text-muted);

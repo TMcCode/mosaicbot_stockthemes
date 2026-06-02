@@ -1,3 +1,5 @@
+import { consolidateTextTableFeedEvents } from "@/lib/consolidateTextTableFeedEvents";
+import { enrichThesisFeedThemes } from "@/lib/enrichThesisFeedThemes";
 import type { ManifestHomeFeedEventV0, ManifestV0 } from "@/types/manifest.v0";
 
 function normThemeName(s: string | undefined): string {
@@ -26,10 +28,16 @@ function isGroupOverviewTextTableNoise(e: ManifestHomeFeedEventV0): boolean {
  * rows from ETL are text-table updates and theme_weights_updated (no renames / theme_change;
  * Group Overview out).
  */
+export type MergeHomeFeedEventsOptions = {
+  /** Ticker → theme display names (from search index); used to group thesis rows by theme. */
+  tickerToThemeNames?: Map<string, string[]>;
+};
+
 export function mergeHomeFeedEvents(
   manifest: ManifestV0,
   themeByName: Map<string, { slug?: string; name: string }>,
   etl: ManifestHomeFeedEventV0[],
+  options?: MergeHomeFeedEventsOptions,
 ): ManifestHomeFeedEventV0[] {
   const newNames = Array.isArray(manifest.new_themes) ? manifest.new_themes : [];
   const updatedRaw = Array.isArray(manifest.updated_themes) ? manifest.updated_themes : [];
@@ -93,10 +101,20 @@ export function mergeHomeFeedEvents(
     if (!baseKeys.has(lifecycleFeedKey(e))) orphanLifecycle.push(e);
   }
 
-  const nonLifecycle = etl.filter((e) => {
+  const nonLifecycleRaw = etl.filter((e) => {
     if (e.kind === "theme_weights_updated") return true;
     return e.kind === "text_table_update" && !isGroupOverviewTextTableNoise(e);
   });
+  const themeSlugByName = new Map<string, string>();
+  for (const [name, t] of themeByName) {
+    const slug = String(t.slug || "").trim();
+    if (name && slug) themeSlugByName.set(name, slug);
+  }
+  const nonLifecycle = enrichThesisFeedThemes(
+    consolidateTextTableFeedEvents(nonLifecycleRaw, themeSlugByName, options?.tickerToThemeNames),
+    themeSlugByName,
+    options?.tickerToThemeNames,
+  );
 
   const combined = [...mergedLifecycle, ...orphanLifecycle, ...nonLifecycle];
 
