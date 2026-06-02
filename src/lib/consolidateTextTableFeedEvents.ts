@@ -1,13 +1,12 @@
 import { buildThesisThemes } from "@/lib/enrichThesisFeedThemes";
 import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 
-const TEXT_TABLE_TITLE_RE =
-  /^(?<entity>.+?)\s+—\s+(?:(?<count>\d+)\s+text tables|.+?)\s+updated$/i;
+const TEXT_TABLE_TITLE_RE = /^(.+?)\s+—\s+(?:(\d+)\s+text tables|.+?)\s+updated$/i;
 
 function parseTextTableEntity(evt: ManifestHomeFeedEventV0): { kind: "ticker" | "theme"; id: string } | null {
   const title = String(evt.title || "").trim();
   const m = title.match(TEXT_TABLE_TITLE_RE);
-  const entity = String(m?.groups?.entity || "").trim();
+  const entity = String(m?.[1] || "").trim();
   const themeName = String(evt.theme_name || "").trim();
   if (!entity && !themeName) return null;
 

@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /.next 2/
+/.next.trash*/
 /out/
 
 # Generated at build from NEXT_PUBLIC_ADSENSE_CLIENT (see scripts/write-ads-txt.mjs)

@@ -1,7 +1,6 @@
 import type { ManifestHomeFeedEventV0, ManifestHomeFeedThesisThemeV0 } from "@/types/manifest.v0";
 
-const TEXT_TABLE_TITLE_RE =
-  /^(?<entity>.+?)\s+—\s+(?:(?<count>\d+)\s+text tables|.+?)\s+updated$/i;
+const TEXT_TABLE_TITLE_RE = /^(.+?)\s+—\s+(?:(\d+)\s+text tables|.+?)\s+updated$/i;
 
 const MAX_SHOWN = 6;
 
@@ -19,7 +18,7 @@ function parseTickerFromTitle(title: string): string {
   const m = String(title || "")
     .trim()
     .match(TEXT_TABLE_TITLE_RE);
-  const entity = String(m?.groups?.entity || "").trim();
+  const entity = String(m?.[1] || "").trim();
   return entity ? entity.toUpperCase() : "";
 }
 
