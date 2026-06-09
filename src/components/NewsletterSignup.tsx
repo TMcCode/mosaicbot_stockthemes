@@ -1,7 +1,6 @@
 "use client";
 
-import { type FormEvent, useId, useLayoutEffect, useState } from "react";
-import Script from "next/script";
+import { type FormEvent, useEffect, useId, useLayoutEffect, useState } from "react";
 import posthog from "posthog-js";
 
 import { useBeehiivApiConfigured } from "@/components/NewsletterRuntimeProvider";
@@ -62,6 +61,20 @@ function beehiivEmbedConfigured(): boolean {
   return keys.some((v) => Boolean(v?.trim()));
 }
 
+/** Lazy-load Beehiiv embed scripts (avoid React 19 client `<script>` render warnings). */
+function useBeehiivEmbedScripts(enabled: boolean) {
+  useEffect(() => {
+    if (!enabled) return;
+    for (const src of [BEEHIIV_EMBED_JS, BEEHIIV_ATTRIBUTION_JS]) {
+      if (document.querySelector(`script[src="${src}"]`)) continue;
+      const script = document.createElement("script");
+      script.src = src;
+      script.async = true;
+      document.body.appendChild(script);
+    }
+  }, [enabled]);
+}
+
 /**
  * Iframe wins when any embed URL env is set (matches GitHub Pages + Beehiiv-styled forms).
  * Else API mode: `POST /api/newsletter/subscribe` + server `BEEHIIV_*` (local / serverful hosts only).
@@ -86,6 +99,8 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
   }, []);
 
   const beehiivFormUrl = getBeehiivFormUrl(theme, narrowViewport);
+  const beehiivEmbed = beehiivEmbedConfigured();
+  useBeehiivEmbedScripts(beehiivEmbed);
 
   function onPlaceholderSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -158,15 +173,13 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
     </div>
   );
 
-  if (beehiivEmbedConfigured()) {
+  if (beehiivEmbed) {
     return (
       <section
         className={rootClass}
         aria-label="Den of Themes newsletter signup"
         data-newsletter-signup={variant}
       >
-        <Script src={BEEHIIV_EMBED_JS} strategy="lazyOnload" />
-        <Script src={BEEHIIV_ATTRIBUTION_JS} strategy="lazyOnload" />
         <div className={styles.embedWrap} data-gtm="newsletter-signup-beehiiv">
           {beehiivFormUrl ? (
             <iframe

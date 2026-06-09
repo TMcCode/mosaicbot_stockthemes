@@ -27,14 +27,13 @@ type Props = {
 export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Props) {
   const [items, setItems] = useState<HomeCommentaryItemV0[]>(initialItems);
   const [totalCount, setTotalCount] = useState(initialItems.length);
-  const liveEnabled = stockthemesCommentaryLiveEnabled();
-  const [loading, setLoading] = useState(liveEnabled);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!liveEnabled) {
-      setLoading(false);
+    if (!stockthemesCommentaryLiveEnabled()) {
       return;
     }
+    setLoading(true);
     let cancelled = false;
     void fetchHomeCommentaryLive()
       .then((data) => {
@@ -57,7 +56,7 @@ export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Pr
     return () => {
       cancelled = true;
     };
-  }, [initialItems, previewDays, liveEnabled]);
+  }, [initialItems, previewDays]);
 
   const preview = commentaryItemsForPreview(items, previewDays, HOME_COMMENTARY_PREVIEW_COUNT);
   const hasMore = totalCount > preview.length;
