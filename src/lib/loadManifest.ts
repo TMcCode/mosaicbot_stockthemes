@@ -10,12 +10,12 @@ const FIXTURE_REL = path.join("public", "fixtures", "manifest.json");
 
 /** Full URL to manifest.json (e.g. public GCS). Inlined for server + optional client use. */
 function manifestUrl(): string | undefined {
+  if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
+    return undefined;
+  }
   const fromEnv = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim();
   if (fromEnv) {
     return fromEnv;
-  }
-  if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
-    return undefined;
   }
   return STOCKTHEMES_DEFAULT_MANIFEST_URL;
 }

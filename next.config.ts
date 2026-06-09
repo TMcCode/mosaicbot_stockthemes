@@ -14,6 +14,16 @@ const isDev = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   ...(isDev ? {} : { output: "export" }),
+  async rewrites() {
+    if (!isDev) return [];
+    // Browser overlay chart sidecars fetch same-origin in dev (CDN CORS only whitelists :3000).
+    return [
+      {
+        source: "/stockthemes-data/:path*",
+        destination: "https://storage.stockthemes.ai/:path*",
+      },
+    ];
+  },
   experimental: {
     // Turbopack FS cache can occasionally corrupt local `.next/dev` in this repo.
     // Keep prod behavior unchanged; this only affects `next dev`.

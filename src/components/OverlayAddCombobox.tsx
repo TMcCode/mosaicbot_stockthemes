@@ -23,7 +23,7 @@ export type OverlayPick = {
 type OverlaySearchRow = {
   key: string;
   pick: OverlayPick;
-  badge: "Theme" | "Group";
+  badge: "Theme" | "Group" | "Ticker";
   title: string;
   subtitle?: string;
 };
@@ -55,29 +55,29 @@ function expandHitsForOverlay(hits: SiteSearchHit[], selectedKeys: Set<string>):
       });
       continue;
     }
-    const tickerLabel = hit.ref.name
-      ? `${hit.ref.ticker} · ${hit.ref.name}`
-      : hit.ref.ticker;
-    for (let j = 0; j < hit.ref.theme_slugs.length; j++) {
-      const slug = hit.ref.theme_slugs[j];
-      const seriesKey = `theme:${slug}`;
-      if (selectedKeys.has(seriesKey)) continue;
-      const themeName = hit.ref.theme_names[j] ?? slug;
-      rows.push({
-        key: `${hit.key}:theme:${slug}`,
-        pick: { kind: "theme", slug, name: themeName },
-        badge: "Theme",
-        title: themeName,
-        subtitle: `via ${tickerLabel}`,
-      });
-    }
+    const ticker = hit.ref.ticker;
+    const tickerKey = `ticker:${ticker}`;
+    if (selectedKeys.has(tickerKey)) continue;
+    const title = hit.ref.name ? `${ticker} · ${hit.ref.name}` : ticker;
+    const themeHint =
+      hit.ref.theme_names.length > 0
+        ? hit.ref.theme_names.slice(0, 2).join(", ") +
+          (hit.ref.theme_names.length > 2 ? ` +${hit.ref.theme_names.length - 2}` : "")
+        : undefined;
+    rows.push({
+      key: hit.key,
+      pick: { kind: "ticker", slug: ticker, name: title },
+      badge: "Ticker",
+      title,
+      subtitle: themeHint ? `Themes: ${themeHint}` : undefined,
+    });
   }
   return rows;
 }
 
 function hitStillSelectable(hit: SiteSearchHit, selectedKeys: Set<string>): boolean {
   if (hit.kind === "ticker") {
-    return hit.ref.theme_slugs.some((slug) => !selectedKeys.has(`theme:${slug}`));
+    return !selectedKeys.has(`ticker:${hit.ref.ticker}`);
   }
   const seriesKey = overlaySeriesKeyFromHit(hit);
   return seriesKey != null && !selectedKeys.has(seriesKey);
@@ -204,7 +204,7 @@ export function OverlayAddCombobox({ selectedKeys, atLimit, onAdd }: Props) {
         id={`${listId}-input`}
         type="search"
         className={styles.input}
-        aria-label="Add theme or group to chart"
+        aria-label="Add theme, group, or ticker to chart"
         placeholder={atLimit ? "Chart full (12 series max)" : "Search ticker, company, or theme…"}
         value={query}
         disabled={atLimit}

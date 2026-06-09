@@ -46,7 +46,7 @@ function isStandardPeriod(p: OverlayChartPeriod): p is OverlayStandardPeriod {
 
 type LoadedSeries = {
   key: string;
-  kind: "theme" | "group";
+  kind: "theme" | "group" | "ticker";
   slug: string;
   name: string;
   rawPerformance: ChartPerformanceV0;
@@ -151,7 +151,7 @@ export function OverlayPageClient({
   );
 
   const countedSeries = items.length + activeSectorTickers.length;
-  const sectorSlotsLeft = Math.max(0, MAX_SERIES - items.length);
+  const maxSectorSelectable = Math.max(0, MAX_SERIES - items.length);
 
   const syncUrl = useCallback(
     (itemKeys: string[], sectorTickers: string[], sectorsEnabled: boolean) => {
@@ -198,11 +198,10 @@ export function OverlayPageClient({
         return;
       }
       const perf = sidecar.performance;
-      const values = applyShortThemePerformanceDisplay(
-        sidecar.name,
-        perf.values.map(Number),
-        perf,
-      );
+      const values =
+        pick.kind === "ticker"
+          ? perf.values.map(Number)
+          : applyShortThemePerformanceDisplay(sidecar.name, perf.values.map(Number), perf);
       setItems((prev) =>
         prev.map((p) =>
           p.key === key
@@ -233,7 +232,11 @@ export function OverlayPageClient({
     for (const key of keys) {
       const parsed = parseOverlayItemKey(key);
       if (!parsed) continue;
-      void loadOne({ kind: parsed.kind, slug: parsed.slug, name: parsed.slug });
+      void loadOne({
+        kind: parsed.kind,
+        slug: parsed.slug,
+        name: parsed.kind === "ticker" ? parsed.slug : parsed.slug,
+      });
     }
     // Initial URL hydration only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -276,7 +279,7 @@ export function OverlayPageClient({
   }, [themeSlugsNeedingPreview]);
 
   useEffect(() => {
-    const maxSectors = Math.max(0, MAX_SERIES - items.length);
+    const maxSectors = maxSectorSelectable;
     if (selectedSectorTickers.length <= maxSectors) return;
     const next = selectedSectorTickers.slice(0, maxSectors);
     setSelectedSectorTickers(next);
@@ -285,7 +288,7 @@ export function OverlayPageClient({
       next,
       showSectorEtfs,
     );
-  }, [items, selectedSectorTickers, showSectorEtfs, syncUrl]);
+  }, [items, selectedSectorTickers, showSectorEtfs, syncUrl, maxSectorSelectable]);
 
   const selectedKeys = useMemo(() => new Set(items.map((i) => i.key)), [items]);
 
@@ -303,7 +306,7 @@ export function OverlayPageClient({
 
   const onSectorTickersChange = useCallback(
     (tickers: string[]) => {
-      const capped = tickers.slice(0, sectorSlotsLeft);
+      const capped = tickers.slice(0, maxSectorSelectable);
       setSelectedSectorTickers(capped);
       syncUrl(
         items.map((i) => i.key),
@@ -311,7 +314,7 @@ export function OverlayPageClient({
         showSectorEtfs,
       );
     },
-    [items, sectorSlotsLeft, showSectorEtfs, syncUrl],
+    [items, maxSectorSelectable, showSectorEtfs, syncUrl],
   );
 
   const onSectorEnabledChange = useCallback(
@@ -452,12 +455,14 @@ export function OverlayPageClient({
         item.kind === "theme" ? themeTickersPreviewBySlug[item.slug] : undefined;
       const groupMeta = item.kind === "group" ? groupLegendMetaBySlug[item.slug] : undefined;
       const legendMeta =
-        item.kind === "group"
-          ? groupMeta?.spySector?.trim() ||
-            (groupMeta?.themeCount
-              ? `${groupMeta.themeCount} theme${groupMeta.themeCount === 1 ? "" : "s"}`
-              : "Group")
-          : undefined;
+        item.kind === "ticker"
+          ? item.slug
+          : item.kind === "group"
+            ? groupMeta?.spySector?.trim() ||
+              (groupMeta?.themeCount
+                ? `${groupMeta.themeCount} theme${groupMeta.themeCount === 1 ? "" : "s"}`
+                : "Group")
+            : undefined;
       out.push({
         id: item.key,
         name: item.name,
@@ -527,7 +532,7 @@ export function OverlayPageClient({
         <p className={pageStyles.eyebrow}>{eyebrow}</p>
         <h1>Theme compare chart</h1>
         <p className={pageStyles.introLead}>
-          Compare up to {MAX_SERIES} themes, groups, or sector SPDRs on one indexed chart.
+          Compare up to {MAX_SERIES} themes, groups, tickers, or sector SPDRs on one indexed chart.
         </p>
 
         <div className={styles.toolbar}>
@@ -553,7 +558,7 @@ export function OverlayPageClient({
                 onEnabledChange={onSectorEnabledChange}
                 selectedTickers={selectedSectorTickers}
                 onSelectedTickersChange={onSectorTickersChange}
-                maxSelectable={sectorSlotsLeft}
+                maxSelectable={maxSectorSelectable}
                 availableTickers={availableSectorTickers}
               />
             ) : null}
@@ -607,17 +612,24 @@ export function OverlayPageClient({
                 key={item.key}
                 className={`${styles.chip} ${item.loading ? styles.chipLoading : ""}`}
               >
-                <Link
-                  href={
-                    item.kind === "group"
-                      ? `/groups/${encodeURIComponent(item.slug)}`
-                      : `/themes/${encodeURIComponent(item.slug)}`
-                  }
-                  className={styles.chipLink}
-                >
-                  {item.name}
-                  {item.loading ? " …" : null}
-                </Link>
+                {item.kind === "ticker" ? (
+                  <span className={styles.chipLink}>
+                    {item.name}
+                    {item.loading ? " …" : null}
+                  </span>
+                ) : (
+                  <Link
+                    href={
+                      item.kind === "group"
+                        ? `/groups/${encodeURIComponent(item.slug)}`
+                        : `/themes/${encodeURIComponent(item.slug)}`
+                    }
+                    className={styles.chipLink}
+                  >
+                    {item.name}
+                    {item.loading ? " …" : null}
+                  </Link>
+                )}
                 <button type="button" className={styles.removeBtn} onClick={() => onRemove(item.key)}>
                   Remove
                 </button>

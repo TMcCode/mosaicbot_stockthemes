@@ -9,15 +9,24 @@ import { normalizePublicDataBase } from "@/lib/stockthemesClientConfig";
  * Set `NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL=` (empty) in `.env.local` to skip the public bucket
  * during static preview — avoids browser fetches when CORS is not configured for localhost.
  */
+/** Full offline build: all server loaders use public/fixtures (manifest, compare, trending, …). */
+export function stockthemesServerUseFixtures(): boolean {
+  return process.env.STOCKTHEMES_USE_FIXTURES === "1";
+}
+
+/**
+ * Browser-only overlay ticker sidecars from fixtures while the rest of the site uses live CDN.
+ * Does not affect SSR data loaders — set `STOCKTHEMES_USE_FIXTURES=1` for full offline instead.
+ */
+export function stockthemesBrowserOverlayFixtures(): boolean {
+  return process.env.NEXT_PUBLIC_STOCKTHEMES_USE_FIXTURES === "1";
+}
+
 export function stockthemesPublicDataBase(): string | undefined {
-  if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
+  if (stockthemesServerUseFixtures()) {
     return undefined;
   }
   const explicit = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim();
-  // Only disable public origin for fixture-only builds (empty env alone should not break prod).
-  if (process.env.STOCKTHEMES_USE_FIXTURES === "1" && !explicit) {
-    return undefined;
-  }
   const raw = explicit || STOCKTHEMES_DEFAULT_MANIFEST_URL;
   try {
     const u = new URL(raw);
@@ -35,6 +44,19 @@ export function stockthemesPublicDataBase(): string | undefined {
   } catch {
     return undefined;
   }
+}
+
+/**
+ * Base URL for browser lazy chart sidecar fetches on /overlay.
+ * Dev uses same-origin `/stockthemes-data` rewrite → storage.stockthemes.ai (any localhost port).
+ */
+export function stockthemesBrowserSidecarFetchBase(): string | undefined {
+  const base = stockthemesPublicDataBase();
+  if (!base) return undefined;
+  if (process.env.NODE_ENV === "development") {
+    return "/stockthemes-data";
+  }
+  return base;
 }
 
 /**

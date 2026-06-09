@@ -13,7 +13,7 @@ import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Theme compare chart",
-  description: "Compare indexed performance for up to 12 themes or groups on one chart.",
+  description: "Compare indexed performance for up to 12 themes, groups, tickers, or sector SPDRs on one chart.",
   path: "/overlay",
 });
 

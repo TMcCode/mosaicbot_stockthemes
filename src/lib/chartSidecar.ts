@@ -1,15 +1,20 @@
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { publicAssetPath } from "@/lib/siteUrl";
 import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import {
+  stockthemesBrowserOverlayFixtures,
+  stockthemesBrowserSidecarFetchBase,
+  stockthemesPublicDataBase,
+} from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceSidecarV0 } from "@/types/chart_performance.v0";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
 export const CHART_SIDECAR_SUFFIX = ".chart.v0.json";
 
-export type OverlayEntityKind = "theme" | "group";
+export type OverlayEntityKind = "theme" | "group" | "ticker";
 
 export function overlayItemKey(kind: OverlayEntityKind, slug: string): string {
   return `${kind}:${slug.trim()}`;
@@ -21,8 +26,8 @@ export function parseOverlayItemKey(raw: string): { kind: OverlayEntityKind; slu
   if (idx <= 0) return null;
   const kind = s.slice(0, idx) as OverlayEntityKind;
   const slug = s.slice(idx + 1).trim();
-  if ((kind !== "theme" && kind !== "group") || !slug) return null;
-  return { kind, slug };
+  if ((kind !== "theme" && kind !== "group" && kind !== "ticker") || !slug) return null;
+  return { kind, slug: kind === "ticker" ? slug.toUpperCase() : slug };
 }
 
 export function parseChartPerformanceSidecar(raw: string): ChartPerformanceSidecarV0 | null {
@@ -32,7 +37,9 @@ export function parseChartPerformanceSidecar(raw: string): ChartPerformanceSidec
     if (!data.slug || !data.name || !data.performance?.dates?.length || !data.performance?.values?.length) {
       return null;
     }
-    if (data.entity_type !== "theme" && data.entity_type !== "group") return null;
+    if (data.entity_type !== "theme" && data.entity_type !== "group" && data.entity_type !== "ticker") {
+      return null;
+    }
     return data;
   } catch {
     return null;
@@ -41,6 +48,9 @@ export function parseChartPerformanceSidecar(raw: string): ChartPerformanceSidec
 
 function sidecarRelPath(kind: OverlayEntityKind, slug: string): string {
   const enc = encodeURIComponent(slug);
+  if (kind === "ticker") {
+    return `tickers/${enc}${CHART_SIDECAR_SUFFIX}`;
+  }
   return kind === "theme" ? `themes/${enc}${CHART_SIDECAR_SUFFIX}` : `groups/${enc}${CHART_SIDECAR_SUFFIX}`;
 }
 
@@ -50,6 +60,7 @@ function detailRelPath(kind: OverlayEntityKind, slug: string): string {
 }
 
 function performanceFromDetailJson(raw: string, kind: OverlayEntityKind, slug: string): ChartPerformanceSidecarV0 | null {
+  if (kind === "ticker") return null;
   try {
     const data = parseJsonPayload<{ slug?: string; name?: string; chart_1y?: { performance?: ChartPerformanceV0 } }>(
       raw,
@@ -73,57 +84,85 @@ function performanceFromDetailJson(raw: string, kind: OverlayEntityKind, slug: s
 const sidecarResultCache = new Map<string, ChartPerformanceSidecarV0 | null>();
 const sidecarInflight = new Map<string, Promise<ChartPerformanceSidecarV0 | null>>();
 
-/** Fetch slim chart sidecar; fall back to chart_1y embedded in full detail JSON. */
+async function fetchSidecarText(url: string, signal?: AbortSignal): Promise<string | null> {
+  try {
+    const res = await fetch(url, {
+      credentials: "omit",
+      cache: stockthemesBrowserFetchCache(),
+      signal,
+    });
+    if (!res.ok) return null;
+    return await res.text();
+  } catch (e) {
+    if (signal?.aborted) throw e;
+    return null;
+  }
+}
+
+/** Fetch slim chart sidecar; fall back to chart_1y embedded in full detail JSON (themes/groups only). */
 export async function fetchChartSidecar(
   kind: OverlayEntityKind,
   slug: string,
   signal?: AbortSignal,
 ): Promise<ChartPerformanceSidecarV0 | null> {
-  const key = overlayItemKey(kind, slug);
+  const normalizedSlug = kind === "ticker" ? slug.trim().toUpperCase() : slug.trim();
+  const key = overlayItemKey(kind, normalizedSlug);
   if (sidecarResultCache.has(key)) return sidecarResultCache.get(key)!;
 
   const inflight = sidecarInflight.get(key);
   if (inflight) return inflight;
 
-  const base = stockthemesPublicDataBase();
-  if (!base) return null;
-
   const promise = (async () => {
+    const base = stockthemesPublicDataBase();
+    const sidecarBase = stockthemesBrowserSidecarFetchBase();
+    const useOverlayFixtures = stockthemesBrowserOverlayFixtures();
     const q = stockthemesBrowserCacheBusterQuery();
-    const sidecarUrl = `${base}/${sidecarRelPath(kind, slug)}?${q}`;
-    try {
-      const res = await fetch(sidecarUrl, {
-        credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
-        signal,
-      });
-      if (res.ok) {
-        const parsed = parseChartPerformanceSidecar(await res.text());
-        if (parsed) return parsed;
-      }
-    } catch (e) {
-      if (signal?.aborted) throw e;
-    }
+    const sidecarPath = sidecarRelPath(kind, normalizedSlug);
 
-    const detailUrl = `${base}/${detailRelPath(kind, slug)}?${q}`;
-    try {
-      const res = await fetch(detailUrl, {
-        credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
-        signal,
-      });
-      if (!res.ok) return null;
-      return performanceFromDetailJson(await res.text(), kind, slug);
-    } catch (e) {
-      if (signal?.aborted) throw e;
+    const tryFixture = async (): Promise<ChartPerformanceSidecarV0 | null> => {
+      const fixtureUrl = publicAssetPath(`/fixtures/${sidecarPath}`);
+      const raw = await fetchSidecarText(fixtureUrl, signal);
+      if (!raw) return null;
+      return parseChartPerformanceSidecar(raw);
+    };
+
+    const tryCdnSidecar = async (): Promise<ChartPerformanceSidecarV0 | null> => {
+      if (!sidecarBase) return null;
+      const sidecarUrl = `${sidecarBase}/${sidecarPath}?${q}`;
+      const raw = await fetchSidecarText(sidecarUrl, signal);
+      if (!raw) return null;
+      return parseChartPerformanceSidecar(raw);
+    };
+
+    // Overlay ticker fixtures: prefer local sample tickers, then live CDN.
+    if (kind === "ticker" && useOverlayFixtures) {
+      const fromFixture = await tryFixture();
+      if (fromFixture) return fromFixture;
+      const fromCdn = await tryCdnSidecar();
+      if (fromCdn) return fromCdn;
       return null;
     }
+
+    // Full offline (no manifest URL): fixtures only.
+    if (!base) {
+      return await tryFixture();
+    }
+
+    const fromCdn = await tryCdnSidecar();
+    if (fromCdn) return fromCdn;
+
+    if (kind === "ticker") return null;
+
+    const detailUrl = `${base}/${detailRelPath(kind, normalizedSlug)}?${q}`;
+    const detailRaw = await fetchSidecarText(detailUrl, signal);
+    if (!detailRaw) return null;
+    return performanceFromDetailJson(detailRaw, kind, normalizedSlug);
   })();
 
   sidecarInflight.set(key, promise);
   try {
     const result = await promise;
-    sidecarResultCache.set(key, result);
+    if (result) sidecarResultCache.set(key, result);
     return result;
   } finally {
     sidecarInflight.delete(key);

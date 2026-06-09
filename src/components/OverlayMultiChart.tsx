@@ -19,7 +19,7 @@ import styles from "./OverlayMultiChart.module.css";
 export type OverlayChartSeries = {
   id: string;
   name: string;
-  kind: "theme" | "group" | "etf";
+  kind: "theme" | "group" | "etf" | "ticker";
   color: string;
   performance: ChartPerformanceV0;
   /** Group composition–style legend: comma-separated tickers (+N). */
@@ -161,7 +161,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
   if (!series.length && !(showBenchmark && benchmark?.dates?.length)) {
     return (
       <div className={styles.empty} aria-live="polite">
-        Add up to 12 themes, groups, or sector SPDRs to compare indexed performance.
+        Add up to 12 themes, groups, tickers, or sector SPDRs to compare indexed performance.
       </div>
     );
   }
