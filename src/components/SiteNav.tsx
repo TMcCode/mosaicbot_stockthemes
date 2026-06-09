@@ -48,6 +48,9 @@ export function SiteNav() {
               <Link href="/overlay" className={styles.menuItem} role="menuitem">
                 Theme compare chart
               </Link>
+              <Link href="/heatmap" className={styles.menuItem} role="menuitem">
+                Market heatmap
+              </Link>
               <Link href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure
               </Link>

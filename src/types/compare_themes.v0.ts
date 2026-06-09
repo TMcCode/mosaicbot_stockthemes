@@ -10,6 +10,8 @@ export type CompareThemesRowV0 = {
   manual_weights_updated_at?: string | null;
   compare_returns?: ThemeCompareReturnsV0 | null;
   rank_10d?: ThemeRank10dV0 | null;
+  /** Mean constituent USD market cap (theme ETL). */
+  avg_market_cap_usd?: number;
 };
 
 export type CompareThemesV0 = {

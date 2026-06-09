@@ -26,6 +26,7 @@
       "slug": "artificial-intelligence",
       "name": "Artificial Intelligence",
       "industry_id": null,
+      "spy_sector": "Information Technology",
       "theme_count": 12,
       "ticker_count": 180,
       "theme_slugs": ["ai-chips", "ai-software", "data-centers"]

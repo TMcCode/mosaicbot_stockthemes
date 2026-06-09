@@ -1,0 +1,44 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-03-27T18:00:00Z",
+  "build_id": "example-local-dev",
+  "columns": ["1D", "10D", "MTD", "YTD", "Period"],
+  "rows": [
+    {
+      "slug": "ai-chips",
+      "name": "AI Chips",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "avg_market_cap_usd": 85000000000,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period"],
+        "metrics": { "1D": 2.1, "10D": 5.4, "MTD": 8.2, "YTD": 12.5, "Period": 18.0 }
+      }
+    },
+    {
+      "slug": "ai-software",
+      "name": "AI Software",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "avg_market_cap_usd": 42000000000,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period"],
+        "metrics": { "1D": -0.8, "10D": 1.2, "MTD": 3.1, "YTD": 9.4, "Period": 14.2 }
+      }
+    },
+    {
+      "slug": "data-centers",
+      "name": "Data Centers",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "avg_market_cap_usd": 31000000000,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period"],
+        "metrics": { "1D": 1.4, "10D": 2.9, "MTD": 4.0, "YTD": 11.1, "Period": 16.8 }
+      }
+    }
+  ]
+}
