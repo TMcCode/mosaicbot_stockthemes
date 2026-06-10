@@ -107,7 +107,8 @@ export async function fetchChartSidecar(
 ): Promise<ChartPerformanceSidecarV0 | null> {
   const normalizedSlug = kind === "ticker" ? slug.trim().toUpperCase() : slug.trim();
   const key = overlayItemKey(kind, normalizedSlug);
-  if (sidecarResultCache.has(key)) return sidecarResultCache.get(key)!;
+  const cacheEnabled = process.env.NODE_ENV !== "development";
+  if (cacheEnabled && sidecarResultCache.has(key)) return sidecarResultCache.get(key)!;
 
   const inflight = sidecarInflight.get(key);
   if (inflight) return inflight;
@@ -134,12 +135,13 @@ export async function fetchChartSidecar(
       return parseChartPerformanceSidecar(raw);
     };
 
-    // Overlay ticker fixtures: prefer local sample tickers, then live CDN.
-    if (kind === "ticker" && useOverlayFixtures) {
-      const fromFixture = await tryFixture();
-      if (fromFixture) return fromFixture;
+    // Tickers: live CDN first; fixtures only when offline or CDN miss.
+    if (kind === "ticker") {
       const fromCdn = await tryCdnSidecar();
       if (fromCdn) return fromCdn;
+      if (useOverlayFixtures || !base) {
+        return await tryFixture();
+      }
       return null;
     }
 
@@ -151,8 +153,6 @@ export async function fetchChartSidecar(
     const fromCdn = await tryCdnSidecar();
     if (fromCdn) return fromCdn;
 
-    if (kind === "ticker") return null;
-
     const detailUrl = `${base}/${detailRelPath(kind, normalizedSlug)}?${q}`;
     const detailRaw = await fetchSidecarText(detailUrl, signal);
     if (!detailRaw) return null;
@@ -162,7 +162,7 @@ export async function fetchChartSidecar(
   sidecarInflight.set(key, promise);
   try {
     const result = await promise;
-    if (result) sidecarResultCache.set(key, result);
+    if (result && cacheEnabled) sidecarResultCache.set(key, result);
     return result;
   } finally {
     sidecarInflight.delete(key);
