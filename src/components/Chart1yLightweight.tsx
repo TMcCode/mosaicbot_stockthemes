@@ -22,6 +22,7 @@ import {
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
+import { rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
@@ -183,6 +184,15 @@ function slicePointsToRange(
   return points.filter((p) => (!start || p.time >= start) && (!end || p.time <= end));
 }
 
+function rebasePointsTo100(
+  points: { time: string; value: number }[],
+): { time: string; value: number }[] | null {
+  if (points.length < 2) return null;
+  const rebased = rebaseIndexedValuesTo100(points.map((p) => p.value));
+  if (!rebased) return null;
+  return points.map((p, i) => ({ time: p.time, value: rebased[i] }));
+}
+
 type Chart1yCanvasProps = {
   chart1y: ThemeChart1yV0 | undefined;
   benchmarkPerformance?: ChartPerformanceV0;
@@ -291,8 +301,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       return;
     }
 
-    const perfPoints =
+    const perfPointsRaw =
       activeView === "performance" ? toPoints(perf?.dates ?? [], perf?.values ?? []) : null;
+    const perfPoints =
+      perfPointsRaw && perfPointsRaw.length >= 2
+        ? rebasePointsTo100(perfPointsRaw) ?? perfPointsRaw
+        : perfPointsRaw;
     const benchmarkPointsRaw = toPoints(
       benchmarkPerformance?.dates ?? [],
       benchmarkPerformance?.values ?? [],
@@ -319,8 +333,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       activeView === "performance" ? perfStartIso : compRange?.start,
       activeView === "performance" ? perfEndIso : compRange?.end,
     );
+    const benchmarkRebased =
+      benchmarkAligned && benchmarkAligned.length >= 2
+        ? rebasePointsTo100(benchmarkAligned) ?? benchmarkAligned
+        : benchmarkAligned;
     const benchmarkPoints =
-      benchmarkAligned && benchmarkAligned.length >= 20 ? benchmarkAligned : null;
+      benchmarkRebased && benchmarkRebased.length >= 20 ? benchmarkRebased : null;
     const perfHasPoints = Boolean(perfPoints && perfPoints.length);
 
     const seriesIdByApi = new Map<ISeriesApi<"Line">, string>();

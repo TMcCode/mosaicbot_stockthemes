@@ -136,6 +136,20 @@ function startIndexForPeriod(
   return firstIndexOnOrAfter(dates, anchor);
 }
 
+/** Rebase indexed values so the first point is 100 (no-op when already 100). */
+export function rebaseIndexedValuesTo100(values: number[]): number[] | null {
+  if (values.length < 1) return null;
+  const base = Number(values[0]);
+  if (!Number.isFinite(base) || base === 0) return null;
+  const rebased = values.map((x) => {
+    const val = Number(x);
+    if (!Number.isFinite(val)) return NaN;
+    return Math.round((val / base) * 10_000) / 100;
+  });
+  if (rebased.some((x) => !Number.isFinite(x))) return null;
+  return rebased;
+}
+
 /** Slice a long indexed series and rebase the window start to 100. */
 export function sliceAndRebaseIndexedPerformance(
   perf: ChartPerformanceV0 | undefined,
@@ -154,14 +168,8 @@ export function sliceAndRebaseIndexedPerformance(
   const start = startIndexForPeriod(d, period, customAnchorIso, referenceLastIso);
   const slicedDates = d.slice(start);
   const slicedValues = v.slice(start);
-  const base = Number(slicedValues[0]);
-  if (!Number.isFinite(base) || base === 0) return null;
-  const rebased = slicedValues.map((x) => {
-    const val = Number(x);
-    if (!Number.isFinite(val)) return NaN;
-    return Math.round((val / base) * 10_000) / 100;
-  });
-  if (rebased.some((x) => !Number.isFinite(x))) return null;
+  const rebased = rebaseIndexedValuesTo100(slicedValues);
+  if (!rebased) return null;
   return {
     ...perf,
     dates: slicedDates,
