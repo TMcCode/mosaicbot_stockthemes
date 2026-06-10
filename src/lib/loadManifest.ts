@@ -2,6 +2,7 @@ import { readFile } from "fs/promises";
 import path from "path";
 
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { normalizePublicJsonUrl } from "@/lib/stockthemesClientConfig";
 import { STOCKTHEMES_DEFAULT_MANIFEST_URL } from "@/lib/stockthemesDefaultManifestUrl";
 import { fetchPublicJsonText } from "@/lib/stockthemesBuildCache";
 import type { ManifestV0 } from "@/types/manifest.v0";
@@ -15,7 +16,7 @@ function manifestUrl(): string | undefined {
   }
   const fromEnv = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL?.trim();
   if (fromEnv) {
-    return fromEnv;
+    return normalizePublicJsonUrl(fromEnv);
   }
   return STOCKTHEMES_DEFAULT_MANIFEST_URL;
 }

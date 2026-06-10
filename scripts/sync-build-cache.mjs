@@ -23,7 +23,7 @@ import {
   themeSlugFingerprint,
   writeObjectMetaSidecar,
 } from "./lib/objectMeta.mjs";
-import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { normalizePublicJsonUrl, publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
 import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -58,7 +58,8 @@ function manifestUrl() {
   if (process.env.STOCKTHEMES_USE_FIXTURES === "1") {
     return null;
   }
-  return explicit?.trim() || DEFAULT_MANIFEST;
+  const raw = explicit?.trim() || DEFAULT_MANIFEST;
+  return normalizePublicJsonUrl(raw);
 }
 
 function readMeta() {

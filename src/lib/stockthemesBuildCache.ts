@@ -2,6 +2,7 @@ import { mkdir, readFile, stat, unlink, writeFile } from "fs/promises";
 import path from "path";
 import { pathToFileURL } from "url";
 
+import { normalizePublicJsonUrl } from "@/lib/stockthemesClientConfig";
 import { hasJsonPayloadStart } from "@/lib/parseJsonPayload";
 import { stockthemesLiveFetchInit } from "@/lib/stockthemesPublicBase";
 
@@ -182,6 +183,7 @@ export async function fetchPublicJsonText(
   cacheRelPath: string,
   options?: FetchPublicJsonOptions,
 ): Promise<string> {
+  url = normalizePublicJsonUrl(url);
   const abs = cachePathForRel(cacheRelPath);
   if (stockthemesBuildCacheEnabled()) {
     try {
