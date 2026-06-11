@@ -6,15 +6,16 @@ Events are sent from the browser when PostHog is configured (`NEXT_PUBLIC_POSTHO
 
 | Step | Event | When | Properties |
 |------|--------|------|------------|
-| 1 | `sign_in` | User completes magic-link sign-in | — (user identified with `posthog.identify`) |
+| 1 | `sign_in` | User completes magic-link sign-in | `is_new_user` (boolean); user identified with `posthog.identify` |
 | 2 | `watchlist_add` | User saves a theme (★) | `item_type`, `item_key` |
 | 3 | `my_view` | Signed-in user opens `/my` | — |
 
 Related (not in this funnel):
 
-| Event | When |
-|--------|------|
-| `account_view` | Signed-in user opens `/account` |
+| Event | When | Properties |
+|--------|------|------------|
+| `sign_up` | First-time account creation (magic link, within ~2 min of `auth.users.created_at`) | — |
+| `account_view` | Signed-in user opens `/account` | — |
 | `theme_idea_submitted` | Suggestion form succeeds | `kind`, `submission_id`, optional `group_slug` |
 
 ## Create the funnel in PostHog

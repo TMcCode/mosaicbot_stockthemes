@@ -11,7 +11,6 @@ import {
 } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 
-import { capturePostHog } from "@/lib/posthogClient";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -71,6 +70,30 @@ function posthogReset() {
     });
 }
 
+/** First magic-link completion: account created within the last 2 minutes. */
+function isNewSignupUser(user: User): boolean {
+  const createdMs = Date.parse(user.created_at);
+  if (Number.isNaN(createdMs)) return false;
+  return Date.now() - createdMs < 120_000;
+}
+
+function captureAuthPostHog(user: User) {
+  if (typeof window === "undefined") return;
+  void import("posthog-js")
+    .then(({ default: posthog }) => {
+      const email = user.email ?? undefined;
+      posthog.identify(user.id, email ? { email } : undefined);
+      const isNewUser = isNewSignupUser(user);
+      posthog.capture("sign_in", { is_new_user: isNewUser });
+      if (isNewUser) {
+        posthog.capture("sign_up");
+      }
+    })
+    .catch(() => {
+      /* optional */
+    });
+}
+
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const configured = useMemo(() => Boolean(getSupabasePublicConfig()), []);
   const client = useMemo(() => getBrowserSupabase(), [configured]);
@@ -98,8 +121,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       setLoading(false);
       if (_event === "SIGNED_IN" && s?.user) {
-        posthogIdentify(s.user);
-        capturePostHog("sign_in");
+        captureAuthPostHog(s.user);
       }
       if (_event === "SIGNED_OUT") {
         posthogReset();
