@@ -2,8 +2,10 @@
 
 export const HOME_SITE_HEADING = "About this site";
 
-export const HOME_SITE_SUMMARY =
-  "Hand-curated theme baskets and groups for narrative equity research—compare performance, holdings, and updates.";
+export const SITE_PRODUCT_SUMMARY =
+  "stockthemes.ai takes those themes and makes them digestible and investable by creating weighted baskets of public companies most exposed. We curate them from filings and earnings, track performance daily, and publish when constituents change. It's a map of thematic equity—not a fund, not advice, just structured research.";
+
+export const HOME_SITE_SUMMARY = SITE_PRODUCT_SUMMARY;
 
 export const HOME_SITE_BULLETS: string[] = [
   "Themes track one investable story; groups bundle related themes under a macro angle.",

@@ -3,28 +3,32 @@ import Link from "next/link";
 
 import { PageSurface } from "@/components/PageSurface";
 import styles from "../page.module.css";
+import { ABOUT_VISION_DISCLAIMER, ABOUT_VISION_PARAGRAPHS } from "@/lib/aboutVisionCopy";
 import { HELLO_EMAIL, mailtoHref, SUPPORT_EMAIL } from "@/lib/contactEmails";
+import {
+  ABOUT_FOUNDER_FEEDBACK,
+  ABOUT_FOUNDER_NEWSLETTER_AFTER_LINK,
+  DEFAULT_HOME_INTRO,
+} from "@/lib/aboutFounderCopy";
+import { SITE_PRODUCT_SUMMARY } from "@/lib/homeSiteCopy";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "About",
-  description: "Background, methodology, and theme basket definitions for stockthemes.ai.",
+  description:
+    "Background, product vision, methodology, and theme basket definitions for stockthemes.ai.",
   path: "/about",
 });
 
 export default async function AboutPage() {
   const content = await getWebsiteContentCached();
-  const homeIntro =
-    (content?.home_intro || "").trim() ||
-    "Stockthemes.ai helps you discover equity themes and groups quickly. Start with groups to find macro narratives, then drill into themes for constituent-level details.";
-  const introParagraphs = homeIntro
+  // Founder intro is versioned in-repo (aboutFounderCopy.ts), not website_content on R2.
+  const introParagraphs = DEFAULT_HOME_INTRO
     .split(/\n\s*\n/g)
     .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
     .filter(Boolean);
-  const themeBasketIntro =
-    (content?.theme_basket_intro || "").trim() ||
-    "A theme basket is a curated set of public stocks connected by a common narrative, such as AI infrastructure, obesity treatment, or grid modernization.";
+  const themeBasketIntro = (content?.theme_basket_intro || "").trim() || SITE_PRODUCT_SUMMARY;
 
   const renderIntroParagraph = (p: string, i: number) => {
     const email = HELLO_EMAIL;
@@ -61,10 +65,14 @@ export default async function AboutPage() {
           <div
             className={`${styles.introCopyWrap} ${styles.aboutProse} ${styles.aboutLead} ${styles.aboutBasketCard}`}
           >
-            <h2 id="about-founder-note">Why I built stockthemes.ai</h2>
-            {(introParagraphs.length ? introParagraphs : [homeIntro]).map((p, i) =>
-              renderIntroParagraph(p, i),
-            )}
+            <h2 id="about-founder-note">Why we built stockthemes.ai</h2>
+            {introParagraphs.map((p, i) => renderIntroParagraph(p, i))}
+            <p className={styles.introCopy}>{ABOUT_FOUNDER_FEEDBACK}</p>
+            <p className={styles.introCopy}>
+              Join the Den of Themes newsletter{" "}
+              <Link href="/#newsletter-signup">at the bottom of the page</Link>
+              {ABOUT_FOUNDER_NEWSLETTER_AFTER_LINK}
+            </p>
           </div>
           <section
             className={`${styles.aboutProse} ${styles.aboutBasketCard}`}
@@ -75,26 +83,24 @@ export default async function AboutPage() {
               {themeBasketIntro}
             </p>
             <p className={styles.introCopy}>
-              A Group is the higher-level umbrella, and each Group contains multiple related themes.
-              Think of the Group as the big idea (for example, Space Supply Chain), and each theme as
-              a specific angle within it (for example, launch services, satellite components, or
-              geospatial intelligence).
+              <strong>The form is three layers:</strong> Groups, themes, and constituents. A Group is
+              the macro umbrella—the big idea (for example, Space Supply Chain). Themes are the
+              specific angles inside it (launch services, satellite components, geospatial
+              intelligence). Each theme page is the basket itself: public tickers, weights,
+              performance, and a changelog when holdings change. Browse groups to orient; open a theme
+              when you want the full list of names tied to a narrative.
             </p>
             <p className={styles.introCopy}>
-              At stockthemes.ai, these baskets are built by hand after extensive research, not
-              auto-generated from a prompt. I review company filings, earnings commentary, product
-              roadmaps, and initiative-level signals to map which public companies are actually exposed
-              to each theme.
+              Baskets are built by hand after extensive research—not auto-generated from a prompt. We
+              review company filings, earnings commentary, product roadmaps, and initiative-level
+              signals to map which public companies are actually exposed to each theme. General-purpose
+              LLM lists often miss this: non-public names, stale narratives, or exposure that no
+              longer matches what companies are doing today.
             </p>
             <p className={styles.introCopy}>
-              General-purpose LLM outputs often miss this nuance: they can include non-public
-              companies, stale narratives, or outdated initiative exposure. This project is designed to
-              stay closer to what is investable now and what is changing in real markets.
-            </p>
-            <p className={styles.introCopy}>
-              stockthemes.ai tracks each basket&apos;s constituents and performance over time so you can
-              compare themes, understand exposure, and follow how membership changes as the narrative
-              evolves.
+              Missing a narrative or think a basket needs updating? Use our{" "}
+              <Link href="/account/suggest">suggestion form</Link> to propose a new group, a new theme,
+              or edits to an existing basket (sign-in required). We review every submission.
             </p>
             <p className={styles.introCopy}>
               For a clinical breakdown of construction rules, weights, return calculations, and refresh
@@ -103,6 +109,26 @@ export default async function AboutPage() {
                 methodology page
               </Link>
               .
+            </p>
+          </section>
+          <section
+            className={`${styles.aboutProse} ${styles.aboutBasketCard}`}
+            aria-labelledby="about-vision"
+          >
+            <h2 id="about-vision">Vision</h2>
+            {ABOUT_VISION_PARAGRAPHS.map((p, i) => (
+              <p key={`vision-${i}`} className={styles.introCopy}>
+                {p}
+              </p>
+            ))}
+            <p className={styles.introCopy}>
+              Subscriber support on the MosaicBot roadmap funds these data layers. If you want to
+              weigh in on what ships next, use the{" "}
+              <Link href="/contact">contact page</Link> or the{" "}
+              <Link href="/#newsletter-signup">Den of Themes newsletter</Link>.
+            </p>
+            <p className={`${styles.introCopy} ${styles.aboutVisionDisclaimer}`}>
+              {ABOUT_VISION_DISCLAIMER}
             </p>
           </section>
           <p className={styles.introCopy}>

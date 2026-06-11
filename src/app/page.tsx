@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
 import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
+import { HomeHeroGuide } from "@/components/HomeHeroGuide";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
@@ -195,13 +196,13 @@ export default async function Home() {
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>{eyebrow}</p>
               <h1 className={styles.heroTitle}>
-                Thematic equity intelligence, organized for discovery
+                Thematic equity intelligence
               </h1>
               <p className={styles.introPunchline}>
-                <span className={styles.introPunchlineLead}>Understand</span> how the world is
-                moving by tracking stock market performance for hundreds of real-world themes and
-                narratives.
+                <span className={styles.introPunchlineLead}>Discover what&apos;s moving.</span> See
+                the tickers behind it.
               </p>
+              <HomeHeroGuide />
               <p className={styles.introMore}>
                 <Link href="#newsletter-signup">Get the Den of Themes newsletter</Link>
                 <span className={styles.introMoreSep} aria-hidden="true">
@@ -265,7 +266,10 @@ export default async function Home() {
             />
 
             <div className={styles.directoryGrid}>
-              <section className={`${styles.section} ${styles.sectionTightTop}`}>
+              <section
+                id="trending-themes"
+                className={`${styles.section} ${styles.sectionTightTop}`}
+              >
                 <h2>Trending themes</h2>
               <HomeTrendingThemesTable
                 rows={rowsForTable}

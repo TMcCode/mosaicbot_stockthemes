@@ -1,0 +1,32 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: -4px 0 0;
+  max-width: 640px;
+}
+
+.wrap p {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 450;
+  color: var(--text-muted);
+  text-wrap: balance;
+}
+
+.wrap a {
+  color: var(--text-secondary);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.wrap a:hover {
+  color: var(--accent);
+}
+
+@media (max-width: 640px) {
+  .wrap p {
+    font-size: 14px;
+  }
+}

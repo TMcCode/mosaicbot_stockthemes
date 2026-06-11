@@ -62,7 +62,11 @@ export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Pr
   const hasMore = totalCount > preview.length;
 
   return (
-    <section className={styles.section} aria-labelledby="home-commentary-heading">
+    <section
+      id="home-commentary"
+      className={styles.section}
+      aria-labelledby="home-commentary-heading"
+    >
       <div className={styles.header}>
         <h2 id="home-commentary-heading">Recent commentary</h2>
         {hasMore ? (
