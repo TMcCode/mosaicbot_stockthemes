@@ -1,0 +1,8 @@
+{
+  "schema_version": "signup_stats.v0",
+  "available": false,
+  "sign_up_count": 0,
+  "as_of": "",
+  "next_update_at": "",
+  "update_schedule_note": "Sign-up count refreshes after each scheduled site deploy (typically ~5 AM ET on days the site rebuilds)."
+}

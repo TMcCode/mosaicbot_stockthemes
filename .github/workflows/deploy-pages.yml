@@ -117,6 +117,12 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
 
+      - name: Fetch sign-up count (giveaway banner)
+        run: node scripts/fetch-signup-stats.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
       - name: Build static export
         run: npm run build && node scripts/write-pages-deploy-meta.mjs
         env:

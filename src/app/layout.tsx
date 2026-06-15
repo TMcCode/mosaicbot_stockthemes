@@ -5,6 +5,7 @@ import "./globals.css";
 
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
+import { SignupGiveawayBanner } from "@/components/SignupGiveawayBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { SupabaseAuthProvider } from "@/components/SupabaseAuthProvider";
@@ -84,6 +85,7 @@ export default async function RootLayout({
             <WatchlistProvider>
               <ThemeRoot>
                 <SiteNav />
+                <SignupGiveawayBanner />
                 {children}
                 <SiteFooter dataAsOf={manifest.as_of} />
               </ThemeRoot>
