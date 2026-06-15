@@ -26,6 +26,8 @@ const AD_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT?.trim();
 // Keep AdSense execution to production only.
 // In local dev/HMR, adsbygoogle can throw teardown races (e.g. parentNode.removeChild on detached nodes).
 const ADS_ENABLED = process.env.NODE_ENV === "production";
+/** Set false and restore {@link AdSenseGlobalScript} in root layout when ready to show ads. */
+const ADS_DISABLED = true;
 
 function slotFor(placement: AdPlacementId): string | undefined {
   switch (placement) {
@@ -151,6 +153,8 @@ export function AdPlacement({
     observer.observe(host);
     return () => observer.disconnect();
   }, [active, minAdWidthPx, shouldRequest]);
+
+  if (ADS_DISABLED) return null;
 
   if (!active) {
     return <aside className={shellClass}>{placeholderLabel}</aside>;

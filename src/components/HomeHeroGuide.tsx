@@ -14,7 +14,7 @@ export function HomeHeroGuide() {
         Our{" "}
         <Link href="#trending-themes">trending themes</Link> and{" "}
         <Link href="#home-commentary">recent commentary</Link> below are a good place to start. We
-        determine the themes we most like and tend to them daily.
+        determine the themes we like most and tend to them daily.
       </p>
     </div>
   );

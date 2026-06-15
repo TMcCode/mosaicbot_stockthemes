@@ -3,7 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
 
-import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
+// import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
@@ -78,7 +78,7 @@ export default async function RootLayout({
           strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: themeInitScriptContent() }}
         />
-        <AdSenseGlobalScript />
+        {/* <AdSenseGlobalScript /> */}
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>
             <WatchlistProvider>
