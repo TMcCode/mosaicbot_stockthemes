@@ -4,7 +4,6 @@
  * Requires SUPABASE_SERVICE_ROLE_KEY (never exposed to the browser).
  * Skips quietly when the service role key is missing (local dev keeps the committed fallback).
  */
-import { createClient } from "@supabase/supabase-js";
 import { writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -40,14 +39,26 @@ function formatNextUpdateEt(isoUtc) {
   }).format(d);
 }
 
-async function countAuthUsers(supabase) {
+/** Auth admin REST — avoids @supabase/supabase-js WebSocket init on Node 20 CI. */
+async function countAuthUsers(projectUrl, serviceKey) {
+  const base = projectUrl.replace(/\/$/, "");
   let total = 0;
   let page = 1;
   const perPage = 1000;
   for (;;) {
-    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage });
-    if (error) throw error;
-    const batch = data?.users ?? [];
+    const endpoint = `${base}/auth/v1/admin/users?page=${page}&per_page=${perPage}`;
+    const res = await fetch(endpoint, {
+      headers: {
+        Authorization: `Bearer ${serviceKey}`,
+        apikey: serviceKey,
+      },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`admin users HTTP ${res.status}: ${body.slice(0, 240)}`);
+    }
+    const data = await res.json();
+    const batch = Array.isArray(data?.users) ? data.users : [];
     total += batch.length;
     if (batch.length < perPage) break;
     page += 1;
@@ -81,11 +92,7 @@ async function main() {
     return;
   }
 
-  const supabase = createClient(url, serviceKey, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const signUpCount = await countAuthUsers(supabase);
+  const signUpCount = await countAuthUsers(url, serviceKey);
   const asOf = new Date();
   const nextDeploy = nextDailyDeployUtc(asOf);
 
