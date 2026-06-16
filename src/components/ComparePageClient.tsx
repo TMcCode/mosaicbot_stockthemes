@@ -6,13 +6,16 @@ import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
+import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import {
   availableCompareSummaryPeriods,
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
+import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 import styles from "./ComparePageClient.module.css";
@@ -34,6 +37,7 @@ type Props = {
   groupOptions: string[];
   yearOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
+  serverCompareBundle?: CompareThemesV0 | null;
 };
 
 export function ComparePageClient({
@@ -44,7 +48,13 @@ export function ComparePageClient({
   groupOptions,
   yearOptions,
   selectedDates,
+  serverCompareBundle,
 }: Props) {
+  const { compareBundle } = useLiveCompareBundles(serverCompareBundle, null);
+  const rowsWithLiveCompare = useMemo(
+    () => mergeComparePageRows(rows, compareBundle?.rows ?? []),
+    [rows, compareBundle?.rows],
+  );
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
@@ -56,13 +66,13 @@ export function ComparePageClient({
 
   const filtered = useMemo(
     () =>
-      filterCompareRows(rows, {
+      filterCompareRows(rowsWithLiveCompare, {
         groupOptions,
         yearOptions,
         selectedGroups,
         selectedYears,
       }),
-    [rows, groupOptions, yearOptions, selectedGroups, selectedYears],
+    [rowsWithLiveCompare, groupOptions, yearOptions, selectedGroups, selectedYears],
   );
 
   return (

@@ -1,4 +1,5 @@
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
+import type { ThemeChart1yV0 } from "@/types/chart.v0";
 
 export function mergeThemeDetailPriceReturns(
   server: ThemeDetailV0,
@@ -18,6 +19,39 @@ export function mergeThemeDetailPriceReturns(
     ticker_performance_as_of: live.ticker_performance_as_of ?? server.ticker_performance_as_of,
     as_of: live.as_of ?? server.as_of,
   };
+}
+
+export type MergeThemeDetailLiveOptions = {
+  prices?: boolean;
+  compareReturns?: boolean;
+  composition?: boolean;
+};
+
+/** Merge selected live fields from CDN theme JSON into the build-time snapshot. */
+export function mergeThemeDetailLiveFields(
+  server: ThemeDetailV0,
+  live: ThemeDetailV0,
+  options: MergeThemeDetailLiveOptions = {},
+): ThemeDetailV0 {
+  const prices = options.prices !== false;
+  const compareReturns = options.compareReturns === true;
+  const composition = options.composition === true;
+
+  let merged = prices ? mergeThemeDetailPriceReturns(server, live) : { ...server };
+
+  if (compareReturns && live.compare_returns) {
+    merged = { ...merged, compare_returns: live.compare_returns };
+  }
+
+  if (composition && live.chart_1y?.composition_indexed) {
+    const chart1y: ThemeChart1yV0 = {
+      ...(merged.chart_1y ?? {}),
+      composition_indexed: live.chart_1y.composition_indexed,
+    };
+    merged = { ...merged, chart_1y: chart1y };
+  }
+
+  return merged;
 }
 
 function parseThemeDetail(raw: unknown): ThemeDetailV0 {
@@ -74,11 +108,13 @@ export async function refreshLiveThemeDetail({
   dataBaseUrl,
   serverDetail,
   fetchJson,
+  mergeOptions,
 }: {
   slug: string;
   dataBaseUrl: string;
   serverDetail: ThemeDetailV0;
   fetchJson: (url: string) => Promise<unknown>;
+  mergeOptions?: MergeThemeDetailLiveOptions;
 }): Promise<ThemeDetailV0> {
   const key = cacheKey(slug, dataBaseUrl);
   const existing = inflight.get(key);
@@ -87,7 +123,7 @@ export async function refreshLiveThemeDetail({
   const promise = (async () => {
     const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json`;
     const live = parseThemeDetail(await fetchJson(url));
-    const merged = mergeThemeDetailPriceReturns(serverDetail, live);
+    const merged = mergeThemeDetailLiveFields(serverDetail, live, mergeOptions);
     entries.set(key, {
       merged,
       fetchedAtMs: Date.now(),

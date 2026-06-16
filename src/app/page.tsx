@@ -7,9 +7,9 @@ import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { HomeHeroGuide } from "@/components/HomeHeroGuide";
 import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
-import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
+import { HomeTopMoversTickerLive } from "@/components/HomeTopMoversTickerLive";
 import { HomeWatchlistCtaLink } from "@/components/HomeWatchlistCtaLink";
-import { HomeTrendingThemesTable } from "@/components/HomeTrendingThemesTable";
+import { HomeTrendingThemesTableLive } from "@/components/HomeTrendingThemesTableLive";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
 
@@ -251,12 +251,13 @@ export default async function Home() {
             ) : null}
           </div>
 
-          <HomeTopMoversTicker
+          <HomeTopMoversTickerLive
             items={topMoversTicker}
             period={topMoversPeriod}
             asOfLabel={
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
+            serverTopMoversBundle={topMoversRes?.bundle ?? null}
           />
 
           <div className={styles.homeFeedStack}>
@@ -271,12 +272,13 @@ export default async function Home() {
                 className={`${styles.section} ${styles.sectionTightTop}`}
               >
                 <h2>Trending themes</h2>
-              <HomeTrendingThemesTable
+              <HomeTrendingThemesTableLive
                 rows={rowsForTable}
                 columns={trendingColumns}
                 columnHelp={Object.fromEntries(
                   trendingColumns.map((col) => [col, customDateHelpText(col, selectedDateByKey)]),
                 )}
+                serverCompareBundle={compareRes?.bundle ?? null}
               />
             </section>
 

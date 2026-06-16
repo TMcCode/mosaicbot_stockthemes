@@ -17,6 +17,46 @@ export function stockthemesLivePriceReturnsEnabled(): boolean {
 }
 
 /**
+ * Client-side refresh of theme/group performance chart via slim chart sidecar (~15 min).
+ * Follows live price_returns unless NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE=0.
+ */
+export function stockthemesLiveChartPerformanceEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE === "0") {
+    return false;
+  }
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE === "1") {
+    return true;
+  }
+  return stockthemesLivePriceReturnsEnabled();
+}
+
+/**
+ * Client-side refresh of theme compare_returns via compare_themes.v0.json (~15 min).
+ */
+export function stockthemesLiveCompareReturnsEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS === "0") {
+    return false;
+  }
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS === "1") {
+    return true;
+  }
+  return stockthemesLivePriceReturnsEnabled();
+}
+
+/**
+ * Client-side refresh of chart composition_indexed from themes/<slug>.json (~15 min).
+ */
+export function stockthemesLiveCompositionEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION === "0") {
+    return false;
+  }
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION === "1") {
+    return true;
+  }
+  return stockthemesLivePriceReturnsEnabled();
+}
+
+/**
  * Block accidental direct GCS URLs during the R2 migration.
  */
 export function normalizePublicDataBase(base: string | undefined): string | undefined {

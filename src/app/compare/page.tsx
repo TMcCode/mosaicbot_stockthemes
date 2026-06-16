@@ -95,6 +95,7 @@ export default async function ComparePage() {
             groupOptions={groupOptions}
             yearOptions={yearOptions}
             selectedDates={manifest.selected_dates}
+            serverCompareBundle={compareRes?.bundle ?? null}
           />
         </div>
       </main>

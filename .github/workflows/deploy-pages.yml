@@ -7,6 +7,9 @@
 # - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs use per-object ETag (not full-catalog pulls on as_of bump).
 # - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no full theme JSON hydrate in browser.
 # - NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS=1 — refresh constituent price_returns from CDN (~15 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE=1 — refresh performance chart via chart sidecar (~15 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS=1 — refresh home/compare aggregates (~15 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION=1 — refresh composition view on theme pages (~15 min).
 # - Default manifest URL: https://storage.stockthemes.ai (R2 custom domain), not storage.googleapis.com.
 #
 # See docs/R2_MIGRATION.md
@@ -135,6 +138,9 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE: "1"
           NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS: "1"
+          NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE: "1"
+          NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS: "1"
+          NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION: "1"
           NEXT_PUBLIC_STOCKTHEMES_PRICE_REVALIDATE_SEC: "900"
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}

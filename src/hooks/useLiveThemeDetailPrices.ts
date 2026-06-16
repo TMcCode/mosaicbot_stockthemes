@@ -5,6 +5,7 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   getLiveThemeDetailEntry,
   liveThemeDetailCacheKey,
+  mergeThemeDetailLiveFields,
   refreshLiveThemeDetail,
   seedLiveThemeDetail,
   subscribeLiveThemeDetail,
@@ -14,7 +15,10 @@ import {
   priceReturnsRevalidateSeconds,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
-import { stockthemesLivePriceReturnsEnabled } from "@/lib/stockthemesClientConfig";
+import {
+  stockthemesLiveCompositionEnabled,
+  stockthemesLivePriceReturnsEnabled,
+} from "@/lib/stockthemesClientConfig";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
 async function fetchThemeJson(url: string): Promise<unknown> {
@@ -30,7 +34,9 @@ export function useLiveThemeDetailPrices(
   dataBaseUrl: string,
   serverDetail: ThemeDetailV0,
 ): { detail: ThemeDetailV0; livePrices: boolean } {
-  const enabled = stockthemesLivePriceReturnsEnabled();
+  const enabled =
+    stockthemesLivePriceReturnsEnabled() ||
+    stockthemesLiveCompositionEnabled();
   const key = liveThemeDetailCacheKey(slug, dataBaseUrl);
 
   useEffect(() => {
@@ -55,6 +61,11 @@ export function useLiveThemeDetailPrices(
         dataBaseUrl,
         serverDetail,
         fetchJson: async () => fetchThemeJson(url),
+        mergeOptions: {
+          prices: stockthemesLivePriceReturnsEnabled(),
+          compareReturns: false,
+          composition: stockthemesLiveCompositionEnabled(),
+        },
       }).catch(() => {
         if (!cancelled) {
           // Keep server snapshot on fetch failure.
@@ -73,5 +84,5 @@ export function useLiveThemeDetailPrices(
 
   const detail = useMemo(() => entry?.merged ?? serverDetail, [entry?.merged, serverDetail]);
 
-  return { detail, livePrices: enabled };
+  return { detail, livePrices: stockthemesLivePriceReturnsEnabled() };
 }

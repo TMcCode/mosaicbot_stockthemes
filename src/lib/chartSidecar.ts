@@ -3,6 +3,7 @@ import { publicAssetPath } from "@/lib/siteUrl";
 import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
+  priceReturnsBrowserCacheBusterQuery,
 } from "@/lib/stockthemesCache";
 import {
   stockthemesBrowserOverlayFixtures,
@@ -104,10 +105,12 @@ export async function fetchChartSidecar(
   kind: OverlayEntityKind,
   slug: string,
   signal?: AbortSignal,
+  options?: { live?: boolean },
 ): Promise<ChartPerformanceSidecarV0 | null> {
   const normalizedSlug = kind === "ticker" ? slug.trim().toUpperCase() : slug.trim();
   const key = overlayItemKey(kind, normalizedSlug);
-  const cacheEnabled = process.env.NODE_ENV !== "development";
+  const live = Boolean(options?.live);
+  const cacheEnabled = process.env.NODE_ENV !== "development" && !live;
   if (cacheEnabled && sidecarResultCache.has(key)) return sidecarResultCache.get(key)!;
 
   const inflight = sidecarInflight.get(key);
@@ -117,7 +120,7 @@ export async function fetchChartSidecar(
     const base = stockthemesPublicDataBase();
     const sidecarBase = stockthemesBrowserSidecarFetchBase();
     const useOverlayFixtures = stockthemesBrowserOverlayFixtures();
-    const q = stockthemesBrowserCacheBusterQuery();
+    const q = live ? priceReturnsBrowserCacheBusterQuery() : stockthemesBrowserCacheBusterQuery();
     const sidecarPath = sidecarRelPath(kind, normalizedSlug);
 
     const tryFixture = async (): Promise<ChartPerformanceSidecarV0 | null> => {

@@ -4,11 +4,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
+import { fetchChartSidecar } from "@/lib/chartSidecar";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
 import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
+  priceReturnsRevalidateSeconds,
 } from "@/lib/stockthemesCache";
 import {
   CHART_FETCH_ERROR_PROD,
@@ -17,7 +19,13 @@ import {
   chartFetchErrorDevMessage,
   stockthemesDevBuildHintsEnabled,
 } from "@/lib/stockthemesBuildHints";
-import { stockthemesLiveHydrationDisabled } from "@/lib/stockthemesClientConfig";
+import { useLiveThemeDetailPrices } from "@/hooks/useLiveThemeDetailPrices";
+import {
+  stockthemesLiveChartPerformanceEnabled,
+  stockthemesLiveCompositionEnabled,
+  stockthemesLiveHydrationDisabled,
+} from "@/lib/stockthemesClientConfig";
+import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
 import styles from "@/app/page.module.css";
 
@@ -65,6 +73,8 @@ type Props = {
   compositionLegendShowSeriesBadge?: boolean;
   /** Optional benchmark overlay for performance view (e.g., S&P 500). */
   benchmarkPerformance?: ChartPerformanceV0;
+  /** Optional full theme detail for live composition refresh (themes only). */
+  serverDetail?: ThemeDetailV0;
 };
 
 /**
@@ -84,52 +94,90 @@ export function ThemeChartLiveHydrate({
   chartJsonFolder = "themes",
   compositionLegendShowSeriesBadge = true,
   benchmarkPerformance,
+  serverDetail,
 }: Props) {
+  const compositionLive = stockthemesLiveCompositionEnabled() && chartJsonFolder === "themes" && Boolean(serverDetail);
+  const { detail: liveDetail } = useLiveThemeDetailPrices(
+    slug,
+    dataBaseUrl,
+    serverDetail ?? ({
+      schema_version: 0,
+      slug,
+      name: performanceTitle ?? slug,
+      as_of: "",
+      constituents: [],
+    } satisfies ThemeDetailV0),
+  );
+  const serverChartWithComposition = useMemo(() => {
+    if (!compositionLive || !liveDetail?.chart_1y?.composition_indexed) {
+      return serverChart;
+    }
+    if (!serverChart) {
+      return liveDetail.chart_1y;
+    }
+    return {
+      ...serverChart,
+      composition_indexed: liveDetail.chart_1y.composition_indexed,
+    } satisfies ThemeChart1yV0;
+  }, [compositionLive, liveDetail?.chart_1y, serverChart]);
+
   const [fetched, setFetched] = useState<ThemeChart1yV0 | undefined>(undefined);
+  const [livePerformance, setLivePerformance] = useState<ChartPerformanceV0 | undefined>(undefined);
   const [fetchError, setFetchError] = useState<string | null>(null);
   const [noChartInPayload, setNoChartInPayload] = useState(false);
   const [lastFetchUrl, setLastFetchUrl] = useState<string | null>(null);
 
-  const serverChartRef = useRef(serverChart);
+  const serverChartRef = useRef(serverChartWithComposition);
   const fetchedRef = useRef(fetched);
-  serverChartRef.current = serverChart;
+  serverChartRef.current = serverChartWithComposition;
   fetchedRef.current = fetched;
 
-  const serverKey = chartStructuralKey(serverChart);
+  const serverKey = chartStructuralKey(serverChartWithComposition);
   const fetchedKey = chartStructuralKey(fetched);
+  const livePerfKey = useMemo(() => {
+    const p = livePerformance;
+    const pl = p?.dates?.length ?? 0;
+    if (!pl) return "";
+    return `${pl}\x1f${p!.dates![pl - 1]}\x1f${p!.values?.[pl - 1] ?? ""}`;
+  }, [livePerformance]);
 
   const chart1y = useMemo(() => {
     const sc = serverChartRef.current;
     const fd = fetchedRef.current;
+    let base: ThemeChart1yV0 | undefined;
     if (!chartHasRenderableData(sc)) {
-      return fd;
-    }
-    if (fd && hasComposition(fd)) {
-      return {
+      base = fd;
+    } else if (fd && hasComposition(fd)) {
+      base = {
         ...sc,
         composition_indexed: fd.composition_indexed,
       } satisfies ThemeChart1yV0;
+    } else {
+      base = sc;
     }
-    return sc;
+    if (base && livePerformance?.dates?.length && livePerformance?.values?.length) {
+      return { ...base, performance: livePerformance } satisfies ThemeChart1yV0;
+    }
+    return base;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
-  }, [serverKey, fetchedKey]);
+  }, [serverKey, fetchedKey, livePerfKey]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(
     () =>
       [
-        chartHasRenderableData(serverChart),
-        hasComposition(serverChart),
-        serverChart?.performance?.dates?.length ?? 0,
-        serverChart?.composition_indexed?.series?.length ?? 0,
+        chartHasRenderableData(serverChartWithComposition),
+        hasComposition(serverChartWithComposition),
+        serverChartWithComposition?.performance?.dates?.length ?? 0,
+        serverChartWithComposition?.composition_indexed?.series?.length ?? 0,
       ].join(":"),
-    [serverChart],
+    [serverChartWithComposition],
   );
 
   useEffect(() => {
-    const needFullChart = !chartHasRenderableData(serverChart);
+    const needFullChart = !chartHasRenderableData(serverChartWithComposition);
     const needCompositionOnly =
-      chartHasRenderableData(serverChart) && !hasComposition(serverChart);
+      chartHasRenderableData(serverChartWithComposition) && !hasComposition(serverChartWithComposition);
     const refreshLiveInDev =
       process.env.NODE_ENV === "development" && !stockthemesLiveHydrationDisabled();
 
@@ -185,6 +233,37 @@ export function ThemeChartLiveHydrate({
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- serverChart identity can thrash; sig captures chart-relevant changes
   }, [slug, dataBaseUrl, serverChartFetchSig, chartJsonFolder]);
+
+  const overlayKind = chartJsonFolder === "groups" ? "group" : "theme";
+
+  useEffect(() => {
+    if (!stockthemesLiveChartPerformanceEnabled()) {
+      return;
+    }
+    if (!chartHasRenderableData(serverChartWithComposition)) {
+      return;
+    }
+
+    let cancelled = false;
+    const refresh = () => {
+      fetchChartSidecar(overlayKind, slug, undefined, { live: true })
+        .then((sidecar) => {
+          if (cancelled || !sidecar?.performance?.dates?.length) return;
+          setLivePerformance(sidecar.performance);
+        })
+        .catch(() => {
+          /* keep baked performance on transient CDN errors */
+        });
+    };
+
+    refresh();
+    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
+    const id = window.setInterval(refresh, intervalMs);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [slug, overlayKind, serverChartFetchSig, serverChartWithComposition]);
 
   return (
     <>
