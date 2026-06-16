@@ -40,7 +40,12 @@ export function isSuspiciousChartPerformanceSpike(perf: ChartPerformanceV0): boo
   return false;
 }
 
-/** Strip trailing bogus spikes before rendering or merging live chart data. */
+/** True when the last point is an implausible spike or cliff vs the prior point. */
+export function isSuspiciousChartPerformanceTailPoint(perf: ChartPerformanceV0): boolean {
+  return isSuspiciousChartPerformanceSpike(perf) || isSuspiciousChartPerformanceCliff(perf);
+}
+
+/** Strip trailing bogus spikes/cliffs before rendering or merging live chart data. */
 export function sanitizeChartPerformanceForDisplay(
   perf: ChartPerformanceV0 | undefined,
 ): ChartPerformanceV0 | undefined {
@@ -48,7 +53,7 @@ export function sanitizeChartPerformanceForDisplay(
   const n = Math.min(perf.dates.length, perf.values.length);
   let dates = perf.dates.slice(0, n);
   let values = perf.values.slice(0, n).map((v) => Number(v));
-  while (values.length >= 2 && isSuspiciousChartPerformanceSpike({ dates, values })) {
+  while (values.length >= 2 && isSuspiciousChartPerformanceTailPoint({ dates, values })) {
     dates = dates.slice(0, -1);
     values = values.slice(0, -1);
   }
