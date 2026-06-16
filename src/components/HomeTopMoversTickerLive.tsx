@@ -13,6 +13,7 @@ type Props = {
   items: TopMoverTickerItem[];
   period?: TopMoverTickerPeriod;
   asOfLabel?: string;
+  tickerPerformanceAsOf?: string;
   serverTopMoversBundle?: HomeTopMoversV0 | null;
 };
 
@@ -20,9 +21,13 @@ export function HomeTopMoversTickerLive({
   items,
   period,
   asOfLabel,
+  tickerPerformanceAsOf,
   serverTopMoversBundle,
 }: Props) {
-  const { topMoversBundle } = useLiveCompareBundles(null, serverTopMoversBundle);
+  const { topMoversBundle, liveTickerPerformanceAsOf } = useLiveCompareBundles(
+    null,
+    serverTopMoversBundle,
+  );
   const liveItems = useMemo(() => {
     if (!period) return items;
     const fromBundle = pickTopMoversWithLiveBundle(serverTopMoversBundle, topMoversBundle, period);
@@ -30,9 +35,19 @@ export function HomeTopMoversTickerLive({
   }, [items, period, serverTopMoversBundle, topMoversBundle]);
 
   const liveAsOfLabel = useMemo(() => {
-    const iso = topMoversBundle?.as_of ?? serverTopMoversBundle?.as_of;
+    const iso =
+      topMoversBundle?.as_of ??
+      serverTopMoversBundle?.as_of ??
+      liveTickerPerformanceAsOf ??
+      tickerPerformanceAsOf;
     return iso ? formatSiteDataPublished(iso) : asOfLabel;
-  }, [asOfLabel, serverTopMoversBundle?.as_of, topMoversBundle?.as_of]);
+  }, [
+    asOfLabel,
+    liveTickerPerformanceAsOf,
+    serverTopMoversBundle?.as_of,
+    tickerPerformanceAsOf,
+    topMoversBundle?.as_of,
+  ]);
 
   return (
     <HomeTopMoversTicker items={liveItems} period={period} asOfLabel={liveAsOfLabel} />

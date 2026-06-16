@@ -257,6 +257,7 @@ export default async function Home() {
             asOfLabel={
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
+            tickerPerformanceAsOf={manifest.ticker_performance_as_of}
             serverTopMoversBundle={topMoversRes?.bundle ?? null}
           />
 

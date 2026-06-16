@@ -30,12 +30,14 @@ export function useLiveCompareBundles(
 ): {
   compareBundle: CompareThemesV0 | null | undefined;
   topMoversBundle: HomeTopMoversV0 | null | undefined;
+  liveTickerPerformanceAsOf: string | null;
   liveCompare: boolean;
 } {
   const enabled = stockthemesLiveCompareReturnsEnabled();
   const base = stockthemesPublicDataBase();
   const [liveCompare, setLiveCompare] = useState<CompareThemesV0 | null>(null);
   const [liveTopMovers, setLiveTopMovers] = useState<HomeTopMoversV0 | null>(null);
+  const [liveTickerPerformanceAsOf, setLiveTickerPerformanceAsOf] = useState<string | null>(null);
 
   useEffect(() => {
     if (!enabled || !base) return;
@@ -44,15 +46,24 @@ export function useLiveCompareBundles(
     const refresh = async () => {
       const q = priceReturnsBrowserCacheBusterQuery();
       try {
-        const [compareRaw, moversRaw] = await Promise.all([
+        const [compareRaw, moversRaw, manifestRaw] = await Promise.all([
           fetchJson(`${base}/compare_themes.v0.json?${q}`),
           fetchJson(`${base}/home_top_movers.v0.json?${q}`),
+          fetchJson(`${base}/manifest.json?${q}`),
         ]);
         if (cancelled) return;
         const compare = parseCompareThemesJson(compareRaw);
         const movers = parseHomeTopMoversJson(moversRaw);
         if (compare) setLiveCompare(compare);
         if (movers) setLiveTopMovers(movers);
+        const perfAsOf =
+          manifestRaw &&
+          typeof manifestRaw === "object" &&
+          typeof (manifestRaw as { ticker_performance_as_of?: unknown }).ticker_performance_as_of ===
+            "string"
+            ? String((manifestRaw as { ticker_performance_as_of: string }).ticker_performance_as_of)
+            : null;
+        if (perfAsOf) setLiveTickerPerformanceAsOf(perfAsOf);
       } catch {
         /* keep server snapshot */
       }
@@ -76,5 +87,5 @@ export function useLiveCompareBundles(
     [liveTopMovers, serverTopMovers],
   );
 
-  return { compareBundle, topMoversBundle, liveCompare: enabled && Boolean(liveCompare) };
+  return { compareBundle, topMoversBundle, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
 }

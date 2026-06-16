@@ -40,6 +40,8 @@ export type ManifestV0 = {
   schema_version: 0;
   as_of: string;
   build_id?: string;
+  /** Last slim/full intraday ticker_performance publish (UTC ISO). */
+  ticker_performance_as_of?: string;
   home_intro?: string;
   theme_basket_intro?: string;
   methodology_intro?: string;
