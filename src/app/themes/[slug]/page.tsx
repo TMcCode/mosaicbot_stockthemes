@@ -729,6 +729,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   <thead>
                     <tr>
                       <th scope="col">Company</th>
+                      {hasWeight ? <th scope="col">Wgt</th> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <th key={col} scope="col">
@@ -742,7 +743,6 @@ export default async function ThemeDetailPage({ params }: Props) {
                         </th>
                       ))}
                       {hasMcap ? <th scope="col">Mkt Cap</th> : null}
-                      {hasWeight ? <th scope="col">Wgt</th> : null}
                     </tr>
                   </thead>
                   <tbody>
@@ -757,6 +757,9 @@ export default async function ThemeDetailPage({ params }: Props) {
                             <TickerBadge ticker={c.ticker} />
                           </div>
                         </td>
+                        {hasWeight ? (
+                          <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
+                        ) : null}
                         {hasPriceReturns
                           ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                               <td key={col}>{formatPct(row.priceReturns[col])}</td>
@@ -769,15 +772,13 @@ export default async function ThemeDetailPage({ params }: Props) {
                         <td>{earnings.intraQtrCell}</td>
                         <td>{earnings.sinceQtrRptCell}</td>
                         {hasMcap ? <td>{formatUsdMarketCap(row.marketCapUsd)}</td> : null}
-                        {hasWeight ? (
-                          <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
-                        ) : null}
                       </tr>
                     )})}
                     <tr>
                       <td>
                         <strong>Average</strong>
                       </td>
+                      {hasWeight ? <td><strong>{avgWeight != null ? formatWeight(avgWeight) : "—"}</strong></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -801,12 +802,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(avgIntraQtr)}</strong></td>
                       <td><strong>{formatPct(avgSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td><strong>{formatUsdMarketCap(avgMarketCap)}</strong></td> : null}
-                      {hasWeight ? <td><strong>{avgWeight != null ? formatWeight(avgWeight) : "—"}</strong></td> : null}
                     </tr>
                     <tr>
                       <td>
                         <strong>Median</strong>
                       </td>
+                      {hasWeight ? <td><strong>{medianWeight != null ? formatWeight(medianWeight) : "—"}</strong></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -830,12 +831,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(medianIntraQtr)}</strong></td>
                       <td><strong>{formatPct(medianSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td><strong>{formatUsdMarketCap(medianMarketCap)}</strong></td> : null}
-                      {hasWeight ? <td><strong>{medianWeight != null ? formatWeight(medianWeight) : "—"}</strong></td> : null}
                     </tr>
                     <tr>
                       <td>
                         <strong>Std Dev</strong>
                       </td>
+                      {hasWeight ? <td><strong>{stdWeight != null ? formatWeight(stdWeight) : "—"}</strong></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -859,12 +860,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(stdIntraQtr)}</strong></td>
                       <td><strong>{formatPct(stdSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td><strong>{formatUsdMarketCap(stdMarketCap)}</strong></td> : null}
-                      {hasWeight ? <td><strong>{stdWeight != null ? formatWeight(stdWeight) : "—"}</strong></td> : null}
                     </tr>
                     <tr>
                       <td>
                         <strong>Min</strong>
                       </td>
+                      {hasWeight ? <td><strong>{minWeight != null ? formatWeight(minWeight) : "—"}</strong></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -888,12 +889,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(minIntraQtr)}</strong></td>
                       <td><strong>{formatPct(minSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td><strong>{formatUsdMarketCap(minMarketCap)}</strong></td> : null}
-                      {hasWeight ? <td><strong>{minWeight != null ? formatWeight(minWeight) : "—"}</strong></td> : null}
                     </tr>
                     <tr>
                       <td>
                         <strong>Max</strong>
                       </td>
+                      {hasWeight ? <td><strong>{maxWeight != null ? formatWeight(maxWeight) : "—"}</strong></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -917,12 +918,12 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(maxIntraQtr)}</strong></td>
                       <td><strong>{formatPct(maxSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td><strong>{formatUsdMarketCap(maxMarketCap)}</strong></td> : null}
-                      {hasWeight ? <td><strong>{maxWeight != null ? formatWeight(maxWeight) : "—"}</strong></td> : null}
                     </tr>
                     <tr>
                       <td>
                         <strong>% Positive Tickers</strong>
                       </td>
+                      {hasWeight ? <td></td> : null}
                       {hasPriceReturns
                         ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
                             <td key={col}>
@@ -946,7 +947,6 @@ export default async function ThemeDetailPage({ params }: Props) {
                       <td><strong>{formatPct(posIntraQtr)}</strong></td>
                       <td><strong>{formatPct(posSinceQtrRpt)}</strong></td>
                       {hasMcap ? <td></td> : null}
-                      {hasWeight ? <td></td> : null}
                     </tr>
                   </tbody>
                 </table>
