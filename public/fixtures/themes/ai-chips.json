@@ -27,8 +27,16 @@
       "weight": 0.22,
       "price_returns": {
         "source": "fixture",
-        "columns": ["1D", "10D", "MTD", "YTD"],
-        "metrics": { "1D": 1.25, "10D": -2.1, "MTD": 4.5, "YTD": 12.3, "Period": 18.4 }
+        "columns": ["1D", "10D", "MTD", "YTD", "IranWar", "LibDay", "Period"],
+        "metrics": {
+          "1D": 1.25,
+          "10D": -2.1,
+          "MTD": 4.5,
+          "YTD": 12.3,
+          "IranWar": -8.4,
+          "LibDay": 3.2,
+          "Period": 18.4
+        }
       }
     },
     {

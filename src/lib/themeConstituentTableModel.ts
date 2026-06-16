@@ -1,8 +1,8 @@
 import type { ConstituentPriceReturnColumn } from "@/lib/constituentPriceReturns";
 import {
-  CONSTITUENT_PRICE_RETURN_COLUMNS,
   hasConstituentPriceReturns,
   priceReturnMetric,
+  resolveConstituentPriceReturnColumns,
 } from "@/lib/constituentPriceReturns";
 import { inferMarketCapUsd, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
@@ -290,6 +290,7 @@ export type ThemeConstituentTableModel = {
   hasWeight: boolean;
   hasMcap: boolean;
   hasPriceReturns: boolean;
+  priceReturnColumns: string[];
   constituentRows: ConstituentTableRow[];
   avgEarningsPerf: number | null;
   avgLastQuarterEarningsMove: number | null;
@@ -331,6 +332,7 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
   const hasWeight = Boolean(detail.constituents?.some((c) => c.weight != null));
   const hasMcap = Boolean(detail.constituents?.some((c) => inferMarketCapUsd(c) != null));
   const hasPriceReturns = hasConstituentPriceReturns(detail.constituents);
+  const priceReturnColumns = resolveConstituentPriceReturnColumns(detail.constituents);
   const sortedConstituents = sortConstituentsByMarketCapDesc(detail.constituents);
   const earningsRowsByTicker = new Map(
     sortedConstituents.map((c) => [c.ticker, buildQuarterEarningsRow(c)]),
@@ -340,7 +342,7 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     const earnings = earningsRowsByTicker.get(c.ticker);
     if (!earnings) continue;
     const priceReturns = Object.fromEntries(
-      CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => [col, priceReturnMetric(c, col)]),
+      priceReturnColumns.map((col) => [col, priceReturnMetric(c, col)]),
     ) as Record<ConstituentPriceReturnColumn, number | null>;
     constituentRows.push({
       constituent: c,
@@ -355,6 +357,7 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     hasWeight,
     hasMcap,
     hasPriceReturns,
+    priceReturnColumns,
     constituentRows,
     avgEarningsPerf:
       precomputedStat(detail, "average", "earnings_move_pct") ??

@@ -1,12 +1,15 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import styles from "@/app/page.module.css";
+import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { TickerBadge } from "@/components/TickerBadge";
-import { CONSTITUENT_PRICE_RETURN_COLUMNS } from "@/lib/constituentPriceReturns";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import { CONSTITUENT_EARNINGS_COLUMNS } from "@/lib/constituentEarningsColumnHelp";
+import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatWeight } from "@/lib/formatWeight";
 import { publicAssetPath } from "@/lib/siteUrl";
@@ -15,19 +18,35 @@ import {
   priceReturnStat,
   type ThemeConstituentTableModel,
 } from "@/lib/themeConstituentTableModel";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
+
+type TableView = "returns" | "earnings";
 
 type Props = {
   detail: ThemeDetailV0;
   model: ThemeConstituentTableModel;
   livePrices?: boolean;
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
-export function ThemeConstituentsTable({ detail, model, livePrices = false }: Props) {
+export function ThemeConstituentsTable({
+  detail,
+  model,
+  livePrices = false,
+  selectedDates,
+}: Props) {
+  const [view, setView] = useState<TableView>("returns");
+  const selectedDateByKey = useMemo(
+    () => buildSelectedDateLookup(selectedDates),
+    [selectedDates],
+  );
+
   const {
     hasWeight,
     hasMcap,
     hasPriceReturns,
+    priceReturnColumns,
     constituentRows,
     avgEarningsPerf,
     avgLastQuarterEarningsMove,
@@ -65,21 +84,53 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
     maxWeight,
   } = model;
 
+  const showReturns = view === "returns";
+  const showEarnings = view === "earnings";
+
   const priceStat = (
     rowKey: Parameters<typeof priceReturnStat>[1],
-    col: (typeof CONSTITUENT_PRICE_RETURN_COLUMNS)[number],
+    col: string,
   ) =>
     priceReturnStat(
       detail,
       rowKey,
       col,
-      constituentRows.map((r) => r.priceReturns[col]),
+      constituentRows.map((r) => r.priceReturns[col] ?? null),
       { livePrices },
     );
 
+  const priceHeader = (col: string) => {
+    const tooltip = metricColumnHeaderTooltip(col, selectedDateByKey);
+    return (
+      <th key={col} scope="col" title={tooltip}>
+        {trendingColumnHeader(col)}
+      </th>
+    );
+  };
+
   return (
     <section className={styles.section} aria-labelledby="constituents-heading">
-      <h2 id="constituents-heading">Constituents</h2>
+      <div className={tableStyles.sectionHeader}>
+        <h2 id="constituents-heading">Constituents</h2>
+        <div className={tableStyles.toggle} role="group" aria-label="Constituents table view">
+          <button
+            type="button"
+            className={showReturns ? tableStyles.toggleActive : undefined}
+            aria-pressed={showReturns}
+            onClick={() => setView("returns")}
+          >
+            Returns
+          </button>
+          <button
+            type="button"
+            className={showEarnings ? tableStyles.toggleActive : undefined}
+            aria-pressed={showEarnings}
+            onClick={() => setView("earnings")}
+          >
+            Earnings
+          </button>
+        </div>
+      </div>
       {detail.build_id ? (
         <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
           Build <code className={styles.code}>{detail.build_id}</code>
@@ -107,19 +158,17 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                 <tr>
                   <th scope="col">Company</th>
                   {hasWeight ? <th scope="col">Wgt</th> : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                        <th key={col} scope="col">
-                          {trendingColumnHeader(col)}
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => priceHeader(col))
+                    : null}
+                  {showEarnings
+                    ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
+                        <th key={col.id} scope="col" title={col.tooltip}>
+                          {col.label}
                         </th>
                       ))
                     : null}
-                  {CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
-                    <th key={col.id} scope="col" title={col.tooltip}>
-                      {col.label}
-                    </th>
-                  ))}
-                  {hasMcap ? <th scope="col">Mkt Cap</th> : null}
+                  {showReturns && hasMcap ? <th scope="col">Mkt Cap</th> : null}
                 </tr>
               </thead>
               <tbody>
@@ -137,21 +186,27 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       {hasWeight ? (
                         <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
                       ) : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                      {showReturns && hasPriceReturns
+                        ? priceReturnColumns.map((col) => (
                             <td key={col}>{formatConstituentPct(row.priceReturns[col])}</td>
                           ))
                         : null}
-                      <td>{earnings.lastReportDateCell}</td>
-                      <td>{earnings.reportDateCell}</td>
-                      <td>{earnings.lastQuarterEarningsMoveCell}</td>
-                      <td>
-                        {earnings.earningsPerfCell}
-                        {earnings.earningsPerfIsProvisional ? "*" : ""}
-                      </td>
-                      <td>{earnings.intraQtrCell}</td>
-                      <td>{earnings.sinceQtrRptCell}</td>
-                      {hasMcap ? <td>{formatUsdMarketCap(row.marketCapUsd)}</td> : null}
+                      {showEarnings ? (
+                        <>
+                          <td>{earnings.lastReportDateCell}</td>
+                          <td>{earnings.reportDateCell}</td>
+                          <td>{earnings.lastQuarterEarningsMoveCell}</td>
+                          <td>
+                            {earnings.earningsPerfCell}
+                            {earnings.earningsPerfIsProvisional ? "*" : ""}
+                          </td>
+                          <td>{earnings.intraQtrCell}</td>
+                          <td>{earnings.sinceQtrRptCell}</td>
+                        </>
+                      ) : null}
+                      {showReturns && hasMcap ? (
+                        <td>{formatUsdMarketCap(row.marketCapUsd)}</td>
+                      ) : null}
                     </tr>
                   );
                 })}
@@ -164,28 +219,32 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       <strong>{avgWeight != null ? formatWeight(avgWeight) : "—"}</strong>
                     </td>
                   ) : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("average", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(avgLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(avgEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(avgIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(avgSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? (
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(avgLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(avgEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(avgIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(avgSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? (
                     <td>
                       <strong>{formatUsdMarketCap(avgMarketCap)}</strong>
                     </td>
@@ -200,28 +259,32 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       <strong>{medianWeight != null ? formatWeight(medianWeight) : "—"}</strong>
                     </td>
                   ) : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("median", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(medianLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(medianEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(medianIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(medianSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? (
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(medianLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(medianEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(medianIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(medianSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? (
                     <td>
                       <strong>{formatUsdMarketCap(medianMarketCap)}</strong>
                     </td>
@@ -236,28 +299,32 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       <strong>{stdWeight != null ? formatWeight(stdWeight) : "—"}</strong>
                     </td>
                   ) : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("std_dev", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(stdLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(stdEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(stdIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(stdSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? (
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(stdLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(stdEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(stdIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(stdSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? (
                     <td>
                       <strong>{formatUsdMarketCap(stdMarketCap)}</strong>
                     </td>
@@ -272,28 +339,32 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       <strong>{minWeight != null ? formatWeight(minWeight) : "—"}</strong>
                     </td>
                   ) : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("min", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(minLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(minEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(minIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(minSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? (
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(minLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(minEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(minIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(minSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? (
                     <td>
                       <strong>{formatUsdMarketCap(minMarketCap)}</strong>
                     </td>
@@ -308,28 +379,32 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                       <strong>{maxWeight != null ? formatWeight(maxWeight) : "—"}</strong>
                     </td>
                   ) : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("max", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(maxLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(maxEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(maxIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(maxSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? (
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(maxLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(maxEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(maxIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(maxSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? (
                     <td>
                       <strong>{formatUsdMarketCap(maxMarketCap)}</strong>
                     </td>
@@ -340,37 +415,43 @@ export function ThemeConstituentsTable({ detail, model, livePrices = false }: Pr
                     <strong>% Positive Tickers</strong>
                   </td>
                   {hasWeight ? <td></td> : null}
-                  {hasPriceReturns
-                    ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
+                  {showReturns && hasPriceReturns
+                    ? priceReturnColumns.map((col) => (
                         <td key={col}>
                           <strong>{formatConstituentPct(priceStat("positive_tickers_pct", col))}</strong>
                         </td>
                       ))
                     : null}
-                  <td></td>
-                  <td></td>
-                  <td>
-                    <strong>{formatConstituentPct(posLastQuarterEarningsMove)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(posEarningsPerf)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(posIntraQtr)}</strong>
-                  </td>
-                  <td>
-                    <strong>{formatConstituentPct(posSinceQtrRpt)}</strong>
-                  </td>
-                  {hasMcap ? <td></td> : null}
+                  {showEarnings ? (
+                    <>
+                      <td></td>
+                      <td></td>
+                      <td>
+                        <strong>{formatConstituentPct(posLastQuarterEarningsMove)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(posEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(posIntraQtr)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(posSinceQtrRpt)}</strong>
+                      </td>
+                    </>
+                  ) : null}
+                  {showReturns && hasMcap ? <td></td> : null}
                 </tr>
               </tbody>
             </table>
           </div>
         </HorizontalScrollArea>
-        <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8, padding: "0 10px 10px" }}>
-          * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
-          EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
-        </p>
+        {showEarnings ? (
+          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8, padding: "0 10px 10px" }}>
+            * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
+            EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
+          </p>
+        ) : null}
       </div>
     </section>
   );
