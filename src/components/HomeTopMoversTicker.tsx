@@ -164,7 +164,6 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
       startScroll: el.scrollLeft,
       moved: false,
     };
-    el.setPointerCapture(e.pointerId);
   }, []);
 
   const onPointerMove = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
@@ -175,6 +174,11 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
     if (!drag.moved && Math.abs(dx) > DRAG_THRESHOLD_PX) {
       drag.moved = true;
       setScrubbing(true);
+      try {
+        el.setPointerCapture(e.pointerId);
+      } catch {
+        /* ignore */
+      }
     }
     if (drag.moved) {
       el.scrollLeft = drag.startScroll - dx;

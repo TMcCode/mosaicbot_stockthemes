@@ -12,12 +12,13 @@
     "dev:webpack": "next dev --webpack",
     "dev:cache": "node scripts/sync-build-cache.mjs",
     "dev:preview": "npm run build && npx --yes serve out -l 3000",
-    "prebuild": "node scripts/write-ads-txt.mjs && node scripts/sync-build-cache.mjs && node scripts/fetch-search-index.mjs && node scripts/generate-og-png.mjs && node scripts/fetch-signup-stats.mjs",
+    "prebuild": "node scripts/write-ads-txt.mjs && node scripts/sync-build-cache.mjs && node scripts/fetch-search-index.mjs && node scripts/generate-og-png.mjs && node scripts/generate-favicon.mjs && node scripts/fetch-signup-stats.mjs",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "serve:out": "npx --yes serve out -l 3000",
     "og:png": "node scripts/generate-og-png.mjs",
+    "icons:generate": "node scripts/generate-favicon.mjs",
     "verify:cdn": "node scripts/verify-cdn.mjs"
   },
   "dependencies": {
