@@ -67,5 +67,20 @@
         "metrics": { "1D": 2.05, "10D": 5.6, "MTD": 9.2, "YTD": 28.1 }
       }
     }
-  ]
+  ],
+  "compare_returns": {
+    "source": "fixture",
+    "columns": ["1D", "10D", "MTD", "YTD", "LstRpt %", "SinceLstRpt", "Period", "IranWar", "LibDay"],
+    "metrics": {
+      "1D": 1.85,
+      "10D": 4.2,
+      "MTD": 7.1,
+      "YTD": 22.4,
+      "LstRpt %": 3.5,
+      "SinceLstRpt": 5.8,
+      "Period": 31.2,
+      "IranWar": -5.1,
+      "LibDay": 12.0
+    }
+  }
 }

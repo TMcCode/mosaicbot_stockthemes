@@ -18,6 +18,11 @@ import {
   priceReturnStat,
   type ThemeConstituentTableModel,
 } from "@/lib/themeConstituentTableModel";
+import {
+  hasThemeManualWeightReturns,
+  THEME_EARNINGS_COMPARE_METRIC,
+  themeManualWeightReturnPct,
+} from "@/lib/themeConstituentThemeReturn";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
@@ -86,6 +91,15 @@ export function ThemeConstituentsTable({
 
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
+  const themeCompare = detail.compare_returns;
+  const showThemeReturnRow = hasThemeManualWeightReturns(
+    themeCompare,
+    priceReturnColumns,
+    view,
+  );
+
+  const themeReturnPct = (columnKey: string) =>
+    formatConstituentPct(themeManualWeightReturnPct(columnKey, themeCompare, detail.name));
 
   const priceStat = (
     rowKey: Parameters<typeof priceReturnStat>[1],
@@ -213,6 +227,39 @@ export function ThemeConstituentsTable({
                     </tr>
                   );
                 })}
+                {showThemeReturnRow ? (
+                  <tr className={tableStyles.themeReturnRow}>
+                    <td>
+                      <strong
+                        className={tableStyles.themeReturnLabel}
+                        title="Manual theme-weight return — same as Theme returns table and the performance chart"
+                      >
+                        Theme return
+                      </strong>
+                    </td>
+                    {hasWeight ? <td>—</td> : null}
+                    {showReturns && hasPriceReturns
+                      ? priceReturnColumns.map((col) => (
+                          <td key={col}>
+                            <strong>{themeReturnPct(col)}</strong>
+                          </td>
+                        ))
+                      : null}
+                    {showEarnings
+                      ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => {
+                          const compareKey = THEME_EARNINGS_COMPARE_METRIC[col.id];
+                          return (
+                            <td key={col.id}>
+                              <strong>
+                                {compareKey ? themeReturnPct(compareKey) : "—"}
+                              </strong>
+                            </td>
+                          );
+                        })
+                      : null}
+                    {showReturns && hasMcap ? <td>—</td> : null}
+                  </tr>
+                ) : null}
                 <tr>
                   <td>
                     <strong>Average</strong>

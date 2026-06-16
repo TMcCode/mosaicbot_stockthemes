@@ -41,6 +41,15 @@
   color: var(--accent, #26fcd6);
 }
 
+.themeReturnRow td {
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.16));
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.themeReturnLabel {
+  color: var(--text-primary);
+}
+
 :global(.st-theme[data-theme="light"]) .toggle {
   border-color: rgba(0, 0, 0, 0.1);
   background: rgba(0, 0, 0, 0.03);

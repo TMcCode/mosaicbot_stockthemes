@@ -63,7 +63,7 @@ export function useLiveThemeDetailPrices(
         fetchJson: async () => fetchThemeJson(url),
         mergeOptions: {
           prices: stockthemesLivePriceReturnsEnabled(),
-          compareReturns: false,
+          compareReturns: stockthemesLivePriceReturnsEnabled(),
           composition: stockthemesLiveCompositionEnabled(),
         },
       }).catch(() => {
