@@ -89,10 +89,15 @@
   align-items: center;
   gap: 12px 20px;
   padding-top: 2px;
+  position: relative;
+  z-index: 2;
 }
 
 .compareSectionTight {
   margin-top: 12px;
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
 }
 
 .themeHeroRail {

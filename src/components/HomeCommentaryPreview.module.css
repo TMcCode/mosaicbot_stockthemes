@@ -49,10 +49,32 @@
   border: 1px solid var(--button-secondary-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
-  padding: 14px 14px 12px;
+  padding: 12px 12px 10px;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
+}
+
+.noteWrap {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.readMoreRow {
+  margin: 0;
+  flex: 0 0 auto;
+}
+
+.readMore {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.readMore:hover {
+  text-decoration: underline;
 }
 
 .cardMeta {

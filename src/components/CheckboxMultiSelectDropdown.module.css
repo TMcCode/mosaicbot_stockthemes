@@ -72,8 +72,7 @@
   line-height: 1.2;
 }
 
-.wrapInlineCompact .panel {
-  right: auto;
+.panelCompact {
   min-width: 240px;
 }
 
@@ -92,12 +91,9 @@
 }
 
 .panel {
-  position: absolute;
-  z-index: 50;
-  top: calc(100% + 4px);
-  left: 0;
-  right: 0;
-  max-height: 240px;
+  position: fixed;
+  z-index: 200;
+  max-height: min(320px, calc(100vh - 16px));
   display: flex;
   flex-direction: column;
   border-radius: 8px;

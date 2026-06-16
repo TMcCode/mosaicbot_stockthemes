@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { createPortal } from "react-dom";
 
 import styles from "./CheckboxMultiSelectDropdown.module.css";
 
@@ -35,12 +36,42 @@ export function CheckboxMultiSelectDropdown({
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const [panelStyle, setPanelStyle] = useState<CSSProperties>({});
+
+  useEffect(() => setMounted(true), []);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const updatePosition = () => {
+      const trigger = triggerRef.current;
+      if (!trigger) return;
+      const rect = trigger.getBoundingClientRect();
+      const minWidth = compact ? 240 : rect.width;
+      setPanelStyle({
+        top: rect.bottom + 4,
+        left: rect.left,
+        width: Math.max(rect.width, minWidth),
+      });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
+    };
+  }, [open, compact]);
 
   useEffect(() => {
     if (!open) return;
     const onDoc = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -58,6 +89,56 @@ export function CheckboxMultiSelectDropdown({
       selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value],
     );
   };
+
+  const panelClass = [styles.panel, compact ? styles.panelCompact : ""].filter(Boolean).join(" ");
+
+  const panel = open ? (
+    <div
+      ref={panelRef}
+      className={panelClass}
+      style={panelStyle}
+      role="listbox"
+      aria-multiselectable="true"
+    >
+      {options.length === 0 ? (
+        <p className={styles.empty}>No options</p>
+      ) : (
+        <>
+          <div className={styles.bulkActions}>
+            <button
+              type="button"
+              className={styles.bulkBtn}
+              disabled={selected.length >= options.length}
+              onClick={() => onChange([...options])}
+            >
+              Select all
+            </button>
+            <button
+              type="button"
+              className={styles.bulkBtn}
+              disabled={selected.length === 0}
+              onClick={() => onChange([])}
+            >
+              Unselect all
+            </button>
+          </div>
+          <ul className={styles.list}>
+            {options.map((opt) => {
+              const checked = selected.includes(opt);
+              return (
+                <li key={opt}>
+                  <label className={styles.option}>
+                    <input type="checkbox" checked={checked} onChange={() => toggle(opt)} />
+                    <span>{opt}</span>
+                  </label>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </div>
+  ) : null;
 
   return (
     <div
@@ -81,6 +162,7 @@ export function CheckboxMultiSelectDropdown({
         {label}
       </span>
       <button
+        ref={triggerRef}
         type="button"
         className={styles.trigger}
         aria-haspopup="listbox"
@@ -93,51 +175,7 @@ export function CheckboxMultiSelectDropdown({
           ▾
         </span>
       </button>
-      {open ? (
-        <div className={styles.panel} role="listbox" aria-multiselectable="true">
-          {options.length === 0 ? (
-            <p className={styles.empty}>No options</p>
-          ) : (
-            <>
-              <div className={styles.bulkActions}>
-                <button
-                  type="button"
-                  className={styles.bulkBtn}
-                  disabled={selected.length >= options.length}
-                  onClick={() => onChange([...options])}
-                >
-                  Select all
-                </button>
-                <button
-                  type="button"
-                  className={styles.bulkBtn}
-                  disabled={selected.length === 0}
-                  onClick={() => onChange([])}
-                >
-                  Unselect all
-                </button>
-              </div>
-              <ul className={styles.list}>
-                {options.map((opt) => {
-                  const checked = selected.includes(opt);
-                  return (
-                    <li key={opt}>
-                      <label className={styles.option}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={() => toggle(opt)}
-                        />
-                        <span>{opt}</span>
-                      </label>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          )}
-        </div>
-      ) : null}
+      {mounted && panel ? createPortal(panel, document.body) : null}
     </div>
   );
 }

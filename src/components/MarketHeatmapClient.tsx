@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 
 import pageStyles from "@/app/page.module.css";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
@@ -12,7 +13,10 @@ import {
   type MarketHeatmapMode,
   type MarketHeatmapTile,
 } from "@/lib/buildMarketHeatmapNodes";
-import { buildNestedSectorTreemap } from "@/lib/buildNestedSectorTreemap";
+import {
+  buildNestedSectorTreemap,
+  type NestedSectorRect,
+} from "@/lib/buildNestedSectorTreemap";
 import {
   pickDefaultTreemapPeriod,
   TREEMAP_RETURN_PERIODS,
@@ -66,6 +70,114 @@ function tileMatchesSearch(tile: MarketHeatmapTile, q: string): boolean {
   );
 }
 
+function ExpandIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M18 6 6 18M6 6l12 12"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+type HeatmapTreemapProps = {
+  nestedRects: NestedSectorRect[];
+  activePeriod: TreemapReturnColumn | null;
+  sectorSpdrReturns: HeatmapSectorSpdrReturns;
+  modeLabel: string;
+  periodLabel: string | null;
+  expanded?: boolean;
+};
+
+function HeatmapTreemap({
+  nestedRects,
+  activePeriod,
+  sectorSpdrReturns,
+  modeLabel,
+  periodLabel,
+  expanded = false,
+}: HeatmapTreemapProps) {
+  const mapClass = expanded ? `${styles.map} ${styles.mapExpanded}` : styles.map;
+
+  return (
+    <div
+      className={mapClass}
+      role="img"
+      aria-label={
+        periodLabel
+          ? `Market heatmap by ${modeLabel}, colored by ${periodLabel} percent change, grouped by sector`
+          : `Market heatmap by ${modeLabel}, grouped by sector`
+      }
+    >
+      {nestedRects.map((r) => {
+        if (r.kind === "label") {
+          const sectorRet = sectorSpdrReturn(sectorSpdrReturns, r.sector, activePeriod);
+          return (
+            <div
+              key={`label-${r.sector}-${r.x}-${r.y}`}
+              className={styles.sectorLabel}
+              style={{
+                left: `${r.x}%`,
+                top: `${r.y}%`,
+                width: `${r.w}%`,
+                height: `${r.h}%`,
+              }}
+            >
+              <span className={styles.sectorLabelName}>{r.sector}</span>
+              {activePeriod != null && sectorRet != null ? (
+                <span className={returnPctClass(sectorRet)}>{formatReturnPct(sectorRet)}</span>
+              ) : null}
+            </div>
+          );
+        }
+        const t = r.tile;
+        const ret = activePeriod != null ? (t.returns[activePeriod] ?? null) : null;
+        const title =
+          periodLabel
+            ? `${t.name} · ${t.sector} · ${periodLabel}: ${formatReturnPct(ret)}`
+            : `${t.name} · ${t.sector}`;
+        return (
+          <Link
+            key={`${t.slug}-${r.x}-${r.y}`}
+            href={t.href}
+            className={`${styles.cell} ${styles.cellLink}`}
+            style={{
+              left: `${r.x}%`,
+              top: `${r.y}%`,
+              width: `${r.w}%`,
+              height: `${r.h}%`,
+              background: returnTileBackground(ret),
+            }}
+            title={title}
+          >
+            <span className={styles.cellName}>{t.name}</span>
+            {activePeriod != null ? (
+              <span className={returnPctClass(ret)}>{formatReturnPct(ret)}</span>
+            ) : null}
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
+
 export function MarketHeatmapClient({
   eyebrow,
   asOfLabel,
@@ -77,6 +189,24 @@ export function MarketHeatmapClient({
   const [mode, setMode] = useState<MarketHeatmapMode>("group");
   const [search, setSearch] = useState("");
   const [selectedSectors, setSelectedSectors] = useState<string[]>([]);
+  const [expanded, setExpanded] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") setExpanded(false);
+    }
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [expanded]);
 
   const baseTiles = useMemo(
     () => buildMarketHeatmapNodes({ mode, groups, themes, compareRows }),
@@ -244,69 +374,67 @@ export function MarketHeatmapClient({
       ) : (
         <>
           <div className={styles.desktopMapWrap}>
-            <div
-              className={styles.map}
-              role="img"
-              aria-label={
-                periodLabel
-                  ? `Market heatmap by ${modeLabel}, colored by ${periodLabel} percent change, grouped by sector`
-                  : `Market heatmap by ${modeLabel}, grouped by sector`
-              }
-            >
-              {nestedRects.map((r) => {
-                if (r.kind === "label") {
-                  const sectorRet = sectorSpdrReturn(sectorSpdrReturns, r.sector, activePeriod);
-                  return (
-                    <div
-                      key={`label-${r.sector}-${r.x}-${r.y}`}
-                      className={styles.sectorLabel}
-                      style={{
-                        left: `${r.x}%`,
-                        top: `${r.y}%`,
-                        width: `${r.w}%`,
-                        height: `${r.h}%`,
-                      }}
-                    >
-                      <span className={styles.sectorLabelName}>{r.sector}</span>
-                      {activePeriod != null && sectorRet != null ? (
-                        <span className={returnPctClass(sectorRet)}>
-                          {formatReturnPct(sectorRet)}
-                        </span>
-                      ) : null}
-                    </div>
-                  );
-                }
-                const t = r.tile;
-                const ret =
-                  activePeriod != null ? (t.returns[activePeriod] ?? null) : null;
-                const title =
-                  periodLabel
-                    ? `${t.name} · ${t.sector} · ${periodLabel}: ${formatReturnPct(ret)}`
-                    : `${t.name} · ${t.sector}`;
-                return (
-                  <Link
-                    key={`${t.slug}-${r.x}-${r.y}`}
-                    href={t.href}
-                    className={`${styles.cell} ${styles.cellLink}`}
-                    style={{
-                      left: `${r.x}%`,
-                      top: `${r.y}%`,
-                      width: `${r.w}%`,
-                      height: `${r.h}%`,
-                      background: returnTileBackground(ret),
-                    }}
-                    title={title}
-                  >
-                    <span className={styles.cellName}>{t.name}</span>
-                    {activePeriod != null ? (
-                      <span className={returnPctClass(ret)}>{formatReturnPct(ret)}</span>
-                    ) : null}
-                  </Link>
-                );
-              })}
+            <div className={styles.mapFrame}>
+              <button
+                type="button"
+                className={styles.expandBtn}
+                onClick={() => setExpanded(true)}
+                aria-label="Expand heatmap to full screen"
+              >
+                <ExpandIcon />
+                <span>Expand</span>
+              </button>
+              <HeatmapTreemap
+                nestedRects={nestedRects}
+                activePeriod={activePeriod}
+                sectorSpdrReturns={sectorSpdrReturns}
+                modeLabel={modeLabel}
+                periodLabel={periodLabel}
+              />
             </div>
             {asOfLabel ? <p className={styles.asOf}>As of {asOfLabel}</p> : null}
           </div>
+
+          {expanded && mounted
+            ? createPortal(
+                <div
+                  className={styles.fullscreenOverlay}
+                  role="dialog"
+                  aria-modal="true"
+                  aria-label="Market heatmap full screen"
+                >
+                  <div className={styles.fullscreenHeader}>
+                    <div className={styles.fullscreenTitle}>
+                      <h2>Market heatmap</h2>
+                      <p>
+                        {countLabel}
+                        {periodLabel ? ` · ${periodLabel}% return` : null}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      className={styles.closeBtn}
+                      onClick={() => setExpanded(false)}
+                      aria-label="Close full screen"
+                    >
+                      <CloseIcon />
+                    </button>
+                  </div>
+                  <div className={styles.fullscreenBody}>
+                    <HeatmapTreemap
+                      nestedRects={nestedRects}
+                      activePeriod={activePeriod}
+                      sectorSpdrReturns={sectorSpdrReturns}
+                      modeLabel={modeLabel}
+                      periodLabel={periodLabel}
+                      expanded
+                    />
+                    {asOfLabel ? <p className={styles.asOf}>As of {asOfLabel}</p> : null}
+                  </div>
+                </div>,
+                document.body,
+              )
+            : null}
 
           <div className={styles.mobileList}>
             <p className={styles.mobileListIntro}>Sector list (simplified mobile view)</p>

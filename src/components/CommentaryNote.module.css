@@ -6,6 +6,19 @@
   white-space: pre-wrap;
 }
 
+.compact.regular,
+.compact.markdown {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.compact.markdown h1,
+.compact.markdown h2,
+.compact.markdown h3,
+.compact.markdown h4 {
+  font-size: 11px;
+}
+
 .markdown {
   font-size: 13px;
   line-height: 1.45;

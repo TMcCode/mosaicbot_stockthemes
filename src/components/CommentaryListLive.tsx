@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { CommentaryNote } from "@/components/CommentaryNote";
-import { fmtCommentaryDate } from "@/lib/commentaryDisplay";
+import { commentaryItemAnchorId, fmtCommentaryDate } from "@/lib/commentaryDisplay";
 import {
   fetchHomeCommentaryLive,
   stockthemesCommentaryLiveEnabled,
@@ -69,7 +69,11 @@ export function CommentaryListLive({ initialItems, initialListDays }: Props) {
             const imageUrl = String(item.image_url || "").trim();
             const isNightly = item.entry_type === "nightly";
             return (
-              <article key={`${item.date}-${idx}`} className={styles.item}>
+              <article
+                key={`${item.date}-${idx}`}
+                id={commentaryItemAnchorId(item.date)}
+                className={styles.item}
+              >
                 <header className={styles.itemHeader}>
                   <time dateTime={item.date}>{fmtCommentaryDate(item.date)}</time>
                   {isNightly ? <span className={styles.badge}>Nightly</span> : null}

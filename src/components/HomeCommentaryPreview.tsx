@@ -6,9 +6,11 @@ import { useEffect, useState } from "react";
 import { CommentaryNote } from "@/components/CommentaryNote";
 import {
   commentaryItemsForPreview,
+  commentaryPreviewHref,
+  commentaryPreviewNeedsMore,
   fmtCommentaryDate,
+  HOME_COMMENTARY_PREVIEW_CLAMP_LINES,
   HOME_COMMENTARY_PREVIEW_COUNT,
-  truncateCommentaryNote,
 } from "@/lib/commentaryDisplay";
 import {
   fetchHomeCommentaryLive,
@@ -110,11 +112,21 @@ export function HomeCommentaryPreview({ initialItems = [], previewDays = 7 }: Pr
                     )
                   ) : null}
                 </div>
-                <CommentaryNote
-                  note={truncateCommentaryNote(item.note)}
-                  entryType={item.entry_type}
-                  clampLines={6}
-                />
+                <div className={styles.noteWrap}>
+                  <CommentaryNote
+                    note={item.note}
+                    entryType={item.entry_type}
+                    compact
+                    clampLines={HOME_COMMENTARY_PREVIEW_CLAMP_LINES}
+                  />
+                </div>
+                {commentaryPreviewNeedsMore(item.note) ? (
+                  <p className={styles.readMoreRow}>
+                    <Link href={commentaryPreviewHref(item.date)} className={styles.readMore}>
+                      Read full note
+                    </Link>
+                  </p>
+                ) : null}
                 {imageUrl ? (
                   <p className={styles.imageRow}>
                     <a href={imageUrl} target="_blank" rel="noopener noreferrer" className={styles.imageLink}>
