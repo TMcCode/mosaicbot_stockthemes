@@ -654,16 +654,26 @@ export default async function ThemeDetailPage({ params }: Props) {
             </div>
             <div className={styles.themeHeroRail}>
               {treemapNodes.length ? (
-                <ThemeHeroTreemap
-                  nodes={treemapNodes}
-                  themeName={theme.name}
-                  defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
-                  asOfLabel={
-                    detail?.ticker_performance_as_of
-                      ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
-                      : undefined
-                  }
-                />
+                detail && dataBaseUrl && stockthemesLivePriceReturnsEnabled() ? (
+                  <ThemeHeroTreemapLive
+                    slug={slug}
+                    dataBaseUrl={dataBaseUrl}
+                    serverDetail={detail}
+                    themeName={theme.name}
+                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                  />
+                ) : (
+                  <ThemeHeroTreemap
+                    nodes={treemapNodes}
+                    themeName={theme.name}
+                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                    asOfLabel={
+                      detail?.ticker_performance_as_of
+                        ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
+                        : undefined
+                    }
+                  />
+                )
               ) : null}
             </div>
           </div>
