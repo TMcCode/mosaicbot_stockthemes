@@ -59,6 +59,7 @@ Force full re-download: workflow_dispatch **refresh_cache**, or `STOCKTHEMES_BUI
 | **CDN purge** | Selective URL purge after upload (not full `data.stockthemes.ai/*` prefix) |
 | **Build cache** | `sync-build-cache.mjs` + Actions cache |
 | **No live hydrate** | `NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1` in Pages build |
+| **Live price_returns** | `NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS=1` — one `themes/<slug>.json` fetch per theme page per ~15 min |
 | **`/my` compare** | Baked at build via `prepareMyWatchlistCompareData` (no client `compare_themes` fetch) |
 | **CDN only** | `normalizePublicDataBase()` blocks `storage.googleapis.com` in prod |
 | **Private bucket** | `docs/PRIVATE_BUCKET_SETUP.md` + MosaicBot scripts |

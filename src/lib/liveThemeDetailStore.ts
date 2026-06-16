@@ -1,0 +1,117 @@
+import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
+
+export function mergeThemeDetailPriceReturns(
+  server: ThemeDetailV0,
+  live: ThemeDetailV0,
+): ThemeDetailV0 {
+  const liveByTicker = new Map(
+    (live.constituents || []).map((c) => [String(c.ticker || "").trim().toUpperCase(), c]),
+  );
+  const constituents = (server.constituents || []).map((c) => {
+    const liveC = liveByTicker.get(String(c.ticker || "").trim().toUpperCase());
+    if (!liveC?.price_returns) return c;
+    return { ...c, price_returns: liveC.price_returns } satisfies ThemeDetailConstituentV0;
+  });
+  return {
+    ...server,
+    constituents,
+    ticker_performance_as_of: live.ticker_performance_as_of ?? server.ticker_performance_as_of,
+    as_of: live.as_of ?? server.as_of,
+  };
+}
+
+function parseThemeDetail(raw: unknown): ThemeDetailV0 {
+  const data = raw as ThemeDetailV0;
+  if (data.schema_version !== 0) {
+    throw new Error(`Unsupported theme detail schema_version: ${data.schema_version}`);
+  }
+  if (!data.slug || !data.name || !Array.isArray(data.constituents)) {
+    throw new Error("Invalid theme detail JSON");
+  }
+  return data;
+}
+
+type Entry = {
+  merged: ThemeDetailV0;
+  fetchedAtMs: number;
+  tickerPerformanceAsOf?: string;
+};
+
+type Listener = () => void;
+
+const entries = new Map<string, Entry>();
+const listeners = new Map<string, Set<Listener>>();
+const inflight = new Map<string, Promise<ThemeDetailV0>>();
+
+function cacheKey(slug: string, dataBaseUrl: string): string {
+  return `${dataBaseUrl}::${slug}`;
+}
+
+function notify(key: string) {
+  for (const listener of listeners.get(key) || []) {
+    listener();
+  }
+}
+
+export function subscribeLiveThemeDetail(key: string, listener: Listener): () => void {
+  const set = listeners.get(key) || new Set<Listener>();
+  set.add(listener);
+  listeners.set(key, set);
+  return () => {
+    const current = listeners.get(key);
+    if (!current) return;
+    current.delete(listener);
+    if (!current.size) listeners.delete(key);
+  };
+}
+
+export function getLiveThemeDetailEntry(key: string): Entry | undefined {
+  return entries.get(key);
+}
+
+export async function refreshLiveThemeDetail({
+  slug,
+  dataBaseUrl,
+  serverDetail,
+  fetchJson,
+}: {
+  slug: string;
+  dataBaseUrl: string;
+  serverDetail: ThemeDetailV0;
+  fetchJson: (url: string) => Promise<unknown>;
+}): Promise<ThemeDetailV0> {
+  const key = cacheKey(slug, dataBaseUrl);
+  const existing = inflight.get(key);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json`;
+    const live = parseThemeDetail(await fetchJson(url));
+    const merged = mergeThemeDetailPriceReturns(serverDetail, live);
+    entries.set(key, {
+      merged,
+      fetchedAtMs: Date.now(),
+      tickerPerformanceAsOf: merged.ticker_performance_as_of,
+    });
+    notify(key);
+    return merged;
+  })().finally(() => {
+    inflight.delete(key);
+  });
+
+  inflight.set(key, promise);
+  return promise;
+}
+
+export function liveThemeDetailCacheKey(slug: string, dataBaseUrl: string): string {
+  return cacheKey(slug, dataBaseUrl);
+}
+
+export function seedLiveThemeDetail(key: string, serverDetail: ThemeDetailV0): void {
+  if (entries.has(key)) return;
+  entries.set(key, {
+    merged: serverDetail,
+    fetchedAtMs: 0,
+    tickerPerformanceAsOf: serverDetail.ticker_performance_as_of,
+  });
+}

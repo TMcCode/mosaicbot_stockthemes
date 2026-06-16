@@ -63,3 +63,26 @@ export function commentaryBrowserCacheBusterQuery(): string {
 export function commentaryBrowserFetchCache(): RequestCache {
   return process.env.NODE_ENV === "development" ? "no-store" : "default";
 }
+
+const DEFAULT_PRICE_REVALIDATE_SEC = 15 * 60;
+
+/** Browser refresh window for live constituent price_returns (matches slim ETL cadence). */
+export function priceReturnsRevalidateSeconds(): number {
+  const raw =
+    process.env.NEXT_PUBLIC_STOCKTHEMES_PRICE_REVALIDATE_SEC?.trim() ||
+    String(DEFAULT_PRICE_REVALIDATE_SEC);
+  const seconds = Number(raw);
+  if (Number.isFinite(seconds) && seconds >= 60) {
+    return Math.floor(seconds);
+  }
+  return DEFAULT_PRICE_REVALIDATE_SEC;
+}
+
+export function priceReturnsBrowserCacheBusterQuery(): string {
+  if (process.env.NODE_ENV === "development") {
+    return `ts=${Date.now()}`;
+  }
+  const windowMs = priceReturnsRevalidateSeconds() * 1000;
+  const bucket = Math.floor(Date.now() / windowMs);
+  return `ts=${bucket}`;
+}

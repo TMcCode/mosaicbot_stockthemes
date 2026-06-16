@@ -6,6 +6,17 @@ export function stockthemesLiveHydrationDisabled(): boolean {
 }
 
 /**
+ * Client-side refresh of constituent price_returns from CDN (themes/<slug>.json).
+ * On by default in production; set NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS=0 to disable.
+ */
+export function stockthemesLivePriceReturnsEnabled(): boolean {
+  if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS === "0") {
+    return false;
+  }
+  return process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS === "1" || process.env.NODE_ENV === "production";
+}
+
+/**
  * Block accidental direct GCS URLs during the R2 migration.
  */
 export function normalizePublicDataBase(base: string | undefined): string | undefined {

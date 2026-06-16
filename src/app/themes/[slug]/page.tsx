@@ -7,37 +7,27 @@ import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
-import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
-import { TickerBadge } from "@/components/TickerBadge";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
+import { ThemeConstituentsTable } from "@/components/ThemeConstituentsTable";
+import { ThemeConstituentsTableLive } from "@/components/ThemeConstituentsTableLive";
 import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
+import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import styles from "../../page.module.css";
 
-import { formatWeight } from "@/lib/formatWeight";
-import {
-  CONSTITUENT_PRICE_RETURN_COLUMNS,
-  hasConstituentPriceReturns,
-  priceReturnMetric,
-  type ConstituentPriceReturnColumn,
-} from "@/lib/constituentPriceReturns";
 import {
   buildConstituentTreemapNodes,
   pickDefaultTreemapPeriod,
 } from "@/lib/buildConstituentTreemapNodes";
 import {
   buildCompositionMetaMap,
-  formatUsdMarketCap,
   inferMarketCapUsd,
-  sortConstituentsByMarketCapDesc,
 } from "@/lib/constituentMeta";
-import { CONSTITUENT_EARNINGS_COLUMNS } from "@/lib/constituentEarningsColumnHelp";
-import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { computeTheme10DRanks, rank10dFromPayload } from "@/lib/themeCompareRank";
@@ -46,10 +36,11 @@ import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { getThemeFactorProfileCached } from "@/lib/loadThemeFactorProfile";
 import { loadManifest } from "@/lib/loadManifest";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
-import { publicAssetPath } from "@/lib/siteUrl";
 import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
 import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import { stockthemesLivePriceReturnsEnabled } from "@/lib/stockthemesClientConfig";
+import { buildThemeConstituentTableModel } from "@/lib/themeConstituentTableModel";
 
 type Props = { params: Promise<{ slug: string }> };
 
@@ -67,282 +58,6 @@ function clipDescription(s: string, max = 158): string {
     return t;
   }
   return `${t.slice(0, max - 1).trimEnd()}…`;
-}
-
-const ET_TIMEZONE = "America/New_York";
-const ET_YMD_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: ET_TIMEZONE });
-const ET_MONTH_FORMATTER = new Intl.DateTimeFormat("en-US", { timeZone: ET_TIMEZONE, month: "numeric" });
-const ET_COMPACT_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
-  timeZone: ET_TIMEZONE,
-  month: "numeric",
-  day: "numeric",
-  year: "2-digit",
-});
-const ET_PARTS_FORMATTER = new Intl.DateTimeFormat("en-US", {
-  timeZone: ET_TIMEZONE,
-  year: "numeric",
-  month: "numeric",
-  day: "numeric",
-  hour: "numeric",
-  minute: "numeric",
-  hour12: false,
-});
-function parseIsoDate(value: string | undefined): Date | null {
-  if (!value) return null;
-  const s = value.trim();
-  if (!s) return null;
-  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (!m) return null;
-  const y = Number(m[1]);
-  const mon = Number(m[2]);
-  const d = Number(m[3]);
-  if (!Number.isFinite(y) || !Number.isFinite(mon) || !Number.isFinite(d)) return null;
-  return new Date(Date.UTC(y, mon - 1, d, 12, 0, 0));
-}
-
-function etNowParts(now: Date): { year: number; month: number; hour: number; minute: number } {
-  const parts = ET_PARTS_FORMATTER.formatToParts(now);
-  const pick = (type: string): number =>
-    Number(parts.find((p) => p.type === type)?.value ?? 0);
-  return { year: pick("year"), month: pick("month"), hour: pick("hour"), minute: pick("minute") };
-}
-
-function quarterForMonth(month: number): 1 | 2 | 3 | 4 {
-  if (month >= 4 && month <= 6) return 1;
-  if (month >= 7 && month <= 9) return 2;
-  if (month >= 10 && month <= 12) return 3;
-  return 4;
-}
-
-function fallbackDateWithYearForQuarter(quarter: 1 | 2 | 3 | 4, nowEtYear: number): string {
-  return ET_COMPACT_DATE_FORMATTER.format(quarterEndDateEt(quarter, nowEtYear));
-}
-
-function quarterEndDateEt(quarter: 1 | 2 | 3 | 4, year: number): Date {
-  if (quarter === 1) return new Date(Date.UTC(year, 5, 30, 12, 0, 0)); // Jun 30
-  if (quarter === 2) return new Date(Date.UTC(year, 8, 30, 12, 0, 0)); // Sep 30
-  if (quarter === 3) return new Date(Date.UTC(year, 11, 31, 12, 0, 0)); // Dec 31
-  return new Date(Date.UTC(year, 2, 31, 12, 0, 0)); // Mar 31
-}
-
-function isEffectiveReportedInEt(reportDate: Date, bamRaw: string | undefined, now: Date): boolean {
-  const bam = String(bamRaw || "").toUpperCase();
-  const reportYmdEt = ET_YMD_FORMATTER.format(reportDate);
-  const nowYmdEt = ET_YMD_FORMATTER.format(now);
-  if (reportYmdEt < nowYmdEt) return true;
-  if (reportYmdEt > nowYmdEt) return false;
-  const { hour, minute } = etNowParts(now);
-  const etMinutes = hour * 60 + minute;
-  const marketOpenMinutes = 9 * 60 + 30;
-  const marketCloseMinutes = 16 * 60;
-  if (bam === "BMO" || bam === "BEFOREMARKET") return etMinutes >= marketOpenMinutes;
-  if (bam === "AMC" || bam === "AFTERMARKET") return etMinutes > marketCloseMinutes;
-  return etMinutes >= marketOpenMinutes;
-}
-
-function formatPct(value: number | undefined | null): string {
-  if (value == null || !Number.isFinite(value)) return "—";
-  const rounded = Math.round(value * 100) / 100;
-  return `${rounded.toFixed(2)}%`;
-}
-
-function formatQuarterReportDate(
-  reportDate: Date | null,
-  bamRaw: string | undefined,
-  fallbackMmdd: string | null,
-  isBmoTodayPartial: boolean,
-): string {
-  if (!reportDate) return fallbackMmdd ?? "—";
-  const label = ET_COMPACT_DATE_FORMATTER.format(reportDate);
-  const bam = String(bamRaw || "").toUpperCase();
-  const bamLabel = bam === "AFTERMARKET" ? "AMC" : bam === "BEFOREMARKET" ? "BMO" : bam;
-  const bamPart = bamLabel ? ` (${bamLabel}${isBmoTodayPartial ? "*" : ""})` : "";
-  return `${label}${bamPart}`;
-}
-
-type QuarterEarningsRow = {
-  lastReportDateCell: string;
-  reportDateCell: string;
-  lastQuarterEarningsMoveCell: string;
-  earningsPerfCell: string;
-  intraQtrCell: string;
-  sinceQtrRptCell: string;
-  earningsPerfIsProvisional: boolean;
-  lastQuarterEarningsMoveValue: number | null;
-  earningsPerfValue: number | null;
-  intraQtrValue: number | null;
-  sinceQtrRptValue: number | null;
-};
-
-function finiteOrNull(value: number | undefined | null): number | null {
-  if (value == null || !Number.isFinite(value)) return null;
-  return value;
-}
-
-function buildQuarterEarningsRow(
-  constituent: {
-    last_report_date?: string;
-    next_report_date?: string;
-    last_before_after_market?: string;
-    next_before_after_market?: string;
-    last_rpt_percent?: number;
-    last_rpt_live_percent?: number;
-    last_rpt_final_percent?: number;
-    last_rpt_is_final?: boolean;
-    since_last_rpt_percent?: number;
-    pre_earnings_percent_last_report?: number;
-    earnings_percent_last_report?: number;
-    earnings_percent_prev_report?: number;
-  },
-  now = new Date(),
-): QuarterEarningsRow {
-  const nowEt = etNowParts(now);
-  const currentQuarter = quarterForMonth(nowEt.month);
-  const quarterEnd = quarterEndDateEt(currentQuarter, nowEt.year);
-  const quarterHasEnded = ET_YMD_FORMATTER.format(now) > ET_YMD_FORMATTER.format(quarterEnd);
-  const fallbackDate = quarterHasEnded
-    ? fallbackDateWithYearForQuarter(currentQuarter, nowEt.year)
-    : null;
-  const lastReport = parseIsoDate(constituent.last_report_date);
-  const nextReport = parseIsoDate(constituent.next_report_date);
-  const lastInQuarter = lastReport ? quarterForMonth(Number(ET_MONTH_FORMATTER.format(lastReport))) === currentQuarter : false;
-  const nextInQuarter = nextReport ? quarterForMonth(Number(ET_MONTH_FORMATTER.format(nextReport))) === currentQuarter : false;
-  const currentQuarterReport = lastInQuarter ? lastReport : nextInQuarter ? nextReport : null;
-  const currentQuarterBam = lastInQuarter
-    ? constituent.last_before_after_market
-    : nextInQuarter
-      ? constituent.next_before_after_market
-      : undefined;
-  const lastReportDateCell = formatQuarterReportDate(
-    lastReport,
-    constituent.last_before_after_market,
-    null,
-    false,
-  );
-  const hasReported = Boolean(
-    lastInQuarter &&
-      lastReport &&
-      isEffectiveReportedInEt(lastReport, constituent.last_before_after_market, now),
-  );
-  const reportDateCell = formatQuarterReportDate(
-    currentQuarterReport,
-    currentQuarterBam,
-    fallbackDate,
-    Boolean(
-      hasReported &&
-        currentQuarterReport &&
-        ET_YMD_FORMATTER.format(currentQuarterReport) === ET_YMD_FORMATTER.format(now) &&
-        String(currentQuarterBam || "").toUpperCase() === "BMO",
-    ),
-  );
-  const isFinalLocked = constituent.last_rpt_is_final === true;
-  const finalLstRpt = constituent.last_rpt_final_percent ?? constituent.last_rpt_percent;
-  const liveLstRpt = constituent.last_rpt_live_percent;
-  const earningsPerfValue = finiteOrNull(isFinalLocked ? finalLstRpt : (liveLstRpt ?? finalLstRpt));
-  const earningsPerfIsProvisional = !isFinalLocked;
-  const intraQtrValue = finiteOrNull(
-    hasReported
-      ? constituent.pre_earnings_percent_last_report
-      : constituent.since_last_rpt_percent,
-  );
-  const sinceQtrRptValue = finiteOrNull(hasReported ? constituent.since_last_rpt_percent : null);
-  const latestEarningsMove = finiteOrNull(constituent.earnings_percent_last_report);
-  const prevEarningsMove = finiteOrNull(constituent.earnings_percent_prev_report);
-  const lastQuarterEarningsMoveValue = hasReported
-    ? (prevEarningsMove ?? latestEarningsMove)
-    : latestEarningsMove;
-  return {
-    lastReportDateCell,
-    reportDateCell,
-    lastQuarterEarningsMoveCell: formatPct(lastQuarterEarningsMoveValue),
-    earningsPerfCell: hasReported ? formatPct(earningsPerfValue) : "—",
-    intraQtrCell: formatPct(intraQtrValue),
-    sinceQtrRptCell: hasReported ? formatPct(sinceQtrRptValue) : "—",
-    earningsPerfIsProvisional: hasReported && earningsPerfIsProvisional,
-    lastQuarterEarningsMoveValue,
-    earningsPerfValue: hasReported ? earningsPerfValue : null,
-    intraQtrValue,
-    sinceQtrRptValue,
-  };
-}
-
-function finiteValues(values: Array<number | null | undefined>): number[] {
-  return values.filter((v): v is number => typeof v === "number" && Number.isFinite(v));
-}
-
-function average(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values);
-  if (!nums.length) return null;
-  return nums.reduce((sum, v) => sum + v, 0) / nums.length;
-}
-
-function stdDev(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values);
-  if (!nums.length) return null;
-  const avg = nums.reduce((sum, v) => sum + v, 0) / nums.length;
-  const variance = nums.reduce((sum, v) => sum + (v - avg) ** 2, 0) / nums.length;
-  return Math.sqrt(variance);
-}
-
-function positivePercent(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values);
-  if (!nums.length) return null;
-  const positive = nums.filter((v) => v > 0).length;
-  return (positive / nums.length) * 100;
-}
-
-function median(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values).sort((a, b) => a - b);
-  if (!nums.length) return null;
-  const mid = Math.floor(nums.length / 2);
-  if (nums.length % 2 === 0) return (nums[mid - 1] + nums[mid]) / 2;
-  return nums[mid];
-}
-
-function minValue(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values);
-  if (!nums.length) return null;
-  return Math.min(...nums);
-}
-
-function maxValue(values: Array<number | null | undefined>): number | null {
-  const nums = finiteValues(values);
-  if (!nums.length) return null;
-  return Math.max(...nums);
-}
-
-function precomputedStat(
-  detail: { constituent_table_stats?: Record<string, Record<string, number | null> | string | undefined> } | null | undefined,
-  rowKey: "average" | "std_dev" | "positive_tickers_pct" | "median" | "min" | "max",
-  metric: string,
-): number | null {
-  const bucket = detail?.constituent_table_stats?.[rowKey];
-  if (typeof bucket !== "object" || bucket == null) return null;
-  const v = bucket[metric];
-  return typeof v === "number" && Number.isFinite(v) ? v : null;
-}
-
-type ConstituentStatRowKey = "average" | "std_dev" | "positive_tickers_pct" | "median" | "min" | "max";
-
-const PRICE_RETURN_STAT_FN: Record<
-  ConstituentStatRowKey,
-  (values: Array<number | null | undefined>) => number | null
-> = {
-  average,
-  std_dev: stdDev,
-  positive_tickers_pct: positivePercent,
-  median,
-  min: minValue,
-  max: maxValue,
-};
-
-function priceReturnStat(
-  detail: { constituent_table_stats?: Record<string, Record<string, number | null> | string | undefined> } | null | undefined,
-  rowKey: ConstituentStatRowKey,
-  column: ConstituentPriceReturnColumn,
-  values: Array<number | null | undefined>,
-): number | null {
-  return precomputedStat(detail, rowKey, column) ?? PRICE_RETURN_STAT_FN[rowKey](values);
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -414,137 +129,8 @@ export default async function ThemeDetailPage({ params }: Props) {
     detail?.constituents?.reduce((sum, c) => sum + (inferMarketCapUsd(c) ?? 0), 0) ?? 0;
   const hasTotalMarketCap = totalMarketCapUsd > 0;
 
-  const hasWeight = Boolean(detail?.constituents?.some((c) => c.weight != null));
-  const hasMcap = Boolean(detail?.constituents?.some((c) => inferMarketCapUsd(c) != null));
-  const hasPriceReturns = hasConstituentPriceReturns(detail?.constituents);
-  const sortedConstituents = detail?.constituents ? sortConstituentsByMarketCapDesc(detail.constituents) : [];
-  const earningsRowsByTicker = new Map(
-    sortedConstituents.map((c) => [c.ticker, buildQuarterEarningsRow(c)]),
-  );
-  const constituentRows = sortedConstituents
-    .map((c) => {
-      const earnings = earningsRowsByTicker.get(c.ticker);
-      if (!earnings) return null;
-      const priceReturns = Object.fromEntries(
-        CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => [col, priceReturnMetric(c, col)]),
-      ) as Record<ConstituentPriceReturnColumn, number | null>;
-      return {
-        constituent: c,
-        earnings,
-        priceReturns,
-        marketCapUsd: inferMarketCapUsd(c),
-        weight: c.weight ?? null,
-      };
-    })
-    .filter((row): row is NonNullable<typeof row> => row != null);
-
-  const avgEarningsPerf =
-    precomputedStat(detail, "average", "earnings_move_pct") ??
-    average(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const avgLastQuarterEarningsMove =
-    precomputedStat(detail, "average", "last_quarter_earnings_move_pct") ??
-    average(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const avgIntraQtr =
-    precomputedStat(detail, "average", "intra_quarter_move_pct") ??
-    average(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const avgSinceQtrRpt =
-    precomputedStat(detail, "average", "since_last_report_pct") ??
-    average(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-  const avgMarketCap =
-    precomputedStat(detail, "average", "market_cap_usd") ??
-    average(constituentRows.map((row) => row.marketCapUsd));
-  const avgWeight =
-    precomputedStat(detail, "average", "weight") ??
-    average(constituentRows.map((row) => row.weight));
-
-  const stdEarningsPerf =
-    precomputedStat(detail, "std_dev", "earnings_move_pct") ??
-    stdDev(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const stdLastQuarterEarningsMove =
-    precomputedStat(detail, "std_dev", "last_quarter_earnings_move_pct") ??
-    stdDev(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const stdIntraQtr =
-    precomputedStat(detail, "std_dev", "intra_quarter_move_pct") ??
-    stdDev(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const stdSinceQtrRpt =
-    precomputedStat(detail, "std_dev", "since_last_report_pct") ??
-    stdDev(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-  const stdMarketCap =
-    precomputedStat(detail, "std_dev", "market_cap_usd") ??
-    stdDev(constituentRows.map((row) => row.marketCapUsd));
-  const stdWeight =
-    precomputedStat(detail, "std_dev", "weight") ??
-    stdDev(constituentRows.map((row) => row.weight));
-
-  const posEarningsPerf =
-    precomputedStat(detail, "positive_tickers_pct", "earnings_move_pct") ??
-    positivePercent(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const posLastQuarterEarningsMove =
-    precomputedStat(detail, "positive_tickers_pct", "last_quarter_earnings_move_pct") ??
-    positivePercent(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const posIntraQtr =
-    precomputedStat(detail, "positive_tickers_pct", "intra_quarter_move_pct") ??
-    positivePercent(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const posSinceQtrRpt =
-    precomputedStat(detail, "positive_tickers_pct", "since_last_report_pct") ??
-    positivePercent(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-
-  const medianEarningsPerf =
-    precomputedStat(detail, "median", "earnings_move_pct") ??
-    median(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const medianLastQuarterEarningsMove =
-    precomputedStat(detail, "median", "last_quarter_earnings_move_pct") ??
-    median(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const medianIntraQtr =
-    precomputedStat(detail, "median", "intra_quarter_move_pct") ??
-    median(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const medianSinceQtrRpt =
-    precomputedStat(detail, "median", "since_last_report_pct") ??
-    median(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-  const medianMarketCap =
-    precomputedStat(detail, "median", "market_cap_usd") ??
-    median(constituentRows.map((row) => row.marketCapUsd));
-  const medianWeight =
-    precomputedStat(detail, "median", "weight") ??
-    median(constituentRows.map((row) => row.weight));
-
-  const minEarningsPerf =
-    precomputedStat(detail, "min", "earnings_move_pct") ??
-    minValue(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const minLastQuarterEarningsMove =
-    precomputedStat(detail, "min", "last_quarter_earnings_move_pct") ??
-    minValue(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const minIntraQtr =
-    precomputedStat(detail, "min", "intra_quarter_move_pct") ??
-    minValue(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const minSinceQtrRpt =
-    precomputedStat(detail, "min", "since_last_report_pct") ??
-    minValue(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-  const minMarketCap =
-    precomputedStat(detail, "min", "market_cap_usd") ??
-    minValue(constituentRows.map((row) => row.marketCapUsd));
-  const minWeight =
-    precomputedStat(detail, "min", "weight") ??
-    minValue(constituentRows.map((row) => row.weight));
-
-  const maxEarningsPerf =
-    precomputedStat(detail, "max", "earnings_move_pct") ??
-    maxValue(constituentRows.map((row) => row.earnings.earningsPerfValue));
-  const maxLastQuarterEarningsMove =
-    precomputedStat(detail, "max", "last_quarter_earnings_move_pct") ??
-    maxValue(constituentRows.map((row) => row.earnings.lastQuarterEarningsMoveValue));
-  const maxIntraQtr =
-    precomputedStat(detail, "max", "intra_quarter_move_pct") ??
-    maxValue(constituentRows.map((row) => row.earnings.intraQtrValue));
-  const maxSinceQtrRpt =
-    precomputedStat(detail, "max", "since_last_report_pct") ??
-    maxValue(constituentRows.map((row) => row.earnings.sinceQtrRptValue));
-  const maxMarketCap =
-    precomputedStat(detail, "max", "market_cap_usd") ??
-    maxValue(constituentRows.map((row) => row.marketCapUsd));
-  const maxWeight =
-    precomputedStat(detail, "max", "weight") ??
-    maxValue(constituentRows.map((row) => row.weight));
+  const livePriceReturns = stockthemesLivePriceReturnsEnabled() && Boolean(dataBaseUrl);
+  const tableModel = detail ? buildThemeConstituentTableModel(detail) : null;
   const themeUrl = absoluteUrl(`/themes/${slug}`);
   const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
   const pageDescription = detail?.seo_intro?.trim() || `Stocks and exposure for ${theme.name}.`;
@@ -643,17 +229,27 @@ export default async function ThemeDetailPage({ params }: Props) {
               ) : null}
             </div>
             <div className={styles.themeHeroRail}>
-              {treemapNodes.length ? (
-                <ThemeHeroTreemap
-                  nodes={treemapNodes}
-                  themeName={theme.name}
-                  defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
-                  asOfLabel={
-                    detail?.ticker_performance_as_of
-                      ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
-                      : undefined
-                  }
-                />
+              {treemapNodes.length && detail ? (
+                livePriceReturns ? (
+                  <ThemeHeroTreemapLive
+                    slug={slug}
+                    dataBaseUrl={dataBaseUrl!}
+                    serverDetail={detail}
+                    themeName={theme.name}
+                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                  />
+                ) : (
+                  <ThemeHeroTreemap
+                    nodes={treemapNodes}
+                    themeName={theme.name}
+                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                    asOfLabel={
+                      detail.ticker_performance_as_of
+                        ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
+                        : undefined
+                    }
+                  />
+                )
               ) : null}
             </div>
           </div>
@@ -700,264 +296,16 @@ export default async function ThemeDetailPage({ params }: Props) {
               format="horizontal"
             />
           ) : null}
-          {detail?.constituents?.length ? (
-            <section className={styles.section} aria-labelledby="constituents-heading">
-              <h2 id="constituents-heading">Constituents</h2>
-              {detail.build_id ? (
-                <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-                  Build <code className={styles.code}>{detail.build_id}</code>
-                </p>
-              ) : null}
-              <p className={styles.tableScrollHint}>Scroll or drag sideways to view all columns.</p>
-              <div className={styles.tableWrap}>
-                <div className={styles.tableWatermark} aria-hidden="true">
-                  <img
-                    src={publicAssetPath("/brand/logo-full-transparent.png")}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                  />
-                </div>
-                <HorizontalScrollArea
-                  className={styles.constituentsScrollWrap}
-                  tabIndex={0}
-                  role="region"
-                  aria-label="Constituents table — scroll horizontally to see all columns"
-                >
-                <div className={styles.constituentsTableSizer}>
-                <table className={styles.dataTable}>
-                  <thead>
-                    <tr>
-                      <th scope="col">Company</th>
-                      {hasWeight ? <th scope="col">Wgt</th> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <th key={col} scope="col">
-                              {trendingColumnHeader(col)}
-                            </th>
-                          ))
-                        : null}
-                      {CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
-                        <th key={col.id} scope="col" title={col.tooltip}>
-                          {col.label}
-                        </th>
-                      ))}
-                      {hasMcap ? <th scope="col">Mkt Cap</th> : null}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {constituentRows.map((row) => {
-                      const c = row.constituent;
-                      const earnings = row.earnings;
-                      return (
-                      <tr key={c.ticker}>
-                        <td>
-                          <div className={styles.companyCell}>
-                            <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
-                            <TickerBadge ticker={c.ticker} />
-                          </div>
-                        </td>
-                        {hasWeight ? (
-                          <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
-                        ) : null}
-                        {hasPriceReturns
-                          ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                              <td key={col}>{formatPct(row.priceReturns[col])}</td>
-                            ))
-                          : null}
-                        <td>{earnings.lastReportDateCell}</td>
-                        <td>{earnings.reportDateCell}</td>
-                        <td>{earnings.lastQuarterEarningsMoveCell}</td>
-                        <td>{earnings.earningsPerfCell}{earnings.earningsPerfIsProvisional ? "*" : ""}</td>
-                        <td>{earnings.intraQtrCell}</td>
-                        <td>{earnings.sinceQtrRptCell}</td>
-                        {hasMcap ? <td>{formatUsdMarketCap(row.marketCapUsd)}</td> : null}
-                      </tr>
-                    )})}
-                    <tr>
-                      <td>
-                        <strong>Average</strong>
-                      </td>
-                      {hasWeight ? <td><strong>{avgWeight != null ? formatWeight(avgWeight) : "—"}</strong></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "average",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(avgLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(avgEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(avgIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(avgSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td><strong>{formatUsdMarketCap(avgMarketCap)}</strong></td> : null}
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Median</strong>
-                      </td>
-                      {hasWeight ? <td><strong>{medianWeight != null ? formatWeight(medianWeight) : "—"}</strong></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "median",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(medianLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(medianEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(medianIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(medianSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td><strong>{formatUsdMarketCap(medianMarketCap)}</strong></td> : null}
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Std Dev</strong>
-                      </td>
-                      {hasWeight ? <td><strong>{stdWeight != null ? formatWeight(stdWeight) : "—"}</strong></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "std_dev",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(stdLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(stdEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(stdIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(stdSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td><strong>{formatUsdMarketCap(stdMarketCap)}</strong></td> : null}
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Min</strong>
-                      </td>
-                      {hasWeight ? <td><strong>{minWeight != null ? formatWeight(minWeight) : "—"}</strong></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "min",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(minLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(minEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(minIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(minSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td><strong>{formatUsdMarketCap(minMarketCap)}</strong></td> : null}
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>Max</strong>
-                      </td>
-                      {hasWeight ? <td><strong>{maxWeight != null ? formatWeight(maxWeight) : "—"}</strong></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "max",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(maxLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(maxEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(maxIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(maxSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td><strong>{formatUsdMarketCap(maxMarketCap)}</strong></td> : null}
-                    </tr>
-                    <tr>
-                      <td>
-                        <strong>% Positive Tickers</strong>
-                      </td>
-                      {hasWeight ? <td></td> : null}
-                      {hasPriceReturns
-                        ? CONSTITUENT_PRICE_RETURN_COLUMNS.map((col) => (
-                            <td key={col}>
-                              <strong>
-                                {formatPct(
-                                  priceReturnStat(
-                                    detail,
-                                    "positive_tickers_pct",
-                                    col,
-                                    constituentRows.map((r) => r.priceReturns[col]),
-                                  ),
-                                )}
-                              </strong>
-                            </td>
-                          ))
-                        : null}
-                      <td></td>
-                      <td></td>
-                      <td><strong>{formatPct(posLastQuarterEarningsMove)}</strong></td>
-                      <td><strong>{formatPct(posEarningsPerf)}</strong></td>
-                      <td><strong>{formatPct(posIntraQtr)}</strong></td>
-                      <td><strong>{formatPct(posSinceQtrRpt)}</strong></td>
-                      {hasMcap ? <td></td> : null}
-                    </tr>
-                  </tbody>
-                </table>
-                </div>
-                </HorizontalScrollArea>
-                <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8, padding: "0 10px 10px" }}>
-                  * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
-                  EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
-                </p>
-              </div>
-            </section>
+          {detail?.constituents?.length && tableModel ? (
+            livePriceReturns ? (
+              <ThemeConstituentsTableLive
+                slug={slug}
+                dataBaseUrl={dataBaseUrl!}
+                serverDetail={detail}
+              />
+            ) : (
+              <ThemeConstituentsTable detail={detail} model={tableModel} />
+            )
           ) : null}
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
