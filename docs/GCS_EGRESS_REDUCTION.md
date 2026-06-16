@@ -54,7 +54,7 @@ Force full re-download: workflow_dispatch **refresh_cache**, or `STOCKTHEMES_BUI
 | Control | What |
 |---------|------|
 | **CI skip** | Scheduled deploy skips when `manifest.as_of` unchanged (`scripts/ci-should-build.mjs`) |
-| **Cron** | Daily 5:00 AM ET (overnight ETL) + 3×/weekday after manifest; skips when `as_of` unchanged |
+| **Cron** | Daily 5:00 AM ET (overnight ETL) + 6×/weekday after manifest; skips when `as_of` unchanged |
 | **Actions cache key** | Fixed `stockthemes-public-v3` (not hashed on `_pages_deploy_meta.json`) |
 | **CDN purge** | Selective URL purge after upload (not full `data.stockthemes.ai/*` prefix) |
 | **Build cache** | `sync-build-cache.mjs` + Actions cache |

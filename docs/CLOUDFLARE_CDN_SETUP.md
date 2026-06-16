@@ -103,7 +103,7 @@ Expect: first request `cf-cache-status: MISS`, second `HIT`.
 
 MosaicBot `stockthemes_manifest.py` purges `https://data.stockthemes.ai/` after each publish when **`CLOUDFLARE_API_TOKEN`** and **`CLOUDFLARE_ZONE_ID`** are set on the Cloud Run job (Zone → Cache Purge permission). See `MosaicBotMain_Local_Dev/docs/STOCKTHEMES_MARKET_HOURS_PUBLISH.md`.
 
-Purge API calls are **free**; expect minor GCS egress when the CDN refetches (~$5–15/mo at 3×/weekday manifest).
+Purge API calls are **free**; expect minor GCS egress when the CDN refetches (~$10–25/mo at 6×/weekday manifest).
 
 ## 7. Billing impact
 
