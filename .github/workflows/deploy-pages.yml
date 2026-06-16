@@ -17,12 +17,12 @@ on:
     branches:
       - main
   # Daily 5:00 AM ET — bake overnight fetcheoddata manifest (~1 AM ET) into static Pages.
-  # Weekdays: 6× ~30m after MosaicBot manifest (10:30 / 12:30 / 14:30 / 15:30 / 16:30 / 17:30 ET).
+  # Weekdays: 3× ~45m after full manifest (11:15 / 15:15 / 18:15 ET) — catches price-only as_of bumps too.
   # Push always rebuilds; schedule skips build when manifest/home_trending as_of unchanged (ci-should-build.mjs).
-  # UTC below is EDT (UTC-4). After US fall back: "0 10 * * *" and "0 16,18,20,21,22,23 * * 1-5".
+  # UTC below is EDT (UTC-4). After US fall back: "0 10 * * *" and "30 15,19,22 * * 1-5".
   schedule:
     - cron: "0 9 * * *"
-    - cron: "0 15,17,19,20,21,22 * * 1-5"
+    - cron: "30 14,18,21 * * 1-5"
   workflow_dispatch:
     inputs:
       force_build:
