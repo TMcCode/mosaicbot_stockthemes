@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
-import { isSuspiciousChartPerformanceCliff } from "@/lib/chartPerformanceSanity";
+import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { fetchChartSidecar } from "@/lib/chartSidecar";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
@@ -157,7 +157,10 @@ export function ThemeChartLiveHydrate({
       base = sc;
     }
     if (base && livePerformance?.dates?.length && livePerformance?.values?.length) {
-      return { ...base, performance: livePerformance } satisfies ThemeChart1yV0;
+      const sanitizedLive = sanitizeChartPerformanceForDisplay(livePerformance);
+      if (sanitizedLive && !isSuspiciousChartPerformanceCliff(sanitizedLive, base.performance)) {
+        return { ...base, performance: sanitizedLive } satisfies ThemeChart1yV0;
+      }
     }
     return base;
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads

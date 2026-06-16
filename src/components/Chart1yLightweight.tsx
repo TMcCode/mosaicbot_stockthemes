@@ -24,6 +24,7 @@ import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
 import { rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
+import { sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
 
@@ -680,10 +681,16 @@ export function Chart1yLightweight({
     const base = chart1ySorted;
     const p = base?.performance;
     if (!base || !p?.values?.length) return base;
+    const sanitized = sanitizeChartPerformanceForDisplay(p) ?? p;
     const title = performanceTitle?.trim() ?? "";
-    const values = applyShortThemePerformanceDisplay(title, p.values, p);
-    if (values === p.values) return base;
-    return { ...base, performance: { ...p, values } };
+    const values = applyShortThemePerformanceDisplay(title, sanitized.values, sanitized);
+    if (values === sanitized.values && sanitized === p) return base;
+    const perf =
+      values === sanitized.values
+        ? sanitized
+        : { ...sanitized, values };
+    if (perf === p) return base;
+    return { ...base, performance: perf };
   }, [chart1ySorted, performanceTitle]);
 
   const [view, setView] = useState<"performance" | "composition">(
