@@ -112,22 +112,24 @@ export function ThemeConstituentsTable({
     <section className={styles.section} aria-labelledby="constituents-heading">
       <div className={tableStyles.sectionHeader}>
         <h2 id="constituents-heading">Constituents</h2>
-        <div className={tableStyles.toggle} role="group" aria-label="Constituents table view">
+        <div className={tableStyles.toggle} role="group" aria-label="Constituents table columns">
           <button
             type="button"
             className={showReturns ? tableStyles.toggleActive : undefined}
             aria-pressed={showReturns}
+            title="Returns over calendar windows and custom event dates (1D, MTD, YTD, etc.)"
             onClick={() => setView("returns")}
           >
-            Returns
+            Period Returns
           </button>
           <button
             type="button"
             className={showEarnings ? tableStyles.toggleActive : undefined}
             aria-pressed={showEarnings}
+            title="Returns around report dates and the current earnings quarter"
             onClick={() => setView("earnings")}
           >
-            Earnings
+            Earnings Returns
           </button>
         </div>
       </div>
@@ -148,6 +150,7 @@ export function ThemeConstituentsTable({
         </div>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
+          data-constituents-view={view}
           tabIndex={0}
           role="region"
           aria-label="Constituents table — scroll horizontally to see all columns"
