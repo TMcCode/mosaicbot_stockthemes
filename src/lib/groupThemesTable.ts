@@ -72,8 +72,9 @@ export function mergeGroupThemeTableRows(
     const fromCompare = compareBySlug.get(slug);
     return {
       ...t,
+      // Prefer live compare bundle over baked group JSON (full manifest embeds stale child metrics).
       compare_returns:
-        t.compare_returns ?? fromCompare?.compare_returns ?? undefined,
+        fromCompare?.compare_returns ?? t.compare_returns ?? undefined,
       avg_market_cap_usd:
         t.avg_market_cap_usd ?? undefined,
       total_market_cap_usd:

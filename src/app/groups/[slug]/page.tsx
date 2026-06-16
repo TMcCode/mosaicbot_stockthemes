@@ -9,7 +9,7 @@ import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { GroupHeroMeta } from "@/components/GroupHeroMeta";
-import { GroupThemesTable } from "@/components/GroupThemesTable";
+import { GroupThemesTableLive } from "@/components/GroupThemesTableLive";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import styles from "../../page.module.css";
 
@@ -259,10 +259,11 @@ export default async function GroupDetailPage({ params }: Props) {
                 Build <code className={styles.code}>{detail.build_id}</code>
               </p>
             ) : null}
-            <GroupThemesTable
+            <GroupThemesTableLive
               rows={groupThemeTableRows}
               metricColumns={groupThemeMetricColumns}
               selectedDates={manifest.selected_dates}
+              serverCompareBundle={compareRes?.bundle ?? null}
             />
           </section>
           <DetailAboutIntro

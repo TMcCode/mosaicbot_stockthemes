@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import type { CompositionMeta } from "@/lib/constituentMeta";
+import { isSuspiciousChartPerformanceCliff } from "@/lib/chartPerformanceSanity";
 import { fetchChartSidecar } from "@/lib/chartSidecar";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
@@ -249,6 +250,8 @@ export function ThemeChartLiveHydrate({
       fetchChartSidecar(overlayKind, slug, undefined, { live: true })
         .then((sidecar) => {
           if (cancelled || !sidecar?.performance?.dates?.length) return;
+          const baseline = serverChartWithComposition?.performance;
+          if (isSuspiciousChartPerformanceCliff(sidecar.performance, baseline)) return;
           setLivePerformance(sidecar.performance);
         })
         .catch(() => {

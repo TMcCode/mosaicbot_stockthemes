@@ -42,6 +42,18 @@ export function mergeCompareReturnsField(
   return live ?? server;
 }
 
+export function mergeGroupThemeTableCompareReturns<
+  T extends { slug: string; name: string; compare_returns?: ThemeCompareReturnsV0 | null },
+>(rows: T[], liveRows: CompareThemesRowV0[]): T[] {
+  const { bySlug, byName } = indexCompareRows(liveRows);
+  return rows.map((row) => {
+    const live =
+      bySlug.get(String(row.slug || "").trim()) || byName.get(normName(row.name));
+    if (!live?.compare_returns) return row;
+    return { ...row, compare_returns: live.compare_returns };
+  });
+}
+
 export function mergeHomeTrendingCompareReturns<
   T extends { slug: string | null; name: string; marketBaseline?: boolean; compare_returns?: ThemeCompareReturnsV0 },
 >(rows: T[], liveRows: CompareThemesRowV0[]): T[] {
