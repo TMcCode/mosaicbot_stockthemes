@@ -4,6 +4,7 @@ import { useMemo } from "react";
 
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { pickTopMoversWithLiveBundle } from "@/lib/mergeLiveCompareData";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
@@ -28,5 +29,12 @@ export function HomeTopMoversTickerLive({
     return fromBundle.length > 0 ? fromBundle : items;
   }, [items, period, serverTopMoversBundle, topMoversBundle]);
 
-  return <HomeTopMoversTicker items={liveItems} period={period} asOfLabel={asOfLabel} />;
+  const liveAsOfLabel = useMemo(() => {
+    const iso = topMoversBundle?.as_of ?? serverTopMoversBundle?.as_of;
+    return iso ? formatSiteDataPublished(iso) : asOfLabel;
+  }, [asOfLabel, serverTopMoversBundle?.as_of, topMoversBundle?.as_of]);
+
+  return (
+    <HomeTopMoversTicker items={liveItems} period={period} asOfLabel={liveAsOfLabel} />
+  );
 }
