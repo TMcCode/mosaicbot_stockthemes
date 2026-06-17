@@ -129,7 +129,7 @@ export function ThemeConstituentsTable({
         <div className={tableStyles.toggle} role="group" aria-label="Constituents table columns">
           <button
             type="button"
-            className={showReturns ? tableStyles.toggleActive : undefined}
+            className={showReturns ? tableStyles.active : undefined}
             aria-pressed={showReturns}
             title="Returns over calendar windows and custom event dates (1D, MTD, YTD, etc.)"
             onClick={() => setView("returns")}
@@ -138,7 +138,7 @@ export function ThemeConstituentsTable({
           </button>
           <button
             type="button"
-            className={showEarnings ? tableStyles.toggleActive : undefined}
+            className={showEarnings ? tableStyles.active : undefined}
             aria-pressed={showEarnings}
             title="Returns around report dates and the current earnings quarter"
             onClick={() => setView("earnings")}

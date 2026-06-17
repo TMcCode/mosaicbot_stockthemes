@@ -13,32 +13,33 @@
 
 .toggle {
   display: inline-flex;
-  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.12));
-  border-radius: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.02);
   overflow: hidden;
-  background: var(--color-panel-muted, rgba(255, 255, 255, 0.04));
 }
 
 .toggle button {
   appearance: none;
+  font-size: 13px;
+  padding: 8px 14px;
   border: none;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-secondary, #9aa8a6);
   font: inherit;
-  font-size: 13px;
   font-weight: 500;
-  padding: 6px 14px;
   cursor: pointer;
   white-space: nowrap;
+  transition: background-color 0.15s ease, color 0.15s ease;
 }
 
 .toggle button:hover {
   color: var(--text-primary);
 }
 
-.toggleActive {
-  background: var(--accent-muted, rgba(38, 252, 214, 0.12));
-  color: var(--accent, #26fcd6);
+.toggle button.active {
+  background: rgba(38, 252, 214, 0.14);
+  color: #d8fff8;
 }
 
 .themeReturnRow td {
@@ -51,11 +52,11 @@
 }
 
 :global(.st-theme[data-theme="light"]) .toggle {
-  border-color: rgba(0, 0, 0, 0.1);
+  border-color: rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.03);
 }
 
-:global(.st-theme[data-theme="light"]) .toggleActive {
-  background: rgba(0, 120, 100, 0.1);
-  color: #007864;
+:global(.st-theme[data-theme="light"]) .toggle button.active {
+  background: var(--color-accent-muted, rgba(42, 207, 200, 0.14));
+  color: var(--accent-strong, #3b4da1);
 }
