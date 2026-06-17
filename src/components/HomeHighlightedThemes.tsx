@@ -3,7 +3,7 @@
 import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 
-import { Chart1yPanel } from "@/components/Chart1yPanel";
+import { HomeHighlightedThemeChart } from "@/components/HomeHighlightedThemeChart";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
 import pageStyles from "@/app/page.module.css";
@@ -89,11 +89,11 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
         </button>
       </div>
       <div className={styles.chartWrap}>
-        <Chart1yPanel
+        <HomeHighlightedThemeChart
+          slug={active.slug}
+          name={active.name}
           chart1y={active.chart1y}
-          performanceTitle={active.name}
           benchmarkPerformance={benchmarkPerformance}
-          compositionLegendShowMcap={false}
         />
       </div>
       <p className={styles.footerLink}>
