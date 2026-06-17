@@ -26,34 +26,37 @@ export type SpyMarketPerf = {
   benchmarkPerformance?: ChartPerformanceV0;
 };
 
+function parseSpySnapshotData(data: SpySnapshotV0): SpyMarketPerf | null {
+  if (data.schema_version !== 0 || !data.metrics) return null;
+  const m = data.metrics;
+  const chartPerf: ChartPerfReturns = {
+    d1: typeof m["1D"] === "number" ? m["1D"] : undefined,
+    d10: typeof m["10D"] === "number" ? m["10D"] : undefined,
+    mtd: typeof m.MTD === "number" ? m.MTD : undefined,
+    ytd: typeof m.YTD === "number" ? m.YTD : undefined,
+    y1: typeof m.Period === "number" ? m.Period : undefined,
+  };
+  const metricMap: Record<string, number | null> = Object.fromEntries(
+    Object.entries(m)
+      .filter(([, v]) => typeof v === "number" && Number.isFinite(v))
+      .map(([k, v]) => [k, v as number]),
+  );
+  const compareReturns: ThemeCompareReturnsV0 = {
+    source: "spy_snapshot.v0",
+    metrics: metricMap,
+    columns: Array.isArray(data.columns) ? data.columns : undefined,
+  };
+  return {
+    asOf: typeof data.as_of === "string" ? data.as_of : undefined,
+    chartPerf,
+    compareReturns,
+    benchmarkPerformance: data.performance,
+  };
+}
+
 export function parseSpySnapshotJson(raw: unknown): SpyMarketPerf | null {
   try {
-    const data = parseJsonPayload<SpySnapshotV0>(raw);
-    if (data.schema_version !== 0 || !data.metrics) return null;
-    const m = data.metrics;
-    const chartPerf: ChartPerfReturns = {
-      d1: typeof m["1D"] === "number" ? m["1D"] : undefined,
-      d10: typeof m["10D"] === "number" ? m["10D"] : undefined,
-      mtd: typeof m.MTD === "number" ? m.MTD : undefined,
-      ytd: typeof m.YTD === "number" ? m.YTD : undefined,
-      y1: typeof m.Period === "number" ? m.Period : undefined,
-    };
-    const metricMap: Record<string, number | null> = Object.fromEntries(
-      Object.entries(m)
-        .filter(([, v]) => typeof v === "number" && Number.isFinite(v))
-        .map(([k, v]) => [k, v as number]),
-    );
-    const compareReturns: ThemeCompareReturnsV0 = {
-      source: "spy_snapshot.v0",
-      metrics: metricMap,
-      columns: Array.isArray(data.columns) ? data.columns : undefined,
-    };
-    return {
-      asOf: typeof data.as_of === "string" ? data.as_of : undefined,
-      chartPerf,
-      compareReturns,
-      benchmarkPerformance: data.performance,
-    };
+    return parseSpySnapshotData(raw as SpySnapshotV0);
   } catch {
     return null;
   }
@@ -61,7 +64,7 @@ export function parseSpySnapshotJson(raw: unknown): SpyMarketPerf | null {
 
 export function parseSpySnapshotText(raw: string): SpyMarketPerf | null {
   try {
-    return parseSpySnapshotJson(JSON.parse(raw));
+    return parseSpySnapshotData(parseJsonPayload<SpySnapshotV0>(raw));
   } catch {
     return null;
   }
