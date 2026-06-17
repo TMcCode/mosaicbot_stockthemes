@@ -3,6 +3,7 @@ import Script from "next/script";
 
 import {
   formatGiveawayEntriesCloseLabel,
+  formatGiveawayWinnerChosenLabel,
   GIVEAWAY_ENTRIES_CLOSE_DATE,
   giveawayEntriesOpen,
   giveawayPledgedDollars,
@@ -10,6 +11,7 @@ import {
   GIVEAWAY_DOLLARS_PER_TIER,
   GIVEAWAY_SIGNUPS_PER_PRIZE,
 } from "@/lib/giveawayConfig";
+import { HELLO_EMAIL, mailtoHref } from "@/lib/contactEmails";
 import { getSignupStatsBaked } from "@/lib/loadSignupStats";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
@@ -44,6 +46,7 @@ export function SignupGiveawayBanner() {
   const toNext = giveawaySignupsToNextTier(stats.sign_up_count);
   const nextUpdate = formatNextUpdateLabel(stats.next_update_at);
   const closeLabel = formatGiveawayEntriesCloseLabel();
+  const winnerLabel = formatGiveawayWinnerChosenLabel();
 
   return (
     <>
@@ -75,23 +78,48 @@ export function SignupGiveawayBanner() {
           </span>
         </p>
         <p className={styles.meta}>
+          50% to the best unique investable theme · 50% to 1 random subscriber
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
           <Link href="/account/suggest" className={styles.link}>
             Suggest a theme
           </Link>
           <span className={styles.sep} aria-hidden="true">
             ·
           </span>
+          <a
+            href={mailtoHref(HELLO_EMAIL, "Theme or site suggestion")}
+            className={styles.link}
+          >
+            {HELLO_EMAIL}
+          </a>
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
           Entries close {closeLabel}
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          Winner {winnerLabel}
+        </p>
+        <p className={styles.note}>
           {nextUpdate ? (
             <>
+              Count updates ~{nextUpdate}
               <span className={styles.sep} aria-hidden="true">
                 ·
               </span>
-              Count updates ~{nextUpdate}
             </>
           ) : null}
+          {stats.update_schedule_note}
+          <span className={styles.sep} aria-hidden="true">
+            ·
+          </span>
+          <Link href="/contact" className={styles.link}>
+            Disclosures
+          </Link>
         </p>
-        <p className={styles.note}>{stats.update_schedule_note}</p>
       </div>
     </aside>
     </>

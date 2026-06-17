@@ -6,6 +6,9 @@ export const GIVEAWAY_DOLLARS_PER_TIER = 100;
 /** Last day entries are accepted (US Eastern calendar date, YYYY-MM-DD). Banner hidden from Aug 1 ET. */
 export const GIVEAWAY_ENTRIES_CLOSE_DATE = "2026-07-31";
 
+/** Winner selection date (US Eastern calendar date, YYYY-MM-DD). */
+export const GIVEAWAY_WINNER_CHOSEN_DATE = "2026-08-05";
+
 const ET_YMD = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
 
 /** Today's date in America/New_York as YYYY-MM-DD. */
@@ -28,8 +31,8 @@ export function giveawaySignupsToNextTier(signUpCount: number): number {
   return mod === 0 ? GIVEAWAY_SIGNUPS_PER_PRIZE : GIVEAWAY_SIGNUPS_PER_PRIZE - mod;
 }
 
-export function formatGiveawayEntriesCloseLabel(): string {
-  const [y, m, d] = GIVEAWAY_ENTRIES_CLOSE_DATE.split("-").map(Number);
+function formatGiveawayEasternDateLabel(ymd: string): string {
+  const [y, m, d] = ymd.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d, 12, 0, 0));
   return dt.toLocaleDateString("en-US", {
     month: "short",
@@ -37,4 +40,12 @@ export function formatGiveawayEntriesCloseLabel(): string {
     year: "numeric",
     timeZone: "America/New_York",
   });
+}
+
+export function formatGiveawayEntriesCloseLabel(): string {
+  return formatGiveawayEasternDateLabel(GIVEAWAY_ENTRIES_CLOSE_DATE);
+}
+
+export function formatGiveawayWinnerChosenLabel(): string {
+  return formatGiveawayEasternDateLabel(GIVEAWAY_WINNER_CHOSEN_DATE);
 }
