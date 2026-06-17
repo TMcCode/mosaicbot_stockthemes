@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ColorType, LineStyle, createChart, type ISeriesApi, type MouseEventParams } from "lightweight-charts";
 
+import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
 import type { FactorMethodologyItem } from "@/lib/loadFactorMethodology";
 import { loadFactorIndex } from "@/lib/loadFactorIndex";
 import { loadFactorRows } from "@/lib/loadFactorRows";
@@ -28,7 +29,7 @@ function factorOptions(payload: FactorIndexV0): Array<{ id: string; label: strin
   return Object.entries(payload.factors)
     .map(([id, b]) => ({
       id,
-      label: typeof b?.label === "string" ? b.label : id,
+      label: factorDisplayLabel(id, typeof b?.label === "string" ? b.label : undefined),
     }))
     .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: "base" }));
 }
@@ -666,6 +667,9 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   );
   const selectedMethod = selectedFactorId ? factorMethodology[selectedFactorId] : null;
   const series = selectedFactorId ? timeseries?.factors?.[selectedFactorId] : null;
+  const selectedFactorLabel = selectedFactorId
+    ? factorDisplayLabel(selectedFactorId, series?.label ?? indexPayload?.factors?.[selectedFactorId]?.label)
+    : "";
   const totalRows = indexPayload?.factors?.[selectedFactorId]?.total ?? rows[0]?.total ?? 0;
   const selectedThemeSeries = useMemo(
     () =>
@@ -682,7 +686,7 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
     if (!series?.values?.length) return [] as FactorChartSeries[];
     const base: FactorChartSeries = {
       id: "factor",
-      label: `${series.label} factor`,
+      label: `${selectedFactorLabel} factor`,
       dates: series.dates,
       values: series.values,
       color: FACTOR_LINE_COLOR,
@@ -697,7 +701,7 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
       })),
       base,
     ];
-  }, [selectedThemeSeries, series]);
+  }, [selectedThemeSeries, series, selectedFactorLabel]);
   const toggleThemeSelection = (row: DisplayRow) => {
     const slug = row.slug;
     if (!slug) return;
@@ -763,7 +767,7 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
           <div className={styles.chartWrap}>
           <div className={styles.chartHead}>
             <p className={styles.chartTitle}>
-              {series.label} factor trend (1Y)
+              {selectedFactorLabel} factor trend (1Y)
               {seriesChange ? (
                 <span className={styles.chartDelta}> · {Number(seriesChange) >= 0 ? "+" : ""}{seriesChange}%</span>
               ) : null}
@@ -779,11 +783,11 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
               ) : null}
             </div>
           </div>
-          <FactorTrendChart series={chartSeries} ariaLabel={`${series.label} factor chart`} />
+          <FactorTrendChart series={chartSeries} ariaLabel={`${selectedFactorLabel} factor chart`} />
           <div className={styles.compareLegend}>
             <span className={styles.legendItem}>
               <span className={styles.legendSwatch} style={{ background: FACTOR_LINE_COLOR }} />
-              {series.label} factor
+              {selectedFactorLabel} factor
             </span>
             {selectedThemeSeries.map((item) => (
               <span key={`legend-${item.slug}`} className={styles.legendItem}>

@@ -23,10 +23,19 @@ export function HomeTrendingThemesTableLive({
   columnHelp,
   serverCompareBundle,
 }: Props) {
-  const { compareBundle } = useLiveCompareBundles(serverCompareBundle, null);
-  const liveRows = useMemo(
-    () => mergeHomeTrendingCompareReturns(rows, compareBundle?.rows ?? []),
-    [rows, compareBundle?.rows],
-  );
+  const { compareBundle, liveSpyPerf } = useLiveCompareBundles(serverCompareBundle, null);
+  const liveRows = useMemo(() => {
+    const merged = mergeHomeTrendingCompareReturns(rows, compareBundle?.rows ?? []);
+    if (!liveSpyPerf?.compareReturns) return merged;
+    return merged.map((row) =>
+      row.marketBaseline
+        ? {
+            ...row,
+            compare_returns: liveSpyPerf.compareReturns,
+            chartPerf: liveSpyPerf.chartPerf,
+          }
+        : row,
+    );
+  }, [rows, compareBundle?.rows, liveSpyPerf]);
   return <HomeTrendingThemesTable rows={liveRows} columns={columns} columnHelp={columnHelp} />;
 }

@@ -26,7 +26,7 @@ export const FACTOR_TOOLTIP_SUMMARIES: Record<string, string> = {
   CRYPTO:
     "Shows crypto-linked sensitivity. Higher means this theme has tended to move more with crypto risk appetite.",
   MEME_RETAIL:
-    "Shows retail-speculation behavior. Higher means this theme has tended to move more like hype-driven, high-volatility retail trades.",
+    "Shows retail-speculation behavior (ARKK vs. the broad market). Higher means this theme has tended to move more like hype-driven, high-volatility retail trades—not the dedicated meme-stock ETF used for Meme Sensitivity.",
   MEME_SENSITIVITY:
     "Shows meme-stock sensitivity. Higher means this theme has tended to move more with the Roundhill Meme Stock ETF (MEME) versus the broad market.",
   OIL_SENSITIVITY:

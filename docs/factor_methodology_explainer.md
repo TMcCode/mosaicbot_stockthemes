@@ -45,7 +45,7 @@ Each section:
 ## CRYPTO - Crypto Sensitivity
 - **Summary:** This shows how much a theme’s price action lines up with crypto appetite. We use a Bitcoin ETF (IBIT) versus the broad market (SPY) as a simple proxy. Higher scores mean the theme has often risen and fallen alongside crypto-linked risk sentiment.
 
-## MEME_RETAIL - Meme / Retail Speculation Exposure
+## MEME_RETAIL - Retail Speculation Exposure
 - **Summary:** This reflects retail-driven, high-hype trading—the kind of sharp moves often seen in popular speculative ETFs. We use ARKK versus the broad market (SPY) as a guide. Higher scores mean the theme has tended to behave more like that speculative, attention-driven corner of the market.
 
 ## MEME_SENSITIVITY - Meme Sensitivity

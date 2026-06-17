@@ -17,6 +17,7 @@ import {
   themeFactorDisplayScore,
   themeFactorProfileUrl,
 } from "@/lib/themeFactorProfile";
+import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
 import { factorTooltipSummaryForId } from "@/lib/factorTooltipSummaries";
 import {
   stockthemesBrowserCacheBusterQuery,
@@ -57,6 +58,7 @@ function resolveProfileState(profile: ThemeFactorProfileV0): ProfileState {
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
   const displayScore = themeFactorDisplayScore(entry);
   const rankLabel = formatThemeFactorDisplayRank(entry);
+  const label = factorDisplayLabel(entry.id, entry.label);
   const tooltipSummary = factorTooltipSummaryForId(entry.id);
   return (
     <li className={styles.row}>
@@ -65,9 +67,9 @@ function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant
           <span
             className={styles.label}
             tabIndex={tooltipSummary ? 0 : undefined}
-            aria-label={tooltipSummary ? `${entry.label}. ${tooltipSummary}` : undefined}
+            aria-label={tooltipSummary ? `${label}. ${tooltipSummary}` : undefined}
           >
-            {entry.label}
+            {label}
             {tooltipSummary ? <span className={styles.tooltip}>{tooltipSummary}</span> : null}
           </span>
           {rankLabel ? <span className={styles.rank}>({rankLabel})</span> : null}

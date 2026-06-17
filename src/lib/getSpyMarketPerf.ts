@@ -1,75 +1,24 @@
 import { readFile } from "fs/promises";
 import path from "path";
 
-import type { ChartPerfReturns } from "@/lib/computeThemePerf";
-import { parseJsonPayload } from "@/lib/parseJsonPayload";
+import { parseSpySnapshotText, type SpyMarketPerf } from "@/lib/parseSpySnapshot";
 import {
   fetchPublicJsonText,
   stockthemesBuildCacheEnabled,
 } from "@/lib/stockthemesBuildCache";
 import { stockthemesLiveFetchInit, stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
-import type { ChartPerformanceV0 } from "@/types/chart.v0";
-import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 const FIXTURE_REL = path.join("public", "fixtures", "spy_snapshot.v0.json");
 
-type SpySnapshotV0 = {
-  schema_version: 0;
-  as_of: string;
-  ticker: "SPY" | string;
-  columns?: string[];
-  performance?: ChartPerformanceV0;
-  metrics: {
-    "1D"?: number | null;
-    "10D"?: number | null;
-    MTD?: number | null;
-    YTD?: number | null;
-    Period?: number | null;
-    [key: string]: number | null | undefined;
-  };
-};
-
-export type SpyMarketPerf = {
-  chartPerf: ChartPerfReturns;
-  compareReturns?: ThemeCompareReturnsV0;
-  benchmarkPerformance?: ChartPerformanceV0;
-};
+export type { SpyMarketPerf };
 
 let memoizedSpyPerfPromise: Promise<SpyMarketPerf | null> | null = null;
-
-function parseSpySnapshot(raw: string): SpyMarketPerf | null {
-  try {
-    const data = parseJsonPayload<SpySnapshotV0>(raw);
-    if (data.schema_version !== 0 || !data.metrics) return null;
-    const m = data.metrics;
-    const chartPerf: ChartPerfReturns = {
-      d1: typeof m["1D"] === "number" ? m["1D"] : undefined,
-      d10: typeof m["10D"] === "number" ? m["10D"] : undefined,
-      mtd: typeof m.MTD === "number" ? m.MTD : undefined,
-      ytd: typeof m.YTD === "number" ? m.YTD : undefined,
-      y1: typeof m.Period === "number" ? m.Period : undefined,
-    };
-    const metricMap: Record<string, number | null> = Object.fromEntries(
-      Object.entries(m)
-        .filter(([, v]) => typeof v === "number" && Number.isFinite(v))
-        .map(([k, v]) => [k, v as number]),
-    );
-    const compareReturns: ThemeCompareReturnsV0 = {
-      source: "spy_snapshot.v0",
-      metrics: metricMap,
-      columns: Array.isArray(data.columns) ? data.columns : undefined,
-    };
-    return { chartPerf, compareReturns, benchmarkPerformance: data.performance };
-  } catch {
-    return null;
-  }
-}
 
 async function loadFixtureSpyPerf(): Promise<SpyMarketPerf | null> {
   try {
     const abs = path.join(process.cwd(), FIXTURE_REL);
     const raw = await readFile(abs, "utf-8");
-    return parseSpySnapshot(raw);
+    return parseSpySnapshotText(raw);
   } catch {
     return null;
   }
@@ -97,7 +46,7 @@ async function getSpyMarketPerfInternal(): Promise<SpyMarketPerf | null> {
     const url = `${base}/spy_snapshot.v0.json`;
     try {
       if (stockthemesBuildCacheEnabled()) {
-        const parsed = parseSpySnapshot(
+        const parsed = parseSpySnapshotText(
           await fetchPublicJsonText(url, "spy_snapshot.v0.json"),
         );
         if (parsed) return parsed;
@@ -108,7 +57,7 @@ async function getSpyMarketPerfInternal(): Promise<SpyMarketPerf | null> {
           signal: AbortSignal.timeout(1200),
         });
         if (res.ok) {
-          const parsed = parseSpySnapshot(await res.text());
+          const parsed = parseSpySnapshotText(await res.text());
           if (parsed) return parsed;
         }
       }

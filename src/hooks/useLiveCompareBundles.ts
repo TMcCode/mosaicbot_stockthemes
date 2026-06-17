@@ -6,6 +6,8 @@ import {
   parseCompareThemesJson,
   parseHomeTopMoversJson,
 } from "@/lib/mergeLiveCompareData";
+import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
+import type { SpyMarketPerf } from "@/lib/parseSpySnapshot";
 import {
   priceReturnsBrowserCacheBusterQuery,
   priceReturnsRevalidateSeconds,
@@ -30,6 +32,7 @@ export function useLiveCompareBundles(
 ): {
   compareBundle: CompareThemesV0 | null | undefined;
   topMoversBundle: HomeTopMoversV0 | null | undefined;
+  liveSpyPerf: SpyMarketPerf | null;
   liveTickerPerformanceAsOf: string | null;
   liveCompare: boolean;
 } {
@@ -37,6 +40,7 @@ export function useLiveCompareBundles(
   const base = stockthemesPublicDataBase();
   const [liveCompare, setLiveCompare] = useState<CompareThemesV0 | null>(null);
   const [liveTopMovers, setLiveTopMovers] = useState<HomeTopMoversV0 | null>(null);
+  const [liveSpyPerf, setLiveSpyPerf] = useState<SpyMarketPerf | null>(null);
   const [liveTickerPerformanceAsOf, setLiveTickerPerformanceAsOf] = useState<string | null>(null);
 
   useEffect(() => {
@@ -46,16 +50,19 @@ export function useLiveCompareBundles(
     const refresh = async () => {
       const q = priceReturnsBrowserCacheBusterQuery();
       try {
-        const [compareRaw, moversRaw, manifestRaw] = await Promise.all([
+        const [compareRaw, moversRaw, manifestRaw, spyRaw] = await Promise.all([
           fetchJson(`${base}/compare_themes.v0.json?${q}`),
           fetchJson(`${base}/home_top_movers.v0.json?${q}`),
           fetchJson(`${base}/manifest.json?${q}`),
+          fetchJson(`${base}/spy_snapshot.v0.json?${q}`),
         ]);
         if (cancelled) return;
         const compare = parseCompareThemesJson(compareRaw);
         const movers = parseHomeTopMoversJson(moversRaw);
+        const spy = parseSpySnapshotJson(spyRaw);
         if (compare) setLiveCompare(compare);
         if (movers) setLiveTopMovers(movers);
+        if (spy) setLiveSpyPerf(spy);
         const perfAsOf =
           manifestRaw &&
           typeof manifestRaw === "object" &&
@@ -87,5 +94,5 @@ export function useLiveCompareBundles(
     [liveTopMovers, serverTopMovers],
   );
 
-  return { compareBundle, topMoversBundle, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
+  return { compareBundle, topMoversBundle, liveSpyPerf, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
 }
