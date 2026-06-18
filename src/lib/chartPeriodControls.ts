@@ -8,6 +8,7 @@ import {
 } from "@/lib/sliceIndexedChart";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
+import type { OverlayEntityKind } from "@/lib/chartSidecar";
 
 function isoDay(raw: string): string {
   return String(raw || "").trim().slice(0, 10);
@@ -51,6 +52,66 @@ export function chart1yWithExtendedPerformance(
   const merged = mergeExtendedChartPerformance(chart1y.performance, extended);
   if (merged === chart1y.performance) return chart1y;
   return { ...chart1y, performance: merged };
+}
+
+/** Theme detail composition = stock tickers; group composition = child theme slugs in ``series.ticker``. */
+export function compositionSeriesSidecarKind(parentKind: OverlayEntityKind): OverlayEntityKind {
+  return parentKind === "group" ? "theme" : "ticker";
+}
+
+export function normalizeCompositionSidecarSlug(
+  kind: OverlayEntityKind,
+  raw: string,
+): string {
+  const s = raw.trim();
+  if (kind === "ticker") return s.toUpperCase();
+  if (kind === "theme") return s.toLowerCase();
+  return s;
+}
+
+export function compositionTickersNeedingExtendedHistory(
+  chart1y: ThemeChart1yV0 | undefined,
+  period: OverlayChartPeriod,
+  referenceLastIso: string | undefined,
+  customAnchorIso: string | undefined,
+  extendedByTicker?: Record<string, ChartPerformanceV0 | undefined>,
+): string[] {
+  const series = chart1y?.composition_indexed?.series;
+  if (!series?.length) return [];
+  const out: string[] = [];
+  for (const s of series) {
+    if (!s.dates?.length || !s.values?.length) continue;
+    const key = s.ticker.trim().toUpperCase();
+    const embedded: ChartPerformanceV0 = { dates: s.dates, values: s.values };
+    const merged = mergeExtendedChartPerformance(embedded, extendedByTicker?.[key]);
+    if (performanceNeedsExtendedHistory(merged, period, referenceLastIso, customAnchorIso)) {
+      out.push(key);
+    }
+  }
+  return out;
+}
+
+export function chart1yWithExtendedComposition(
+  chart1y: ThemeChart1yV0 | undefined,
+  extendedByTicker: Record<string, ChartPerformanceV0 | undefined>,
+): ThemeChart1yV0 | undefined {
+  const comp = chart1y?.composition_indexed;
+  if (!comp?.series?.length || Object.keys(extendedByTicker).length === 0) return chart1y;
+  let changed = false;
+  const series = comp.series.map((s) => {
+    const key = s.ticker.trim().toUpperCase();
+    const ext = extendedByTicker[key];
+    if (!ext?.dates?.length) return s;
+    const merged = mergeExtendedChartPerformance(
+      { dates: s.dates, values: s.values },
+      ext,
+    );
+    if (!merged || (merged.dates === s.dates && merged.values === s.values)) return s;
+    changed = true;
+    return { ...s, dates: merged.dates, values: merged.values };
+  });
+  if (!changed || !chart1y) return chart1y;
+  return { ...chart1y, composition_indexed: { ...comp, series } };
 }
 
 export const DETAIL_CHART_STANDARD_PERIODS: OverlayStandardPeriod[] = [

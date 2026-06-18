@@ -24,12 +24,16 @@ import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
 import {
   chartCustomPeriodsFromManifest,
+  chart1yWithExtendedComposition,
   chart1yWithExtendedPerformance,
   chartPerformancesForDetailPeriodSupport,
   chartPeriodWindowLabel,
+  compositionSeriesSidecarKind,
+  compositionTickersNeedingExtendedHistory,
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
   mergeExtendedChartPerformance,
+  normalizeCompositionSidecarSlug,
   performanceNeedsExtendedHistory,
   referenceLastIsoFromPerformances,
   sliceBenchmarkForPeriod,
@@ -707,6 +711,9 @@ export function Chart1yLightweight({
   const [extendedPerformance, setExtendedPerformance] = useState<ChartPerformanceV0 | undefined>(
     undefined,
   );
+  const [extendedCompositionByTicker, setExtendedCompositionByTicker] = useState<
+    Record<string, ChartPerformanceV0>
+  >({});
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -745,6 +752,7 @@ export function Chart1yLightweight({
 
   useEffect(() => {
     setExtendedPerformance(undefined);
+    setExtendedCompositionByTicker({});
   }, [sidecarEntity?.kind, sidecarEntity?.slug, chart1ySorted]);
 
   const referenceLastIso = useMemo(
@@ -833,10 +841,79 @@ export function Chart1yLightweight({
     extendedPerformance,
   ]);
 
-  const chart1yWithHistory = useMemo(
-    () => chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance),
-    [chart1yForRender, extendedPerformance],
-  );
+  const compositionSidecarKind = sidecarEntity
+    ? compositionSeriesSidecarKind(sidecarEntity.kind)
+    : null;
+
+  const compositionTickersNeedingFetch = useMemo(() => {
+    if (!showPeriodControls || activeView !== "composition" || !compositionSidecarKind) {
+      return [];
+    }
+    return compositionTickersNeedingExtendedHistory(
+      chart1yForRender,
+      period,
+      referenceLastIso,
+      customAnchorIso,
+      extendedCompositionByTicker,
+    );
+  }, [
+    showPeriodControls,
+    activeView,
+    compositionSidecarKind,
+    chart1yForRender,
+    period,
+    referenceLastIso,
+    customAnchorIso,
+    extendedCompositionByTicker,
+  ]);
+
+  useEffect(() => {
+    if (!compositionSidecarKind || compositionTickersNeedingFetch.length === 0) return;
+
+    let cancelled = false;
+    void Promise.all(
+      compositionTickersNeedingFetch.map(async (tickerKey) => {
+        const slug = normalizeCompositionSidecarSlug(compositionSidecarKind, tickerKey);
+        const sidecar = await fetchChartSidecar(compositionSidecarKind, slug);
+        if (!sidecar?.performance?.dates?.length) return null;
+        const series = chart1yForRender?.composition_indexed?.series.find(
+          (s) => s.ticker.trim().toUpperCase() === tickerKey,
+        );
+        const baseline = series
+          ? ({ dates: series.dates, values: series.values } satisfies ChartPerformanceV0)
+          : undefined;
+        let perf = sanitizeChartPerformanceForDisplay(sidecar.performance) ?? sidecar.performance;
+        if (isSuspiciousChartPerformanceCliff(perf, baseline)) return null;
+        return { tickerKey, perf };
+      }),
+    )
+      .then((rows) => {
+        if (cancelled) return;
+        const updates: Record<string, ChartPerformanceV0> = {};
+        for (const row of rows) {
+          if (!row) continue;
+          updates[row.tickerKey] = row.perf;
+        }
+        if (Object.keys(updates).length === 0) return;
+        setExtendedCompositionByTicker((prev) => ({ ...prev, ...updates }));
+      })
+      .catch(() => {
+        /* keep embedded composition window on CDN miss */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    compositionSidecarKind,
+    compositionTickersNeedingFetch,
+    chart1yForRender?.composition_indexed?.series,
+  ]);
+
+  const chart1yWithHistory = useMemo(() => {
+    const withPerf = chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance);
+    return chart1yWithExtendedComposition(withPerf, extendedCompositionByTicker);
+  }, [chart1yForRender, extendedPerformance, extendedCompositionByTicker]);
 
   const performancesForSupport = useMemo(
     () => chartPerformancesForDetailPeriodSupport(chart1yWithHistory, activeView),
