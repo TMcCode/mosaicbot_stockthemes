@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from "react";
 
-import { buildRotationMapData, type RotationMapData } from "@/lib/buildRotationMapData";
+import {
+  buildRotationMapSource,
+  type RotationMapSource,
+} from "@/lib/buildRotationMapData";
 import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
 import {
   stockthemesBrowserCacheBusterQuery,
@@ -15,7 +18,7 @@ import type { ManifestV0 } from "@/types/manifest.v0";
 type LoadState =
   | { status: "idle" }
   | { status: "loading" }
-  | { status: "ready"; asOf: string; mapData: RotationMapData }
+  | { status: "ready"; asOf: string; source: RotationMapSource }
   | { status: "error" };
 
 function parseCompareThemes(raw: unknown): CompareThemesV0 | null {
@@ -84,14 +87,14 @@ export function useRotationMapData(enabled: boolean): LoadState {
           return;
         }
         const asOf = compare.as_of || manifest.as_of;
-        const mapData = buildRotationMapData({
+        const source = buildRotationMapSource({
           asOf,
           groups: manifest.groups,
           themes: manifest.themes,
           compareRows: compare.rows,
           spyCompareReturns: spy?.compareReturns ?? null,
         });
-        setState({ status: "ready", asOf, mapData });
+        setState({ status: "ready", asOf, source });
       })
       .catch(() => {
         if (!cancelled) setState({ status: "error" });

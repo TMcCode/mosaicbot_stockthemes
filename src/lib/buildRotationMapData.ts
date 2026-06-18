@@ -1,6 +1,8 @@
 import {
-  pickRotationLongAxis,
-  type RotationLongAxis,
+  defaultRotationLongAxis,
+  defaultRotationShortAxis,
+  ROTATION_HORIZON_ORDER,
+  type RotationHorizonKey,
 } from "@/lib/rotationAxis";
 import { isHeatmapSectorEligible } from "@/lib/marketHeatmapSectors";
 import { applyShortThemeCompareReturnsDisplay } from "@/lib/shortThemeChart";
@@ -12,7 +14,16 @@ import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
 import type { ManifestGroupSummaryV0, ManifestThemeSummaryV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
+import type { ThemeRank10dV0 } from "@/types/theme.detail.v0";
+
 export type RotationPointKind = "group" | "theme";
+
+export type RotationRank10d = {
+  universeRank: number;
+  universeTotal: number;
+  groupRank?: number | null;
+  groupTotal?: number | null;
+};
 
 export type RotationMapPoint = {
   kind: RotationPointKind;
@@ -21,13 +32,44 @@ export type RotationMapPoint = {
   sector: string;
   groupSlug: string | null;
   groupName: string | null;
-  /** 10D return minus SPY 10D (%). */
+  /** Short-horizon return minus SPY (%). */
   x: number;
-  /** YTD or 1Yr minus SPY (%). */
+  /** Long-horizon return minus SPY (%). */
   y: number;
   /** Sizing weight (avg constituent USD mcap or group aggregate). */
   weight: number;
   themeCount?: number;
+  rank10d?: RotationRank10d;
+  /** Prior position for motion arrows (longer short-horizon, same long axis). */
+  motionFrom?: { x: number; y: number } | null;
+};
+
+export type RotationThemeSource = {
+  slug: string;
+  name: string;
+  sector: string;
+  groupSlug: string;
+  groupName: string | null;
+  weight: number;
+  /** Metric key → return minus SPY (%). */
+  relatives: Partial<Record<RotationHorizonKey, number>>;
+  raw10d?: number | null;
+  rank10d?: RotationRank10d;
+};
+
+export type RotationGroupMeta = {
+  slug: string;
+  name: string;
+  sector: string;
+};
+
+export type RotationMapSource = {
+  asOf: string;
+  defaultShortAxis: RotationHorizonKey;
+  defaultLongAxis: RotationHorizonKey;
+  availableMetrics: RotationHorizonKey[];
+  groups: RotationGroupMeta[];
+  themesByGroupSlug: Map<string, RotationThemeSource[]>;
 };
 
 export type RotationMapBuildInput = {
@@ -39,7 +81,8 @@ export type RotationMapBuildInput = {
 };
 
 export type RotationMapData = {
-  longAxis: RotationLongAxis;
+  shortAxis: RotationHorizonKey;
+  longAxis: RotationHorizonKey;
   groups: RotationMapPoint[];
   themesByGroupSlug: Map<string, RotationMapPoint[]>;
 };
@@ -52,13 +95,27 @@ function spyMetric(
   return typeof v === "number" && Number.isFinite(v) ? v : null;
 }
 
-function themeRelativePoint(
+function parseRank10d(block: ThemeRank10dV0 | null | undefined): RotationRank10d | undefined {
+  if (!block || typeof block.universe_rank !== "number" || typeof block.universe_total !== "number") {
+    return undefined;
+  }
+  return {
+    universeRank: block.universe_rank,
+    universeTotal: block.universe_total,
+    groupRank: typeof block.group_rank === "number" ? block.group_rank : null,
+    groupTotal: typeof block.group_total === "number" ? block.group_total : null,
+  };
+}
+
+function themeRelativeMetrics(
   row: CompareThemesRowV0,
   theme: ManifestThemeSummaryV0,
-  sector: string,
-  longAxis: RotationLongAxis,
   spy: ThemeCompareReturnsV0 | null | undefined,
-): RotationMapPoint | null {
+): {
+  relatives: Partial<Record<RotationHorizonKey, number>>;
+  raw10d: number | null;
+  rank10d?: RotationRank10d;
+} | null {
   const name = String(theme.name || row.name || "").trim();
   if (!name) return null;
 
@@ -66,22 +123,46 @@ function themeRelativePoint(
   const m = display?.metrics;
   if (!m) return null;
 
-  const t10 = m["10D"];
-  const tLong = m[longAxis];
-  const spy10 = spyMetric(spy, "10D");
-  const spyLong = spyMetric(spy, longAxis);
-  if (
-    !isPlausibleCompareReturnMetric("10D", t10) ||
-    !isPlausibleCompareReturnMetric(longAxis, tLong) ||
-    !isPlausibleCompareReturnMetric("10D", spy10) ||
-    !isPlausibleCompareReturnMetric(longAxis, spyLong)
-  ) {
-    return null;
+  const relatives: Partial<Record<RotationHorizonKey, number>> = {};
+  for (const key of ROTATION_HORIZON_ORDER) {
+    const themeVal = m[key];
+    const spyVal = spyMetric(spy, key);
+    if (
+      !isPlausibleCompareReturnMetric(key, themeVal) ||
+      !isPlausibleCompareReturnMetric(key, spyVal) ||
+      spyVal == null
+    ) {
+      continue;
+    }
+    relatives[key] = Math.round((themeVal - spyVal) * 100) / 100;
   }
 
-  if (spy10 == null || spyLong == null) {
-    return null;
-  }
+  if (Object.keys(relatives).length === 0) return null;
+
+  const raw10d = m["10D"];
+  const raw10dVal =
+    typeof raw10d === "number" && Number.isFinite(raw10d) ? raw10d : null;
+
+  return {
+    relatives,
+    raw10d: raw10dVal,
+    rank10d: parseRank10d(row.rank_10d ?? undefined),
+  };
+}
+
+function themeSourceFromRow(
+  row: CompareThemesRowV0,
+  theme: ManifestThemeSummaryV0,
+  sector: string,
+  groupSlug: string,
+  spy: ThemeCompareReturnsV0 | null | undefined,
+): RotationThemeSource | null {
+  const metrics = themeRelativeMetrics(row, theme, spy);
+  if (!metrics) return null;
+
+  const slug = String(theme.slug || row.slug || "").trim();
+  const name = String(theme.name || row.name || "").trim();
+  if (!slug || !name) return null;
 
   const mcap = row.avg_market_cap_usd;
   const weight =
@@ -89,19 +170,49 @@ function themeRelativePoint(
       ? mcap
       : (theme.ticker_count ?? 1);
 
-  const slug = String(theme.slug || row.slug || "").trim();
-  if (!slug) return null;
-
   return {
-    kind: "theme",
     slug,
     name,
     sector,
-    groupSlug: String(theme.group_slug || row.group_slug || "").trim() || null,
+    groupSlug,
     groupName: String(row.group_name || "").trim() || null,
-    x: Math.round((t10 - spy10) * 100) / 100,
-    y: Math.round((tLong - spyLong) * 100) / 100,
     weight,
+    relatives: metrics.relatives,
+    raw10d: metrics.raw10d,
+    rank10d: metrics.rank10d,
+  };
+}
+
+function themePointFromSource(
+  source: RotationThemeSource,
+  shortKey: RotationHorizonKey,
+  longKey: RotationHorizonKey,
+  motionPriorShort: RotationHorizonKey | null,
+): RotationMapPoint | null {
+  const x = source.relatives[shortKey];
+  const y = source.relatives[longKey];
+  if (typeof x !== "number" || typeof y !== "number") return null;
+
+  let motionFrom: { x: number; y: number } | null = null;
+  if (motionPriorShort) {
+    const mx = source.relatives[motionPriorShort];
+    if (typeof mx === "number") {
+      motionFrom = { x: mx, y };
+    }
+  }
+
+  return {
+    kind: "theme",
+    slug: source.slug,
+    name: source.name,
+    sector: source.sector,
+    groupSlug: source.groupSlug,
+    groupName: source.groupName,
+    x,
+    y,
+    weight: source.weight,
+    rank10d: source.rank10d,
+    motionFrom,
   };
 }
 
@@ -119,9 +230,9 @@ function groupSizingWeight(themePoints: RotationMapPoint[]): number {
 }
 
 function groupAggregatePoint(
-  group: ManifestGroupSummaryV0,
-  sector: string,
+  group: RotationGroupMeta,
   themePoints: RotationMapPoint[],
+  motionPriorShort: RotationHorizonKey | null,
 ): RotationMapPoint | null {
   if (themePoints.length === 0) return null;
   const xs = themePoints.map((p) => p.x);
@@ -129,22 +240,56 @@ function groupAggregatePoint(
   const xMed = medianFinite(xs);
   const yMed = medianFinite(ys);
   if (xMed == null || yMed == null) return null;
-  const slug = String(group.slug || "").trim();
-  const name = String(group.name || "").trim();
-  if (!slug || !name) return null;
+
+  let motionFrom: { x: number; y: number } | null = null;
+  if (motionPriorShort) {
+    const mxVals = themePoints
+      .map((p) => p.motionFrom?.x)
+      .filter((v): v is number => typeof v === "number" && Number.isFinite(v));
+    const mx = medianFinite(mxVals);
+    if (mx != null) {
+      motionFrom = { x: mx, y: yMed };
+    }
+  }
 
   return {
     kind: "group",
-    slug,
-    name,
-    sector,
-    groupSlug: slug,
-    groupName: name,
+    slug: group.slug,
+    name: group.name,
+    sector: group.sector,
+    groupSlug: group.slug,
+    groupName: group.name,
     x: Math.round(xMed * 100) / 100,
     y: Math.round(yMed * 100) / 100,
     weight: groupSizingWeight(themePoints),
     themeCount: themePoints.length,
+    motionFrom,
   };
+}
+
+function attachGroupRank10d(groups: RotationMapPoint[], raw10dByGroupSlug: Map<string, number>): void {
+  const scored: { slug: string; ret: number }[] = [];
+  for (const g of groups) {
+    const ret = raw10dByGroupSlug.get(g.slug);
+    if (typeof ret === "number" && Number.isFinite(ret)) {
+      scored.push({ slug: g.slug, ret });
+    }
+  }
+  if (scored.length === 0) return;
+
+  scored.sort((a, b) => b.ret - a.ret || a.slug.localeCompare(b.slug));
+  const total = scored.length;
+  const rankBySlug = new Map(scored.map((row, idx) => [row.slug, idx + 1]));
+
+  for (const g of groups) {
+    const rank = rankBySlug.get(g.slug);
+    if (rank != null) {
+      g.rank10d = {
+        universeRank: rank,
+        universeTotal: total,
+      };
+    }
+  }
 }
 
 function resolveGroupSector(group: ManifestGroupSummaryV0): string {
@@ -154,8 +299,7 @@ function resolveGroupSector(group: ManifestGroupSummaryV0): string {
   return "Other";
 }
 
-export function buildRotationMapData(input: RotationMapBuildInput): RotationMapData {
-  const longAxis = pickRotationLongAxis(input.asOf);
+export function buildRotationMapSource(input: RotationMapBuildInput): RotationMapSource {
   const spy = input.spyCompareReturns;
 
   const groupBySlug = new Map<string, ManifestGroupSummaryV0>();
@@ -170,7 +314,8 @@ export function buildRotationMapData(input: RotationMapBuildInput): RotationMapD
     if (slug) compareBySlug.set(slug, row);
   }
 
-  const themesByGroupSlug = new Map<string, RotationMapPoint[]>();
+  const themesByGroupSlug = new Map<string, RotationThemeSource[]>();
+  const availableSet = new Set<RotationHorizonKey>();
 
   for (const theme of input.themes) {
     const gslug = String(theme.group_slug || "").trim();
@@ -183,30 +328,88 @@ export function buildRotationMapData(input: RotationMapBuildInput): RotationMapD
     if (!row?.compare_returns) continue;
 
     const sector = resolveGroupSector(group);
-    const point = themeRelativePoint(row, theme, sector, longAxis, spy);
-    if (!point) continue;
+    const source = themeSourceFromRow(row, theme, sector, gslug, spy);
+    if (!source) continue;
+
+    for (const key of Object.keys(source.relatives) as RotationHorizonKey[]) {
+      availableSet.add(key);
+    }
 
     const bucket = themesByGroupSlug.get(gslug) ?? [];
-    bucket.push(point);
+    bucket.push(source);
     themesByGroupSlug.set(gslug, bucket);
   }
 
-  const groups: RotationMapPoint[] = [];
+  const groupMetas: RotationGroupMeta[] = [];
   for (const group of input.groups) {
     const slug = String(group.slug || "").trim();
-    if (!slug) continue;
-    const themePoints = themesByGroupSlug.get(slug) ?? [];
-    const sector = resolveGroupSector(group);
-    const gp = groupAggregatePoint(group, sector, themePoints);
+    const name = String(group.name || "").trim();
+    if (!slug || !name) continue;
+    groupMetas.push({
+      slug,
+      name,
+      sector: resolveGroupSector(group),
+    });
+  }
+
+  const availableMetrics = ROTATION_HORIZON_ORDER.filter((k) => availableSet.has(k));
+  const shortOpts = availableMetrics.filter((k) => k === "1D" || k === "10D" || k === "MTD");
+  const longOpts = availableMetrics.filter((k) => k === "MTD" || k === "YTD" || k === "Period");
+
+  return {
+    asOf: input.asOf,
+    defaultShortAxis: defaultRotationShortAxis(shortOpts),
+    defaultLongAxis: defaultRotationLongAxis(input.asOf, longOpts),
+    availableMetrics,
+    groups: groupMetas,
+    themesByGroupSlug,
+  };
+}
+
+export function projectRotationMap(
+  source: RotationMapSource,
+  shortAxis: RotationHorizonKey,
+  longAxis: RotationHorizonKey,
+  motionPriorShort: RotationHorizonKey | null = null,
+): RotationMapData {
+  const themesByGroupSlug = new Map<string, RotationMapPoint[]>();
+  const raw10dMedians = new Map<string, number>();
+
+  for (const [gslug, themeSources] of source.themesByGroupSlug) {
+    const points: RotationMapPoint[] = [];
+    const raw10ds: number[] = [];
+    for (const ts of themeSources) {
+      const point = themePointFromSource(ts, shortAxis, longAxis, motionPriorShort);
+      if (!point) continue;
+      points.push(point);
+      if (typeof ts.raw10d === "number" && Number.isFinite(ts.raw10d)) {
+        raw10ds.push(ts.raw10d);
+      }
+    }
+    points.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
+    themesByGroupSlug.set(gslug, points);
+    const med = medianFinite(raw10ds);
+    if (med != null) raw10dMedians.set(gslug, med);
+  }
+
+  const groups: RotationMapPoint[] = [];
+  for (const group of source.groups) {
+    const themePoints = themesByGroupSlug.get(group.slug) ?? [];
+    const gp = groupAggregatePoint(group, themePoints, motionPriorShort);
     if (gp) groups.push(gp);
   }
 
   groups.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-  for (const [, pts] of themesByGroupSlug) {
-    pts.sort((a, b) => a.name.localeCompare(b.name, undefined, { sensitivity: "base" }));
-  }
 
-  return { longAxis, groups, themesByGroupSlug };
+  attachGroupRank10d(groups, raw10dMedians);
+
+  return { shortAxis, longAxis, groups, themesByGroupSlug };
+}
+
+/** Build source + default projection (legacy convenience). */
+export function buildRotationMapData(input: RotationMapBuildInput): RotationMapData {
+  const source = buildRotationMapSource(input);
+  return projectRotationMap(source, source.defaultShortAxis, source.defaultLongAxis);
 }
 
 /** Log-scaled dot radius in SVG user units (6–22). */

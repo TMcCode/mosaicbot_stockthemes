@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import localStyles from "@/app/rotation/page.module.css";
+import { RotationQuadrantPanel } from "@/components/RotationQuadrantPanel";
 import {
+  projectRotationMap,
   rotationAdaptiveDotRadius,
   rotationDataToSvgX,
   rotationDataToSvgY,
@@ -14,22 +16,34 @@ import {
   rotationPointOffPlot,
   rotationTrueDisplayPositions,
   type RotationDisplayPoint,
-  type RotationMapData,
   type RotationMapPoint,
+  type RotationMapSource,
 } from "@/lib/buildRotationMapData";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
 import {
+  coerceRotationLongAxis,
+  coerceRotationShortAxis,
   formatRotationAxisTick,
+  resolveRotationAxisOptions,
+  rotationAxisMetricLabel,
   rotationAxisTicks,
-  rotationLongAxisLabel,
-  rotationShortAxisLabel,
+  rotationMotionPriorShort,
+  type RotationHorizonKey,
 } from "@/lib/rotationAxis";
+import { formatRotationRank10d } from "@/lib/rotationRankLabel";
 import {
   buildRotationSectorColorMap,
   rotationSectorColor,
 } from "@/lib/rotationSectorColors";
+import { compareColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { useRotationMapData } from "@/hooks/useRotationMapData";
+import {
+  classifyRotationQuadrant,
+  filterGroupsByQuadrant,
+  ROTATION_QUADRANT_LABELS,
+  type RotationQuadrantId,
+} from "@/lib/rotationQuadrants";
 import { formatReturnPct } from "@/lib/treemapLayout";
 
 import styles from "./RotationMapClient.module.css";
@@ -195,7 +209,7 @@ export function RotationMapClient({ eyebrow }: Props) {
     <RotationMapChart
       eyebrow={eyebrow}
       asOf={loadState.asOf}
-      mapData={loadState.mapData}
+      source={loadState.source}
     />
   );
 }
@@ -203,18 +217,117 @@ export function RotationMapClient({ eyebrow }: Props) {
 type ChartProps = {
   eyebrow: string;
   asOf: string;
-  mapData: RotationMapData;
+  source: RotationMapSource;
 };
 
-function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
+function renderMotionArrow({
+  point,
+  toSvgX,
+  toSvgY,
+  sectorColorMap,
+  dimmed = false,
+  markerId,
+}: {
+  point: RotationMapPoint;
+  toSvgX: (x: number) => number;
+  toSvgY: (y: number) => number;
+  sectorColorMap: Map<string, string>;
+  dimmed?: boolean;
+  markerId: string;
+}) {
+  const from = point.motionFrom;
+  if (!from) return null;
+
+  let x1 = toSvgX(from.x);
+  let y1 = toSvgY(from.y);
+  let x2 = toSvgX(point.x);
+  let y2 = toSvgY(point.y);
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.hypot(dx, dy);
+  if (len < 2) return null;
+
+  const trimStart = 3;
+  const trimEnd = 7;
+  if (len > trimStart + trimEnd) {
+    const t0 = trimStart / len;
+    const t1 = (len - trimEnd) / len;
+    const x1o = x1;
+    const y1o = y1;
+    x1 = x1o + dx * t0;
+    y1 = y1o + dy * t0;
+    x2 = x1o + dx * t1;
+    y2 = y1o + dy * t1;
+  }
+
+  const color = rotationSectorColor(point.sector, sectorColorMap);
+  return (
+    <line
+      key={`motion-${point.kind}-${point.slug}`}
+      x1={x1}
+      y1={y1}
+      x2={x2}
+      y2={y2}
+      className={styles.motionArrow}
+      stroke={color}
+      strokeOpacity={dimmed ? 0.25 : 0.92}
+      markerEnd={`url(#${markerId})`}
+      pointerEvents="none"
+    />
+  );
+}
+
+function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
   const router = useRouter();
+  const chartShellRef = useRef<HTMLDivElement>(null);
+  const scrollToChart = useCallback(() => {
+    requestAnimationFrame(() => {
+      chartShellRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    });
+  }, []);
+
+  const motionMarkerId = useId().replace(/:/g, "");
   const asOfLabel = formatSiteDataPublished(asOf);
+  const axisOptions = useMemo(
+    () => resolveRotationAxisOptions(source.availableMetrics),
+    [source.availableMetrics],
+  );
+  const [shortAxis, setShortAxis] = useState<RotationHorizonKey>(source.defaultShortAxis);
+  const [longAxis, setLongAxis] = useState<RotationHorizonKey>(source.defaultLongAxis);
+  const [showMotionArrows, setShowMotionArrows] = useState(false);
+  const [hiddenSectors, setHiddenSectors] = useState<Set<string>>(() => new Set());
   const [expandedGroupSlug, setExpandedGroupSlug] = useState<string | null>(null);
+  const [selectedQuadrant, setSelectedQuadrant] = useState<RotationQuadrantId | null>(null);
   const [hover, setHover] = useState<HoverState>(null);
   const [search, setSearch] = useState("");
   const [offScaleOpen, setOffScaleOpen] = useState(false);
 
+  useEffect(() => {
+    setShortAxis(source.defaultShortAxis);
+    setLongAxis(source.defaultLongAxis);
+  }, [source.defaultShortAxis, source.defaultLongAxis, source.asOf]);
+
+  const motionPriorShortKey = rotationMotionPriorShort(shortAxis);
+  const motionPriorLabel = motionPriorShortKey
+    ? compareColumnHeader(motionPriorShortKey)
+    : null;
+
+  const mapData = useMemo(
+    () => projectRotationMap(source, shortAxis, longAxis, motionPriorShortKey),
+    [source, shortAxis, longAxis, motionPriorShortKey],
+  );
+
   const groupPoints = mapData.groups;
+
+  const visibleGroupPoints = useMemo(
+    () => groupPoints.filter((g) => !hiddenSectors.has(g.sector)),
+    [groupPoints, hiddenSectors],
+  );
+
+  const quadrantGroups = useMemo(() => {
+    if (!selectedQuadrant) return [];
+    return filterGroupsByQuadrant(visibleGroupPoints, selectedQuadrant);
+  }, [visibleGroupPoints, selectedQuadrant]);
 
   const expandedGroup = useMemo(() => {
     if (!expandedGroupSlug) return null;
@@ -243,18 +356,25 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
   );
 
   const isFocused = Boolean(expandedGroupSlug && expandedGroup);
+  const isQuadrantFocused = Boolean(selectedQuadrant);
 
   const bounds = useMemo(() => {
-    if (!isFocused || !expandedGroup) return overviewBounds;
-    return rotationFocusBounds([expandedGroup, ...expandedGroupThemesAll]);
-  }, [isFocused, expandedGroup, expandedGroupThemesAll, overviewBounds]);
+    if (isFocused && expandedGroup) {
+      return rotationFocusBounds([expandedGroup, ...expandedGroupThemesAll]);
+    }
+    if (isQuadrantFocused && quadrantGroups.length > 0) {
+      return rotationFocusBounds(quadrantGroups);
+    }
+    return overviewBounds;
+  }, [isFocused, expandedGroup, expandedGroupThemesAll, isQuadrantFocused, quadrantGroups, overviewBounds]);
 
   const groupDisplay = useMemo(() => {
     if (isFocused) return rotationTrueDisplayPositions(groupPoints);
+    if (isQuadrantFocused) return rotationTrueDisplayPositions(quadrantGroups);
     return rotationTrueDisplayPositions(
       groupPoints.filter((p) => !rotationPointOffPlot(p, overviewBounds)),
     );
-  }, [groupPoints, isFocused, overviewBounds]);
+  }, [groupPoints, isFocused, isQuadrantFocused, quadrantGroups, overviewBounds]);
 
   const themeDisplay = useMemo(
     () => rotationTrueDisplayPositions(expandedThemes),
@@ -291,8 +411,8 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
   const zeroX = toSvgX(0);
   const zeroY = toSvgY(0);
 
-  const longLabel = rotationLongAxisLabel(mapData.longAxis);
-  const shortLabel = rotationShortAxisLabel();
+  const shortLabel = rotationAxisMetricLabel(shortAxis);
+  const longLabel = rotationAxisMetricLabel(longAxis);
 
   const xSpan = bounds.xMax - bounds.xMin;
   const ySpan = bounds.yMax - bounds.yMin;
@@ -307,8 +427,34 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
     [bounds.yMin, bounds.yMax],
   );
 
+  function handleShortAxisChange(next: RotationHorizonKey) {
+    setShortAxis(next);
+    setLongAxis((prev) => coerceRotationLongAxis(next, prev, axisOptions.long));
+    setHover(null);
+  }
+
+  function handleLongAxisChange(next: RotationHorizonKey) {
+    setLongAxis(next);
+    setShortAxis((prev) => coerceRotationShortAxis(prev, next, axisOptions.short));
+    setHover(null);
+  }
+
   function expandGroup(slug: string) {
+    setSelectedQuadrant(null);
     setExpandedGroupSlug(slug);
+    setSearch("");
+    setHover(null);
+    setOffScaleOpen(false);
+  }
+
+  function handleQuadrantGroupSelect(slug: string) {
+    expandGroup(slug);
+    scrollToChart();
+  }
+
+  function handleQuadrantSelect(quadrant: RotationQuadrantId) {
+    setSelectedQuadrant((prev) => (prev === quadrant ? null : quadrant));
+    setExpandedGroupSlug(null);
     setSearch("");
     setHover(null);
     setOffScaleOpen(false);
@@ -325,6 +471,20 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
     setHover((h) => (h?.point.slug === slug ? null : h));
   }
 
+  function toggleSector(sector: string) {
+    setHiddenSectors((prev) => {
+      const next = new Set(prev);
+      if (next.has(sector)) next.delete(sector);
+      else next.add(sector);
+      return next;
+    });
+    setHover(null);
+  }
+
+  function isSectorVisible(sector: string): boolean {
+    return !hiddenSectors.has(sector);
+  }
+
   function handlePointClick(point: RotationMapPoint) {
     if (point.kind === "group") {
       if (expandedGroupSlug === point.slug) {
@@ -337,15 +497,39 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
     router.push(`/themes/${encodeURIComponent(point.slug)}`);
   }
 
+  const motionSummaryLabel =
+    motionPriorLabel && motionPriorShortKey
+      ? `${motionPriorLabel} → ${compareColumnHeader(shortAxis)}`
+      : null;
+
+  function quadrantHintClass(id: RotationQuadrantId): string {
+    if (!selectedQuadrant) return styles.quadrantHint;
+    return selectedQuadrant === id
+      ? `${styles.quadrantHint} ${styles.quadrantHintActive}`
+      : `${styles.quadrantHint} ${styles.quadrantHintDim}`;
+  }
+
+  function groupInView(point: RotationMapPoint): boolean {
+    if (isQuadrantFocused && selectedQuadrant) {
+      return classifyRotationQuadrant(point.x, point.y) === selectedQuadrant;
+    }
+    if (isFocused) return true;
+    return !rotationPointOffPlot(point, overviewBounds);
+  }
+
   return (
     <div className={styles.wrap}>
-      <div className={pageStyles.heroGrid}>
-        <div className={pageStyles.heroMain}>
+      <div className={styles.rotationLayout}>
+        <header className={styles.rotationHero}>
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
           <h1>Theme rotation map</h1>
-          <p className={pageStyles.introLead}>
+          <p className={`${pageStyles.introLead} ${styles.introDesktop}`}>
             Groups positioned by short-term vs longer-term performance relative to the S&amp;P 500.
             Click a group to zoom the chart and show its themes.
+          </p>
+          <p className={`${pageStyles.introLead} ${styles.introMobile}`}>
+            Groups vs the S&amp;P 500 on short- and long-term horizons. Tap a quadrant to focus the
+            map, then pick a group from the list.
           </p>
           {asOfLabel ? (
             <p className={styles.statsLine}>
@@ -354,24 +538,59 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           ) : (
             <p className={styles.statsLine}>{groupPoints.length} groups</p>
           )}
-          {groupPoints.length >= 10 && !isFocused ? (
-            <p className={styles.scaleNote}>
+          {groupPoints.length >= 10 && !isFocused && !isQuadrantFocused ? (
+            <p className={`${styles.scaleNote} ${styles.scaleNoteDesktop}`}>
               Overview shows the central bulk of groups. Groups outside this range are listed below —
               click one to zoom to its true position.
             </p>
           ) : null}
-          {isFocused && expandedGroup ? (
-            <p className={styles.scaleNote}>
-              Zoomed to <strong>{expandedGroup.name}</strong> — click anywhere on the chart or
-              Collapse to return to the full map.
+          {groupPoints.length >= 10 && !isFocused && !isQuadrantFocused ? (
+            <p className={`${styles.scaleNote} ${styles.scaleNoteMobile}`}>
+              The full map is crowded on small screens — start with a quadrant, then tap a group.
             </p>
           ) : null}
-        </div>
-      </div>
+          {isFocused && expandedGroup ? (
+            <p className={styles.scaleNote}>
+              Zoomed to <strong>{expandedGroup.name}</strong> — tap Collapse or the chart background
+              to return.
+            </p>
+          ) : null}
+          {isQuadrantFocused && selectedQuadrant ? (
+            <p className={`${styles.scaleNote} ${styles.scaleNoteDesktop}`}>
+              Focused on <strong>{ROTATION_QUADRANT_LABELS[selectedQuadrant]}</strong> (
+              {quadrantGroups.length} groups) — click the quadrant again in the panel or anywhere
+              on the chart to return to the full map.
+            </p>
+          ) : null}
+        </header>
 
+        <div className={styles.rotationQuadrantSlot}>
+          <RotationQuadrantPanel
+            groups={visibleGroupPoints}
+            selectedQuadrant={selectedQuadrant}
+            filteredGroups={quadrantGroups}
+            onQuadrantSelect={handleQuadrantSelect}
+            onGroupSelect={handleQuadrantGroupSelect}
+            motionLabel={motionSummaryLabel}
+            shortLabel={shortLabel}
+            longLabel={longLabel}
+          />
+        </div>
+
+        <div className={styles.rotationBody}>
       <div className={styles.toolbar}>
         <div className={styles.breadcrumb}>
           <span className={styles.breadcrumbCurrent}>All groups ({groupPoints.length})</span>
+          {isQuadrantFocused && selectedQuadrant ? (
+            <>
+              <span className={styles.breadcrumbSep} aria-hidden="true">
+                ·
+              </span>
+              <span className={styles.breadcrumbCurrent}>
+                {ROTATION_QUADRANT_LABELS[selectedQuadrant]} ({quadrantGroups.length})
+              </span>
+            </>
+          ) : null}
           {expandedGroup ? (
             <>
               <span className={styles.breadcrumbSep} aria-hidden="true">
@@ -404,8 +623,8 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
         ) : null}
       </div>
 
-      {!isFocused && offScaleGroups.length > 0 ? (
-        <div className={styles.offScalePanel}>
+      {!isFocused && !isQuadrantFocused && offScaleGroups.length > 0 ? (
+        <div className={`${styles.offScalePanel} ${styles.offScalePanelDesktop}`}>
           <button
             type="button"
             className={styles.offScaleToggle}
@@ -437,7 +656,7 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
         </div>
       ) : null}
 
-      <div className={styles.chartShell}>
+      <div className={styles.chartShell} ref={chartShellRef}>
         <svg
           className={isFocused ? `${styles.chart} ${styles.chartExpanded}` : styles.chart}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -445,12 +664,29 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           aria-label={
             isFocused
               ? "Group rotation map — click empty chart area to collapse"
-              : "Group rotation map relative to SPY"
+              : isQuadrantFocused
+                ? "Group rotation map — click empty chart area to clear quadrant focus"
+                : "Group rotation map relative to SPY"
           }
           onClick={() => {
             if (isFocused) collapseGroup();
+            else if (isQuadrantFocused) setSelectedQuadrant(null);
           }}
         >
+          <defs>
+            <marker
+              id={motionMarkerId}
+              viewBox="0 0 10 10"
+              markerWidth="8"
+              markerHeight="8"
+              refX="8"
+              refY="5"
+              orient="auto"
+              markerUnits="userSpaceOnUse"
+            >
+              <path d="M0,0 L10,5 L0,10 Z" className={styles.motionArrowHead} />
+            </marker>
+          </defs>
           <rect
             x={PLOT.left}
             y={PLOT.top}
@@ -461,19 +697,28 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           />
 
           {/* Quadrant hints */}
-          <text x={PLOT.left + 8} y={PLOT.top + 14} className={styles.quadrantHint}>
+          <text
+            x={PLOT.left + 8}
+            y={PLOT.top + 14}
+            className={quadrantHintClass("long_term_leaders")}
+          >
             Long-term leaders
           </text>
-          <text x={PLOT.left + plotW - 8} y={PLOT.top + 14} className={styles.quadrantHint} textAnchor="end">
+          <text
+            x={PLOT.left + plotW - 8}
+            y={PLOT.top + 14}
+            className={quadrantHintClass("leaders")}
+            textAnchor="end"
+          >
             Leaders
           </text>
-          <text x={PLOT.left + 8} y={PLOT.top + plotH - 6} className={styles.quadrantHint}>
+          <text x={PLOT.left + 8} y={PLOT.top + plotH - 6} className={quadrantHintClass("laggards")}>
             Laggards
           </text>
           <text
             x={PLOT.left + plotW - 8}
             y={PLOT.top + plotH - 6}
-            className={styles.quadrantHint}
+            className={quadrantHintClass("new_momentum")}
             textAnchor="end"
           >
             New momentum
@@ -509,13 +754,50 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
             </text>
           </g>
 
+          {/* Motion arrows (under points) */}
+          {showMotionArrows
+            ? groupPoints.map((point) => {
+                if (!isSectorVisible(point.sector)) return null;
+                if (!groupInView(point)) return null;
+                const display = groupDisplay.get(point.slug);
+                if (!display) return null;
+                const offFocus =
+                  isFocused &&
+                  point.slug !== expandedGroupSlug &&
+                  rotationPointOffPlot(point, bounds);
+                if (offFocus) return null;
+                return renderMotionArrow({
+                  point,
+                  toSvgX,
+                  toSvgY,
+                  sectorColorMap,
+                  dimmed: Boolean(
+                    isFocused && expandedGroupSlug && expandedGroupSlug !== point.slug,
+                  ),
+                  markerId: motionMarkerId,
+                });
+              })
+            : null}
+          {showMotionArrows
+            ? expandedThemes.map((point) =>
+                isSectorVisible(point.sector)
+                  ? renderMotionArrow({
+                      point,
+                      toSvgX,
+                      toSvgY,
+                      sectorColorMap,
+                      markerId: motionMarkerId,
+                    })
+                  : null,
+              )
+            : null}
+
           {/* Group bubbles */}
           {groupPoints.map((point) => {
+            if (!isSectorVisible(point.sector)) return null;
+            if (!groupInView(point)) return null;
             const display = groupDisplay.get(point.slug);
             if (!display) return null;
-            const offOverview =
-              !isFocused && rotationPointOffPlot(point, overviewBounds);
-            if (offOverview) return null;
 
             const offFocus =
               isFocused &&
@@ -543,8 +825,9 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           })}
 
           {/* Theme bubbles for expanded group */}
-          {expandedThemes.map((point) =>
-            renderPlotPoint({
+          {expandedThemes.map((point) => {
+            if (!isSectorVisible(point.sector)) return null;
+            return renderPlotPoint({
               point,
               display: themeDisplay.get(point.slug) ?? {
                 x: point.x,
@@ -563,8 +846,8 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
               onHover: setHover,
               onLeave: handlePointLeave,
               onClick: handlePointClick,
-            }),
-          )}
+            });
+          })}
 
           {/* X axis ticks */}
           {xTicks.map((v) => (
@@ -618,6 +901,11 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           >
             <div className={styles.tooltipTitle}>{hover.point.name}</div>
             <div className={styles.tooltipMeta}>{hover.point.sector}</div>
+            {formatRotationRank10d(hover.point.rank10d, hover.point.kind) ? (
+              <div className={styles.tooltipRank}>
+                {formatRotationRank10d(hover.point.rank10d, hover.point.kind)}
+              </div>
+            ) : null}
             <div className={styles.tooltipRow}>
               <span>{shortLabel}</span>
               <strong>{formatReturnPct(hover.point.x)}</strong>
@@ -638,24 +926,81 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
         ) : null}
       </div>
 
+      <div className={styles.axisControls}>
+        <div className={styles.controlRow}>
+          <span className={styles.controlLabel}>Short horizon (X)</span>
+          <div className={styles.toggle} role="group" aria-label="Short horizon axis">
+            {axisOptions.short.map((key) => (
+              <button
+                key={key}
+                type="button"
+                className={shortAxis === key ? styles.toggleActive : undefined}
+                aria-pressed={shortAxis === key}
+                onClick={() => handleShortAxisChange(key)}
+              >
+                {compareColumnHeader(key)}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className={styles.controlRow}>
+          <span className={styles.controlLabel}>Long horizon (Y)</span>
+          <div className={styles.toggle} role="group" aria-label="Long horizon axis">
+            {axisOptions.long.map((key) => (
+              <button
+                key={key}
+                type="button"
+                className={longAxis === key ? styles.toggleActive : undefined}
+                aria-pressed={longAxis === key}
+                onClick={() => handleLongAxisChange(key)}
+              >
+                {compareColumnHeader(key)}
+              </button>
+            ))}
+          </div>
+        </div>
+        {motionPriorLabel ? (
+          <label className={styles.directionCheck}>
+            <input
+              type="checkbox"
+              checked={showMotionArrows}
+              onChange={(e) => setShowMotionArrows(e.target.checked)}
+            />
+            Show direction ({motionPriorLabel} → {compareColumnHeader(shortAxis)})
+          </label>
+        ) : null}
+      </div>
+
       {legendSectors.length > 0 ? (
-        <ul className={styles.legend} aria-label="Sector colors">
-          {legendSectors.map((sector) => (
-            <li key={sector} className={styles.legendItem}>
-              <span
-                className={styles.legendSwatch}
-                style={{ background: rotationSectorColor(sector, sectorColorMap) }}
-                aria-hidden="true"
-              />
-              {sector}
-            </li>
-          ))}
+        <ul className={styles.legend} aria-label="Sector colors — click to hide or show">
+          {legendSectors.map((sector) => {
+            const hidden = hiddenSectors.has(sector);
+            return (
+              <li key={sector}>
+                <button
+                  type="button"
+                  className={`${styles.legendItem} ${hidden ? styles.legendItemHidden : ""}`}
+                  aria-pressed={!hidden}
+                  onClick={() => toggleSector(sector)}
+                >
+                  <span
+                    className={styles.legendSwatch}
+                    style={{ background: rotationSectorColor(sector, sectorColorMap) }}
+                    aria-hidden="true"
+                  />
+                  {sector}
+                </button>
+              </li>
+            );
+          })}
         </ul>
       ) : null}
 
       {expandedGroupSlug && expandedThemes.length === 0 ? (
         <p className={styles.empty}>No themes with complete return data in this group.</p>
       ) : null}
+        </div>
+      </div>
     </div>
   );
 }

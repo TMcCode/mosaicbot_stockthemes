@@ -2,6 +2,36 @@
   width: 100%;
 }
 
+.rotationLayout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
+  grid-template-areas:
+    "hero panel"
+    "body body";
+  gap: 16px 20px;
+  align-items: start;
+}
+
+.rotationHero {
+  grid-area: hero;
+  min-width: 0;
+}
+
+.rotationQuadrantSlot {
+  grid-area: panel;
+  min-width: 0;
+}
+
+.rotationBody {
+  grid-area: body;
+  min-width: 0;
+}
+
+.introMobile,
+.scaleNoteMobile {
+  display: none;
+}
+
 .statsLine {
   margin: 0;
   font-size: 13px;
@@ -13,6 +43,80 @@
   font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary, #9aa8a6);
+}
+
+.axisControls {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px 20px;
+  width: 100%;
+  margin: 10px 0 0;
+}
+
+.controlRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 10px;
+}
+
+.controlLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary, #9aa8a6);
+  flex-shrink: 0;
+}
+
+.toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-radius: 999px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.02);
+  padding: 3px;
+}
+
+.toggle button {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  cursor: pointer;
+}
+
+.toggle button:hover {
+  color: var(--text-primary, #eaf2f0);
+}
+
+.toggleActive {
+  background: rgba(38, 252, 214, 0.14) !important;
+  color: var(--text-primary, #eaf2f0) !important;
+}
+
+.motionArrow {
+  stroke-width: 2.25;
+  stroke-linecap: round;
+}
+
+.motionArrowHead {
+  fill: rgba(248, 250, 252, 0.95);
+}
+
+.tooltipRank {
+  margin: 0 0 4px;
+  font-size: 9px;
+  line-height: 1.3;
+  color: #a6abb9;
 }
 
 .toolbar {
@@ -36,7 +140,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-accent, #26fcd6);
+  color: var(--accent, #26fcd6);
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
@@ -47,12 +151,12 @@
 }
 
 .breadcrumbSep {
-  color: var(--color-text-muted, #6b7280);
+  color: var(--text-muted, #6e7d7b);
 }
 
 .breadcrumbCurrent {
   font-weight: 600;
-  color: var(--color-text, #e8edec);
+  color: var(--text-primary, #eaf2f0);
 }
 
 .searchWrap {
@@ -64,18 +168,22 @@
   width: 100%;
   padding: 8px 12px;
   border-radius: 8px;
-  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
-  background: var(--color-panel, rgba(255, 255, 255, 0.03));
-  color: var(--color-text, #e8edec);
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-primary, #eaf2f0);
   font-size: 14px;
 }
 
 .offScalePanel {
   margin-bottom: 14px;
   padding: 10px 12px;
-  border: 1px solid var(--rotation-plot-border, rgba(255, 255, 255, 0.08));
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
+}
+
+.offScalePanelDesktop {
+  display: block;
 }
 
 .offScaleToggle {
@@ -83,7 +191,7 @@
   padding: 0;
   border: none;
   background: none;
-  color: var(--color-accent, #26fcd6);
+  color: var(--accent, #26fcd6);
   font-size: 13px;
   font-weight: 600;
   text-align: left;
@@ -115,7 +223,7 @@
   border: none;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.04);
-  color: var(--color-text, #e8edec);
+  color: var(--text-primary, #eaf2f0);
   text-align: left;
   cursor: pointer;
 }
@@ -131,7 +239,7 @@
 
 .offScaleMeta {
   font-size: 11px;
-  color: var(--color-text-muted, #9aa8a6);
+  color: var(--text-secondary, #9aa8a6);
 }
 
 .chartShell {
@@ -173,6 +281,15 @@
   fill: rgba(226, 232, 240, 0.55);
   font-size: 10px;
   font-weight: 500;
+}
+
+.quadrantHintActive {
+  fill: rgba(38, 252, 214, 0.95);
+  font-weight: 600;
+}
+
+.quadrantHintDim {
+  fill: rgba(226, 232, 240, 0.22);
 }
 
 .tickLabel {
@@ -289,7 +406,7 @@
   margin: 4px 0 0;
   font-size: 9px;
   line-height: 1.25;
-  color: var(--color-accent, #26fcd6);
+  color: var(--accent, #26fcd6);
 }
 
 .tooltipClamped {
@@ -298,21 +415,54 @@
   color: #fbbf24;
 }
 
+.directionCheck {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--text-secondary, #9aa8a6);
+  cursor: pointer;
+  user-select: none;
+}
+
+.directionCheck input {
+  accent-color: var(--accent, #26fcd6);
+}
+
 .legend {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px 16px;
-  margin: 16px 0 0;
+  gap: 8px 12px;
+  margin: 12px 0 0;
   padding: 0;
   list-style: none;
 }
 
 .legendItem {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 6px;
+  padding: 4px 8px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
   font-size: 12px;
-  color: var(--color-text-muted, #9aa8a6);
+  color: var(--text-secondary, #9aa8a6);
+  cursor: pointer;
+}
+
+.legendItem:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary, #eaf2f0);
+}
+
+.legendItemHidden {
+  opacity: 0.42;
+  text-decoration: line-through;
+}
+
+.legendItemHidden .legendSwatch {
+  opacity: 0.35;
 }
 
 .legendSwatch {
@@ -325,5 +475,151 @@
 .empty {
   margin: 16px 0 0;
   font-size: 14px;
-  color: var(--color-text-muted, #9aa8a6);
+  color: var(--text-secondary, #9aa8a6);
+}
+
+:global(.st-theme[data-theme="light"]) .backBtn,
+:global(.st-theme[data-theme="light"]) .offScaleToggle {
+  color: var(--accent-strong, #3b4da1);
+}
+
+:global(.st-theme[data-theme="light"]) .directionCheck {
+  color: var(--text-secondary, #43405c);
+}
+
+:global(.st-theme[data-theme="light"]) .legendItem:hover {
+  background: rgba(59, 77, 161, 0.06);
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .legendItem {
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .toggle {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+}
+
+:global(.st-theme[data-theme="light"]) .toggleActive {
+  background: rgba(59, 77, 161, 0.12) !important;
+  color: var(--text-primary, #1e1c36) !important;
+}
+
+:global(.st-theme[data-theme="light"]) .controlLabel {
+  color: var(--text-secondary, #43405c);
+}
+
+:global(.st-theme[data-theme="light"]) .toggle button {
+  color: var(--text-secondary, #43405c);
+}
+
+:global(.st-theme[data-theme="light"]) .toggle button:hover {
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .offScalePanel {
+  background: rgba(59, 77, 161, 0.04);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+}
+
+:global(.st-theme[data-theme="light"]) .offScaleItem {
+  background: rgba(59, 77, 161, 0.04);
+}
+
+:global(.st-theme[data-theme="light"]) .offScaleItem:hover {
+  background: rgba(59, 77, 161, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .quadrantHintActive {
+  fill: var(--accent-strong, #3b4da1);
+}
+
+:global(.st-theme[data-theme="light"]) .quadrantHintDim {
+  fill: rgba(67, 64, 92, 0.2);
+}
+
+:global(.st-theme[data-theme="light"]) .searchInput {
+  background: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 900px) {
+  .rotationLayout {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "hero"
+      "panel"
+      "body";
+    gap: 12px;
+  }
+
+  .rotationQuadrantSlot {
+    position: sticky;
+    top: 6px;
+    z-index: 4;
+  }
+
+  .rotationQuadrantSlot::before {
+    content: "";
+    position: absolute;
+    inset: -6px -4px;
+    z-index: -1;
+    border-radius: 14px;
+    background: var(--background, #040506);
+    opacity: 0.92;
+    pointer-events: none;
+  }
+
+  .introDesktop,
+  .scaleNoteDesktop {
+    display: none;
+  }
+
+  .introMobile,
+  .scaleNoteMobile {
+    display: block;
+  }
+
+  .toolbar {
+    margin-top: 4px;
+  }
+
+  .axisControls {
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .controlRow {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .toggle button {
+    min-height: 36px;
+    padding: 8px 12px;
+  }
+
+  .directionCheck {
+    width: 100%;
+    min-height: 36px;
+  }
+
+  .legendItem {
+    min-height: 36px;
+    padding: 6px 10px;
+  }
+
+  .chart {
+    min-height: 300px;
+    aspect-ratio: 4 / 3;
+  }
+
+  .backBtn {
+    min-height: 36px;
+    padding: 4px 0;
+  }
+
+  .offScalePanelDesktop {
+    display: none;
+  }
 }

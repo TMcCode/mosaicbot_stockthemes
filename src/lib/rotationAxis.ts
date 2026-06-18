@@ -1,4 +1,15 @@
+import { compareColumnHeader } from "@/lib/trendingCompareMetrics";
+
 export type RotationLongAxis = "YTD" | "Period";
+
+/** Shortest → longest compare horizons usable on the rotation map. */
+export const ROTATION_HORIZON_ORDER = ["1D", "10D", "MTD", "YTD", "Period"] as const;
+
+export type RotationHorizonKey = (typeof ROTATION_HORIZON_ORDER)[number];
+
+export const ROTATION_SHORT_AXIS_OPTIONS: readonly RotationHorizonKey[] = ["1D", "10D", "MTD"];
+
+export const ROTATION_LONG_AXIS_OPTIONS: readonly RotationHorizonKey[] = ["MTD", "YTD", "Period"];
 
 /** Jan–Feb use trailing 1Yr; from March use YTD (matches compare table long horizon). */
 export function pickRotationLongAxis(asOf: string | Date): RotationLongAxis {
@@ -7,12 +18,93 @@ export function pickRotationLongAxis(asOf: string | Date): RotationLongAxis {
   return month < 2 ? "Period" : "YTD";
 }
 
-export function rotationLongAxisLabel(axis: RotationLongAxis): string {
-  return axis === "Period" ? "1Yr vs SPY" : "YTD vs SPY";
+export function rotationAxisMetricLabel(metricKey: string): string {
+  const header = compareColumnHeader(metricKey);
+  return `${header} vs SPY`;
 }
 
+/** @deprecated Use rotationAxisMetricLabel("10D") */
 export function rotationShortAxisLabel(): string {
-  return "10D vs SPY";
+  return rotationAxisMetricLabel("10D");
+}
+
+/** @deprecated Use rotationAxisMetricLabel(longAxis) */
+export function rotationLongAxisLabel(axis: RotationLongAxis): string {
+  return rotationAxisMetricLabel(axis);
+}
+
+export function resolveRotationAxisOptions(
+  availableMetrics: ReadonlySet<string> | string[],
+): { short: RotationHorizonKey[]; long: RotationHorizonKey[] } {
+  const set = availableMetrics instanceof Set ? availableMetrics : new Set(availableMetrics);
+  return {
+    short: ROTATION_SHORT_AXIS_OPTIONS.filter((k) => set.has(k)),
+    long: ROTATION_LONG_AXIS_OPTIONS.filter((k) => set.has(k)),
+  };
+}
+
+export function defaultRotationShortAxis(
+  available: readonly RotationHorizonKey[],
+): RotationHorizonKey {
+  if (available.includes("10D")) return "10D";
+  return available[0] ?? "10D";
+}
+
+export function defaultRotationLongAxis(
+  asOf: string,
+  available: readonly RotationHorizonKey[],
+): RotationHorizonKey {
+  const preferred = pickRotationLongAxis(asOf);
+  if (available.includes(preferred)) return preferred;
+  if (available.includes("YTD")) return "YTD";
+  if (available.includes("Period")) return "Period";
+  return available[0] ?? "YTD";
+}
+
+export function isValidRotationAxisPair(
+  shortKey: RotationHorizonKey,
+  longKey: RotationHorizonKey,
+): boolean {
+  const si = ROTATION_HORIZON_ORDER.indexOf(shortKey);
+  const li = ROTATION_HORIZON_ORDER.indexOf(longKey);
+  return si >= 0 && li > si;
+}
+
+export function coerceRotationLongAxis(
+  shortKey: RotationHorizonKey,
+  longKey: RotationHorizonKey,
+  availableLong: readonly RotationHorizonKey[],
+): RotationHorizonKey {
+  const si = ROTATION_HORIZON_ORDER.indexOf(shortKey);
+  const valid = availableLong.filter((k) => ROTATION_HORIZON_ORDER.indexOf(k) > si);
+  if (valid.length === 0) return longKey;
+  if (valid.includes(longKey) && isValidRotationAxisPair(shortKey, longKey)) return longKey;
+  return valid[0];
+}
+
+export function coerceRotationShortAxis(
+  shortKey: RotationHorizonKey,
+  longKey: RotationHorizonKey,
+  availableShort: readonly RotationHorizonKey[],
+): RotationHorizonKey {
+  const li = ROTATION_HORIZON_ORDER.indexOf(longKey);
+  const valid = availableShort.filter((k) => ROTATION_HORIZON_ORDER.indexOf(k) < li);
+  if (valid.length === 0) return shortKey;
+  if (valid.includes(shortKey) && isValidRotationAxisPair(shortKey, longKey)) return shortKey;
+  return valid[valid.length - 1];
+}
+
+/**
+ * Longer short-horizon used as the tail of motion arrows (rotation into current X).
+ * e.g. 10D current position ← from MTD on the same long axis.
+ */
+export function rotationMotionPriorShort(shortKey: string): RotationHorizonKey | null {
+  const idx = ROTATION_HORIZON_ORDER.indexOf(shortKey as RotationHorizonKey);
+  if (idx <= 0) return null;
+  if (shortKey === "10D") return "MTD";
+  if (shortKey === "1D") return "10D";
+  if (shortKey === "MTD") return "10D";
+  return ROTATION_HORIZON_ORDER[idx - 1] ?? null;
 }
 
 /** Pick a "nice" step so a span yields roughly 6–8 tick marks. */

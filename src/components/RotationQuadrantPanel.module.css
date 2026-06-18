@@ -1,0 +1,328 @@
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 12px 14px;
+  box-sizing: border-box;
+}
+
+.panelHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.clearBtn {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--accent, #26fcd6);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.clearBtn:hover {
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.toolbarLabel {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.hint {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.hintMobile {
+  display: none;
+}
+
+.quadrantGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+}
+
+.quadrantCell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 10px 12px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  color: var(--text-secondary);
+  cursor: pointer;
+  text-align: left;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.quadrantCell:hover {
+  border-color: rgba(38, 252, 214, 0.35);
+  color: var(--text-primary);
+}
+
+.quadrantCellActive {
+  background: rgba(38, 252, 214, 0.1);
+  border-color: rgba(38, 252, 214, 0.45);
+  color: var(--text-primary);
+}
+
+.quadrantLabel {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.quadrantCount {
+  font-size: 18px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.divider {
+  height: 1px;
+  margin: 0;
+  border: none;
+  background: var(--button-secondary-border);
+}
+
+.motionSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.motionHeading {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.motionSubheading {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.motionList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.motionList li {
+  display: block;
+}
+
+.motionItem {
+  width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 8px;
+  min-height: 36px;
+  padding: 6px 8px;
+  margin: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.motionItem:hover {
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.motionName {
+  font-size: 12px;
+  font-weight: 600;
+  min-width: 0;
+}
+
+.motionLabel {
+  color: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.motionLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  min-width: 0;
+}
+
+.motionLink:hover {
+  text-decoration: underline;
+}
+
+.motionValue {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.motionValueUp {
+  color: #3dd68c;
+}
+
+.motionValueDown {
+  color: #f07178;
+}
+
+.motionEmpty {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.35;
+}
+
+.groupSection {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.groupHeading {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.groupList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 220px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.groupItem {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary);
+  text-align: left;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.groupItem:hover {
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.groupName {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.groupMeta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 900px) {
+  .hintDesktop {
+    display: none;
+  }
+
+  .hintMobile {
+    display: inline;
+  }
+
+  .panel {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .quadrantGrid {
+    gap: 8px;
+  }
+
+  .quadrantCell {
+    min-height: 52px;
+  }
+
+  .quadrantLabel {
+    font-size: 12px;
+  }
+
+  .groupList {
+    max-height: min(42vh, 320px);
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .clearBtn {
+  color: var(--accent-strong, #3b4da1);
+}
+
+:global(.st-theme[data-theme="light"]) .groupItem {
+  background: rgba(59, 77, 161, 0.04);
+}
+
+:global(.st-theme[data-theme="light"]) .groupItem:hover {
+  background: rgba(59, 77, 161, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .motionItem:hover {
+  background: rgba(59, 77, 161, 0.08);
+}
