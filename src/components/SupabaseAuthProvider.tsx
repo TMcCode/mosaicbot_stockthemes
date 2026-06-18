@@ -108,18 +108,35 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     }
 
     let unsub: { subscription: { unsubscribe: () => void } } | undefined;
+    let settled = false;
 
-    void client.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
+    const finishLoading = () => {
+      if (settled) return;
+      settled = true;
       setLoading(false);
-      if (s?.user) {
-        posthogIdentify(s.user);
-      }
-    });
+    };
+
+    const failSafe = window.setTimeout(finishLoading, 1500);
+
+    void client.auth
+      .getSession()
+      .then(({ data: { session: s } }) => {
+        setSession(s);
+        if (s?.user) {
+          posthogIdentify(s.user);
+        }
+      })
+      .catch(() => {
+        setSession(null);
+      })
+      .finally(() => {
+        window.clearTimeout(failSafe);
+        finishLoading();
+      });
 
     const { data } = client.auth.onAuthStateChange((_event, s) => {
       setSession(s);
-      setLoading(false);
+      finishLoading();
       if (_event === "SIGNED_IN" && s?.user) {
         captureAuthPostHog(s.user);
       }
@@ -129,7 +146,10 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     });
     unsub = data;
 
-    return () => unsub?.subscription.unsubscribe();
+    return () => {
+      window.clearTimeout(failSafe);
+      unsub?.subscription.unsubscribe();
+    };
   }, [client]);
 
   const signOut = useCallback(async () => {

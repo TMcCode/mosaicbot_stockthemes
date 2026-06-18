@@ -51,6 +51,9 @@ export function SiteNav() {
               <Link href="/heatmap" className={styles.menuItem} role="menuitem">
                 Market heatmap
               </Link>
+              <Link href="/rotation" className={styles.menuItem} role="menuitem">
+                Theme rotation map
+              </Link>
               <Link href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure
               </Link>

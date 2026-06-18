@@ -1,0 +1,69 @@
+.content {
+  width: 100%;
+  margin-top: 28px;
+}
+
+.signInPrompt {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  max-width: 640px;
+}
+
+.signInTitle {
+  margin: 0 0 8px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.signInCopy {
+  margin: 0 0 14px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.signInActions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  margin: 0;
+}
+
+.signInBtn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.signInBtn:hover {
+  filter: brightness(1.05);
+}
+
+.signInSecondary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.signInSecondary:hover {
+  text-decoration: underline;
+}
+
+.dataLoading {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #9aa8a6);
+}

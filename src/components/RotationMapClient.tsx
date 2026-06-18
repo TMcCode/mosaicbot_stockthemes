@@ -1,0 +1,655 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
+
+import pageStyles from "@/app/page.module.css";
+import localStyles from "@/app/rotation/page.module.css";
+import {
+  rotationAdaptiveDotRadius,
+  rotationDataToSvgX,
+  rotationDataToSvgY,
+  rotationFocusBounds,
+  rotationPlotBounds,
+  rotationPointOffPlot,
+  rotationTrueDisplayPositions,
+  type RotationDisplayPoint,
+  type RotationMapData,
+  type RotationMapPoint,
+} from "@/lib/buildRotationMapData";
+import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
+import {
+  rotationLongAxisLabel,
+  rotationShortAxisLabel,
+} from "@/lib/rotationAxis";
+import {
+  buildRotationSectorColorMap,
+  rotationSectorColor,
+} from "@/lib/rotationSectorColors";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
+import { useRotationMapData } from "@/hooks/useRotationMapData";
+import { formatReturnPct } from "@/lib/treemapLayout";
+
+import styles from "./RotationMapClient.module.css";
+
+const PLOT = { left: 48, top: 28, right: 20, bottom: 48 };
+const SVG_W = 920;
+const SVG_H = 600;
+
+type Props = {
+  eyebrow: string;
+};
+
+type HoverState = {
+  point: RotationMapPoint;
+  sx: number;
+  sy: number;
+  offScale: boolean;
+} | null;
+
+function formatAxisTick(v: number): string {
+  if (!Number.isFinite(v)) return "";
+  const sign = v > 0 ? "+" : "";
+  return `${sign}${v.toFixed(1)}%`;
+}
+
+function weightRangeFromPoints(points: RotationMapPoint[]): { min: number; max: number } {
+  if (points.length === 0) return { min: 1, max: 1 };
+  let min = Infinity;
+  let max = -Infinity;
+  for (const p of points) {
+    min = Math.min(min, p.weight);
+    max = Math.max(max, p.weight);
+  }
+  return { min: Number.isFinite(min) ? min : 1, max: Number.isFinite(max) ? max : 1 };
+}
+
+type RenderPointOpts = {
+  point: RotationMapPoint;
+  display: RotationDisplayPoint;
+  toSvgX: (x: number) => number;
+  toSvgY: (y: number) => number;
+  weightRange: { min: number; max: number };
+  pointCount: number;
+  sectorColorMap: Map<string, string>;
+  dimmed?: boolean;
+  selected?: boolean;
+  isTheme?: boolean;
+  alwaysShowLabel?: boolean;
+  labelText?: string;
+  hoverSlug: string | null;
+  onHover: (state: HoverState) => void;
+  onLeave: (slug: string) => void;
+  onClick: (point: RotationMapPoint) => void;
+};
+
+function renderPlotPoint({
+  point,
+  display,
+  toSvgX,
+  toSvgY,
+  weightRange,
+  pointCount,
+  sectorColorMap,
+  dimmed = false,
+  selected = false,
+  isTheme = false,
+  alwaysShowLabel = false,
+  labelText,
+  hoverSlug,
+  onHover,
+  onLeave,
+  onClick,
+}: RenderPointOpts) {
+  const cx = toSvgX(display.x);
+  const cy = toSvgY(display.y);
+  const baseR = rotationAdaptiveDotRadius(
+    point.weight,
+    weightRange.min,
+    weightRange.max,
+    isTheme ? Math.max(pointCount, 12) : pointCount,
+  );
+  const r = isTheme ? Math.max(6, Math.min(11, baseR * 0.72)) : baseR;
+  const fill = rotationSectorColor(point.sector, sectorColorMap);
+  const opacity = dimmed ? 0.28 : display.offScale ? 0.78 : isTheme ? 1 : 0.88;
+  const showLabel = hoverSlug === point.slug || (isTheme && alwaysShowLabel);
+  const displayLabel =
+    labelText ??
+    (point.name.length > 26 ? `${point.name.slice(0, 24)}…` : point.name);
+
+  return (
+    <g
+      key={`${point.kind}-${point.slug}`}
+      className={isTheme ? styles.pointTheme : styles.pointGroup}
+      onMouseEnter={() => onHover({ point, sx: cx, sy: cy, offScale: display.offScale })}
+      onMouseLeave={() => onLeave(point.slug)}
+      onClick={() => onClick(point)}
+      style={{ cursor: "pointer" }}
+    >
+      {isTheme ? (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r + 3.5}
+          fill="none"
+          className={styles.themeOutlineOuter}
+        />
+      ) : null}
+      {selected ? (
+        <circle
+          cx={cx}
+          cy={cy}
+          r={r + 5}
+          fill="none"
+          stroke="var(--color-accent, #26fcd6)"
+          strokeWidth={2}
+          opacity={0.9}
+        />
+      ) : null}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={fill}
+        fillOpacity={opacity}
+        stroke={
+          isTheme
+            ? "#f8fafc"
+            : "rgba(255,255,255,0.35)"
+        }
+        strokeWidth={isTheme ? 2 : 1}
+      />
+      {showLabel ? (
+        <text
+          x={cx}
+          y={cy - r - (isTheme ? 8 : 5)}
+          textAnchor="middle"
+          className={isTheme && alwaysShowLabel ? styles.themeLabelAlways : styles.pointLabel}
+        >
+          {displayLabel}
+        </text>
+      ) : null}
+    </g>
+  );
+}
+
+export function RotationMapClient({ eyebrow }: Props) {
+  const loadState = useRotationMapData(true);
+
+  if (loadState.status === "loading" || loadState.status === "idle") {
+    return (
+      <p className={localStyles.dataLoading} role="status">
+        Loading rotation map…
+      </p>
+    );
+  }
+
+  if (loadState.status === "error") {
+    return (
+      <p className={localStyles.dataLoading}>
+        Could not load rotation data. Try refreshing the page.
+      </p>
+    );
+  }
+
+  return (
+    <RotationMapChart
+      eyebrow={eyebrow}
+      asOf={loadState.asOf}
+      mapData={loadState.mapData}
+    />
+  );
+}
+
+type ChartProps = {
+  eyebrow: string;
+  asOf: string;
+  mapData: RotationMapData;
+};
+
+function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
+  const router = useRouter();
+  const asOfLabel = formatSiteDataPublished(asOf);
+  const [expandedGroupSlug, setExpandedGroupSlug] = useState<string | null>(null);
+  const [hover, setHover] = useState<HoverState>(null);
+  const [search, setSearch] = useState("");
+  const [offScaleOpen, setOffScaleOpen] = useState(false);
+
+  const groupPoints = mapData.groups;
+
+  const expandedGroup = useMemo(() => {
+    if (!expandedGroupSlug) return null;
+    return groupPoints.find((g) => g.slug === expandedGroupSlug) ?? null;
+  }, [groupPoints, expandedGroupSlug]);
+
+  const expandedGroupThemesAll = useMemo(() => {
+    if (!expandedGroupSlug) return [];
+    return mapData.themesByGroupSlug.get(expandedGroupSlug) ?? [];
+  }, [mapData.themesByGroupSlug, expandedGroupSlug]);
+
+  const expandedThemes = useMemo(() => {
+    if (!expandedGroupSlug) return [];
+    const q = search.trim().toLowerCase();
+    if (!q) return expandedGroupThemesAll;
+    return expandedGroupThemesAll.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.slug.toLowerCase().includes(q),
+    );
+  }, [expandedGroupSlug, expandedGroupThemesAll, search]);
+
+  const overviewBounds = useMemo(() => rotationPlotBounds(groupPoints), [groupPoints]);
+
+  const offScaleGroups = useMemo(
+    () => groupPoints.filter((p) => rotationPointOffPlot(p, overviewBounds)),
+    [groupPoints, overviewBounds],
+  );
+
+  const isFocused = Boolean(expandedGroupSlug && expandedGroup);
+
+  const bounds = useMemo(() => {
+    if (!isFocused || !expandedGroup) return overviewBounds;
+    return rotationFocusBounds([expandedGroup, ...expandedGroupThemesAll]);
+  }, [isFocused, expandedGroup, expandedGroupThemesAll, overviewBounds]);
+
+  const groupDisplay = useMemo(() => {
+    if (isFocused) return rotationTrueDisplayPositions(groupPoints);
+    return rotationTrueDisplayPositions(
+      groupPoints.filter((p) => !rotationPointOffPlot(p, overviewBounds)),
+    );
+  }, [groupPoints, isFocused, overviewBounds]);
+
+  const themeDisplay = useMemo(
+    () => rotationTrueDisplayPositions(expandedThemes),
+    [expandedThemes],
+  );
+
+  const groupWeightRange = useMemo(() => weightRangeFromPoints(groupPoints), [groupPoints]);
+
+  const themeWeightRange = useMemo(
+    () => weightRangeFromPoints(expandedThemes),
+    [expandedThemes],
+  );
+
+  const sectorColorMap = useMemo(() => {
+    const sectors = [...groupPoints, ...expandedThemes].map((p) => p.sector);
+    return buildRotationSectorColorMap(sectors);
+  }, [groupPoints, expandedThemes]);
+
+  const legendSectors = useMemo(
+    () => [...sectorColorMap.keys()].sort((a, b) => a.localeCompare(b)),
+    [sectorColorMap],
+  );
+
+  const plotW = SVG_W - PLOT.left - PLOT.right;
+  const plotH = SVG_H - PLOT.top - PLOT.bottom;
+  const plotBottom = PLOT.top + plotH;
+  const plotRight = PLOT.left + plotW;
+
+  const toSvgX = (x: number) =>
+    rotationDataToSvgX(x, bounds.xMin, bounds.xMax, PLOT.left, plotRight);
+  const toSvgY = (y: number) =>
+    rotationDataToSvgY(y, bounds.yMin, bounds.yMax, plotBottom, PLOT.top);
+
+  const zeroX = toSvgX(0);
+  const zeroY = toSvgY(0);
+
+  const longLabel = rotationLongAxisLabel(mapData.longAxis);
+  const shortLabel = rotationShortAxisLabel();
+
+  const xTicks = useMemo(() => {
+    const span = bounds.xMax - bounds.xMin;
+    const step = span <= 12 ? 2 : span <= 24 ? 4 : 5;
+    const ticks: number[] = [];
+    const start = Math.ceil(bounds.xMin / step) * step;
+    for (let v = start; v <= bounds.xMax + 0.01; v += step) {
+      ticks.push(Math.round(v * 10) / 10);
+    }
+    return ticks;
+  }, [bounds]);
+
+  const yTicks = useMemo(() => {
+    const span = bounds.yMax - bounds.yMin;
+    const step = span <= 12 ? 2 : span <= 24 ? 4 : 5;
+    const ticks: number[] = [];
+    const start = Math.ceil(bounds.yMin / step) * step;
+    for (let v = start; v <= bounds.yMax + 0.01; v += step) {
+      ticks.push(Math.round(v * 10) / 10);
+    }
+    return ticks;
+  }, [bounds]);
+
+  function expandGroup(slug: string) {
+    setExpandedGroupSlug(slug);
+    setSearch("");
+    setHover(null);
+    setOffScaleOpen(false);
+  }
+
+  function collapseGroup() {
+    setExpandedGroupSlug(null);
+    setSearch("");
+    setHover(null);
+    setOffScaleOpen(false);
+  }
+
+  function handlePointLeave(slug: string) {
+    setHover((h) => (h?.point.slug === slug ? null : h));
+  }
+
+  function handlePointClick(point: RotationMapPoint) {
+    if (point.kind === "group") {
+      if (expandedGroupSlug === point.slug) {
+        collapseGroup();
+      } else {
+        expandGroup(point.slug);
+      }
+      return;
+    }
+    router.push(`/themes/${encodeURIComponent(point.slug)}`);
+  }
+
+  return (
+    <div className={styles.wrap}>
+      <header className={styles.header}>
+        <p className={pageStyles.eyebrow}>{eyebrow}</p>
+        <h1 className={styles.title}>Theme rotation map</h1>
+        <p className={styles.lead}>
+          Groups positioned by short-term vs longer-term performance relative to the S&amp;P 500.
+          Click a group to zoom the chart and show its themes.
+        </p>
+        {asOfLabel ? <p className={styles.asOf}>Data as of {asOfLabel}</p> : null}
+        {groupPoints.length >= 10 && !isFocused ? (
+          <p className={styles.scaleNote}>
+            Overview shows the central bulk of groups. Groups outside this range are listed below —
+            click one to zoom to its true position.
+          </p>
+        ) : null}
+        {isFocused && expandedGroup ? (
+          <p className={styles.scaleNote}>
+            Zoomed to <strong>{expandedGroup.name}</strong> — collapse to return to the full map.
+          </p>
+        ) : null}
+      </header>
+
+      <div className={styles.toolbar}>
+        <div className={styles.breadcrumb}>
+          <span className={styles.breadcrumbCurrent}>All groups ({groupPoints.length})</span>
+          {expandedGroup ? (
+            <>
+              <span className={styles.breadcrumbSep} aria-hidden="true">
+                ·
+              </span>
+              <span className={styles.breadcrumbCurrent}>
+                {expandedGroup.name} ({expandedThemes.length} themes)
+              </span>
+              <button
+                type="button"
+                className={styles.backBtn}
+                onClick={collapseGroup}
+              >
+                Collapse
+              </button>
+            </>
+          ) : null}
+        </div>
+        {expandedGroupSlug ? (
+          <label className={styles.searchWrap}>
+            <input
+              type="search"
+              className={styles.searchInput}
+              placeholder="Filter themes…"
+              aria-label="Filter themes"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </label>
+        ) : null}
+      </div>
+
+      {!isFocused && offScaleGroups.length > 0 ? (
+        <div className={styles.offScalePanel}>
+          <button
+            type="button"
+            className={styles.offScaleToggle}
+            aria-expanded={offScaleOpen}
+            onClick={() => setOffScaleOpen((open) => !open)}
+          >
+            {offScaleGroups.length} group{offScaleGroups.length === 1 ? "" : "s"} outside current
+            range — click to zoom in
+          </button>
+          {offScaleOpen ? (
+            <ul className={styles.offScaleList}>
+              {offScaleGroups.map((group) => (
+                <li key={group.slug}>
+                  <button
+                    type="button"
+                    className={styles.offScaleItem}
+                    onClick={() => expandGroup(group.slug)}
+                  >
+                    <span className={styles.offScaleName}>{group.name}</span>
+                    <span className={styles.offScaleMeta}>
+                      {shortLabel} {formatReturnPct(group.x)} · {longLabel}{" "}
+                      {formatReturnPct(group.y)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className={styles.chartShell}>
+        <svg
+          className={styles.chart}
+          viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+          role="img"
+          aria-label="Group rotation map relative to SPY"
+        >
+          <rect
+            x={PLOT.left}
+            y={PLOT.top}
+            width={plotW}
+            height={plotH}
+            className={styles.plotBg}
+            rx={8}
+          />
+
+          {/* Quadrant hints */}
+          <text x={PLOT.left + 8} y={PLOT.top + 14} className={styles.quadrantHint}>
+            Long-term leaders
+          </text>
+          <text x={PLOT.left + plotW - 8} y={PLOT.top + 14} className={styles.quadrantHint} textAnchor="end">
+            Leaders
+          </text>
+          <text x={PLOT.left + 8} y={PLOT.top + plotH - 6} className={styles.quadrantHint}>
+            Laggards
+          </text>
+          <text
+            x={PLOT.left + plotW - 8}
+            y={PLOT.top + plotH - 6}
+            className={styles.quadrantHint}
+            textAnchor="end"
+          >
+            New momentum
+          </text>
+
+          {/* Grid */}
+          {xTicks.map((v) => (
+            <line
+              key={`gx-${v}`}
+              x1={toSvgX(v)}
+              y1={PLOT.top}
+              x2={toSvgX(v)}
+              y2={PLOT.top + plotH}
+              className={v === 0 ? styles.axisZeroLine : styles.gridLine}
+            />
+          ))}
+          {yTicks.map((v) => (
+            <line
+              key={`gy-${v}`}
+              x1={PLOT.left}
+              y1={toSvgY(v)}
+              x2={PLOT.left + plotW}
+              y2={toSvgY(v)}
+              className={v === 0 ? styles.axisZeroLine : styles.gridLine}
+            />
+          ))}
+
+          {/* SPY origin */}
+          <g transform={`translate(${zeroX}, ${zeroY})`}>
+            <circle r={5} className={styles.spyMarker} />
+            <text y={-10} textAnchor="middle" className={styles.spyLabel}>
+              SPY
+            </text>
+          </g>
+
+          {/* Group bubbles */}
+          {groupPoints.map((point) => {
+            const display = groupDisplay.get(point.slug);
+            if (!display) return null;
+            const offOverview =
+              !isFocused && rotationPointOffPlot(point, overviewBounds);
+            if (offOverview) return null;
+
+            const offFocus =
+              isFocused &&
+              point.slug !== expandedGroupSlug &&
+              rotationPointOffPlot(point, bounds);
+            if (offFocus) return null;
+
+            return renderPlotPoint({
+              point,
+              display,
+              toSvgX,
+              toSvgY,
+              weightRange: groupWeightRange,
+              pointCount: groupPoints.length,
+              sectorColorMap,
+              dimmed: Boolean(
+                isFocused && expandedGroupSlug && expandedGroupSlug !== point.slug,
+              ),
+              selected: expandedGroupSlug === point.slug,
+              hoverSlug: hover?.point.slug ?? null,
+              onHover: setHover,
+              onLeave: handlePointLeave,
+              onClick: handlePointClick,
+            });
+          })}
+
+          {/* Theme bubbles for expanded group */}
+          {expandedThemes.map((point) =>
+            renderPlotPoint({
+              point,
+              display: themeDisplay.get(point.slug) ?? {
+                x: point.x,
+                y: point.y,
+                offScale: false,
+              },
+              toSvgX,
+              toSvgY,
+              weightRange: themeWeightRange,
+              pointCount: expandedThemes.length,
+              sectorColorMap,
+              isTheme: true,
+              alwaysShowLabel: expandedThemes.length <= 20,
+              labelText: rotationThemeLabelSuffix(point.name, expandedGroup?.name),
+              hoverSlug: hover?.point.slug ?? null,
+              onHover: setHover,
+              onLeave: handlePointLeave,
+              onClick: handlePointClick,
+            }),
+          )}
+
+          {/* X axis ticks */}
+          {xTicks.map((v) => (
+            <text
+              key={`tx-${v}`}
+              x={toSvgX(v)}
+              y={SVG_H - 18}
+              textAnchor="middle"
+              className={styles.tickLabel}
+            >
+              {formatAxisTick(v)}
+            </text>
+          ))}
+          <text
+            x={PLOT.left + plotW / 2}
+            y={SVG_H - 4}
+            textAnchor="middle"
+            className={styles.axisTitle}
+          >
+            {shortLabel}
+          </text>
+
+          {/* Y axis ticks */}
+          {yTicks.map((v) => (
+            <text
+              key={`ty-${v}`}
+              x={PLOT.left - 10}
+              y={toSvgY(v) + 4}
+              textAnchor="end"
+              className={styles.tickLabel}
+            >
+              {formatAxisTick(v)}
+            </text>
+          ))}
+          <text
+            transform={`translate(14, ${PLOT.top + plotH / 2}) rotate(-90)`}
+            textAnchor="middle"
+            className={styles.axisTitle}
+          >
+            {longLabel}
+          </text>
+        </svg>
+
+        {hover ? (
+          <div
+            className={styles.tooltip}
+            style={{
+              left: `${(hover.sx / SVG_W) * 100}%`,
+              top: `${(hover.sy / SVG_H) * 100}%`,
+            }}
+          >
+            <p className={styles.tooltipTitle}>{hover.point.name}</p>
+            <p className={styles.tooltipMeta}>{hover.point.sector}</p>
+            <p className={styles.tooltipRow}>
+              <span>{shortLabel}</span>
+              <strong>{formatReturnPct(hover.point.x)}</strong>
+            </p>
+            <p className={styles.tooltipRow}>
+              <span>{longLabel}</span>
+              <strong>{formatReturnPct(hover.point.y)}</strong>
+            </p>
+            {hover.point.kind === "group" && hover.point.themeCount != null ? (
+              <p className={styles.tooltipHint}>
+                Click to {expandedGroupSlug === hover.point.slug ? "collapse" : "zoom in & expand"}{" "}
+                {hover.point.themeCount} themes
+              </p>
+            ) : (
+              <p className={styles.tooltipHint}>Click to open theme</p>
+            )}
+          </div>
+        ) : null}
+      </div>
+
+      {legendSectors.length > 0 ? (
+        <ul className={styles.legend} aria-label="Sector colors">
+          {legendSectors.map((sector) => (
+            <li key={sector} className={styles.legendItem}>
+              <span
+                className={styles.legendSwatch}
+                style={{ background: rotationSectorColor(sector, sectorColorMap) }}
+                aria-hidden="true"
+              />
+              {sector}
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {expandedGroupSlug && expandedThemes.length === 0 ? (
+        <p className={styles.empty}>No themes with complete return data in this group.</p>
+      ) : null}
+    </div>
+  );
+}

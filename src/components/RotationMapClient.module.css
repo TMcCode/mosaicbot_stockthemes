@@ -1,0 +1,334 @@
+.wrap {
+  width: 100%;
+}
+
+.header {
+  margin-bottom: 20px;
+}
+
+.title {
+  margin: 0 0 8px;
+  font-size: clamp(1.5rem, 3vw, 1.85rem);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--color-text, #e8edec);
+}
+
+.lead {
+  margin: 0;
+  max-width: 52rem;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.asOf {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.scaleNote {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.backBtn {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent, #26fcd6);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.backBtn:hover {
+  text-decoration: underline;
+}
+
+.breadcrumbSep {
+  color: var(--color-text-muted, #6b7280);
+}
+
+.breadcrumbCurrent {
+  font-weight: 600;
+  color: var(--color-text, #e8edec);
+}
+
+.searchWrap {
+  flex: 1 1 200px;
+  max-width: 280px;
+}
+
+.searchInput {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.12));
+  background: var(--color-panel, rgba(255, 255, 255, 0.03));
+  color: var(--color-text, #e8edec);
+  font-size: 14px;
+}
+
+.offScalePanel {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--rotation-plot-border, rgba(255, 255, 255, 0.08));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.offScaleToggle {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-accent, #26fcd6);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.offScaleToggle:hover {
+  text-decoration: underline;
+}
+
+.offScaleList {
+  margin: 10px 0 0;
+  padding: 0;
+  list-style: none;
+  max-height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.offScaleItem {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--color-text, #e8edec);
+  text-align: left;
+  cursor: pointer;
+}
+
+.offScaleItem:hover {
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.offScaleName {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.offScaleMeta {
+  font-size: 11px;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.chartShell {
+  position: relative;
+  width: 100%;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: #070b0f;
+  overflow: hidden;
+}
+
+.chart {
+  display: block;
+  width: 100%;
+  height: auto;
+  min-height: 420px;
+  aspect-ratio: 920 / 600;
+}
+
+.plotBg {
+  fill: #0c1218;
+}
+
+.gridLine {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.axisZeroLine {
+  stroke: rgba(255, 255, 255, 0.35);
+  stroke-width: 1.25;
+}
+
+.quadrantHint {
+  fill: rgba(226, 232, 240, 0.55);
+  font-size: 10px;
+  font-weight: 500;
+}
+
+.tickLabel {
+  fill: rgba(203, 213, 225, 0.9);
+  font-size: 11px;
+}
+
+.axisTitle {
+  fill: rgba(226, 232, 240, 0.95);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.spyMarker {
+  fill: rgba(226, 232, 240, 0.15);
+  stroke: rgba(226, 232, 240, 0.85);
+  stroke-width: 2;
+}
+
+.spyLabel {
+  fill: rgba(226, 232, 240, 0.85);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.pointGroup {
+  transition: opacity 0.12s ease;
+}
+
+.pointTheme {
+  transition: opacity 0.12s ease;
+}
+
+.themeOutlineOuter {
+  stroke: var(--color-accent, #26fcd6);
+  stroke-width: 2.25;
+  opacity: 0.95;
+}
+
+.pointLabel {
+  fill: #f8fafc;
+  font-size: 11px;
+  font-weight: 600;
+  paint-order: stroke;
+  stroke: rgba(7, 11, 15, 0.92);
+  stroke-width: 3px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.themeLabelAlways {
+  fill: #e2e8f0;
+  font-size: 8px;
+  font-weight: 500;
+  paint-order: stroke;
+  stroke: rgba(7, 11, 15, 0.9);
+  stroke-width: 2.5px;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 4;
+  transform: translate(-50%, calc(-100% - 12px));
+  min-width: 180px;
+  max-width: 260px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.14));
+  background: var(--color-panel-elevated, rgba(12, 16, 18, 0.96));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+}
+
+.tooltipTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text, #e8edec);
+}
+
+.tooltipMeta {
+  margin: 0 0 8px;
+  font-size: 11px;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.tooltipRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 4px;
+  font-size: 12px;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.tooltipRow strong {
+  color: var(--color-text, #e8edec);
+  font-weight: 600;
+}
+
+.tooltipHint {
+  margin: 8px 0 0;
+  font-size: 11px;
+  color: var(--color-accent, #26fcd6);
+}
+
+.tooltipClamped {
+  margin: 6px 0 0;
+  font-size: 11px;
+  color: #fbbf24;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 16px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--color-text-muted, #9aa8a6);
+}
+
+.legendSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+
+.empty {
+  margin: 16px 0 0;
+  font-size: 14px;
+  color: var(--color-text-muted, #9aa8a6);
+}
