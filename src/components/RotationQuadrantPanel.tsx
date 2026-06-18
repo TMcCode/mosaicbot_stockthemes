@@ -16,12 +16,9 @@ import styles from "./RotationQuadrantPanel.module.css";
 type Props = {
   groups: RotationMapPoint[];
   selectedQuadrant: RotationQuadrantId | null;
-  filteredGroups: RotationMapPoint[];
   onQuadrantSelect: (quadrant: RotationQuadrantId) => void;
   onGroupSelect?: (slug: string) => void;
   motionLabel: string | null;
-  shortLabel: string;
-  longLabel: string;
 };
 
 const QUADRANT_GRID_ORDER: RotationQuadrantId[] = [
@@ -57,12 +54,9 @@ function MoverLine({
 export function RotationQuadrantPanel({
   groups,
   selectedQuadrant,
-  filteredGroups,
   onQuadrantSelect,
   onGroupSelect,
   motionLabel,
-  shortLabel,
-  longLabel,
 }: Props) {
   const counts = useMemo(() => countRotationQuadrants(groups), [groups]);
   const { heating, cooling } = useMemo(
@@ -70,13 +64,6 @@ export function RotationQuadrantPanel({
     [groups],
   );
   const hasMotion = heating.length > 0 || cooling.length > 0;
-  const sortedFilteredGroups = useMemo(
-    () =>
-      [...filteredGroups].sort((a, b) =>
-        a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-      ),
-    [filteredGroups],
-  );
 
   return (
     <aside className={styles.panel} aria-label="Rotation quadrant summary">
@@ -88,7 +75,7 @@ export function RotationQuadrantPanel({
               Click a quadrant to focus the map. Click again to reset.
             </span>
             <span className={styles.hintMobile}>
-              Tap a quadrant to focus the map — then pick a group below.
+              Tap a quadrant to focus the map. Tap again to reset.
             </span>
           </p>
         </div>
@@ -121,71 +108,45 @@ export function RotationQuadrantPanel({
         })}
       </div>
 
-      {selectedQuadrant && sortedFilteredGroups.length > 0 ? (
-        <>
-          <hr className={styles.divider} />
-          <div className={styles.groupSection}>
-            <p className={styles.groupHeading}>
-              {ROTATION_QUADRANT_LABELS[selectedQuadrant]} ({sortedFilteredGroups.length})
-            </p>
-            <ul className={styles.groupList}>
-              {sortedFilteredGroups.map((group) => (
-                <li key={group.slug}>
-                  <button
-                    type="button"
-                    className={styles.groupItem}
-                    onClick={() => onGroupSelect?.(group.slug)}
-                  >
-                    <span className={styles.groupName}>{group.name}</span>
-                    <span className={styles.groupMeta}>
-                      {shortLabel} {formatReturnPct(group.x)} · {longLabel}{" "}
-                      {formatReturnPct(group.y)}
-                    </span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </>
-      ) : null}
-
       {motionLabel && hasMotion ? (
         <>
           <hr className={styles.divider} />
           <div className={styles.motionSection}>
-            <p className={styles.motionHeading}>Short-term rotation ({motionLabel})</p>
-            {heating.length > 0 ? (
-              <>
-                <p className={styles.motionSubheading}>Heating up</p>
-                <ul className={styles.motionList}>
-                  {heating.map((m) => (
-                    <MoverLine
-                      key={`heat-${m.slug}`}
-                      slug={m.slug}
-                      name={m.name}
-                      deltaX={m.deltaX}
-                      onSelect={onGroupSelect}
-                    />
-                  ))}
-                </ul>
-              </>
-            ) : null}
-            {cooling.length > 0 ? (
-              <>
-                <p className={styles.motionSubheading}>Cooling off</p>
-                <ul className={styles.motionList}>
-                  {cooling.map((m) => (
-                    <MoverLine
-                      key={`cool-${m.slug}`}
-                      slug={m.slug}
-                      name={m.name}
-                      deltaX={m.deltaX}
-                      onSelect={onGroupSelect}
-                    />
-                  ))}
-                </ul>
-              </>
-            ) : null}
+            <p className={styles.motionHeading}>Rotation ({motionLabel})</p>
+            <div className={styles.motionColumns}>
+              {heating.length > 0 ? (
+                <div className={styles.motionColumn}>
+                  <p className={styles.motionSubheading}>Heating up</p>
+                  <ul className={styles.motionList}>
+                    {heating.map((m) => (
+                      <MoverLine
+                        key={`heat-${m.slug}`}
+                        slug={m.slug}
+                        name={m.name}
+                        deltaX={m.deltaX}
+                        onSelect={onGroupSelect}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+              {cooling.length > 0 ? (
+                <div className={styles.motionColumn}>
+                  <p className={styles.motionSubheading}>Cooling off</p>
+                  <ul className={styles.motionList}>
+                    {cooling.map((m) => (
+                      <MoverLine
+                        key={`cool-${m.slug}`}
+                        slug={m.slug}
+                        name={m.name}
+                        deltaX={m.deltaX}
+                        onSelect={onGroupSelect}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
           </div>
         </>
       ) : motionLabel ? (

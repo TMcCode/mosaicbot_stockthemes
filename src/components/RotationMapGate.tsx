@@ -1,23 +1,11 @@
 "use client";
 
-import dynamic from "next/dynamic";
 import Link from "next/link";
 
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { RotationMapClient } from "@/components/RotationMapClient";
 import styles from "@/app/page.module.css";
 import localStyles from "@/app/rotation/page.module.css";
-
-const RotationMapClient = dynamic(
-  () => import("@/components/RotationMapClient").then((m) => m.RotationMapClient),
-  {
-    ssr: false,
-    loading: () => (
-      <p className={localStyles.dataLoading} role="status">
-        Loading rotation map…
-      </p>
-    ),
-  },
-);
 
 type Props = {
   eyebrow: string;
@@ -61,7 +49,7 @@ export function RotationMapGate({ eyebrow }: Props) {
   }
 
   return (
-    <section className={`${styles.section} ${localStyles.content}`}>
+    <section className={`${styles.section} ${styles.tightChartTop} ${localStyles.content}`}>
       <RotationMapClient eyebrow={eyebrow} />
     </section>
   );

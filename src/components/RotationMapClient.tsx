@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import localStyles from "@/app/rotation/page.module.css";
@@ -279,13 +279,6 @@ function renderMotionArrow({
 
 function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
   const router = useRouter();
-  const chartShellRef = useRef<HTMLDivElement>(null);
-  const scrollToChart = useCallback(() => {
-    requestAnimationFrame(() => {
-      chartShellRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-    });
-  }, []);
-
   const motionMarkerId = useId().replace(/:/g, "");
   const asOfLabel = formatSiteDataPublished(asOf);
   const axisOptions = useMemo(
@@ -447,11 +440,6 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
     setOffScaleOpen(false);
   }
 
-  function handleQuadrantGroupSelect(slug: string) {
-    expandGroup(slug);
-    scrollToChart();
-  }
-
   function handleQuadrantSelect(quadrant: RotationQuadrantId) {
     setSelectedQuadrant((prev) => (prev === quadrant ? null : quadrant));
     setExpandedGroupSlug(null);
@@ -519,17 +507,17 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
 
   return (
     <div className={styles.wrap}>
-      <div className={styles.rotationLayout}>
+      <div className={styles.rotationTop}>
         <header className={styles.rotationHero}>
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
           <h1>Theme rotation map</h1>
-          <p className={`${pageStyles.introLead} ${styles.introDesktop}`}>
+          <p className={`${pageStyles.introLead} ${styles.rotationIntro} ${styles.introDesktop}`}>
             Groups positioned by short-term vs longer-term performance relative to the S&amp;P 500.
             Click a group to zoom the chart and show its themes.
           </p>
-          <p className={`${pageStyles.introLead} ${styles.introMobile}`}>
+          <p className={`${pageStyles.introLead} ${styles.rotationIntro} ${styles.introMobile}`}>
             Groups vs the S&amp;P 500 on short- and long-term horizons. Tap a quadrant to focus the
-            map, then pick a group from the list.
+            map.
           </p>
           {asOfLabel ? (
             <p className={styles.statsLine}>
@@ -546,7 +534,8 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
           ) : null}
           {groupPoints.length >= 10 && !isFocused && !isQuadrantFocused ? (
             <p className={`${styles.scaleNote} ${styles.scaleNoteMobile}`}>
-              The full map is crowded on small screens — start with a quadrant, then tap a group.
+              The full map is crowded on small screens — tap a quadrant to focus, or use the outlier
+              list below the chart.
             </p>
           ) : null}
           {isFocused && expandedGroup ? (
@@ -568,16 +557,14 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
           <RotationQuadrantPanel
             groups={visibleGroupPoints}
             selectedQuadrant={selectedQuadrant}
-            filteredGroups={quadrantGroups}
             onQuadrantSelect={handleQuadrantSelect}
-            onGroupSelect={handleQuadrantGroupSelect}
+            onGroupSelect={expandGroup}
             motionLabel={motionSummaryLabel}
-            shortLabel={shortLabel}
-            longLabel={longLabel}
           />
         </div>
+      </div>
 
-        <div className={styles.rotationBody}>
+      <div className={styles.rotationBody}>
       <div className={styles.toolbar}>
         <div className={styles.breadcrumb}>
           <span className={styles.breadcrumbCurrent}>All groups ({groupPoints.length})</span>
@@ -623,8 +610,8 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
         ) : null}
       </div>
 
-      {!isFocused && !isQuadrantFocused && offScaleGroups.length > 0 ? (
-        <div className={`${styles.offScalePanel} ${styles.offScalePanelDesktop}`}>
+      {!isFocused && offScaleGroups.length > 0 ? (
+        <div className={styles.offScalePanel}>
           <button
             type="button"
             className={styles.offScaleToggle}
@@ -656,7 +643,7 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
         </div>
       ) : null}
 
-      <div className={styles.chartShell} ref={chartShellRef}>
+      <div className={styles.chartShell}>
         <svg
           className={isFocused ? `${styles.chart} ${styles.chartExpanded}` : styles.chart}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
@@ -1000,7 +987,6 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
         <p className={styles.empty}>No themes with complete return data in this group.</p>
       ) : null}
         </div>
-      </div>
     </div>
   );
 }

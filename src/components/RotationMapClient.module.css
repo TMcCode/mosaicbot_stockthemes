@@ -1,29 +1,41 @@
 .wrap {
   width: 100%;
+  align-self: stretch;
 }
 
-.rotationLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 430px);
-  grid-template-areas:
-    "hero panel"
-    "body body";
-  gap: 16px 20px;
-  align-items: start;
+.rotationTop {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px 14px;
+  margin-bottom: 10px;
 }
 
 .rotationHero {
-  grid-area: hero;
+  flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rotationHero h1 {
+  margin: 0;
+}
+
+.rotationIntro {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.4;
 }
 
 .rotationQuadrantSlot {
-  grid-area: panel;
-  min-width: 0;
+  flex: 0 0 clamp(320px, 38vw, 420px);
+  min-width: 320px;
+  max-width: 420px;
 }
 
 .rotationBody {
-  grid-area: body;
+  width: 100%;
   min-width: 0;
 }
 
@@ -40,8 +52,8 @@
 
 .scaleNote {
   margin: 0;
-  font-size: 13px;
-  line-height: 1.45;
+  font-size: 12px;
+  line-height: 1.35;
   color: var(--text-secondary, #9aa8a6);
 }
 
@@ -125,7 +137,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 16px 0 14px;
+  margin: 4px 0 10px;
 }
 
 .breadcrumb {
@@ -180,10 +192,6 @@
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.02);
-}
-
-.offScalePanelDesktop {
-  display: block;
 }
 
 .offScaleToggle {
@@ -544,30 +552,16 @@
 }
 
 @media (max-width: 900px) {
-  .rotationLayout {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "hero"
-      "panel"
-      "body";
-    gap: 12px;
+  .rotationTop {
+    flex-direction: column;
+    margin-bottom: 8px;
   }
 
   .rotationQuadrantSlot {
-    position: sticky;
-    top: 6px;
-    z-index: 4;
-  }
-
-  .rotationQuadrantSlot::before {
-    content: "";
-    position: absolute;
-    inset: -6px -4px;
-    z-index: -1;
-    border-radius: 14px;
-    background: var(--background, #040506);
-    opacity: 0.92;
-    pointer-events: none;
+    flex: 1 1 auto;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 
   .introDesktop,
@@ -617,9 +611,5 @@
   .backBtn {
     min-height: 36px;
     padding: 4px 0;
-  }
-
-  .offScalePanelDesktop {
-    display: none;
   }
 }
