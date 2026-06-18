@@ -1,0 +1,123 @@
+.formBlock {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 360px;
+}
+
+.oauthStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 360px;
+}
+
+.oauthBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.14));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #eaf2f0);
+  font-family: var(--font-geist-sans);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.oauthBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(38, 252, 214, 0.35);
+}
+
+.oauthBtn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+.oauthIcon {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.orDivider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 360px;
+  margin: 4px 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.orDivider::before,
+.orDivider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+}
+
+.emailInput {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--text-primary, #eaf2f0);
+  font-family: var(--font-geist-sans);
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+.submitBtn {
+  padding: 11px 16px;
+  border-radius: 10px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #040506;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.submitBtn:disabled {
+  cursor: default;
+  opacity: 0.7;
+}
+
+.messageOk {
+  margin-top: 16px;
+  color: var(--accent, #26fcd6);
+}
+
+.messageErr {
+  margin-top: 16px;
+  color: #f87171;
+}
+
+:global(.st-theme[data-theme="light"]) .oauthBtn {
+  background: rgba(59, 77, 161, 0.04);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .oauthBtn:hover:not(:disabled) {
+  background: rgba(59, 77, 161, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .emailInput {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+  color: var(--text-primary, #1e1c36);
+}

@@ -15,6 +15,7 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 - [ ] Create organization + project (note **project URL** and **anon public key**)
 - [ ] Pick region (e.g. `us-east-1` — hard to change later)
 - [ ] **Authentication → Providers → Email:** enable Email; enable **Magic link** (disable password if unused)
+- [ ] **Authentication → Providers:** enable **Google** (and/or **GitHub**, **Apple**, **Azure**) for one-click sign-in; add OAuth client IDs/secrets per provider docs
 - [ ] **Authentication → Email:** choose templates (optional: customize “Confirm signup” / “Magic link” copy and branding)
 - [ ] **Authentication → URL configuration:**
   - Site URL: `https://stockthemes.ai`

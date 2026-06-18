@@ -259,6 +259,28 @@
   overflow: hidden;
 }
 
+/* Above plot band (see PLOT.top in RotationMapClient) — not over bubble area */
+.chartBrandMark {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  z-index: 6;
+  pointer-events: none;
+  line-height: 0;
+  opacity: 0.98;
+  max-height: calc((48 / 600) * 100% - 10px);
+}
+
+.chartBrandMark img {
+  display: block;
+  width: clamp(120px, 16vw, 210px);
+  height: auto;
+  max-height: 100%;
+  max-width: min(210px, calc(100vw - 56px));
+  object-fit: contain;
+  object-position: left center;
+}
+
 .chart {
   display: block;
   width: 100%;

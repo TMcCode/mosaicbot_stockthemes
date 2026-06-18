@@ -45,10 +45,11 @@ import {
   type RotationQuadrantId,
 } from "@/lib/rotationQuadrants";
 import { formatReturnPct } from "@/lib/treemapLayout";
+import { publicAssetPath } from "@/lib/siteUrl";
 
 import styles from "./RotationMapClient.module.css";
 
-const PLOT = { left: 54, top: 28, right: 20, bottom: 48 };
+const PLOT = { left: 54, top: 48, right: 20, bottom: 48 };
 const SVG_W = 920;
 const SVG_H = 600;
 
@@ -877,6 +878,16 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
             {longLabel}
           </text>
         </svg>
+
+        <div className={styles.chartBrandMark} aria-hidden="true">
+          <img
+            src={publicAssetPath("/brand/logo-full-dark-tight.png")}
+            alt=""
+            loading="lazy"
+            fetchPriority="low"
+            decoding="async"
+          />
+        </div>
 
         {hover ? (
           <div

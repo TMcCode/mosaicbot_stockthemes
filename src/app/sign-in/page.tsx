@@ -6,15 +6,19 @@ import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
 import styles from "@/app/page.module.css";
+import signInStyles from "@/app/sign-in/sign-in.module.css";
 import { PageSurface } from "@/components/PageSurface";
+import { SignInOAuthButtons } from "@/components/SignInOAuthButtons";
 
 import { authCallbackAbsoluteUrl, AUTH_DEFAULT_NEXT_PATH, sanitizeAuthNextPath } from "@/lib/authRedirect";
+import { getEnabledAuthOAuthProviders } from "@/lib/authOAuthProviders";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 export default function SignInPage() {
   const router = useRouter();
   const { configured, loading, user } = useSupabaseAuth();
+  const oauthProviders = getEnabledAuthOAuthProviders();
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -108,15 +112,24 @@ export default function SignInPage() {
           <p className={styles.eyebrow}>Sign in · Create account</p>
           <h1>Add email to curate stockthemes.ai — up to 20 themes</h1>
           <p className={styles.introCopy}>
-            <strong>New here?</strong> Enter your email below — we&apos;ll send a one-time link. Opening it{" "}
-            <strong>creates your free account</strong> (no separate sign-up form).
+            <strong>New here?</strong> Use Google, GitHub, or a one-time email link — we&apos;ll{" "}
+            <strong>create your free account</strong> on first sign-in (no password).
           </p>
           <p className={styles.introCopy}>
-            <strong>Already use stockthemes?</strong> Same link signs you back in — no passwords. Personal
-            watchlists and performance tables ship next.
+            <strong>Already use stockthemes?</strong> Same options sign you back in. Personal watchlists
+            and performance tables ship next.
           </p>
 
-          <form onSubmit={onSubmit} style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14, maxWidth: 360 }}>
+          {oauthProviders.length > 0 ? (
+            <>
+              <SignInOAuthButtons returnPath={returnPath} onError={setError} />
+              <div className={signInStyles.orDivider} role="presentation">
+                or email a link
+              </div>
+            </>
+          ) : null}
+
+          <form onSubmit={onSubmit} className={signInStyles.formBlock}>
             <label htmlFor="sign-in-email">
               <span className={styles.introCopy} style={{ display: "block", marginBottom: 6 }}>
                 Email address
@@ -130,44 +143,19 @@ export default function SignInPage() {
                 onChange={(ev) => setEmail(ev.target.value)}
                 placeholder="you@example.com"
                 disabled={busy}
-                style={{
-                  width: "100%",
-                  padding: "10px 12px",
-                  borderRadius: 10,
-                  border: "1px solid var(--nav-border, rgba(255,255,255,0.14))",
-                  background: "rgba(255,255,255,0.04)",
-                  color: "var(--text-primary, #eaf2f0)",
-                  fontFamily: "var(--font-geist-sans)",
-                  fontSize: 15,
-                }}
+                className={signInStyles.emailInput}
               />
             </label>
-            <button
-              type="submit"
-              disabled={busy}
-              style={{
-                padding: "11px 16px",
-                borderRadius: 10,
-                border: "none",
-                background: "var(--accent, #26fcd6)",
-                color: "#040506",
-                fontWeight: 600,
-                cursor: busy ? "default" : "pointer",
-              }}
-            >
+            <button type="submit" disabled={busy} className={signInStyles.submitBtn}>
               {busy ? "Sending…" : "Email me a secure link"}
             </button>
           </form>
 
           {message ? (
-            <p className={styles.introCopy} style={{ marginTop: 16, color: "var(--accent, #26fcd6)" }}>
-              {message}
-            </p>
+            <p className={`${styles.introCopy} ${signInStyles.messageOk}`}>{message}</p>
           ) : null}
           {error ? (
-            <p className={styles.introCopy} style={{ marginTop: 16, color: "#f87171" }}>
-              {error}
-            </p>
+            <p className={`${styles.introCopy} ${signInStyles.messageErr}`}>{error}</p>
           ) : null}
 
           <p className={styles.introCopy} style={{ marginTop: 24 }}>
