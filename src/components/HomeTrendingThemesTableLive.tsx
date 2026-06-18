@@ -7,13 +7,16 @@ import {
   type HomeTrendingRow,
 } from "@/components/HomeTrendingThemesTable";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import type { TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import { mergeHomeTrendingCompareReturns } from "@/lib/mergeLiveCompareData";
+import { sortHomeTrendingRows } from "@/lib/sortHomeTrendingRows";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 
 type Props = {
   rows: HomeTrendingRow[];
   columns: string[];
   columnHelp: Record<string, string | undefined>;
+  sortPeriod: TopMoverTickerPeriod;
   serverCompareBundle?: CompareThemesV0 | null;
 };
 
@@ -21,21 +24,24 @@ export function HomeTrendingThemesTableLive({
   rows,
   columns,
   columnHelp,
+  sortPeriod,
   serverCompareBundle,
 }: Props) {
   const { compareBundle, liveSpyPerf } = useLiveCompareBundles(serverCompareBundle, null);
   const liveRows = useMemo(() => {
     const merged = mergeHomeTrendingCompareReturns(rows, compareBundle?.rows ?? []);
-    if (!liveSpyPerf?.compareReturns) return merged;
-    return merged.map((row) =>
-      row.marketBaseline
-        ? {
-            ...row,
-            compare_returns: liveSpyPerf.compareReturns,
-            chartPerf: liveSpyPerf.chartPerf,
-          }
-        : row,
-    );
-  }, [rows, compareBundle?.rows, liveSpyPerf]);
+    const withSpy = !liveSpyPerf?.compareReturns
+      ? merged
+      : merged.map((row) =>
+          row.marketBaseline
+            ? {
+                ...row,
+                compare_returns: liveSpyPerf.compareReturns,
+                chartPerf: liveSpyPerf.chartPerf,
+              }
+            : row,
+        );
+    return sortHomeTrendingRows(withSpy, sortPeriod);
+  }, [rows, compareBundle?.rows, liveSpyPerf, sortPeriod]);
   return <HomeTrendingThemesTable rows={liveRows} columns={columns} columnHelp={columnHelp} />;
 }

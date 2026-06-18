@@ -31,7 +31,8 @@ import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { homeEyebrowText } from "@/lib/stockthemesBuildHints";
-import { resolveTrendingColumnOrder, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
+import { sortHomeTrendingRows } from "@/lib/sortHomeTrendingRows";
+import { resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
 import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
 import { buildTickerToThemeNamesMap } from "@/lib/loadSearchIndex";
@@ -162,16 +163,7 @@ export default async function Home() {
     marketBaseline: true,
   };
   // Weekdays: 1D (matches ticker); Sat/Sun ET: 10D when markets are closed.
-  const detailsSorted = [...details, marketRow].sort((a, b) => {
-    const va = valueForTrendingColumn(topMoversPeriod, a.compare_returns, a.chartPerf, a.name);
-    const vb = valueForTrendingColumn(topMoversPeriod, b.compare_returns, b.chartPerf, b.name);
-    const aOk = va != null && Number.isFinite(va);
-    const bOk = vb != null && Number.isFinite(vb);
-    if (aOk && bOk) return vb - va;
-    if (aOk) return -1;
-    if (bOk) return 1;
-    return 0;
-  });
+  const detailsSorted = sortHomeTrendingRows([...details, marketRow], topMoversPeriod);
   const rowsForTable = detailsSorted.map((row) => ({
     ...row,
     marketBaseline: row.marketBaseline === true,
@@ -276,6 +268,7 @@ export default async function Home() {
               <HomeTrendingThemesTableLive
                 rows={rowsForTable}
                 columns={trendingColumns}
+                sortPeriod={topMoversPeriod}
                 columnHelp={Object.fromEntries(
                   trendingColumns.map((col) => [col, customDateHelpText(col, selectedDateByKey)]),
                 )}
