@@ -9,6 +9,11 @@ export const GIVEAWAY_ENTRIES_CLOSE_DATE = "2026-07-31";
 /** Winner selection date (US Eastern calendar date, YYYY-MM-DD). */
 export const GIVEAWAY_WINNER_CHOSEN_DATE = "2026-08-05";
 
+/** Versioned so a future giveaway can show the banner again for prior dismissals. */
+export const GIVEAWAY_BANNER_DISMISS_STORAGE_KEY = `stockthemes-giveaway-banner-dismissed-${GIVEAWAY_ENTRIES_CLOSE_DATE}`;
+
+export const GIVEAWAY_BANNER_HIDDEN_ATTR = "data-giveaway-banner";
+
 const ET_YMD = new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" });
 
 /** Today's date in America/New_York as YYYY-MM-DD. */
@@ -48,4 +53,11 @@ export function formatGiveawayEntriesCloseLabel(): string {
 
 export function formatGiveawayWinnerChosenLabel(): string {
   return formatGiveawayEasternDateLabel(GIVEAWAY_WINNER_CHOSEN_DATE);
+}
+
+/** Inline IIFE for layout — hide dismissed banner before first paint. */
+export function giveawayBannerDismissScriptContent(): string {
+  const key = JSON.stringify(GIVEAWAY_BANNER_DISMISS_STORAGE_KEY);
+  const attr = JSON.stringify(GIVEAWAY_BANNER_HIDDEN_ATTR);
+  return `(function(){try{var k=${key};if(localStorage.getItem(k)==="1"){document.documentElement.setAttribute(${attr},"hidden");}}catch(e){}})();`;
 }

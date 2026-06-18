@@ -1,16 +1,48 @@
 .wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 24px;
+  padding: 0 16px 0 24px;
   font-family: var(--font-geist-sans);
   font-size: 13px;
   line-height: 1.4;
-  color: var(--text-secondary);
+  color: var(--nav-muted, #a6b4b2);
   background: rgba(38, 252, 214, 0.06);
   border-bottom: 1px solid rgba(38, 252, 214, 0.14);
 }
 
+.dismiss {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-top: 7px;
+  padding: 0;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+  border-radius: 8px;
+  color: var(--nav-fg, #eaf2f0);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  color: var(--nav-accent, #26fcd6);
+  border-color: rgba(38, 252, 214, 0.35);
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.dismiss:focus-visible {
+  outline: 2px solid var(--nav-accent, #26fcd6);
+  outline-offset: 2px;
+}
+
 .inner {
+  flex: 1;
+  min-width: 0;
   max-width: 1200px;
   margin: 0 auto;
   padding: 10px 0 11px;
@@ -19,18 +51,18 @@
 .line {
   margin: 0;
   font-weight: 450;
-  color: var(--text-primary);
+  color: var(--nav-fg, #eaf2f0);
 }
 
 .line strong {
   font-weight: 650;
-  color: var(--accent);
+  color: var(--nav-accent, #26fcd6);
 }
 
 .detail {
   margin-left: 0.25em;
   font-weight: 450;
-  color: var(--text-muted);
+  color: var(--nav-muted, #a6b4b2);
 }
 
 .meta {
@@ -41,17 +73,17 @@
 .note {
   margin: 4px 0 0;
   font-size: 11px;
-  color: var(--text-muted);
+  color: var(--nav-muted, #a6b4b2);
 }
 
 .link {
-  color: var(--text-secondary);
+  color: var(--nav-muted, #a6b4b2);
   text-decoration: underline;
   text-underline-offset: 2px;
 }
 
 .link:hover {
-  color: var(--accent);
+  color: var(--nav-accent, #26fcd6);
 }
 
 .sep {
@@ -61,8 +93,14 @@
 
 @media (max-width: 640px) {
   .wrap {
-    padding: 0 16px;
+    padding: 0 12px 0 16px;
     font-size: 12px;
+  }
+
+  .dismiss {
+    width: 30px;
+    height: 30px;
+    margin-top: 6px;
   }
 
   .inner {
