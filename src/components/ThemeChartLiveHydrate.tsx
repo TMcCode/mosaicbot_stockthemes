@@ -284,6 +284,7 @@ export function ThemeChartLiveHydrate({
         compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
         benchmarkPerformance={benchmarkPerformance}
         selectedDates={selectedDates}
+        sidecarEntity={{ kind: overlayKind, slug }}
       />
       {!chart1y && fetchError ? (
         <p

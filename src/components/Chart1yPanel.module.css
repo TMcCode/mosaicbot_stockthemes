@@ -13,12 +13,13 @@
   margin-bottom: var(--chart-panel-toolbar-margin-bottom, 12px);
 }
 
-.toolbarControls {
+.periodBar {
   display: flex;
-  flex-wrap: wrap;
-  align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
 }
 
 .periodRow {
@@ -26,6 +27,7 @@
   flex-wrap: wrap;
   gap: 6px;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .periodBtn,
@@ -88,13 +90,20 @@
 }
 
 .toggle button {
+  appearance: none;
   font-size: 13px;
+  font-family: inherit;
   padding: 8px 14px;
   border: none;
   background: transparent;
   color: var(--text-secondary, #9aa8a6);
   cursor: pointer;
+  white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.toggle button:hover {
+  color: var(--text-primary);
 }
 
 .toggle button.active {

@@ -24,19 +24,23 @@ import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
 import {
   chartCustomPeriodsFromManifest,
+  chart1yWithExtendedPerformance,
   chartPerformancesForDetailPeriodSupport,
   chartPeriodWindowLabel,
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
+  mergeExtendedChartPerformance,
+  performanceNeedsExtendedHistory,
   referenceLastIsoFromPerformances,
   sliceBenchmarkForPeriod,
   sliceThemeChart1yForPeriod,
   type OverlayChartPeriod,
   type OverlayStandardPeriod,
 } from "@/lib/chartPeriodControls";
+import { fetchChartSidecar, type OverlayEntityKind } from "@/lib/chartSidecar";
 import { OVERLAY_STANDARD_PERIODS, rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
-import { sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
+import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
@@ -662,6 +666,8 @@ export type Chart1yLightweightProps = {
    * and defaults the chart to 1Y instead of the full embedded history window.
    */
   selectedDates?: ManifestSelectedDateV0[];
+  /** When set, 2Y/5Y/custom periods lazy-load slim ``.chart.v0.json`` (no full detail JSON fetch). */
+  sidecarEntity?: { kind: OverlayEntityKind; slug: string };
 };
 
 function formatMarketCap(v: number | undefined): string {
@@ -684,6 +690,7 @@ export function Chart1yLightweight({
   compositionLegendShowSeriesBadge = true,
   compositionLegendShowMcap = true,
   selectedDates,
+  sidecarEntity,
 }: Chart1yLightweightProps) {
   const showPeriodControls = selectedDates !== undefined;
   const customPeriods = useMemo(
@@ -697,6 +704,9 @@ export function Chart1yLightweight({
   }, [customPeriods]);
 
   const [period, setPeriod] = useState<OverlayChartPeriod>("1Y");
+  const [extendedPerformance, setExtendedPerformance] = useState<ChartPerformanceV0 | undefined>(
+    undefined,
+  );
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -733,6 +743,10 @@ export function Chart1yLightweight({
     return { ...base, performance: perf };
   }, [chart1ySorted, performanceTitle]);
 
+  useEffect(() => {
+    setExtendedPerformance(undefined);
+  }, [sidecarEntity?.kind, sidecarEntity?.slug, chart1ySorted]);
+
   const referenceLastIso = useMemo(
     () =>
       referenceLastIsoFromPerformances([
@@ -751,9 +765,82 @@ export function Chart1yLightweight({
           ? "composition"
           : "performance";
 
+  const customAnchorIso = isStandardPeriod(period)
+    ? undefined
+    : customAnchorByKey.get(period);
+
+  const needsExtendedHistory = useMemo(
+    () =>
+      Boolean(
+        showPeriodControls &&
+          sidecarEntity &&
+          performanceNeedsExtendedHistory(
+            chart1yForRender?.performance,
+            period,
+            referenceLastIso,
+            customAnchorIso,
+          ),
+      ),
+    [
+      showPeriodControls,
+      sidecarEntity,
+      chart1yForRender?.performance,
+      period,
+      referenceLastIso,
+      customAnchorIso,
+    ],
+  );
+
+  useEffect(() => {
+    if (!needsExtendedHistory || !sidecarEntity) return;
+    const merged = mergeExtendedChartPerformance(
+      chart1yForRender?.performance,
+      extendedPerformance,
+    );
+    if (
+      merged &&
+      extendedPerformance &&
+      !performanceNeedsExtendedHistory(merged, period, referenceLastIso, customAnchorIso)
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    void fetchChartSidecar(sidecarEntity.kind, sidecarEntity.slug)
+      .then((sidecar) => {
+        if (cancelled || !sidecar?.performance?.dates?.length) return;
+        let perf = sanitizeChartPerformanceForDisplay(sidecar.performance) ?? sidecar.performance;
+        const title = performanceTitle?.trim() ?? "";
+        const values = applyShortThemePerformanceDisplay(title, perf.values, perf);
+        if (values !== perf.values) perf = { ...perf, values };
+        if (isSuspiciousChartPerformanceCliff(perf, chart1yForRender?.performance)) return;
+        setExtendedPerformance(perf);
+      })
+      .catch(() => {
+        /* keep embedded window on CDN miss */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    needsExtendedHistory,
+    sidecarEntity,
+    period,
+    customAnchorIso,
+    referenceLastIso,
+    performanceTitle,
+    chart1yForRender?.performance,
+    extendedPerformance,
+  ]);
+
+  const chart1yWithHistory = useMemo(
+    () => chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance),
+    [chart1yForRender, extendedPerformance],
+  );
+
   const performancesForSupport = useMemo(
-    () => chartPerformancesForDetailPeriodSupport(chart1yForRender, activeView),
-    [chart1yForRender, activeView],
+    () => chartPerformancesForDetailPeriodSupport(chart1yWithHistory, activeView),
+    [chart1yWithHistory, activeView],
   );
 
   const supportedPeriods = useMemo(
@@ -785,19 +872,15 @@ export function Chart1yLightweight({
     }
   }, [showPeriodControls, period, supportedPeriods, supportedCustomPeriodKeys, customPeriods]);
 
-  const customAnchorIso = isStandardPeriod(period)
-    ? undefined
-    : customAnchorByKey.get(period);
-
   const chart1yForCanvas = useMemo(() => {
-    if (!showPeriodControls || !chart1yForRender) return chart1yForRender;
+    if (!showPeriodControls || !chart1yWithHistory) return chart1yWithHistory;
     return sliceThemeChart1yForPeriod(
-      chart1yForRender,
+      chart1yWithHistory,
       period,
       customAnchorIso,
       referenceLastIso,
     );
-  }, [showPeriodControls, chart1yForRender, period, customAnchorIso, referenceLastIso]);
+  }, [showPeriodControls, chart1yWithHistory, period, customAnchorIso, referenceLastIso]);
 
   const benchmarkForCanvas = useMemo(() => {
     if (!showPeriodControls) return benchmarkPerformance;
@@ -862,36 +945,24 @@ export function Chart1yLightweight({
             </>
           )}
         </span>
-        <div className={styles.toolbarControls}>
-          {showPeriodControls ? (
-            <ChartPeriodToolbar
-              period={period}
-              onPeriodChange={setPeriod}
-              supportedPeriods={supportedPeriods}
-              supportedCustomPeriodKeys={supportedCustomPeriodKeys}
-              customPeriods={customPeriods}
-              variant="detail"
-            />
-          ) : null}
-          {hasPerf && hasComp ? (
-            <div className={styles.toggle} role="group" aria-label="Chart type">
-              <button
-                type="button"
-                className={activeView === "performance" ? styles.active : undefined}
-                onClick={() => setView("performance")}
-              >
-                Performance
-              </button>
-              <button
-                type="button"
-                className={activeView === "composition" ? styles.active : undefined}
-                onClick={() => setView("composition")}
-              >
-                Composition (line)
-              </button>
-            </div>
-          ) : null}
-        </div>
+        {hasPerf && hasComp ? (
+          <div className={styles.toggle} role="group" aria-label="Chart type">
+            <button
+              type="button"
+              className={activeView === "performance" ? styles.active : undefined}
+              onClick={() => setView("performance")}
+            >
+              Performance
+            </button>
+            <button
+              type="button"
+              className={activeView === "composition" ? styles.active : undefined}
+              onClick={() => setView("composition")}
+            >
+              Composition (line)
+            </button>
+          </div>
+        ) : null}
       </div>
       <Chart1yCanvas
         chart1y={chart1yForCanvas}
@@ -901,6 +972,18 @@ export function Chart1yLightweight({
         compositionMetaRef={compositionMetaRef}
         performanceTitleRef={performanceTitleRef}
       />
+      {showPeriodControls ? (
+        <div className={styles.periodBar}>
+          <ChartPeriodToolbar
+            period={period}
+            onPeriodChange={setPeriod}
+            supportedPeriods={supportedPeriods}
+            supportedCustomPeriodKeys={supportedCustomPeriodKeys}
+            customPeriods={customPeriods}
+            variant="detail"
+          />
+        </div>
+      ) : null}
       {activeView === "composition" && hasComp && chart1ySorted?.composition_indexed?.series ? (
         <div
           className={styles.legend}

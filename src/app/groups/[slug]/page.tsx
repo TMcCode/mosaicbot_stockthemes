@@ -242,6 +242,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   compositionLegendShowSeriesBadge={false}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
                   selectedDates={selectedDates}
+                  sidecarEntity={{ kind: "group", slug }}
                 />
               </DeferRender>
             </div>

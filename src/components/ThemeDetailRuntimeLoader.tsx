@@ -149,6 +149,7 @@ export function ThemeDetailRuntimeLoader({
           performanceTitle={detail.name}
           benchmarkPerformance={benchmarkPerformance}
           selectedDates={selectedDates}
+          sidecarEntity={{ kind: "theme", slug }}
         />
       </div>
       {detail.constituents?.length ? (

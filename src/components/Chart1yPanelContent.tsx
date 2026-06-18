@@ -23,6 +23,8 @@ export type Chart1yPanelProps = {
   benchmarkPerformance?: ChartPerformanceV0;
   /** When set (even `[]`), enables in-chart period controls without extra network requests. */
   selectedDates?: ManifestSelectedDateV0[];
+  /** Lazy-loads extended performance for 2Y/5Y/custom windows via slim chart sidecar. */
+  sidecarEntity?: { kind: "theme" | "group"; slug: string };
 };
 
 /**
@@ -36,6 +38,7 @@ function Chart1yPanelInner({
   compositionLegendShowMcap = true,
   benchmarkPerformance,
   selectedDates,
+  sidecarEntity,
 }: Chart1yPanelProps) {
   if (!chart1yHasRenderableSeries(chart1y)) {
     return null;
@@ -49,6 +52,7 @@ function Chart1yPanelInner({
       compositionLegendShowMcap={compositionLegendShowMcap}
       benchmarkPerformance={benchmarkPerformance}
       selectedDates={selectedDates}
+      sidecarEntity={sidecarEntity}
     />
   );
 }

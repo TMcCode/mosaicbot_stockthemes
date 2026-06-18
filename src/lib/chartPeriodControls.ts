@@ -1,12 +1,57 @@
 import {
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
+  periodAnchorIso,
   sliceAndRebaseIndexedPerformance,
   type OverlayChartPeriod,
   type OverlayStandardPeriod,
 } from "@/lib/sliceIndexedChart";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
+
+function isoDay(raw: string): string {
+  return String(raw || "").trim().slice(0, 10);
+}
+
+const SHORT_DETAIL_PERIODS: Set<OverlayChartPeriod> = new Set(["1W", "1M", "YTD", "1Y"]);
+
+/** Embedded theme JSON is ~1Y; 2Y/5Y/custom need the slim chart sidecar when anchor precedes first point. */
+export function performanceNeedsExtendedHistory(
+  perf: ChartPerformanceV0 | undefined,
+  period: OverlayChartPeriod,
+  referenceLastIso: string | undefined,
+  customAnchorIso: string | undefined,
+): boolean {
+  if (SHORT_DETAIL_PERIODS.has(period)) return false;
+  const dates = perf?.dates;
+  if (!dates?.length) return false;
+  const ref = referenceLastIso ? isoDay(referenceLastIso) : isoDay(String(dates[dates.length - 1]));
+  const anchor = customAnchorIso ? isoDay(customAnchorIso) : periodAnchorIso(ref, period);
+  const first = isoDay(String(dates[0]));
+  return first > anchor;
+}
+
+export function mergeExtendedChartPerformance(
+  base: ChartPerformanceV0 | undefined,
+  extended: ChartPerformanceV0 | undefined,
+): ChartPerformanceV0 | undefined {
+  if (!extended?.dates?.length) return base;
+  if (!base?.dates?.length) return extended;
+  const baseFirst = isoDay(String(base.dates[0]));
+  const extFirst = isoDay(String(extended.dates[0]));
+  if (extFirst < baseFirst || extended.dates.length > base.dates.length) return extended;
+  return base;
+}
+
+export function chart1yWithExtendedPerformance(
+  chart1y: ThemeChart1yV0 | undefined,
+  extended: ChartPerformanceV0 | undefined,
+): ThemeChart1yV0 | undefined {
+  if (!chart1y) return chart1y;
+  const merged = mergeExtendedChartPerformance(chart1y.performance, extended);
+  if (merged === chart1y.performance) return chart1y;
+  return { ...chart1y, performance: merged };
+}
 
 export const DETAIL_CHART_STANDARD_PERIODS: OverlayStandardPeriod[] = [
   "1W",

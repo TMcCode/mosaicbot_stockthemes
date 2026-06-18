@@ -18,8 +18,11 @@ export function hasIndexedPerformanceFromAnchor(
   const dates = perf?.dates;
   if (!Array.isArray(dates) || dates.length < 2) return false;
   const anchor = isoDay(anchorIso);
-  const first = isoDay(String(dates[0] || ""));
-  return first <= anchor;
+  const last = isoDay(String(dates[dates.length - 1] || ""));
+  if (!anchor || !last || anchor > last) return false;
+  // Match sliceAndRebaseIndexedPerformance: first trading day on/after anchor needs 2+ points.
+  const start = firstIndexOnOrAfter(dates, anchor);
+  return dates.length - start >= 2;
 }
 
 /** Enable 2Y/5Y when every loaded series has data back to the period anchor. */

@@ -283,6 +283,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   performanceTitle={theme.name}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
                   selectedDates={selectedDates}
+                  sidecarEntity={{ kind: "theme", slug }}
                 />
               </div>
             </DeferRender>
