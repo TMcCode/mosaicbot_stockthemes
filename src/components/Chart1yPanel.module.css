@@ -13,6 +13,57 @@
   margin-bottom: var(--chart-panel-toolbar-margin-bottom, 12px);
 }
 
+.toolbarControls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.periodRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.periodBtn,
+.periodBtnActive {
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.periodBtnActive {
+  border-color: rgba(38, 252, 214, 0.45);
+  color: #26fcd6;
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.periodBtn:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
+}
+
+:global(.st-theme[data-theme="light"]) .periodBtn {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #586470;
+}
+
+:global(.st-theme[data-theme="light"]) .periodBtnActive {
+  border-color: rgba(42, 207, 200, 0.45);
+  color: var(--accent, #2a9893);
+  background: var(--color-accent-muted, rgba(42, 207, 200, 0.14));
+}
+
 .toolbarLabel {
   font-size: 13px;
   font-weight: 600;

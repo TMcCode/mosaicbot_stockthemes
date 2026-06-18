@@ -139,6 +139,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const groupTreemapNodes = buildGroupThemeTreemapNodes(detail?.theme_treemap);
   const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
   const spyPerf = await getSpyMarketPerfCached();
+  const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const groupUrl = absoluteUrl(`/groups/${slug}`);
   const dateModified = detail?.as_of || manifest.as_of;
   const pageDescription = detail?.seo_intro?.trim() || `${group.name} investment theme group.`;
@@ -226,6 +227,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   compositionMetaByTicker={groupChartMetaBySlug}
                   compositionLegendShowSeriesBadge={false}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                  selectedDates={selectedDates}
                 />
               </DeferRender>
             </div>
@@ -239,6 +241,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   compositionMetaByTicker={groupChartMetaBySlug}
                   compositionLegendShowSeriesBadge={false}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                  selectedDates={selectedDates}
                 />
               </DeferRender>
             </div>
@@ -262,7 +265,7 @@ export default async function GroupDetailPage({ params }: Props) {
             <GroupThemesTableLive
               rows={groupThemeTableRows}
               metricColumns={groupThemeMetricColumns}
-              selectedDates={manifest.selected_dates}
+              selectedDates={selectedDates}
               serverCompareBundle={compareRes?.bundle ?? null}
             />
           </section>

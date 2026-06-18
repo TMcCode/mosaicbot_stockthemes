@@ -27,6 +27,7 @@ import {
   stockthemesLiveHydrationDisabled,
 } from "@/lib/stockthemesClientConfig";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import styles from "@/app/page.module.css";
 
@@ -76,6 +77,8 @@ type Props = {
   benchmarkPerformance?: ChartPerformanceV0;
   /** Optional full theme detail for live composition refresh (themes only). */
   serverDetail?: ThemeDetailV0;
+  /** Enables period toolbar; uses manifest dates already on the page (no extra fetch). */
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
 /**
@@ -96,6 +99,7 @@ export function ThemeChartLiveHydrate({
   compositionLegendShowSeriesBadge = true,
   benchmarkPerformance,
   serverDetail,
+  selectedDates,
 }: Props) {
   const compositionLive = stockthemesLiveCompositionEnabled() && chartJsonFolder === "themes" && Boolean(serverDetail);
   const { detail: liveDetail } = useLiveThemeDetailPrices(
@@ -279,6 +283,7 @@ export function ThemeChartLiveHydrate({
         performanceTitle={performanceTitle}
         compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
         benchmarkPerformance={benchmarkPerformance}
+        selectedDates={selectedDates}
       />
       {!chart1y && fetchError ? (
         <p

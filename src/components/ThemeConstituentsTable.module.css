@@ -22,12 +22,11 @@
 .toggle button {
   appearance: none;
   font-size: 13px;
+  font-family: inherit;
   padding: 8px 14px;
   border: none;
   background: transparent;
   color: var(--text-secondary, #9aa8a6);
-  font: inherit;
-  font-weight: 500;
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.15s ease, color 0.15s ease;

@@ -22,13 +22,31 @@ import {
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
-import { rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
+import {
+  chartCustomPeriodsFromManifest,
+  chartPerformancesForPeriodSupport,
+  chartPeriodWindowLabel,
+  computeOverlaySupportedCustomPeriodKeys,
+  computeOverlaySupportedPeriods,
+  referenceLastIsoFromPerformances,
+  sliceBenchmarkForPeriod,
+  sliceThemeChart1yForPeriod,
+  type OverlayChartPeriod,
+  type OverlayStandardPeriod,
+} from "@/lib/chartPeriodControls";
+import { OVERLAY_STANDARD_PERIODS, rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { publicAssetPath } from "@/lib/siteUrl";
 import { TickerBadge } from "@/components/TickerBadge";
+import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import styles from "./Chart1yPanel.module.css";
+
+function isStandardPeriod(p: OverlayChartPeriod): p is OverlayStandardPeriod {
+  return (OVERLAY_STANDARD_PERIODS as readonly string[]).includes(p);
+}
 
 function escapeHtml(s: string): string {
   return s
@@ -567,8 +585,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       }
       chartRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp come from chart1y
-  }, [chart1y, activeView, lineApisRef]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp/benchmark are sliced upstream
+  }, [chart1y, benchmarkPerformance, activeView, lineApisRef]);
 
   return (
     <div style={{ position: "relative" }}>
@@ -639,6 +657,11 @@ export type Chart1yLightweightProps = {
    * Group ticker-preview column is unchanged when present.
    */
   compositionLegendShowMcap?: boolean;
+  /**
+   * Manifest custom event dates (IranWar, LibDay, …). When set, shows period controls
+   * and defaults the chart to 1Y instead of the full embedded history window.
+   */
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
 function formatMarketCap(v: number | undefined): string {
@@ -660,7 +683,20 @@ export function Chart1yLightweight({
   performanceTitle,
   compositionLegendShowSeriesBadge = true,
   compositionLegendShowMcap = true,
+  selectedDates,
 }: Chart1yLightweightProps) {
+  const showPeriodControls = selectedDates !== undefined;
+  const customPeriods = useMemo(
+    () => (showPeriodControls ? chartCustomPeriodsFromManifest(selectedDates) : []),
+    [showPeriodControls, selectedDates],
+  );
+  const customAnchorByKey = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const c of customPeriods) m.set(c.key, c.date);
+    return m;
+  }, [customPeriods]);
+
+  const [period, setPeriod] = useState<OverlayChartPeriod>("1Y");
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -692,6 +728,77 @@ export function Chart1yLightweight({
     if (perf === p) return base;
     return { ...base, performance: perf };
   }, [chart1ySorted, performanceTitle]);
+
+  const referenceLastIso = useMemo(
+    () =>
+      referenceLastIsoFromPerformances([
+        chart1yForRender?.performance,
+        benchmarkPerformance,
+      ]),
+    [chart1yForRender?.performance, benchmarkPerformance],
+  );
+
+  const performancesForSupport = useMemo(
+    () => chartPerformancesForPeriodSupport(chart1yForRender, benchmarkPerformance),
+    [chart1yForRender, benchmarkPerformance],
+  );
+
+  const supportedPeriods = useMemo(
+    () => computeOverlaySupportedPeriods(referenceLastIso, performancesForSupport),
+    [referenceLastIso, performancesForSupport],
+  );
+
+  const supportedCustomPeriodKeys = useMemo(
+    () =>
+      showPeriodControls
+        ? computeOverlaySupportedCustomPeriodKeys(
+            performancesForSupport,
+            customPeriods.map((c) => ({ key: c.key, date: c.date })),
+          )
+        : new Set<string>(),
+    [showPeriodControls, performancesForSupport, customPeriods],
+  );
+
+  useEffect(() => {
+    if (!showPeriodControls) return;
+    if (isStandardPeriod(period) && !supportedPeriods.has(period)) {
+      setPeriod("1Y");
+    } else if (
+      !isStandardPeriod(period) &&
+      customPeriods.some((c) => c.key === period) &&
+      !supportedCustomPeriodKeys.has(period)
+    ) {
+      setPeriod("1Y");
+    }
+  }, [showPeriodControls, period, supportedPeriods, supportedCustomPeriodKeys, customPeriods]);
+
+  const customAnchorIso = isStandardPeriod(period)
+    ? undefined
+    : customAnchorByKey.get(period);
+
+  const chart1yForCanvas = useMemo(() => {
+    if (!showPeriodControls || !chart1yForRender) return chart1yForRender;
+    return sliceThemeChart1yForPeriod(
+      chart1yForRender,
+      period,
+      customAnchorIso,
+      referenceLastIso,
+    );
+  }, [showPeriodControls, chart1yForRender, period, customAnchorIso, referenceLastIso]);
+
+  const benchmarkForCanvas = useMemo(() => {
+    if (!showPeriodControls) return benchmarkPerformance;
+    return sliceBenchmarkForPeriod(
+      benchmarkPerformance,
+      period,
+      customAnchorIso,
+      referenceLastIso,
+    );
+  }, [showPeriodControls, benchmarkPerformance, period, customAnchorIso, referenceLastIso]);
+
+  const periodWindowLabel = showPeriodControls
+    ? chartPeriodWindowLabel(period, customPeriods)
+    : "the Past Year";
 
   const [view, setView] = useState<"performance" | "composition">(
     () => (hasPerf ? "performance" : "composition"),
@@ -737,42 +844,58 @@ export function Chart1yLightweight({
   }
   const themeLabel = performanceTitle?.trim() || "Theme";
   return (
-    <section className={styles.section} aria-label="About one year chart">
+    <section className={styles.section} aria-label="Theme performance chart">
       <div className={styles.toolbar}>
         <span className={styles.toolbarLabel}>
           {activeView === "composition" ? (
             <>
-              <span className={styles.themeTitleAccent}>{themeLabel}</span> Constituents Over the Past Year
+              <span className={styles.themeTitleAccent}>{themeLabel}</span> Constituents Over{" "}
+              {periodWindowLabel}
             </>
           ) : (
             <>
               <span className={styles.themeTitleAccent}>{themeLabel} Index</span>
-              <span className={styles.benchmarkTitle}> vs. S&P 500 Index Over the Past Year</span>
+              <span className={styles.benchmarkTitle}>
+                {" "}
+                vs. S&P 500 Index Over {periodWindowLabel}
+              </span>
             </>
           )}
         </span>
-        {hasPerf && hasComp ? (
-          <div className={styles.toggle} role="group" aria-label="Chart type">
-            <button
-              type="button"
-              className={activeView === "performance" ? styles.active : undefined}
-              onClick={() => setView("performance")}
-            >
-              Performance
-            </button>
-            <button
-              type="button"
-              className={activeView === "composition" ? styles.active : undefined}
-              onClick={() => setView("composition")}
-            >
-              Composition (line)
-            </button>
-          </div>
-        ) : null}
+        <div className={styles.toolbarControls}>
+          {showPeriodControls ? (
+            <ChartPeriodToolbar
+              period={period}
+              onPeriodChange={setPeriod}
+              supportedPeriods={supportedPeriods}
+              supportedCustomPeriodKeys={supportedCustomPeriodKeys}
+              customPeriods={customPeriods}
+              variant="detail"
+            />
+          ) : null}
+          {hasPerf && hasComp ? (
+            <div className={styles.toggle} role="group" aria-label="Chart type">
+              <button
+                type="button"
+                className={activeView === "performance" ? styles.active : undefined}
+                onClick={() => setView("performance")}
+              >
+                Performance
+              </button>
+              <button
+                type="button"
+                className={activeView === "composition" ? styles.active : undefined}
+                onClick={() => setView("composition")}
+              >
+                Composition (line)
+              </button>
+            </div>
+          ) : null}
+        </div>
       </div>
       <Chart1yCanvas
-        chart1y={chart1yForRender}
-        benchmarkPerformance={benchmarkPerformance}
+        chart1y={chart1yForCanvas}
+        benchmarkPerformance={benchmarkForCanvas}
         activeView={activeView}
         lineApisRef={lineApisRef}
         compositionMetaRef={compositionMetaRef}

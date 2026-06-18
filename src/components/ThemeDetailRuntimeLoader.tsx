@@ -12,6 +12,7 @@ import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import {
   stockthemesBrowserCacheBusterQuery,
@@ -34,6 +35,7 @@ type Props = {
   slug: string;
   dataBaseUrl: string;
   benchmarkPerformance?: ChartPerformanceV0;
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
 function parseDetail(raw: string): ThemeDetailV0 {
@@ -51,7 +53,12 @@ function parseDetail(raw: string): ThemeDetailV0 {
  * When static export had no theme JSON at build time, try fetching the same URL in the
  * browser (needs GCS CORS for this origin). Fills charts + constituents when the object exists.
  */
-export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerformance }: Props) {
+export function ThemeDetailRuntimeLoader({
+  slug,
+  dataBaseUrl,
+  benchmarkPerformance,
+  selectedDates,
+}: Props) {
   const [state, setState] = useState<
     | { status: "loading" }
     | { status: "error"; message: string }
@@ -141,6 +148,7 @@ export function ThemeDetailRuntimeLoader({ slug, dataBaseUrl, benchmarkPerforman
           compositionMetaByTicker={compositionMetaByTicker}
           performanceTitle={detail.name}
           benchmarkPerformance={benchmarkPerformance}
+          selectedDates={selectedDates}
         />
       </div>
       {detail.constituents?.length ? (

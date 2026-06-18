@@ -254,6 +254,7 @@ export default async function ThemeDetailPage({ params }: Props) {
               slug={slug}
               dataBaseUrl={dataBaseUrl}
               benchmarkPerformance={spyPerf?.benchmarkPerformance}
+              selectedDates={selectedDates}
             />
           ) : null}
           {detail && dataBaseUrl ? (
@@ -268,6 +269,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   compositionMetaByTicker={compositionMetaByTicker}
                   performanceTitle={theme.name}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                  selectedDates={selectedDates}
                 />
               </div>
             </DeferRender>
@@ -280,6 +282,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   compositionMetaByTicker={compositionMetaByTicker}
                   performanceTitle={theme.name}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
+                  selectedDates={selectedDates}
                 />
               </div>
             </DeferRender>

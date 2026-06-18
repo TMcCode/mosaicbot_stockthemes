@@ -6,6 +6,7 @@ import { Chart1yLightweight } from "@/components/Chart1yLightweight";
 import { chart1yHasRenderableSeries } from "@/lib/chart1yRenderable";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompositionMeta } from "@/lib/constituentMeta";
+import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 export type Chart1yPanelProps = {
   chart1y: ThemeChart1yV0 | undefined;
@@ -20,6 +21,8 @@ export type Chart1yPanelProps = {
   compositionLegendShowMcap?: boolean;
   /** Optional benchmark overlay for performance view (e.g., S&P 500). */
   benchmarkPerformance?: ChartPerformanceV0;
+  /** When set (even `[]`), enables in-chart period controls without extra network requests. */
+  selectedDates?: ManifestSelectedDateV0[];
 };
 
 /**
@@ -32,6 +35,7 @@ function Chart1yPanelInner({
   compositionLegendShowSeriesBadge = true,
   compositionLegendShowMcap = true,
   benchmarkPerformance,
+  selectedDates,
 }: Chart1yPanelProps) {
   if (!chart1yHasRenderableSeries(chart1y)) {
     return null;
@@ -44,6 +48,7 @@ function Chart1yPanelInner({
       compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
       compositionLegendShowMcap={compositionLegendShowMcap}
       benchmarkPerformance={benchmarkPerformance}
+      selectedDates={selectedDates}
     />
   );
 }
