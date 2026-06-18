@@ -19,6 +19,8 @@ import {
 } from "@/lib/buildRotationMapData";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
 import {
+  formatRotationAxisTick,
+  rotationAxisTicks,
   rotationLongAxisLabel,
   rotationShortAxisLabel,
 } from "@/lib/rotationAxis";
@@ -32,7 +34,7 @@ import { formatReturnPct } from "@/lib/treemapLayout";
 
 import styles from "./RotationMapClient.module.css";
 
-const PLOT = { left: 48, top: 28, right: 20, bottom: 48 };
+const PLOT = { left: 54, top: 28, right: 20, bottom: 48 };
 const SVG_W = 920;
 const SVG_H = 600;
 
@@ -46,12 +48,6 @@ type HoverState = {
   sy: number;
   offScale: boolean;
 } | null;
-
-function formatAxisTick(v: number): string {
-  if (!Number.isFinite(v)) return "";
-  const sign = v > 0 ? "+" : "";
-  return `${sign}${v.toFixed(1)}%`;
-}
 
 function weightRangeFromPoints(points: RotationMapPoint[]): { min: number; max: number } {
   if (points.length === 0) return { min: 1, max: 1 };
@@ -112,7 +108,7 @@ function renderPlotPoint({
   const r = isTheme ? Math.max(6, Math.min(11, baseR * 0.72)) : baseR;
   const fill = rotationSectorColor(point.sector, sectorColorMap);
   const opacity = dimmed ? 0.28 : display.offScale ? 0.78 : isTheme ? 1 : 0.88;
-  const showLabel = hoverSlug === point.slug || (isTheme && alwaysShowLabel);
+  const showLabel = isTheme && alwaysShowLabel && hoverSlug !== point.slug;
   const displayLabel =
     labelText ??
     (point.name.length > 26 ? `${point.name.slice(0, 24)}…` : point.name);
@@ -123,7 +119,10 @@ function renderPlotPoint({
       className={isTheme ? styles.pointTheme : styles.pointGroup}
       onMouseEnter={() => onHover({ point, sx: cx, sy: cy, offScale: display.offScale })}
       onMouseLeave={() => onLeave(point.slug)}
-      onClick={() => onClick(point)}
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick(point);
+      }}
       style={{ cursor: "pointer" }}
     >
       {isTheme ? (
@@ -295,27 +294,18 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
   const longLabel = rotationLongAxisLabel(mapData.longAxis);
   const shortLabel = rotationShortAxisLabel();
 
-  const xTicks = useMemo(() => {
-    const span = bounds.xMax - bounds.xMin;
-    const step = span <= 12 ? 2 : span <= 24 ? 4 : 5;
-    const ticks: number[] = [];
-    const start = Math.ceil(bounds.xMin / step) * step;
-    for (let v = start; v <= bounds.xMax + 0.01; v += step) {
-      ticks.push(Math.round(v * 10) / 10);
-    }
-    return ticks;
-  }, [bounds]);
+  const xSpan = bounds.xMax - bounds.xMin;
+  const ySpan = bounds.yMax - bounds.yMin;
 
-  const yTicks = useMemo(() => {
-    const span = bounds.yMax - bounds.yMin;
-    const step = span <= 12 ? 2 : span <= 24 ? 4 : 5;
-    const ticks: number[] = [];
-    const start = Math.ceil(bounds.yMin / step) * step;
-    for (let v = start; v <= bounds.yMax + 0.01; v += step) {
-      ticks.push(Math.round(v * 10) / 10);
-    }
-    return ticks;
-  }, [bounds]);
+  const xTicks = useMemo(
+    () => rotationAxisTicks(bounds.xMin, bounds.xMax),
+    [bounds.xMin, bounds.xMax],
+  );
+
+  const yTicks = useMemo(
+    () => rotationAxisTicks(bounds.yMin, bounds.yMax),
+    [bounds.yMin, bounds.yMax],
+  );
 
   function expandGroup(slug: string) {
     setExpandedGroupSlug(slug);
@@ -349,26 +339,35 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
 
   return (
     <div className={styles.wrap}>
-      <header className={styles.header}>
-        <p className={pageStyles.eyebrow}>{eyebrow}</p>
-        <h1 className={styles.title}>Theme rotation map</h1>
-        <p className={styles.lead}>
-          Groups positioned by short-term vs longer-term performance relative to the S&amp;P 500.
-          Click a group to zoom the chart and show its themes.
-        </p>
-        {asOfLabel ? <p className={styles.asOf}>Data as of {asOfLabel}</p> : null}
-        {groupPoints.length >= 10 && !isFocused ? (
-          <p className={styles.scaleNote}>
-            Overview shows the central bulk of groups. Groups outside this range are listed below —
-            click one to zoom to its true position.
+      <div className={pageStyles.heroGrid}>
+        <div className={pageStyles.heroMain}>
+          <p className={pageStyles.eyebrow}>{eyebrow}</p>
+          <h1>Theme rotation map</h1>
+          <p className={pageStyles.introLead}>
+            Groups positioned by short-term vs longer-term performance relative to the S&amp;P 500.
+            Click a group to zoom the chart and show its themes.
           </p>
-        ) : null}
-        {isFocused && expandedGroup ? (
-          <p className={styles.scaleNote}>
-            Zoomed to <strong>{expandedGroup.name}</strong> — collapse to return to the full map.
-          </p>
-        ) : null}
-      </header>
+          {asOfLabel ? (
+            <p className={styles.statsLine}>
+              {groupPoints.length} groups · Data as of {asOfLabel}
+            </p>
+          ) : (
+            <p className={styles.statsLine}>{groupPoints.length} groups</p>
+          )}
+          {groupPoints.length >= 10 && !isFocused ? (
+            <p className={styles.scaleNote}>
+              Overview shows the central bulk of groups. Groups outside this range are listed below —
+              click one to zoom to its true position.
+            </p>
+          ) : null}
+          {isFocused && expandedGroup ? (
+            <p className={styles.scaleNote}>
+              Zoomed to <strong>{expandedGroup.name}</strong> — click anywhere on the chart or
+              Collapse to return to the full map.
+            </p>
+          ) : null}
+        </div>
+      </div>
 
       <div className={styles.toolbar}>
         <div className={styles.breadcrumb}>
@@ -440,10 +439,17 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
 
       <div className={styles.chartShell}>
         <svg
-          className={styles.chart}
+          className={isFocused ? `${styles.chart} ${styles.chartExpanded}` : styles.chart}
           viewBox={`0 0 ${SVG_W} ${SVG_H}`}
           role="img"
-          aria-label="Group rotation map relative to SPY"
+          aria-label={
+            isFocused
+              ? "Group rotation map — click empty chart area to collapse"
+              : "Group rotation map relative to SPY"
+          }
+          onClick={() => {
+            if (isFocused) collapseGroup();
+          }}
         >
           <rect
             x={PLOT.left}
@@ -569,7 +575,7 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
               textAnchor="middle"
               className={styles.tickLabel}
             >
-              {formatAxisTick(v)}
+              {formatRotationAxisTick(v, xSpan)}
             </text>
           ))}
           <text
@@ -585,18 +591,18 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
           {yTicks.map((v) => (
             <text
               key={`ty-${v}`}
-              x={PLOT.left - 10}
-              y={toSvgY(v) + 4}
+              x={PLOT.left - 8}
+              y={toSvgY(v) + 3}
               textAnchor="end"
               className={styles.tickLabel}
             >
-              {formatAxisTick(v)}
+              {formatRotationAxisTick(v, ySpan)}
             </text>
           ))}
           <text
-            transform={`translate(14, ${PLOT.top + plotH / 2}) rotate(-90)`}
+            transform={`translate(6, ${PLOT.top + plotH / 2}) rotate(-90)`}
             textAnchor="middle"
-            className={styles.axisTitle}
+            className={styles.axisTitleY}
           >
             {longLabel}
           </text>
@@ -610,23 +616,23 @@ function RotationMapChart({ eyebrow, asOf, mapData }: ChartProps) {
               top: `${(hover.sy / SVG_H) * 100}%`,
             }}
           >
-            <p className={styles.tooltipTitle}>{hover.point.name}</p>
-            <p className={styles.tooltipMeta}>{hover.point.sector}</p>
-            <p className={styles.tooltipRow}>
+            <div className={styles.tooltipTitle}>{hover.point.name}</div>
+            <div className={styles.tooltipMeta}>{hover.point.sector}</div>
+            <div className={styles.tooltipRow}>
               <span>{shortLabel}</span>
               <strong>{formatReturnPct(hover.point.x)}</strong>
-            </p>
-            <p className={styles.tooltipRow}>
+            </div>
+            <div className={styles.tooltipRow}>
               <span>{longLabel}</span>
               <strong>{formatReturnPct(hover.point.y)}</strong>
-            </p>
+            </div>
             {hover.point.kind === "group" && hover.point.themeCount != null ? (
-              <p className={styles.tooltipHint}>
+              <div className={styles.tooltipHint}>
                 Click to {expandedGroupSlug === hover.point.slug ? "collapse" : "zoom in & expand"}{" "}
                 {hover.point.themeCount} themes
-              </p>
+              </div>
             ) : (
-              <p className={styles.tooltipHint}>Click to open theme</p>
+              <div className={styles.tooltipHint}>Click to open theme</div>
             )}
           </div>
         ) : null}

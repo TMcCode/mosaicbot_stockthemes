@@ -17,7 +17,9 @@ export default function RotationPage() {
   return (
     <PageSurface>
       <main className={styles.main}>
-        <RotationMapGate eyebrow="Theme rotation map" />
+        <div className={styles.intro}>
+          <RotationMapGate eyebrow="Theme rotation map" />
+        </div>
       </main>
     </PageSurface>
   );
