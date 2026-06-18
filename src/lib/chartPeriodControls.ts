@@ -8,13 +8,13 @@ import {
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
-/** Theme/group detail charts: omit 5Y to keep the toolbar compact. */
 export const DETAIL_CHART_STANDARD_PERIODS: OverlayStandardPeriod[] = [
   "1W",
   "1M",
   "YTD",
   "1Y",
   "2Y",
+  "5Y",
 ];
 
 export function normalizeChartEventKey(raw: string): string {
@@ -62,6 +62,7 @@ export function chartPeriodWindowLabel(
   if (period === "YTD") return "Year to Date";
   if (period === "1Y") return "the Past Year";
   if (period === "2Y") return "the Past 2 Years";
+  if (period === "5Y") return "the Past 5 Years";
   const custom = customPeriods.find((c) => c.key === period);
   if (custom) return `Since ${custom.label}`;
   return "the Selected Period";
@@ -118,14 +119,21 @@ export function sliceBenchmarkForPeriod(
   );
 }
 
-export function chartPerformancesForPeriodSupport(
+/**
+ * Which series gate period-button enablement on theme/group detail charts.
+ * SPY benchmark is aligned to the visible window in the canvas and must not
+ * disable 2Y/5Y/custom dates when the theme line has full history.
+ */
+export function chartPerformancesForDetailPeriodSupport(
   chart1y: ThemeChart1yV0 | undefined,
-  benchmark: ChartPerformanceV0 | undefined,
+  activeView: "performance" | "composition",
 ): ChartPerformanceV0[] {
   const out: ChartPerformanceV0[] = [];
-  const perf = chart1y?.performance;
-  if (perf?.dates?.length) out.push(perf);
-  if (benchmark?.dates?.length) out.push(benchmark);
+  if (activeView === "performance") {
+    const perf = chart1y?.performance;
+    if (perf?.dates?.length) out.push(perf);
+    return out;
+  }
   const comp = chart1y?.composition_indexed?.series;
   if (comp?.length) {
     for (const s of comp) {

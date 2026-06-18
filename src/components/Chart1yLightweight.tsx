@@ -24,7 +24,7 @@ import type { CompositionMeta } from "@/lib/constituentMeta";
 import { sortCompositionSeriesByMarketCapDesc } from "@/lib/constituentMeta";
 import {
   chartCustomPeriodsFromManifest,
-  chartPerformancesForPeriodSupport,
+  chartPerformancesForDetailPeriodSupport,
   chartPeriodWindowLabel,
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
@@ -704,6 +704,10 @@ export function Chart1yLightweight({
     comp?.series?.some((s) => s.dates?.length && s.values?.length),
   );
 
+  const [view, setView] = useState<"performance" | "composition">(
+    () => (hasPerf ? "performance" : "composition"),
+  );
+
   const chart1ySorted = useMemo(() => {
     if (!chart1y) return chart1y;
     const c = chart1y.composition_indexed;
@@ -738,9 +742,18 @@ export function Chart1yLightweight({
     [chart1yForRender?.performance, benchmarkPerformance],
   );
 
+  const activeView: "performance" | "composition" =
+    view === "composition" && hasComp
+      ? "composition"
+      : hasPerf
+        ? "performance"
+        : hasComp
+          ? "composition"
+          : "performance";
+
   const performancesForSupport = useMemo(
-    () => chartPerformancesForPeriodSupport(chart1yForRender, benchmarkPerformance),
-    [chart1yForRender, benchmarkPerformance],
+    () => chartPerformancesForDetailPeriodSupport(chart1yForRender, activeView),
+    [chart1yForRender, activeView],
   );
 
   const supportedPeriods = useMemo(
@@ -799,19 +812,6 @@ export function Chart1yLightweight({
   const periodWindowLabel = showPeriodControls
     ? chartPeriodWindowLabel(period, customPeriods)
     : "the Past Year";
-
-  const [view, setView] = useState<"performance" | "composition">(
-    () => (hasPerf ? "performance" : "composition"),
-  );
-
-  const activeView: "performance" | "composition" =
-    view === "composition" && hasComp
-      ? "composition"
-      : hasPerf
-        ? "performance"
-        : hasComp
-          ? "composition"
-          : "performance";
 
   const lineApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
   const compositionMetaRef = useRef(compositionMetaByTicker);
