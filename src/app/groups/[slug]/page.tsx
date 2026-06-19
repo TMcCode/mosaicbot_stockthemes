@@ -3,12 +3,12 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
-import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { GroupHeroMeta } from "@/components/GroupHeroMeta";
+import { GroupHeroSummary } from "@/components/GroupHeroSummary";
 import { GroupThemesTableLive } from "@/components/GroupThemesTableLive";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import styles from "../../page.module.css";
@@ -138,6 +138,7 @@ export default async function GroupDetailPage({ params }: Props) {
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const groupTreemapNodes = buildGroupThemeTreemapNodes(detail?.theme_treemap);
   const groupChartMetaBySlug = buildGroupThemeChartMetaMap(tableRows);
+  const topTickersYtd = detail?.top_tickers_ytd ?? [];
   const spyPerf = await getSpyMarketPerfCached();
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const groupUrl = absoluteUrl(`/groups/${slug}`);
@@ -179,7 +180,7 @@ export default async function GroupDetailPage({ params }: Props) {
       <main className={styles.main}>
         <div className={styles.intro}>
           <div
-            className={`${styles.heroGrid} ${groupTreemapNodes.length ? styles.heroGridThemeDetail : ""}`}
+            className={`${styles.heroGrid} ${groupTreemapNodes.length ? `${styles.heroGridThemeDetail} ${styles.heroGridGroupDetail}` : ""}`}
           >
             <div className={styles.heroMain}>
               <p className={styles.eyebrow}>
@@ -192,6 +193,18 @@ export default async function GroupDetailPage({ params }: Props) {
                 rank10d={rank10d}
               />
               {!detail ? <StockthemesDetailUnavailable kind="group" slug={slug} /> : null}
+              {detail ? (
+                <div
+                  className={groupTreemapNodes.length ? styles.heroSummarySlot : undefined}
+                >
+                  <GroupHeroSummary
+                    intro={detail.seo_intro}
+                    topTickers={topTickersYtd}
+                    groupSlug={slug}
+                    fillRail={groupTreemapNodes.length > 0}
+                  />
+                </div>
+              ) : null}
               <AdPlacement
                 placement="groupRail"
                 className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
@@ -270,11 +283,6 @@ export default async function GroupDetailPage({ params }: Props) {
               serverCompareBundle={compareRes?.bundle ?? null}
             />
           </section>
-          <DetailAboutIntro
-            heading="About this group"
-            headingId="about-group-heading"
-            intro={detail?.seo_intro}
-          />
           <p>
             <Link href="/groups" style={{ fontWeight: 500 }}>
               ← All groups

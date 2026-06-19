@@ -123,6 +123,15 @@
   max-width: 720px;
 }
 
+.heroGridGroupDetail .heroSummarySlot {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+
 .themeHeroRail .groupsAdCompact {
   width: 100%;
   max-width: 100%;
@@ -897,18 +906,15 @@ a.feedTitle:hover {
   max-width: 280px;
 }
 
-/* Returns view: a bit more room for long names; Earnings view: fill leftover width in company column */
-.constituentsScrollWrap[data-constituents-view="returns"] .dataTable th:first-child,
-.constituentsScrollWrap[data-constituents-view="returns"] .dataTable td:first-child {
-  min-width: 200px;
-  max-width: 340px;
-}
-
+/* Period Returns & Earnings: fill leftover width in company column */
+.constituentsScrollWrap[data-constituents-view="returns"] .constituentsTableSizer .dataTable,
 .constituentsScrollWrap[data-constituents-view="earnings"] .constituentsTableSizer .dataTable {
   width: 100%;
   table-layout: auto;
 }
 
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable td:first-child,
 .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable th:first-child,
 .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable td:first-child {
   min-width: min(320px, 42vw);
@@ -916,6 +922,7 @@ a.feedTitle:hover {
   width: 48%;
 }
 
+.constituentsScrollWrap[data-constituents-view="returns"] .companyCell,
 .constituentsScrollWrap[data-constituents-view="earnings"] .companyCell {
   gap: 14px;
 }

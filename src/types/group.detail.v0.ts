@@ -17,6 +17,15 @@ export type GroupDetailThemeTreemapV0 = {
   themes: GroupDetailThemeTreemapThemeV0[];
 };
 
+/** Top constituent YTD movers across child themes (group hero summary). */
+export type GroupTopTickerYtdV0 = {
+  ticker: string;
+  name?: string;
+  ytd_pct: number;
+  theme_slug: string;
+  theme_name: string;
+};
+
 /**
  * Mirrors docs/stockthemes/schemas/group.detail.v0.schema.json in MosaicBot.
  */
@@ -47,6 +56,8 @@ export type GroupDetailV0 = {
   theme_slugs?: string[];
   seo_intro?: string;
   themes: GroupDetailChildThemeV0[];
+  /** Top 3 constituent YTD returns across child themes (ETL). */
+  top_tickers_ytd?: GroupTopTickerYtdV0[];
   /** Group aggregate line + optional per-theme lines (`composition_indexed`, 2+ child themes). */
   chart_1y?: ThemeChart1yV0;
   /** Equal-weight theme market map (manual-weight compare_returns per theme). */

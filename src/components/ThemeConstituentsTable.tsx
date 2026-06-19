@@ -125,7 +125,7 @@ export function ThemeConstituentsTable({
   return (
     <section className={styles.section} aria-labelledby="constituents-heading">
       <div className={tableStyles.sectionHeader}>
-        <h2 id="constituents-heading">Constituents</h2>
+        <h2 id="constituents-heading">{detail.name} Constituents</h2>
         <div className={tableStyles.toggle} role="group" aria-label="Constituents table columns">
           <button
             type="button"
@@ -147,12 +147,6 @@ export function ThemeConstituentsTable({
           </button>
         </div>
       </div>
-      {detail.build_id ? (
-        <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-          Build <code className={styles.code}>{detail.build_id}</code>
-        </p>
-      ) : null}
-      <p className={styles.tableScrollHint}>Scroll or drag sideways to view all columns.</p>
       <div className={styles.tableWrap}>
         <div className={styles.tableWatermark} aria-hidden="true">
           <img

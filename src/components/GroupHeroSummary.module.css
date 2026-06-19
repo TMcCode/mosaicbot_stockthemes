@@ -1,0 +1,145 @@
+.heroWrap {
+  width: 100%;
+  max-width: 720px;
+  margin-top: 4px;
+}
+
+.heroFillRail {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  max-width: 720px;
+}
+
+.heroFillRail .panel {
+  flex: 1 1 auto;
+}
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 14px 16px;
+}
+
+.intro {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+.tickersBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sectionLabel {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+.tickerList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tickerRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.tickerRow:hover .tickerTheme,
+.tickerRow:hover .tickerSymbol {
+  color: var(--accent);
+}
+
+.tickerTheme {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.tickerSep {
+  color: var(--text-muted);
+  user-select: none;
+}
+
+.tickerSymbol {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.tickerReturn {
+  margin-left: auto;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.returnUp {
+  color: #0d9668;
+}
+
+.returnDown {
+  color: #c53030;
+}
+
+.returnFlat {
+  color: var(--text-secondary);
+}
+
+.quickLinks {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin-top: auto;
+  padding-top: 2px;
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.quickLinks a {
+  font-weight: 600;
+  color: var(--text-primary);
+  text-decoration: none;
+}
+
+.quickLinks a:hover {
+  color: var(--accent);
+}
+
+:global(.st-theme[data-theme="light"]) .panel {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .returnUp {
+  color: #047857;
+}
+
+:global(.st-theme[data-theme="light"]) .returnDown {
+  color: #b91c1c;
+}
