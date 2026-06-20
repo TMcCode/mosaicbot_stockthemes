@@ -736,18 +736,35 @@ export function Chart1yLightweight({
   /** Short themes: same display inversion as /factors compare (CDN vs dev disk cache can differ). */
   const chart1yForRender = useMemo(() => {
     const base = chart1ySorted;
-    const p = base?.performance;
-    if (!base || !p?.values?.length) return base;
+    if (!base) return base;
+
+    let next = base;
+    const comp = base.composition_indexed;
+    if (comp?.series?.length) {
+      let compChanged = false;
+      const series = comp.series.map((s) => {
+        if (!s.dates?.length || !s.values?.length) return s;
+        const sanitized =
+          sanitizeChartPerformanceForDisplay({ dates: s.dates, values: s.values }) ??
+          ({ dates: s.dates, values: s.values } satisfies ChartPerformanceV0);
+        if (sanitized.dates === s.dates && sanitized.values === s.values) return s;
+        compChanged = true;
+        return { ...s, dates: sanitized.dates, values: sanitized.values };
+      });
+      if (compChanged) {
+        next = { ...next, composition_indexed: { ...comp, series } };
+      }
+    }
+
+    const p = next.performance;
+    if (!p?.values?.length) return next === base ? base : next;
     const sanitized = sanitizeChartPerformanceForDisplay(p) ?? p;
     const title = performanceTitle?.trim() ?? "";
     const values = applyShortThemePerformanceDisplay(title, sanitized.values, sanitized);
-    if (values === sanitized.values && sanitized === p) return base;
     const perf =
-      values === sanitized.values
-        ? sanitized
-        : { ...sanitized, values };
-    if (perf === p) return base;
-    return { ...base, performance: perf };
+      values === sanitized.values ? sanitized : { ...sanitized, values };
+    if (perf === p && next === base) return base;
+    return { ...next, performance: perf };
   }, [chart1ySorted, performanceTitle]);
 
   useEffect(() => {

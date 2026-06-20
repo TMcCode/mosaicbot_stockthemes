@@ -148,14 +148,6 @@ export function ThemeConstituentsTable({
         </div>
       </div>
       <div className={styles.tableWrap}>
-        <div className={styles.tableWatermark} aria-hidden="true">
-          <img
-            src={publicAssetPath("/brand/logo-full-transparent.png")}
-            alt=""
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
           data-constituents-view={view}
@@ -490,12 +482,22 @@ export function ThemeConstituentsTable({
             </table>
           </div>
         </HorizontalScrollArea>
-        {showEarnings ? (
-          <p style={{ fontSize: 12, color: "var(--text-secondary)", marginTop: 8, padding: "0 10px 10px" }}>
-            * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
-            EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
-          </p>
-        ) : null}
+        <div className={styles.tableFooter}>
+          {showEarnings ? (
+            <p className={styles.tableFootnote}>
+              * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
+              EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
+            </p>
+          ) : null}
+          <div className={styles.tableWatermark} aria-hidden="true">
+            <img
+              src={publicAssetPath("/brand/logo-full-transparent.png")}
+              alt=""
+              loading="lazy"
+              decoding="async"
+            />
+          </div>
+        </div>
       </div>
     </section>
   );

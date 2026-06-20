@@ -864,11 +864,23 @@ a.feedTitle:hover {
   cursor: grabbing;
 }
 
+.tableFooter {
+  border-top: 1px solid var(--button-secondary-border);
+  padding: 10px 12px 12px;
+}
+
+.tableFootnote {
+  margin: 0 0 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
 .tableWatermark {
-  position: absolute;
-  right: 8px;
-  bottom: -58px;
-  z-index: 0;
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0;
+  padding: 0;
   opacity: 0.98;
   pointer-events: none;
 }

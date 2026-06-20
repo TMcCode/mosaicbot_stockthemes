@@ -24,6 +24,7 @@ export function isSuspiciousChartPerformanceCliff(
   if (baseVals.length >= 1) {
     const baseLast = baseVals[baseVals.length - 1];
     if (Number.isFinite(baseLast) && baseLast > 10 && last < baseLast * 0.2) return true;
+    if (Number.isFinite(baseLast) && baseLast > 30 && last > baseLast * 2.5) return true;
   }
   return false;
 }
@@ -37,6 +38,8 @@ export function isSuspiciousChartPerformanceSpike(perf: ChartPerformanceV0): boo
   if (!Number.isFinite(last) || !Number.isFinite(prev)) return true;
   if (Math.abs(last) > MAX_INDEXED_LEVEL) return true;
   if (Math.abs(prev) > 1e-6 && Math.abs(last) > Math.abs(prev) * MAX_DAILY_RATIO) return true;
+  // Bad slim/matrix tail: e.g. 117 → 396 in one day on an indexed theme line.
+  if (prev > 30 && last > prev * 2.5) return true;
   return false;
 }
 

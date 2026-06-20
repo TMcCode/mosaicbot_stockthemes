@@ -188,12 +188,17 @@ export function ThemeChartLiveHydrate({
       chartHasRenderableData(serverChartWithComposition) && !hasComposition(serverChartWithComposition);
     const refreshLiveInDev =
       process.env.NODE_ENV === "development" && !stockthemesLiveHydrationDisabled();
+    const refreshGroupChartFromCdn =
+      chartJsonFolder === "groups" &&
+      chartHasRenderableData(serverChartWithComposition) &&
+      stockthemesLiveChartPerformanceEnabled() &&
+      !stockthemesLiveHydrationDisabled();
 
     if (stockthemesLiveHydrationDisabled()) {
       return;
     }
 
-    if (!needFullChart && !needCompositionOnly && !refreshLiveInDev) {
+    if (!needFullChart && !needCompositionOnly && !refreshLiveInDev && !refreshGroupChartFromCdn) {
       return;
     }
 
@@ -211,7 +216,7 @@ export function ThemeChartLiveHydrate({
         if (cancelled) return;
         const live = data.chart_1y;
 
-        if (refreshLiveInDev) {
+        if (refreshLiveInDev || refreshGroupChartFromCdn) {
           if (chartHasRenderableData(live)) {
             setFetched(live);
           }
@@ -258,6 +263,14 @@ export function ThemeChartLiveHydrate({
         .then((sidecar) => {
           if (cancelled || !sidecar?.performance?.dates?.length) return;
           const baseline = serverChartWithComposition?.performance;
+          const sidecarSource = String(sidecar.performance.source ?? "");
+          const baselineSource = String(baseline?.source ?? "");
+          if (
+            sidecarSource.includes("historical_market_cap") &&
+            baselineSource.includes("theme_chart")
+          ) {
+            return;
+          }
           if (isSuspiciousChartPerformanceCliff(sidecar.performance, baseline)) return;
           setLivePerformance(sidecar.performance);
         })
