@@ -196,7 +196,7 @@ export default async function Home() {
               </p>
               <HomeHeroGuide />
               <p className={styles.introMore}>
-                <Link href="#newsletter-signup">Get the Den of Themes newsletter</Link>
+                <Link href="#newsletter-signup">Get the Field of Themes newsletter</Link>
                 <span className={styles.introMoreSep} aria-hidden="true">
                   {" · "}
                 </span>

@@ -69,7 +69,7 @@ export default async function AboutPage() {
             {introParagraphs.map((p, i) => renderIntroParagraph(p, i))}
             <p className={styles.introCopy}>{ABOUT_FOUNDER_FEEDBACK}</p>
             <p className={styles.introCopy}>
-              Join the Den of Themes newsletter{" "}
+              Join the Field of Themes newsletter{" "}
               <Link href="/#newsletter-signup">at the bottom of the page</Link>
               {ABOUT_FOUNDER_NEWSLETTER_AFTER_LINK}
             </p>
@@ -125,7 +125,7 @@ export default async function AboutPage() {
               Subscriber support on the MosaicBot roadmap funds these data layers. If you want to
               weigh in on what ships next, use the{" "}
               <Link href="/contact">contact page</Link> or the{" "}
-              <Link href="/#newsletter-signup">Den of Themes newsletter</Link>.
+              <Link href="/#newsletter-signup">Field of Themes newsletter</Link>.
             </p>
             <p className={`${styles.introCopy} ${styles.aboutVisionDisclaimer}`}>
               {ABOUT_VISION_DISCLAIMER}

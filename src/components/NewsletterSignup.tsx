@@ -164,7 +164,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
   const copy = (
     <div className={styles.copy}>
       <h2 id={headingId} className={styles.title}>
-        Sign Up for our weekly Den of Themes newsletter
+        Sign Up for our weekly Field of Themes newsletter
       </h2>
       <p className={styles.blurb}>
         Get updates on new themes, trending themes, deeper dives and insight into inflecting themes —
@@ -177,7 +177,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
     return (
       <section
         className={rootClass}
-        aria-label="Den of Themes newsletter signup"
+        aria-label="Field of Themes newsletter signup"
         data-newsletter-signup={variant}
       >
         <div className={styles.embedWrap} data-gtm="newsletter-signup-beehiiv">
@@ -185,7 +185,7 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
             <iframe
               key={`${theme}-${narrowViewport}-${beehiivFormUrl}`}
               src={beehiivFormUrl}
-              title="Subscribe to the Den of Themes newsletter"
+              title="Subscribe to the Field of Themes newsletter"
               className={`beehiiv-embed ${styles.embedIframe}`}
               data-test-id="beehiiv-embed"
               frameBorder={0}
