@@ -181,10 +181,52 @@
   padding: 8px 10px;
   border-radius: 10px;
   text-align: left;
+  overflow: hidden;
+}
+
+.legendItemButton > .legendNameCell,
+.legendItemButton > .legendTickers,
+.legendItemButton > .legendMcap {
+  min-width: 0;
 }
 
 .legendItemButtonTwoCol {
   grid-template-columns: 10px minmax(0, 1fr);
+}
+
+/* Group composition legend: stack ticker preview under theme name to avoid overlap. */
+.legendItemButtonStacked {
+  grid-template-columns: 10px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  align-items: start;
+  row-gap: 2px;
+}
+
+.legendItemButtonStacked .swatch {
+  grid-row: 1 / span 2;
+  align-self: start;
+  margin-top: 4px;
+}
+
+.legendItemButtonStacked .legendNameCell {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+.legendItemButtonStacked .legendTickers {
+  grid-column: 2;
+  grid-row: 2;
+  justify-self: start;
+  text-align: left;
+  max-width: 100%;
+}
+
+.legendItemButtonStacked .legendLabel {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .legendItemButton:hover {

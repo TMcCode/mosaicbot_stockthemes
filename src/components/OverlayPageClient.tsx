@@ -667,11 +667,12 @@ export function OverlayPageClient({
         <div className={styles.legend} role="group" aria-label="Series — click to show or hide">
           {chartSeries.map((s) => {
             const rightMeta = s.tickersPreview || s.legendMeta;
+            const stackedLegend = Boolean(s.tickersPreview);
             return (
               <button
                 key={s.id}
                 type="button"
-                className={`${chartLegendStyles.legendItemButton} ${!rightMeta ? chartLegendStyles.legendItemButtonTwoCol : ""} ${hiddenIds.has(s.id) ? chartLegendStyles.legendItemMuted : ""}`}
+                className={`${chartLegendStyles.legendItemButton} ${!rightMeta ? chartLegendStyles.legendItemButtonTwoCol : ""} ${stackedLegend ? chartLegendStyles.legendItemButtonStacked : ""} ${hiddenIds.has(s.id) ? chartLegendStyles.legendItemMuted : ""}`}
                 aria-pressed={!hiddenIds.has(s.id)}
                 onClick={() => toggleHidden(s.id)}
               >

@@ -993,9 +993,13 @@ export function Chart1yLightweight({
   const lineApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
   const compositionMetaRef = useRef(compositionMetaByTicker);
   const performanceTitleRef = useRef(performanceTitle);
-  /** Tickers / PERF_SERIES_ID hidden via legend click (state so we don't read refs during render). */
+  /** Tickers hidden via legend click (state drives visibility; synced after canvas rebuild). */
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([]);
   const hiddenSet = useMemo(() => new Set(hiddenSeries), [hiddenSeries]);
+
+  useEffect(() => {
+    setHiddenSeries([]);
+  }, [period, activeView, sidecarEntity?.kind, sidecarEntity?.slug]);
 
   useEffect(() => {
     compositionMetaRef.current = compositionMetaByTicker;
@@ -1005,15 +1009,19 @@ export function Chart1yLightweight({
     performanceTitleRef.current = performanceTitle;
   }, [performanceTitle]);
 
+  /** Apply legend visibility after canvas rebuild (2Y/5Y/custom refetch recreates series APIs). */
+  useEffect(() => {
+    if (activeView !== "composition") return;
+    const hidden = new Set(hiddenSeries);
+    for (const [id, api] of lineApisRef.current.entries()) {
+      api.applyOptions({ visible: !hidden.has(id) });
+    }
+  }, [chart1yForCanvas, benchmarkForCanvas, activeView, hiddenSeries]);
+
   const toggleSeries = useCallback((id: string) => {
-    const api = lineApisRef.current.get(id);
-    if (!api) return;
-    setHiddenSeries((prev) => {
-      const wasHidden = prev.includes(id);
-      api.applyOptions({ visible: wasHidden });
-      if (wasHidden) return prev.filter((x) => x !== id);
-      return [...prev, id];
-    });
+    setHiddenSeries((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
+    );
   }, []);
 
   if (!hasPerf && !hasComp) {
@@ -1091,11 +1099,12 @@ export function Chart1yLightweight({
             const ticker = s.ticker?.trim() || "";
             const tickersPreview = meta?.tickersPreview?.trim();
             const showThirdColumn = Boolean(tickersPreview) || compositionLegendShowMcap;
+            const stackedLegend = Boolean(tickersPreview);
             return (
               <button
                 key={s.ticker}
                 type="button"
-                className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
+                className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${stackedLegend ? styles.legendItemButtonStacked : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
                 aria-pressed={!hiddenSet.has(s.ticker)}
                 onClick={() => toggleSeries(s.ticker)}
               >
