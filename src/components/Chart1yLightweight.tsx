@@ -56,6 +56,36 @@ function isStandardPeriod(p: OverlayChartPeriod): p is OverlayStandardPeriod {
   return (OVERLAY_STANDARD_PERIODS as readonly string[]).includes(p);
 }
 
+/** Stable key so composition view ignores live performance tail-only updates. */
+function chartDataCanvasKey(
+  chart1y: ThemeChart1yV0 | undefined,
+  benchmark: ChartPerformanceV0 | undefined,
+  activeView: "performance" | "composition",
+  period: OverlayChartPeriod,
+): string {
+  if (!chart1y) return "";
+  const bl = benchmark?.dates?.length ?? 0;
+  const bTail = bl
+    ? `${benchmark!.dates![0]}\0${benchmark!.dates![bl - 1]}\0${bl}`
+    : "";
+  if (activeView === "performance") {
+    const p = chart1y.performance;
+    const pl = p?.dates?.length ?? 0;
+    const pTail = pl ? `${p!.dates![0]}\0${p!.dates![pl - 1]}\0${pl}` : "";
+    return `perf\x1f${period}\x1f${pTail}\x1f${bTail}`;
+  }
+  const comp = chart1y.composition_indexed;
+  const rows =
+    comp?.series
+      ?.filter((s) => s.dates?.length && s.values?.length)
+      .map((s) => {
+        const L = s.dates!.length;
+        return `${s.ticker}:${s.dates![0]}:${s.dates![L - 1]}:${L}:${s.values![0]}:${s.values![L - 1]}`;
+      })
+      .join("\x1e") ?? "";
+  return `comp\x1f${period}\x1f${rows}\x1f${bTail}`;
+}
+
 function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
@@ -224,6 +254,8 @@ type Chart1yCanvasProps = {
   chart1y: ThemeChart1yV0 | undefined;
   benchmarkPerformance?: ChartPerformanceV0;
   activeView: "performance" | "composition";
+  /** Composition legend hidden tickers — applied after each canvas rebuild. */
+  hiddenSeries?: string[];
   lineApisRef: MutableRefObject<Map<string, ISeriesApi<"Line">>>;
   /** Ref so tooltip meta stays fresh without remounting the chart when `memo` skips canvas render. */
   compositionMetaRef: MutableRefObject<Record<string, CompositionMeta> | undefined>;
@@ -238,6 +270,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   chart1y,
   benchmarkPerformance,
   activeView,
+  hiddenSeries = [],
   lineApisRef,
   compositionMetaRef,
   performanceTitleRef,
@@ -415,6 +448,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           });
           bench.setData(benchmarkPoints);
         }
+        const hidden = new Set(hiddenSeries);
         comp.series.forEach((s, i) => {
           if (!s.dates?.length || !s.values?.length) return;
           const pts = toPoints(s.dates, s.values);
@@ -426,6 +460,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             priceLineVisible: false,
             lastValueVisible: false,
             crosshairMarkerVisible: false,
+            visible: !hidden.has(s.ticker),
             priceFormat: INTEGER_PRICE_FORMAT,
           });
           series.setData(pts);
@@ -593,8 +628,17 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       }
       chartRef.current = null;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp/benchmark are sliced upstream
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp/benchmark are sliced upstream; hiddenSeries applied in follow-up effect
   }, [chart1y, benchmarkPerformance, activeView, lineApisRef]);
+
+  /** Legend toggle without full chart rebuild (composition only). */
+  useEffect(() => {
+    if (activeView !== "composition") return;
+    const hidden = new Set(hiddenSeries);
+    for (const [id, api] of lineApisRef.current.entries()) {
+      api.applyOptions({ visible: !hidden.has(id) });
+    }
+  }, [activeView, hiddenSeries, lineApisRef]);
 
   return (
     <div style={{ position: "relative" }}>
@@ -714,6 +758,9 @@ export function Chart1yLightweight({
   const [extendedCompositionByTicker, setExtendedCompositionByTicker] = useState<
     Record<string, ChartPerformanceV0>
   >({});
+  const extendedPerformanceRef = useRef<ChartPerformanceV0 | undefined>(undefined);
+  const performanceSidecarFetchedRef = useRef("");
+  extendedPerformanceRef.current = extendedPerformance;
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -770,7 +817,9 @@ export function Chart1yLightweight({
   useEffect(() => {
     setExtendedPerformance(undefined);
     setExtendedCompositionByTicker({});
-  }, [sidecarEntity?.kind, sidecarEntity?.slug, chart1ySorted]);
+    extendedPerformanceRef.current = undefined;
+    performanceSidecarFetchedRef.current = "";
+  }, [sidecarEntity?.kind, sidecarEntity?.slug, period]);
 
   const referenceLastIso = useMemo(
     () =>
@@ -818,17 +867,20 @@ export function Chart1yLightweight({
 
   useEffect(() => {
     if (!needsExtendedHistory || !sidecarEntity) return;
+    const fetchToken = `${sidecarEntity.kind}:${sidecarEntity.slug}:${period}:${customAnchorIso ?? ""}`;
     const merged = mergeExtendedChartPerformance(
       chart1yForRender?.performance,
-      extendedPerformance,
+      extendedPerformanceRef.current,
     );
     if (
       merged &&
-      extendedPerformance &&
+      extendedPerformanceRef.current &&
       !performanceNeedsExtendedHistory(merged, period, referenceLastIso, customAnchorIso)
     ) {
+      performanceSidecarFetchedRef.current = fetchToken;
       return;
     }
+    if (performanceSidecarFetchedRef.current === fetchToken) return;
 
     let cancelled = false;
     void fetchChartSidecar(sidecarEntity.kind, sidecarEntity.slug)
@@ -839,6 +891,7 @@ export function Chart1yLightweight({
         const values = applyShortThemePerformanceDisplay(title, perf.values, perf);
         if (values !== perf.values) perf = { ...perf, values };
         if (isSuspiciousChartPerformanceCliff(perf, chart1yForRender?.performance)) return;
+        performanceSidecarFetchedRef.current = fetchToken;
         setExtendedPerformance(perf);
       })
       .catch(() => {
@@ -855,7 +908,6 @@ export function Chart1yLightweight({
     referenceLastIso,
     performanceTitle,
     chart1yForRender?.performance,
-    extendedPerformance,
   ]);
 
   const compositionSidecarKind = sidecarEntity
@@ -884,16 +936,21 @@ export function Chart1yLightweight({
     extendedCompositionByTicker,
   ]);
 
-  useEffect(() => {
-    if (!compositionSidecarKind || compositionTickersNeedingFetch.length === 0) return;
+  const compositionTickersFetchKey = compositionTickersNeedingFetch.slice().sort().join("\0");
+  const compSeriesRef = useRef(chart1yForRender?.composition_indexed?.series);
+  compSeriesRef.current = chart1yForRender?.composition_indexed?.series;
 
+  useEffect(() => {
+    if (!compositionSidecarKind || !compositionTickersFetchKey) return;
+
+    const tickersToFetch = compositionTickersFetchKey.split("\0").filter(Boolean);
     let cancelled = false;
     void Promise.all(
-      compositionTickersNeedingFetch.map(async (tickerKey) => {
+      tickersToFetch.map(async (tickerKey) => {
         const slug = normalizeCompositionSidecarSlug(compositionSidecarKind, tickerKey);
         const sidecar = await fetchChartSidecar(compositionSidecarKind, slug);
         if (!sidecar?.performance?.dates?.length) return null;
-        const series = chart1yForRender?.composition_indexed?.series.find(
+        const series = compSeriesRef.current?.find(
           (s) => s.ticker.trim().toUpperCase() === tickerKey,
         );
         const baseline = series
@@ -921,11 +978,7 @@ export function Chart1yLightweight({
     return () => {
       cancelled = true;
     };
-  }, [
-    compositionSidecarKind,
-    compositionTickersNeedingFetch,
-    chart1yForRender?.composition_indexed?.series,
-  ]);
+  }, [compositionSidecarKind, compositionTickersFetchKey]);
 
   const chart1yWithHistory = useMemo(() => {
     const withPerf = chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance);
@@ -986,6 +1039,13 @@ export function Chart1yLightweight({
     );
   }, [showPeriodControls, benchmarkPerformance, period, customAnchorIso, referenceLastIso]);
 
+  const canvasInputKey = useMemo(
+    () => chartDataCanvasKey(chart1yForCanvas, benchmarkForCanvas, activeView, period),
+    [chart1yForCanvas, benchmarkForCanvas, activeView, period],
+  );
+  const canvasChart1y = useMemo(() => chart1yForCanvas, [canvasInputKey]);
+  const canvasBenchmark = useMemo(() => benchmarkForCanvas, [canvasInputKey]);
+
   const periodWindowLabel = showPeriodControls
     ? chartPeriodWindowLabel(period, customPeriods)
     : "the Past Year";
@@ -1008,15 +1068,6 @@ export function Chart1yLightweight({
   useEffect(() => {
     performanceTitleRef.current = performanceTitle;
   }, [performanceTitle]);
-
-  /** Apply legend visibility after canvas rebuild (2Y/5Y/custom refetch recreates series APIs). */
-  useEffect(() => {
-    if (activeView !== "composition") return;
-    const hidden = new Set(hiddenSeries);
-    for (const [id, api] of lineApisRef.current.entries()) {
-      api.applyOptions({ visible: !hidden.has(id) });
-    }
-  }, [chart1yForCanvas, benchmarkForCanvas, activeView, hiddenSeries]);
 
   const toggleSeries = useCallback((id: string) => {
     setHiddenSeries((prev) =>
@@ -1067,9 +1118,10 @@ export function Chart1yLightweight({
         ) : null}
       </div>
       <Chart1yCanvas
-        chart1y={chart1yForCanvas}
-        benchmarkPerformance={benchmarkForCanvas}
+        chart1y={canvasChart1y}
+        benchmarkPerformance={canvasBenchmark}
         activeView={activeView}
+        hiddenSeries={hiddenSeries}
         lineApisRef={lineApisRef}
         compositionMetaRef={compositionMetaRef}
         performanceTitleRef={performanceTitleRef}
