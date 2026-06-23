@@ -42,6 +42,7 @@ import {
   type OverlayStandardPeriod,
 } from "@/lib/chartPeriodControls";
 import { fetchChartSidecar, type OverlayEntityKind } from "@/lib/chartSidecar";
+import { fetchSpyBenchmarkPerformance } from "@/lib/fetchSpyBenchmark";
 import { OVERLAY_STANDARD_PERIODS, rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
@@ -371,8 +372,6 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       benchmarkPerformance?.dates ?? [],
       benchmarkPerformance?.values ?? [],
     );
-    const perfStartIso = perfPoints?.[0]?.time;
-    const perfEndIso = perfPoints?.[perfPoints.length - 1]?.time;
     const compRange = (() => {
       if (activeView !== "composition" || !comp?.series?.length) return null;
       let start = "";
@@ -388,11 +387,18 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       }
       return start && end ? { start, end } : null;
     })();
-    const benchmarkAligned = slicePointsToRange(
-      benchmarkPointsRaw,
-      activeView === "performance" ? perfStartIso : compRange?.start,
-      activeView === "performance" ? perfEndIso : compRange?.end,
-    );
+    const benchmarkAligned = (() => {
+      if (activeView === "composition") {
+        return slicePointsToRange(
+          benchmarkPointsRaw,
+          compRange?.start,
+          compRange?.end,
+        );
+      }
+      // Performance: benchmark is period-sliced upstream — do not clip to theme span
+      // (theme may still be on ~1Y embedded data while 2Y/5Y sidecar loads).
+      return benchmarkPointsRaw;
+    })();
     const benchmarkRebased =
       benchmarkAligned && benchmarkAligned.length >= 2
         ? rebasePointsTo100(benchmarkAligned) ?? benchmarkAligned
@@ -758,9 +764,15 @@ export function Chart1yLightweight({
   const [extendedCompositionByTicker, setExtendedCompositionByTicker] = useState<
     Record<string, ChartPerformanceV0>
   >({});
+  const [extendedBenchmark, setExtendedBenchmark] = useState<ChartPerformanceV0 | undefined>(
+    undefined,
+  );
   const extendedPerformanceRef = useRef<ChartPerformanceV0 | undefined>(undefined);
+  const extendedBenchmarkRef = useRef<ChartPerformanceV0 | undefined>(undefined);
   const performanceSidecarFetchedRef = useRef("");
+  const benchmarkFetchedRef = useRef("");
   extendedPerformanceRef.current = extendedPerformance;
+  extendedBenchmarkRef.current = extendedBenchmark;
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
   const hasPerf = Boolean(perf?.dates?.length && perf?.values?.length);
@@ -817,8 +829,11 @@ export function Chart1yLightweight({
   useEffect(() => {
     setExtendedPerformance(undefined);
     setExtendedCompositionByTicker({});
+    setExtendedBenchmark(undefined);
     extendedPerformanceRef.current = undefined;
+    extendedBenchmarkRef.current = undefined;
     performanceSidecarFetchedRef.current = "";
+    benchmarkFetchedRef.current = "";
   }, [sidecarEntity?.kind, sidecarEntity?.slug, period]);
 
   const referenceLastIso = useMemo(
@@ -908,6 +923,60 @@ export function Chart1yLightweight({
     referenceLastIso,
     performanceTitle,
     chart1yForRender?.performance,
+  ]);
+
+  const needsExtendedBenchmark = useMemo(
+    () =>
+      Boolean(
+        showPeriodControls &&
+          performanceNeedsExtendedHistory(
+            benchmarkPerformance,
+            period,
+            referenceLastIso,
+            customAnchorIso,
+          ),
+      ),
+    [showPeriodControls, benchmarkPerformance, period, referenceLastIso, customAnchorIso],
+  );
+
+  useEffect(() => {
+    if (!needsExtendedBenchmark) return;
+    const fetchToken = `${period}:${customAnchorIso ?? ""}`;
+    const merged = mergeExtendedChartPerformance(
+      benchmarkPerformance,
+      extendedBenchmarkRef.current,
+    );
+    if (
+      merged &&
+      extendedBenchmarkRef.current &&
+      !performanceNeedsExtendedHistory(merged, period, referenceLastIso, customAnchorIso)
+    ) {
+      benchmarkFetchedRef.current = fetchToken;
+      return;
+    }
+    if (benchmarkFetchedRef.current === fetchToken) return;
+
+    let cancelled = false;
+    void fetchSpyBenchmarkPerformance()
+      .then((perf) => {
+        if (cancelled || !perf?.dates?.length) return;
+        const sanitized = sanitizeChartPerformanceForDisplay(perf) ?? perf;
+        if (isSuspiciousChartPerformanceCliff(sanitized, benchmarkPerformance)) return;
+        benchmarkFetchedRef.current = fetchToken;
+        setExtendedBenchmark(sanitized);
+      })
+      .catch(() => {
+        /* keep embedded benchmark on CDN miss */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    needsExtendedBenchmark,
+    period,
+    customAnchorIso,
+    referenceLastIso,
+    benchmarkPerformance,
   ]);
 
   const compositionSidecarKind = sidecarEntity
@@ -1030,14 +1099,22 @@ export function Chart1yLightweight({
   }, [showPeriodControls, chart1yWithHistory, period, customAnchorIso, referenceLastIso]);
 
   const benchmarkForCanvas = useMemo(() => {
-    if (!showPeriodControls) return benchmarkPerformance;
+    const merged = mergeExtendedChartPerformance(benchmarkPerformance, extendedBenchmark);
+    if (!showPeriodControls) return merged;
     return sliceBenchmarkForPeriod(
-      benchmarkPerformance,
+      merged,
       period,
       customAnchorIso,
       referenceLastIso,
     );
-  }, [showPeriodControls, benchmarkPerformance, period, customAnchorIso, referenceLastIso]);
+  }, [
+    showPeriodControls,
+    benchmarkPerformance,
+    extendedBenchmark,
+    period,
+    customAnchorIso,
+    referenceLastIso,
+  ]);
 
   const canvasInputKey = useMemo(
     () => chartDataCanvasKey(chart1yForCanvas, benchmarkForCanvas, activeView, period),
