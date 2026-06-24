@@ -8,9 +8,15 @@ import {
 } from "@/components/HomeTrendingThemesTable";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import type { TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
-import { mergeHomeTrendingCompareReturns } from "@/lib/mergeLiveCompareData";
+import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
+import {
+  homeTrendingListsMatch,
+  mergeHomeTrendingCompareReturns,
+  mergeLiveHomeTrendingRows,
+} from "@/lib/mergeLiveCompareData";
 import { sortHomeTrendingRows } from "@/lib/sortHomeTrendingRows";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
+import type { HomeTrendingRowV0 } from "@/types/home_trending.v0";
 
 type Props = {
   rows: HomeTrendingRow[];
@@ -27,9 +33,22 @@ export function HomeTrendingThemesTableLive({
   sortPeriod,
   serverCompareBundle,
 }: Props) {
-  const { compareBundle, liveSpyPerf } = useLiveCompareBundles(serverCompareBundle, null);
+  const { compareBundle, liveHomeTrending, liveSpyPerf } = useLiveCompareBundles(serverCompareBundle, null);
+
+  const baseRows = useMemo(() => {
+    if (!liveHomeTrending || homeTrendingListsMatch(rows, liveHomeTrending)) {
+      return rows;
+    }
+    return mergeLiveHomeTrendingRows(rows, liveHomeTrending, (row: HomeTrendingRowV0): HomeTrendingRow => ({
+      slug: row.slug ?? null,
+      name: row.name,
+      chartPerf: computePerfFromChartPerformance(row.chart_1y?.performance),
+      compare_returns: row.compare_returns ?? undefined,
+    }));
+  }, [rows, liveHomeTrending]);
+
   const liveRows = useMemo(() => {
-    const merged = mergeHomeTrendingCompareReturns(rows, compareBundle?.rows ?? []);
+    const merged = mergeHomeTrendingCompareReturns(baseRows, compareBundle?.rows ?? []);
     const withSpy = !liveSpyPerf?.compareReturns
       ? merged
       : merged.map((row) =>
@@ -42,6 +61,6 @@ export function HomeTrendingThemesTableLive({
             : row,
         );
     return sortHomeTrendingRows(withSpy, sortPeriod);
-  }, [rows, compareBundle?.rows, liveSpyPerf, sortPeriod]);
+  }, [baseRows, compareBundle?.rows, liveSpyPerf, sortPeriod]);
   return <HomeTrendingThemesTable rows={liveRows} columns={columns} columnHelp={columnHelp} />;
 }

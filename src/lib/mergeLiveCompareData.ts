@@ -1,6 +1,8 @@
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import type { CompareThemesRowV0, CompareThemesV0 } from "@/types/compare_themes.v0";
+import type { HomeTrendingRowV0, HomeTrendingV0 } from "@/types/home_trending.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
@@ -121,4 +123,47 @@ export function parseHomeTopMoversJson(raw: unknown): HomeTopMoversV0 | null {
   } catch {
     return null;
   }
+}
+
+export function parseHomeTrendingJson(raw: unknown): HomeTrendingV0 | null {
+  try {
+    const data = raw as HomeTrendingV0;
+    if (data.schema_version !== 0) return null;
+    if (!data.as_of || !Array.isArray(data.rows)) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
+function trendingThemeNameKeys(rows: Array<{ name?: string; marketBaseline?: boolean }>): string[] {
+  return rows
+    .filter((row) => row.marketBaseline !== true)
+    .map((row) => normName(row.name))
+    .filter(Boolean)
+    .sort();
+}
+
+/** True when server SSR rows and a live home_trending bundle list the same themes. */
+export function homeTrendingListsMatch<
+  T extends { name: string; marketBaseline?: boolean },
+>(serverRows: T[], bundle: HomeTrendingV0): boolean {
+  const serverKeys = trendingThemeNameKeys(serverRows);
+  const liveKeys = trendingThemeNameKeys(bundle.rows);
+  if (serverKeys.length !== liveKeys.length) return false;
+  return serverKeys.every((key, i) => key === liveKeys[i]);
+}
+
+export function mergeLiveHomeTrendingRows<
+  T extends {
+    slug: string | null;
+    name: string;
+    marketBaseline?: boolean;
+    compare_returns?: ThemeCompareReturnsV0;
+    chartPerf: ChartPerfReturns;
+  },
+>(serverRows: T[], bundle: HomeTrendingV0, toRow: (row: HomeTrendingRowV0) => T): T[] {
+  const marketRow = serverRows.find((row) => row.marketBaseline === true);
+  const themeRows = bundle.rows.map(toRow);
+  return marketRow ? [...themeRows, marketRow] : themeRows;
 }

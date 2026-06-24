@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   parseCompareThemesJson,
   parseHomeTopMoversJson,
+  parseHomeTrendingJson,
 } from "@/lib/mergeLiveCompareData";
 import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
 import type { SpyMarketPerf } from "@/lib/parseSpySnapshot";
@@ -16,6 +17,7 @@ import {
 import { stockthemesLiveCompareReturnsEnabled } from "@/lib/stockthemesClientConfig";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
+import type { HomeTrendingV0 } from "@/types/home_trending.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 
 async function fetchJson(url: string): Promise<unknown> {
@@ -32,6 +34,7 @@ export function useLiveCompareBundles(
 ): {
   compareBundle: CompareThemesV0 | null | undefined;
   topMoversBundle: HomeTopMoversV0 | null | undefined;
+  liveHomeTrending: HomeTrendingV0 | null;
   liveSpyPerf: SpyMarketPerf | null;
   liveTickerPerformanceAsOf: string | null;
   liveCompare: boolean;
@@ -40,6 +43,7 @@ export function useLiveCompareBundles(
   const base = stockthemesPublicDataBase();
   const [liveCompare, setLiveCompare] = useState<CompareThemesV0 | null>(null);
   const [liveTopMovers, setLiveTopMovers] = useState<HomeTopMoversV0 | null>(null);
+  const [liveHomeTrending, setLiveHomeTrending] = useState<HomeTrendingV0 | null>(null);
   const [liveSpyPerf, setLiveSpyPerf] = useState<SpyMarketPerf | null>(null);
   const [liveTickerPerformanceAsOf, setLiveTickerPerformanceAsOf] = useState<string | null>(null);
 
@@ -50,18 +54,21 @@ export function useLiveCompareBundles(
     const refresh = async () => {
       const q = priceReturnsBrowserCacheBusterQuery();
       try {
-        const [compareRaw, moversRaw, manifestRaw, spyRaw] = await Promise.all([
+        const [compareRaw, moversRaw, trendingRaw, manifestRaw, spyRaw] = await Promise.all([
           fetchJson(`${base}/compare_themes.v0.json?${q}`),
           fetchJson(`${base}/home_top_movers.v0.json?${q}`),
+          fetchJson(`${base}/home_trending.v0.json?${q}`),
           fetchJson(`${base}/manifest.json?${q}`),
           fetchJson(`${base}/spy_snapshot.v0.json?${q}`),
         ]);
         if (cancelled) return;
         const compare = parseCompareThemesJson(compareRaw);
         const movers = parseHomeTopMoversJson(moversRaw);
+        const trending = parseHomeTrendingJson(trendingRaw);
         const spy = parseSpySnapshotJson(spyRaw);
         if (compare) setLiveCompare(compare);
         if (movers) setLiveTopMovers(movers);
+        if (trending) setLiveHomeTrending(trending);
         if (spy) setLiveSpyPerf(spy);
         const perfAsOf =
           manifestRaw &&
@@ -94,5 +101,5 @@ export function useLiveCompareBundles(
     [liveTopMovers, serverTopMovers],
   );
 
-  return { compareBundle, topMoversBundle, liveSpyPerf, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
+  return { compareBundle, topMoversBundle, liveHomeTrending, liveSpyPerf, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
 }
