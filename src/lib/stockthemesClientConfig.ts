@@ -44,7 +44,9 @@ export function stockthemesLiveCompareReturnsEnabled(): boolean {
 }
 
 /**
- * Client-side refresh of chart composition_indexed from themes/<slug>.json (~15 min).
+ * Client-side refresh of chart composition_indexed from CDN detail JSON.
+ * Themes: themes/<slug>.json (~15 min via useLiveThemeDetailPrices).
+ * Groups: groups/<slug>.json on page load when baked series lag membership (2h cache bucket).
  */
 export function stockthemesLiveCompositionEnabled(): boolean {
   if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION === "0") {

@@ -21,6 +21,7 @@ import {
   stockthemesDevBuildHintsEnabled,
 } from "@/lib/stockthemesBuildHints";
 import { useLiveThemeDetailPrices } from "@/hooks/useLiveThemeDetailPrices";
+import { groupCompositionNeedsLiveRefresh } from "@/lib/chart1yRenderable";
 import {
   stockthemesLiveChartPerformanceEnabled,
   stockthemesLiveCompositionEnabled,
@@ -79,15 +80,20 @@ type Props = {
   serverDetail?: ThemeDetailV0;
   /** Enables period toolbar; uses manifest dates already on the page (no extra fetch). */
   selectedDates?: ManifestSelectedDateV0[];
+  /** Group pages: manifest/detail theme count; triggers CDN composition refresh when chart lags. */
+  expectedCompositionSeriesCount?: number;
 };
 
 /**
- * Static export may embed detail JSON from build time; GCS can be newer (e.g. charts added later).
+ * Static export may embed detail JSON from build time; CDN can be newer (e.g. charts added later).
  * When the server snapshot has no drawable chart, fetch themes/… or groups/… in the browser.
  *
  * Also: when the build embeds `performance` but not yet `composition_indexed` (themes), we fetch once
  * and merge composition from the bucket so the Performance / Composition toggle can appear without
  * rebuilding the site.
+ *
+ * Group composition refresh is independent of `DISABLE_LIVE_HYDRATE` (R2 has no egress fees; table
+ * already live-fetches compare_themes.v0.json).
  */
 export function ThemeChartLiveHydrate({
   slug,
@@ -100,6 +106,7 @@ export function ThemeChartLiveHydrate({
   benchmarkPerformance,
   serverDetail,
   selectedDates,
+  expectedCompositionSeriesCount,
 }: Props) {
   const compositionLive = stockthemesLiveCompositionEnabled() && chartJsonFolder === "themes" && Boolean(serverDetail);
   const { detail: liveDetail } = useLiveThemeDetailPrices(
@@ -193,12 +200,23 @@ export function ThemeChartLiveHydrate({
       chartHasRenderableData(serverChartWithComposition) &&
       stockthemesLiveChartPerformanceEnabled() &&
       !stockthemesLiveHydrationDisabled();
+    const refreshGroupCompositionFromCdn =
+      chartJsonFolder === "groups" &&
+      stockthemesLiveCompositionEnabled() &&
+      chartHasRenderableData(serverChartWithComposition) &&
+      groupCompositionNeedsLiveRefresh(serverChartWithComposition, expectedCompositionSeriesCount);
 
-    if (stockthemesLiveHydrationDisabled()) {
+    if (stockthemesLiveHydrationDisabled() && !refreshGroupCompositionFromCdn) {
       return;
     }
 
-    if (!needFullChart && !needCompositionOnly && !refreshLiveInDev && !refreshGroupChartFromCdn) {
+    if (
+      !needFullChart &&
+      !needCompositionOnly &&
+      !refreshLiveInDev &&
+      !refreshGroupChartFromCdn &&
+      !refreshGroupCompositionFromCdn
+    ) {
       return;
     }
 
@@ -215,6 +233,13 @@ export function ThemeChartLiveHydrate({
       .then((data) => {
         if (cancelled) return;
         const live = data.chart_1y;
+
+        if (refreshGroupCompositionFromCdn) {
+          if (hasComposition(live)) {
+            setFetched(live);
+          }
+          return;
+        }
 
         if (refreshLiveInDev || refreshGroupChartFromCdn) {
           if (chartHasRenderableData(live)) {
@@ -245,7 +270,7 @@ export function ThemeChartLiveHydrate({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- serverChart identity can thrash; sig captures chart-relevant changes
-  }, [slug, dataBaseUrl, serverChartFetchSig, chartJsonFolder]);
+  }, [slug, dataBaseUrl, serverChartFetchSig, chartJsonFolder, expectedCompositionSeriesCount]);
 
   const overlayKind = chartJsonFolder === "groups" ? "group" : "theme";
 

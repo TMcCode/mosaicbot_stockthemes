@@ -241,6 +241,9 @@ export default async function GroupDetailPage({ params }: Props) {
                   compositionLegendShowSeriesBadge={false}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
                   selectedDates={selectedDates}
+                  expectedCompositionSeriesCount={
+                    group.theme_count ?? detail?.theme_count ?? tableRows.length
+                  }
                 />
               </DeferRender>
             </div>
