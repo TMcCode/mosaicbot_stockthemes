@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { GroupThemesTable } from "@/components/GroupThemesTable";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { mergeGroupThemeTableCompareReturns } from "@/lib/mergeLiveCompareData";
-import type { GroupThemeTableRow } from "@/lib/groupThemesTable";
+import { resolveGroupThemesMetricColumns, type GroupThemeTableRow } from "@/lib/groupThemesTable";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
@@ -27,7 +27,14 @@ export function GroupThemesTableLive({
     () => mergeGroupThemeTableCompareReturns(rows, compareBundle?.rows ?? []),
     [rows, compareBundle?.rows],
   );
+  const liveMetricColumns = useMemo(() => resolveGroupThemesMetricColumns(liveRows), [liveRows]);
+  const metricColumnsResolved =
+    liveMetricColumns.length > 0 ? liveMetricColumns : metricColumns;
   return (
-    <GroupThemesTable rows={liveRows} metricColumns={metricColumns} selectedDates={selectedDates} />
+    <GroupThemesTable
+      rows={liveRows}
+      metricColumns={metricColumnsResolved}
+      selectedDates={selectedDates}
+    />
   );
 }

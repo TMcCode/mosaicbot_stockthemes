@@ -33,22 +33,23 @@ export function resolveGroupThemesMetricColumns(rows: GroupThemeTableRow[]): str
   const raw: string[] = [];
   for (const row of rows) {
     const cols = row.compare_returns?.columns;
-    if (!cols?.length) continue;
-    for (const c of cols) {
-      const key = String(c || "").trim();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      raw.push(key);
-    }
-  }
-  if (!raw.length) {
-    for (const row of rows) {
-      const m = row.compare_returns?.metrics;
-      if (!m) continue;
-      for (const key of Object.keys(m)) {
+    if (cols?.length) {
+      for (const c of cols) {
+        const key = String(c || "").trim();
         if (!key || seen.has(key)) continue;
         seen.add(key);
         raw.push(key);
+      }
+    }
+    const m = row.compare_returns?.metrics;
+    if (m) {
+      for (const key of Object.keys(m)) {
+        if (!key || seen.has(key)) continue;
+        const v = m[key];
+        if (typeof v === "number" && Number.isFinite(v)) {
+          seen.add(key);
+          raw.push(key);
+        }
       }
     }
   }
