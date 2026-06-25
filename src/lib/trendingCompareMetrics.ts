@@ -11,7 +11,7 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
   Period: "y1",
 };
 
-const DEFAULT_COLUMN_ORDER = ["1D", "10D", "MTD", "YTD", "Period"] as const;
+const DEFAULT_COLUMN_ORDER = ["1D", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
 
 /** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
@@ -22,6 +22,8 @@ const COMPARE_COLUMN_ORDER = [
   "SinceLstRpt",
   "YTD",
   "Period",
+  "2Y",
+  "5Y",
 ] as const;
 
 const STANDARD_METRIC_KEYS = new Set<string>(DEFAULT_COLUMN_ORDER);
@@ -76,6 +78,8 @@ export function trendingColumnHeader(key: string): string {
     MTD: "MTD %",
     YTD: "YTD %",
     Period: "1Yr %",
+    "2Y": "2Yr %",
+    "5Y": "5Yr %",
   };
   if (labels[key]) return labels[key];
   return key.includes("%") ? key : `${key} %`;
@@ -91,6 +95,8 @@ export function compareColumnHeader(key: string): string {
     MTD: "MTD",
     YTD: "YTD",
     Period: "1Yr",
+    "2Y": "2Yr",
+    "5Y": "5Yr",
   };
   if (labels[key]) return labels[key];
   return String(key).replace(/\s*%+\s*$/, "").trim();

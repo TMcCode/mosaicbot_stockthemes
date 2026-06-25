@@ -34,7 +34,10 @@ function fmtPct(v?: number): string {
 }
 
 function metricHeaderLabel(col: string): string {
-  return col === "Period" ? "1Yr %" : trendingColumnHeader(col);
+  if (col === "Period") return "1Yr %";
+  if (col === "2Y") return "2Yr %";
+  if (col === "5Y") return "5Yr %";
+  return trendingColumnHeader(col);
 }
 
 function numericField(
