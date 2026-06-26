@@ -1,8 +1,7 @@
-/** Matches FetchEODData `SHORT_THEME_PATTERN` / `_is_short_theme_name`. */
-const SHORT_THEME_PATTERN = /\bShort\s*'\d{2}\b/i;
-
+/** Matches `utils.theme_utils.is_short_theme` / manifest `_is_short_theme_name`. */
 export function isShortThemeName(themeName: string): boolean {
-  return SHORT_THEME_PATTERN.test(String(themeName ?? ""));
+  const stem = String(themeName ?? "").split(":", 1)[0];
+  return /\bShort\b/i.test(stem);
 }
 
 /**
