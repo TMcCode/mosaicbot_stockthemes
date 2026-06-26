@@ -3,8 +3,8 @@ import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 /** Standard calendar price-return columns (matches compare / ticker_performance_latest.parquet). */
 export const CONSTITUENT_PREMARKET_COL = "Premarket" as const;
 export const CONSTITUENT_STANDARD_RETURN_HEAD = [
-  "1D",
   CONSTITUENT_PREMARKET_COL,
+  "1D",
   "10D",
   "MTD",
   "YTD",

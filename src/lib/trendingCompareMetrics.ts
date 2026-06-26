@@ -11,12 +11,12 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
   Period: "y1",
 };
 
-const DEFAULT_COLUMN_ORDER = ["1D", "Premarket", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
+const DEFAULT_COLUMN_ORDER = ["Premarket", "1D", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
 
 /** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
-  "1D",
   "Premarket",
+  "1D",
   "10D",
   "MTD",
   "LstRpt %",

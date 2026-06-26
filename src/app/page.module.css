@@ -851,6 +851,8 @@ a.feedTitle:hover {
   scrollbar-gutter: stable;
   cursor: grab;
   padding-bottom: 4px;
+  /* Same company column width in Period Returns vs Earnings so Wgt stays aligned */
+  --constituents-company-col-width: 280px;
 }
 
 .tableScrollHint {
@@ -918,7 +920,7 @@ a.feedTitle:hover {
   max-width: 280px;
 }
 
-/* Period Returns & Earnings: fill leftover width in company column */
+/* Period Returns & Earnings: fixed company column so Wgt aligns across toggles */
 .constituentsScrollWrap[data-constituents-view="returns"] .constituentsTableSizer .dataTable,
 .constituentsScrollWrap[data-constituents-view="earnings"] .constituentsTableSizer .dataTable {
   width: 100%;
@@ -929,9 +931,10 @@ a.feedTitle:hover {
 .constituentsScrollWrap[data-constituents-view="returns"] .dataTable td:first-child,
 .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable th:first-child,
 .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable td:first-child {
-  min-width: min(320px, 42vw);
-  max-width: none;
-  width: 48%;
+  width: var(--constituents-company-col-width);
+  min-width: var(--constituents-company-col-width);
+  max-width: var(--constituents-company-col-width);
+  box-sizing: border-box;
 }
 
 .constituentsScrollWrap[data-constituents-view="returns"] .companyCell,
