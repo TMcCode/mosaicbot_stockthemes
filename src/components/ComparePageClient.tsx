@@ -14,6 +14,7 @@ import {
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
+import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -51,6 +52,7 @@ export function ComparePageClient({
   serverCompareBundle,
 }: Props) {
   const { compareBundle } = useLiveCompareBundles(serverCompareBundle, null);
+  const visibleColumns = useMemo(() => withoutPremarketUnlessActive(columns), [columns]);
   const rowsWithLiveCompare = useMemo(
     () => mergeComparePageRows(rows, compareBundle?.rows ?? []),
     [rows, compareBundle?.rows],
@@ -58,7 +60,10 @@ export function ComparePageClient({
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
-  const availablePeriods = useMemo(() => availableCompareSummaryPeriods(columns), [columns]);
+  const availablePeriods = useMemo(
+    () => availableCompareSummaryPeriods(visibleColumns),
+    [visibleColumns],
+  );
   const [summaryPeriod, setSummaryPeriod] = useState<CompareSummaryPeriod>(() => {
     if (availablePeriods.includes("10D")) return "10D";
     return availablePeriods[0] ?? "10D";
@@ -87,7 +92,7 @@ export function ComparePageClient({
             a secondary sort.
           </p>
           <p>
-            {rows.length} themes · {columns.length} metrics
+            {rows.length} themes · {visibleColumns.length} metrics
           </p>
           <div className={pageStyles.compareHeroFilters}>
             <CheckboxMultiSelectDropdown
@@ -129,7 +134,7 @@ export function ComparePageClient({
         <CompareThemesTable
           benchmarkRows={showBenchmarks ? benchmarkRows : []}
           rows={filtered}
-          columns={columns}
+          columns={visibleColumns}
           selectedDates={selectedDates}
         />
       </section>

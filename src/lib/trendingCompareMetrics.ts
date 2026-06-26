@@ -1,5 +1,6 @@
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { applyShortThemeCompareReturnsDisplay } from "@/lib/shortThemeChart";
+import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 /** Map Compare parquet column → chart fallback field (when compare_returns missing). */
@@ -40,24 +41,24 @@ const COMPARE_STANDARD_KEYS = new Set<string>([
  * 1D → 10D → MTD → YTD → 1Yr, then custom SelectedDates columns in source order.
  */
 export function normalizeTrendingColumnOrder(cols: string[]): string[] {
-  if (!cols.length) return [...DEFAULT_COLUMN_ORDER];
+  if (!cols.length) return withoutPremarketUnlessActive([...DEFAULT_COLUMN_ORDER]);
   const head: string[] = [];
   for (const k of DEFAULT_COLUMN_ORDER) {
     if (cols.includes(k)) head.push(k);
   }
   const tail = cols.filter((c) => !STANDARD_METRIC_KEYS.has(c));
-  return [...head, ...tail];
+  return withoutPremarketUnlessActive([...head, ...tail]);
 }
 
 /** Column order for the full /compare table (includes LstRpt / SinceLstRpt). */
 export function normalizeCompareColumnOrder(cols: string[]): string[] {
-  if (!cols.length) return [...COMPARE_COLUMN_ORDER];
+  if (!cols.length) return withoutPremarketUnlessActive([...COMPARE_COLUMN_ORDER]);
   const head: string[] = [];
   for (const k of COMPARE_COLUMN_ORDER) {
     if (cols.includes(k)) head.push(k);
   }
   const tail = cols.filter((c) => !COMPARE_STANDARD_KEYS.has(c) && !head.includes(c));
-  return [...head, ...tail];
+  return withoutPremarketUnlessActive([...head, ...tail]);
 }
 
 export function resolveTrendingColumnOrder(
@@ -67,7 +68,7 @@ export function resolveTrendingColumnOrder(
     const c = r.compare_returns?.columns;
     if (c && c.length > 0) return normalizeTrendingColumnOrder(c);
   }
-  return [...DEFAULT_COLUMN_ORDER];
+  return withoutPremarketUnlessActive([...DEFAULT_COLUMN_ORDER]);
 }
 
 export function trendingColumnHeader(key: string): string {

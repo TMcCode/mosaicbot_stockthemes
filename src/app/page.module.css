@@ -867,30 +867,38 @@ a.feedTitle:hover {
 }
 
 .tableFooter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 14px;
   border-top: 1px solid var(--button-secondary-border);
-  padding: 10px 12px 12px;
+  padding: 6px 10px 7px;
 }
 
 .tableFootnote {
-  margin: 0 0 10px;
-  font-size: 12px;
-  line-height: 1.4;
-  color: var(--text-secondary);
+  margin: 0;
+  flex: 1 1 12rem;
+  min-width: 0;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text-muted);
 }
 
 .tableWatermark {
-  display: flex;
-  justify-content: flex-end;
-  margin-top: 0;
-  padding: 0;
+  flex: 0 0 auto;
+  margin-left: auto;
+  line-height: 0;
   opacity: 0.98;
   pointer-events: none;
 }
 
 .tableWatermark img {
   display: block;
-  width: clamp(120px, 18vw, 220px);
-  height: auto;
+  width: auto;
+  height: 22px;
+  max-width: min(132px, 34vw);
+  object-fit: contain;
+  object-position: right center;
 }
 
 .dataTable {

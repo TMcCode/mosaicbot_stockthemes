@@ -491,7 +491,7 @@ export function ThemeConstituentsTable({
           ) : null}
           <div className={styles.tableWatermark} aria-hidden="true">
             <img
-              src={publicAssetPath("/brand/logo-full-transparent.png")}
+              src={publicAssetPath("/brand/logo-full-dark-tight.png")}
               alt=""
               loading="lazy"
               decoding="async"

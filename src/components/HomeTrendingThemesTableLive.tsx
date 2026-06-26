@@ -15,6 +15,7 @@ import {
   mergeLiveHomeTrendingRows,
 } from "@/lib/mergeLiveCompareData";
 import { sortHomeTrendingRows } from "@/lib/sortHomeTrendingRows";
+import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTrendingRowV0 } from "@/types/home_trending.v0";
 
@@ -62,5 +63,20 @@ export function HomeTrendingThemesTableLive({
         );
     return sortHomeTrendingRows(withSpy, sortPeriod);
   }, [baseRows, compareBundle?.rows, liveSpyPerf, sortPeriod]);
-  return <HomeTrendingThemesTable rows={liveRows} columns={columns} columnHelp={columnHelp} />;
+  const visibleColumns = useMemo(() => withoutPremarketUnlessActive(columns), [columns]);
+  const visibleColumnHelp = useMemo(
+    () =>
+      Object.fromEntries(
+        visibleColumns.map((col) => [col, columnHelp[col]]),
+      ) as Record<string, string | undefined>,
+    [visibleColumns, columnHelp],
+  );
+
+  return (
+    <HomeTrendingThemesTable
+      rows={liveRows}
+      columns={visibleColumns}
+      columnHelp={visibleColumnHelp}
+    />
+  );
 }
