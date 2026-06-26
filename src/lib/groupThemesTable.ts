@@ -7,13 +7,12 @@ export type GroupThemeTableRow = GroupDetailChildThemeV0 & {
   compare_returns?: ThemeCompareReturnsV0 | null;
 };
 
-const GROUP_RETURN_HEAD = ["1D", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
+const GROUP_RETURN_HEAD = ["1D", "Premarket", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
 const GROUP_EARNINGS_TAIL = ["LstRpt %", "SinceLstRpt"] as const;
 const GROUP_COMPARE_SKIP = new Set<string>([
   ...GROUP_RETURN_HEAD,
   ...GROUP_EARNINGS_TAIL,
   "1W",
-  "Premarket",
 ]);
 
 /** Column order for group child-theme metrics (calendar returns → custom dates → earnings). */

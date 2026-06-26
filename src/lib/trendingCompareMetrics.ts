@@ -11,11 +11,12 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
   Period: "y1",
 };
 
-const DEFAULT_COLUMN_ORDER = ["1D", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
+const DEFAULT_COLUMN_ORDER = ["1D", "Premarket", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
 
 /** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
   "1D",
+  "Premarket",
   "10D",
   "MTD",
   "LstRpt %",
@@ -89,6 +90,7 @@ export function trendingColumnHeader(key: string): string {
 export function compareColumnHeader(key: string): string {
   const labels: Record<string, string> = {
     "1D": "1D",
+    Premarket: "Pre",
     "10D": "10D",
     SinceLstRpt: "Since LstRpt",
     "LstRpt %": "LstRpt",
@@ -103,6 +105,7 @@ export function compareColumnHeader(key: string): string {
 }
 
 const COMPARE_COLUMN_TOOLTIPS: Record<string, string> = {
+  Premarket: "Return from prior session close through the latest premarket quote (4:00–9:30 AM ET).",
   "LstRpt %":
     "On average return since each ticker's last earnings report date.",
   SinceLstRpt:

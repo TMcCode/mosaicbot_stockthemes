@@ -1,7 +1,14 @@
 import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 
 /** Standard calendar price-return columns (matches compare / ticker_performance_latest.parquet). */
-export const CONSTITUENT_STANDARD_RETURN_HEAD = ["1D", "10D", "MTD", "YTD"] as const;
+export const CONSTITUENT_PREMARKET_COL = "Premarket" as const;
+export const CONSTITUENT_STANDARD_RETURN_HEAD = [
+  "1D",
+  CONSTITUENT_PREMARKET_COL,
+  "10D",
+  "MTD",
+  "YTD",
+] as const;
 export const CONSTITUENT_PERIOD_COL = "Period" as const;
 
 /** Default when payload has no price_returns.columns (legacy fixtures). */
@@ -16,7 +23,6 @@ const CONSTITUENT_RETURN_SKIP = new Set<string>([
   ...CONSTITUENT_STANDARD_RETURN_HEAD,
   CONSTITUENT_PERIOD_COL,
   "1W",
-  "Premarket",
   "LstRpt %",
   "SinceLstRpt",
 ]);
