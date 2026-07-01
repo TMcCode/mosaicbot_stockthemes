@@ -258,6 +258,10 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
         <span className={styles.meta}>
           {periodLabel} · {topCount} gainers · {bottomCount} losers
           {asOfLabel ? ` · ${asOfLabel}` : ""}
+          {" · "}
+          <Link href="/compare" className={styles.metaLink}>
+            Theme returns
+          </Link>
         </span>
       </div>
       <div

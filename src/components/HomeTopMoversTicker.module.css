@@ -90,6 +90,17 @@
   color: var(--text-muted);
 }
 
+.metaLink {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.metaLink:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
 .viewport {
   overflow-x: auto;
   overflow-y: hidden;

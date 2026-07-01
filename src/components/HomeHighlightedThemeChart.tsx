@@ -5,6 +5,11 @@ import { useEffect, useMemo, useState } from "react";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { fetchChartSidecar } from "@/lib/chartSidecar";
 import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
+import {
+  referenceLastIsoFromPerformances,
+  sliceBenchmarkForPeriod,
+  sliceThemeChart1yForPeriod,
+} from "@/lib/chartPeriodControls";
 import { priceReturnsRevalidateSeconds } from "@/lib/stockthemesCache";
 import { stockthemesLiveChartPerformanceEnabled } from "@/lib/stockthemesClientConfig";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
@@ -77,11 +82,32 @@ export function HomeHighlightedThemeChart({ slug, name, chart1y, benchmarkPerfor
     return chart1y;
   }, [chart1y, livePerformance]);
 
+  const { chart1yOneYear, benchmarkOneYear } = useMemo(() => {
+    const referenceLastIso = referenceLastIsoFromPerformances([
+      chart1yMerged?.performance,
+      benchmarkPerformance,
+    ]);
+    return {
+      chart1yOneYear: sliceThemeChart1yForPeriod(
+        chart1yMerged,
+        "1Y",
+        undefined,
+        referenceLastIso,
+      ),
+      benchmarkOneYear: sliceBenchmarkForPeriod(
+        benchmarkPerformance,
+        "1Y",
+        undefined,
+        referenceLastIso,
+      ),
+    };
+  }, [chart1yMerged, benchmarkPerformance]);
+
   return (
     <Chart1yPanel
-      chart1y={chart1yMerged}
+      chart1y={chart1yOneYear}
       performanceTitle={name}
-      benchmarkPerformance={benchmarkPerformance}
+      benchmarkPerformance={benchmarkOneYear}
       compositionLegendShowMcap={false}
     />
   );

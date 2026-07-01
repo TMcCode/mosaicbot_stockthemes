@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Fragment, useMemo, useState } from "react";
 
 import styles from "@/app/page.module.css";
 
@@ -26,7 +27,10 @@ type Props = {
   rows: HomeTrendingRow[];
   columns: string[];
   columnHelp: Record<string, string | undefined>;
+  defaultSortKey: string;
 };
+
+type SortState = { key: string; dir: "asc" | "desc" };
 
 function fmtPct(v?: number): string {
   if (v == null || !Number.isFinite(v)) return "—";
@@ -34,8 +38,61 @@ function fmtPct(v?: number): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
-export function HomeTrendingThemesTable({ rows, columns, columnHelp }: Props) {
+function compareRows(a: HomeTrendingRow, b: HomeTrendingRow, sorts: SortState[]): number {
+  for (const s of sorts) {
+    if (s.key === "Theme") {
+      const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      if (cmp !== 0) return s.dir === "asc" ? cmp : -cmp;
+      continue;
+    }
+    const va = valueForTrendingColumn(s.key, a.compare_returns, a.chartPerf, a.name);
+    const vb = valueForTrendingColumn(s.key, b.compare_returns, b.chartPerf, b.name);
+    const aOk = va != null && Number.isFinite(va);
+    const bOk = vb != null && Number.isFinite(vb);
+    if (aOk && bOk && va !== vb) return s.dir === "asc" ? va - vb : vb - va;
+    if (aOk !== bOk) return aOk ? -1 : 1;
+  }
+  return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+}
+
+export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSortKey }: Props) {
+  const [sorts, setSorts] = useState<SortState[]>([{ key: defaultSortKey, dir: "desc" }]);
+  const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
+
+  const sortedRows = useMemo(() => {
+    const out = [...rows];
+    out.sort((a, b) => compareRows(a, b, sorts));
+    return out;
+  }, [rows, sorts]);
+
+  const onHeaderClick = (key: string, shiftKey: boolean) => {
+    setSorts((prev) => {
+      const idx = prev.findIndex((s) => s.key === key);
+      const nextDir = idx >= 0 && prev[idx].dir === "desc" ? "asc" : "desc";
+      if (!shiftKey) return [{ key, dir: nextDir }];
+      if (idx >= 0) {
+        const copy = [...prev];
+        copy[idx] = { key, dir: nextDir };
+        return copy;
+      }
+      return [...prev, { key, dir: nextDir }];
+    });
+  };
+
+  const renderSortHead = (key: string, label: React.ReactNode, sticky?: boolean, title?: string) => (
+    <button
+      type="button"
+      className={`${styles.trendingHead} ${styles.trendingSortHead} ${sticky ? styles.trendingSticky : ""} ${activeSortKeys.has(key) ? styles.trendingSortHeadActive : ""}`}
+      onClick={(e) => onHeaderClick(key, e.shiftKey)}
+      onPointerDown={(e) => e.stopPropagation()}
+      title={title}
+    >
+      {label}
+    </button>
+  );
+
   return (
+    <>
     <HorizontalScrollArea className={styles.trendingScrollWrap}>
       <div
         className={styles.trendingTable}
@@ -43,26 +100,29 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp }: Props) {
           gridTemplateColumns: `var(--trending-theme-col) repeat(${columns.length}, minmax(var(--trending-value-col), max-content))`,
         }}
       >
-        <div className={`${styles.trendingHead} ${styles.trendingSticky}`}>Theme</div>
+        {renderSortHead("Theme", "Theme", true)}
         {columns.map((col) => (
-          <div
-            key={`h-${col}`}
-            className={styles.trendingHead}
-            title={columnHelp[col] || col}
-          >
-            {trendingColumnHeader(col)}
-            {columnHelp[col] ? (
-              <span
-                className={styles.metricInfoAsterisk}
-                title={columnHelp[col]}
-                aria-label={`${trendingColumnHeader(col)} explanation`}
-              >
-                *
-              </span>
-            ) : null}
-          </div>
+          <Fragment key={`h-${col}`}>
+            {renderSortHead(
+              col,
+              <>
+                {trendingColumnHeader(col)}
+                {columnHelp[col] ? (
+                  <span
+                    className={styles.metricInfoAsterisk}
+                    title={columnHelp[col]}
+                    aria-label={`${trendingColumnHeader(col)} explanation`}
+                  >
+                    *
+                  </span>
+                ) : null}
+              </>,
+              false,
+              columnHelp[col] || col,
+            )}
+          </Fragment>
         ))}
-        {rows.flatMap((row) => {
+        {sortedRows.flatMap((row) => {
           const keyBase = row.slug ?? `n-${row.name}`;
           const nameCell =
             row.slug != null ? (
@@ -115,5 +175,9 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp }: Props) {
         })}
       </div>
     </HorizontalScrollArea>
+    <p className={styles.trendingSortHint}>
+      Default: {trendingColumnHeader(defaultSortKey)} ↓ · Click headers to sort · Shift+click secondary
+    </p>
+    </>
   );
 }
