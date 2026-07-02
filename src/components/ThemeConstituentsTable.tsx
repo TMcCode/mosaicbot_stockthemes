@@ -25,14 +25,19 @@ import {
 } from "@/lib/themeConstituentThemeReturn";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
+import { ThemeConstituentsRevenuePanel } from "@/components/ThemeConstituentsRevenuePanel";
+import { ThemeConstituentsRevisionsPanel } from "@/components/ThemeConstituentsRevisionsPanel";
+import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
 
-type TableView = "returns" | "earnings";
+type TableView = "returns" | "earnings" | "revenue" | "revisions";
 
 type Props = {
   detail: ThemeDetailV0;
   model: ThemeConstituentTableModel;
   livePrices?: boolean;
   selectedDates?: ManifestSelectedDateV0[];
+  slug?: string;
+  dataBaseUrl?: string;
 };
 
 export function ThemeConstituentsTable({
@@ -40,8 +45,12 @@ export function ThemeConstituentsTable({
   model,
   livePrices = false,
   selectedDates,
+  slug,
+  dataBaseUrl,
 }: Props) {
   const [view, setView] = useState<TableView>("returns");
+  const needsRevenueSidecar = view === "revenue" || view === "revisions";
+  const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
@@ -91,12 +100,12 @@ export function ThemeConstituentsTable({
 
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
+  const showRevenue = view === "revenue";
+  const showRevisions = view === "revisions";
   const themeCompare = detail.compare_returns;
-  const showThemeReturnRow = hasThemeManualWeightReturns(
-    themeCompare,
-    priceReturnColumns,
-    view,
-  );
+  const showThemeReturnRow =
+    (view === "returns" || view === "earnings") &&
+    hasThemeManualWeightReturns(themeCompare, priceReturnColumns, view);
 
   const themeReturnPct = (columnKey: string) =>
     formatConstituentPct(themeManualWeightReturnPct(columnKey, themeCompare, detail.name));
@@ -145,8 +154,38 @@ export function ThemeConstituentsTable({
           >
             Earnings Returns
           </button>
+          <button
+            type="button"
+            className={showRevenue ? tableStyles.active : undefined}
+            aria-pressed={showRevenue}
+            title="Analyst revenue growth estimates and valuation ratios"
+            onClick={() => setView("revenue")}
+          >
+            Revenue
+          </button>
+          <button
+            type="button"
+            className={showRevisions ? tableStyles.active : undefined}
+            aria-pressed={showRevisions}
+            title="Lock-quarter revenue estimate revisions"
+            onClick={() => setView("revisions")}
+          >
+            Rev Revisions
+          </button>
         </div>
       </div>
+      {showRevenue && slug && dataBaseUrl ? (
+        <ThemeConstituentsRevenuePanel detail={detail} sidecarState={sidecarState} />
+      ) : null}
+      {showRevisions && slug && dataBaseUrl ? (
+        <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
+      ) : null}
+      {(showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
+        <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
+          Revenue data is not available in this build.
+        </p>
+      ) : null}
+      {!showRevenue && !showRevisions ? (
       <div className={styles.tableWrap}>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
@@ -499,6 +538,7 @@ export function ThemeConstituentsTable({
           </div>
         </div>
       </div>
+      ) : null}
     </section>
   );
 }

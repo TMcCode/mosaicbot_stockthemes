@@ -59,3 +59,29 @@
   background: var(--color-accent-muted, rgba(42, 207, 200, 0.14));
   color: var(--accent-strong, #3b4da1);
 }
+
+.revenueToolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  margin-bottom: 8px;
+}
+
+.acceleratingNote {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary, #9aa8a6);
+  flex: 1 1 200px;
+}
+
+.revenuePos {
+  color: #3dd68c;
+  font-weight: 600;
+}
+
+.revenueNeg {
+  color: #f07178;
+  font-weight: 600;
+}

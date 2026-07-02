@@ -30,6 +30,8 @@ export function ThemeConstituentsTableLive({
       model={model}
       livePrices={livePrices}
       selectedDates={selectedDates}
+      slug={slug}
+      dataBaseUrl={dataBaseUrl}
     />
   );
 }

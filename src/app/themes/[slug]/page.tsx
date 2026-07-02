@@ -310,6 +310,8 @@ export default async function ThemeDetailPage({ params }: Props) {
                 detail={detail}
                 model={constituentTableModel}
                 selectedDates={selectedDates}
+                slug={slug}
+                dataBaseUrl={dataBaseUrl ?? undefined}
               />
             )
           ) : null}
