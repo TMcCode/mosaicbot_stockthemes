@@ -1,17 +1,16 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
-import { getSupabaseBrowserCookiePath, getSupabasePublicConfig } from "@/lib/supabase/config";
-
-
-import type { SupabaseClient } from "@supabase/supabase-js";
+import { getSupabasePublicConfig } from "@/lib/supabase/config";
 
 let singleton: SupabaseClient | null = null;
 
 /**
  * Singleton browser client — reuse across components to avoid duplicate auth listeners.
- * Uses `@supabase/ssr` so PKCE (magic link) state lives in cookies, not localStorage; the
- * default `createClient` loses the code verifier across Next.js navigations and shows
- * "PKCE code verifier not found in storage".
+ *
+ * Uses default localStorage (not `@supabase/ssr` cookies). OAuth leaves the site for
+ * Google/GitHub; Safari ITP often drops PKCE verifier cookies on return while
+ * same-origin localStorage survives. Static export has no SSR auth, so cookies are
+ * unnecessary.
  *
  * Returns null when env is not configured (builds/locales without secrets).
  */
@@ -21,8 +20,13 @@ export function getBrowserSupabase(): SupabaseClient | null {
     return null;
   }
   if (!singleton) {
-    singleton = createBrowserClient(cfg.url, cfg.anonKey, {
-      cookieOptions: { path: getSupabaseBrowserCookiePath() },
+    singleton = createClient(cfg.url, cfg.anonKey, {
+      auth: {
+        flowType: "pkce",
+        detectSessionInUrl: false,
+        persistSession: true,
+        autoRefreshToken: true,
+      },
     });
   }
   return singleton;
