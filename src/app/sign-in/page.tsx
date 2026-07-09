@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 
@@ -10,13 +9,17 @@ import signInStyles from "@/app/sign-in/sign-in.module.css";
 import { PageSurface } from "@/components/PageSurface";
 import { SignInOAuthButtons } from "@/components/SignInOAuthButtons";
 
-import { authCallbackAbsoluteUrl, AUTH_DEFAULT_NEXT_PATH, sanitizeAuthNextPath } from "@/lib/authRedirect";
+import {
+  authCallbackAbsoluteUrl,
+  authHardRedirect,
+  AUTH_DEFAULT_NEXT_PATH,
+  sanitizeAuthNextPath,
+} from "@/lib/authRedirect";
 import { getEnabledAuthOAuthProviders } from "@/lib/authOAuthProviders";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 export default function SignInPage() {
-  const router = useRouter();
   const { configured, loading, user } = useSupabaseAuth();
   const oauthProviders = getEnabledAuthOAuthProviders();
   const [email, setEmail] = useState("");
@@ -36,9 +39,9 @@ export default function SignInPage() {
   useEffect(() => {
     if (!configured || loading) return;
     if (user) {
-      router.replace(returnPath);
+      authHardRedirect(returnPath);
     }
-  }, [configured, loading, user, router, returnPath]);
+  }, [configured, loading, user, returnPath]);
 
   if (!configured) {
     return (
