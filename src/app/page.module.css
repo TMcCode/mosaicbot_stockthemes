@@ -634,19 +634,29 @@
 
 .trendingThemeRow {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 6px;
-  min-width: max-content;
+  min-width: 0;
+  width: 100%;
+}
+
+.trendingThemeText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex: 1;
 }
 
 .trendingThemeRow .trendingThemeName {
-  flex: 1;
+  flex: none;
   min-width: 0;
 }
 
 .trendingThemeCell.trendingSticky {
   /* Keep grid track width; plain min-width:0 can collapse the theme column on small screens */
   min-width: auto;
+  overflow: hidden;
 }
 
 .trendingThemeName {
@@ -656,12 +666,22 @@
   font-size: 14px;
   line-height: 1.35;
   white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trendingThemeName:hover {
   text-decoration: underline;
+}
+
+.trendingThemeGroup {
+  display: block;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trendingThemeNameMuted {
@@ -670,8 +690,8 @@
   font-size: 14px;
   line-height: 1.35;
   white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .trendingValue {
@@ -1447,7 +1467,8 @@ a.secondary {
   }
 
   .trendingThemeCell.trendingSticky .trendingThemeName,
-  .trendingThemeCell.trendingSticky .trendingThemeNameMuted {
+  .trendingThemeCell.trendingSticky .trendingThemeNameMuted,
+  .trendingThemeCell.trendingSticky .trendingThemeGroup {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

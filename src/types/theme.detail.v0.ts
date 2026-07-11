@@ -14,6 +14,11 @@ export type ThemeCompareReturnsV0 = {
   columns?: string[];
   /** Set by ETL or client when short-theme metrics were sign-flipped for display. */
   short_display_inverted?: boolean;
+  /**
+   * Set when Premarket/1D/10D are in short-display PnL (aligned with short_display_inverted).
+   * Legacy CDN omitted this after constituent overrides left those keys long.
+   */
+  short_constituent_horizons_inverted?: boolean;
 };
 
 /** 10D rank vs all themes and within group (manifest ETL → themes/<slug>.json). */

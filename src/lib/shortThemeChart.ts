@@ -30,7 +30,31 @@ export type ShortThemePerformanceMeta = {
 export type ShortThemeCompareReturns = {
   metrics?: Record<string, number | null>;
   short_display_inverted?: boolean;
+  /**
+   * Set by ETL when Premarket/1D/10D were written in short-display PnL after
+   * constituent overrides. Absent on legacy CDN where those keys stayed long.
+   */
+  short_constituent_horizons_inverted?: boolean;
 };
+
+/** Horizons overwritten from long constituent price_returns after short inversion. */
+const SHORT_CONSTITUENT_HORIZON_KEYS = ["Premarket", "1D", "10D"] as const;
+
+function negateFiniteMetrics(
+  metrics: Record<string, number | null>,
+  keys?: readonly string[],
+): Record<string, number | null> {
+  const out: Record<string, number | null> = { ...metrics };
+  const iter = keys ?? Object.keys(metrics);
+  for (const key of iter) {
+    if (!Object.prototype.hasOwnProperty.call(metrics, key)) continue;
+    const val = metrics[key];
+    if (typeof val === "number" && Number.isFinite(val)) {
+      out[key] = Math.round(-val * 10_000) / 10_000;
+    }
+  }
+  return out;
+}
 
 /** Negate compare-table metrics for explicit short themes (matches manifest ETL). */
 export function applyShortThemeCompareReturnsDisplay<T extends ShortThemeCompareReturns>(
@@ -41,17 +65,24 @@ export function applyShortThemeCompareReturnsDisplay<T extends ShortThemeCompare
     return block ?? undefined;
   }
   if (block.short_display_inverted === true) {
-    return block;
-  }
-  const metrics: Record<string, number | null> = {};
-  for (const [key, val] of Object.entries(block.metrics)) {
-    if (typeof val === "number" && Number.isFinite(val)) {
-      metrics[key] = Math.round(-val * 10_000) / 10_000;
-    } else {
-      metrics[key] = val ?? null;
+    // Legacy CDN: long-horizon metrics inverted, but Premarket/1D/10D still long.
+    if (block.short_constituent_horizons_inverted === true) {
+      return block;
     }
+    const metrics = negateFiniteMetrics(block.metrics, SHORT_CONSTITUENT_HORIZON_KEYS);
+    return {
+      ...block,
+      metrics,
+      short_constituent_horizons_inverted: true,
+    };
   }
-  return { ...block, metrics, short_display_inverted: true };
+  const metrics = negateFiniteMetrics(block.metrics);
+  return {
+    ...block,
+    metrics,
+    short_display_inverted: true,
+    short_constituent_horizons_inverted: true,
+  };
 }
 
 /**
@@ -70,21 +101,21 @@ export function applyShortThemePerformanceDisplay(
   let shouldInvert = false;
   if (meta?.short_display_inverted === false) {
     shouldInvert = true;
+  } else {
+    const first = values[0];
+    const last = values[values.length - 1];
+    if (!Number.isFinite(first) || !Number.isFinite(last) || first === 0) {
+      shouldInvert = true;
     } else {
-      const first = values[0];
-      const last = values[values.length - 1];
-      if (!Number.isFinite(first) || !Number.isFinite(last) || first === 0) {
-        shouldInvert = true;
+      const totalRet = last / first - 1;
+      // Already inverted (e.g. dev disk cache): skip. Long-oriented CDN JSON: flip.
+      if (totalRet < -0.12) {
+        shouldInvert = false;
       } else {
-        const totalRet = last / first - 1;
-        // Already inverted (e.g. dev disk cache): skip. Long-oriented CDN JSON: flip.
-        if (totalRet < -0.12) {
-          shouldInvert = false;
-        } else {
-          shouldInvert = totalRet > 0.12;
-        }
+        shouldInvert = totalRet > 0.12;
       }
     }
+  }
 
   if (!shouldInvert) return values;
 

@@ -16,9 +16,13 @@
 }
 
 .scrollWrap {
+  --compare-theme-col: minmax(240px, max-content);
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .table {
@@ -64,6 +68,10 @@
   min-width: 0;
 }
 
+.themeCell.sticky {
+  overflow: hidden;
+}
+
 .themeName {
   display: block;
   color: var(--text-primary);
@@ -72,6 +80,8 @@
   font-weight: 600;
   line-height: 1.35;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .themeName:hover {
@@ -80,7 +90,25 @@
 
 .meta {
   font-size: 11px;
+  line-height: 1.25;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tickersMeta {
+  margin-top: 1px;
+}
+
+@media (max-width: 640px) {
+  .scrollWrap {
+    --compare-theme-col: minmax(160px, 58vw);
+  }
+
+  .tickersMeta {
+    display: none;
+  }
 }
 
 .benchmarkName {

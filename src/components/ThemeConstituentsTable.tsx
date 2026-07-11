@@ -135,44 +135,51 @@ export function ThemeConstituentsTable({
     <section className={styles.section} aria-labelledby="constituents-heading">
       <div className={tableStyles.sectionHeader}>
         <h2 id="constituents-heading">{detail.name} Constituents</h2>
-        <div className={tableStyles.toggle} role="group" aria-label="Constituents table columns">
-          <button
-            type="button"
-            className={showReturns ? tableStyles.active : undefined}
-            aria-pressed={showReturns}
-            title="Returns over calendar windows and custom event dates (1D, MTD, YTD, etc.)"
-            onClick={() => setView("returns")}
-          >
-            Period Returns
-          </button>
-          <button
-            type="button"
-            className={showEarnings ? tableStyles.active : undefined}
-            aria-pressed={showEarnings}
-            title="Returns around report dates and the current earnings quarter"
-            onClick={() => setView("earnings")}
-          >
-            Earnings Returns
-          </button>
-          <button
-            type="button"
-            className={showRevenue ? tableStyles.active : undefined}
-            aria-pressed={showRevenue}
-            title="Analyst revenue growth estimates and valuation ratios"
-            onClick={() => setView("revenue")}
-          >
-            Revenue
-          </button>
-          <button
-            type="button"
-            className={showRevisions ? tableStyles.active : undefined}
-            aria-pressed={showRevisions}
-            title="Lock-quarter revenue estimate revisions"
-            onClick={() => setView("revisions")}
-          >
-            Rev Revisions
-          </button>
-        </div>
+        <HorizontalScrollArea
+          className={tableStyles.toggleScroll}
+          tabIndex={0}
+          role="group"
+          aria-label="Constituents table columns"
+        >
+          <div className={tableStyles.toggle}>
+            <button
+              type="button"
+              className={showReturns ? tableStyles.active : undefined}
+              aria-pressed={showReturns}
+              title="Returns over calendar windows and custom event dates (1D, MTD, YTD, etc.)"
+              onClick={() => setView("returns")}
+            >
+              Period Returns
+            </button>
+            <button
+              type="button"
+              className={showEarnings ? tableStyles.active : undefined}
+              aria-pressed={showEarnings}
+              title="Returns around report dates and the current earnings quarter"
+              onClick={() => setView("earnings")}
+            >
+              Earnings Returns
+            </button>
+            <button
+              type="button"
+              className={showRevenue ? tableStyles.active : undefined}
+              aria-pressed={showRevenue}
+              title="Analyst revenue growth estimates and valuation ratios"
+              onClick={() => setView("revenue")}
+            >
+              Revenue
+            </button>
+            <button
+              type="button"
+              className={showRevisions ? tableStyles.active : undefined}
+              aria-pressed={showRevisions}
+              title="Lock-quarter revenue estimate revisions"
+              onClick={() => setView("revisions")}
+            >
+              Rev Revisions
+            </button>
+          </div>
+        </HorizontalScrollArea>
       </div>
       {showRevenue && slug && dataBaseUrl ? (
         <ThemeConstituentsRevenuePanel detail={detail} sidecarState={sidecarState} />

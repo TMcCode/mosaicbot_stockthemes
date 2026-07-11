@@ -8,6 +8,7 @@ import styles from "@/app/page.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import {
   trendingColumnHeader,
   valueForTrendingColumn,
@@ -124,6 +125,7 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
         ))}
         {sortedRows.flatMap((row) => {
           const keyBase = row.slug ?? `n-${row.name}`;
+          const { title, groupPrefix } = splitThemeDisplayName(row.name);
           const nameCell =
             row.slug != null ? (
               <div
@@ -138,13 +140,18 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
                     label={row.name}
                     signInNext={`/themes/${row.slug}`}
                   />
-                  <Link
-                    href={`/themes/${row.slug}`}
-                    className={styles.trendingThemeName}
-                    title={row.name}
-                  >
-                    {row.name}
-                  </Link>
+                  <div className={styles.trendingThemeText}>
+                    <Link
+                      href={`/themes/${row.slug}`}
+                      className={styles.trendingThemeName}
+                      title={row.name}
+                    >
+                      {title}
+                    </Link>
+                    {groupPrefix ? (
+                      <div className={styles.trendingThemeGroup}>{groupPrefix}</div>
+                    ) : null}
+                  </div>
                 </div>
               </div>
             ) : (

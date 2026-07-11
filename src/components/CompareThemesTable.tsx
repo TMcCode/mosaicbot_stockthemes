@@ -9,6 +9,7 @@ import {
   metricColumnHeaderTooltip,
 } from "@/lib/customDateColumnHelp";
 import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -80,7 +81,7 @@ export function CompareThemesTable({
     return out;
   }, [benchmarkRows, rows, sorts]);
 
-  const gridTemplateColumns = `minmax(240px, max-content) repeat(${columns.length}, minmax(76px, max-content))`;
+  const gridTemplateColumns = `var(--compare-theme-col) repeat(${columns.length}, minmax(76px, max-content))`;
 
   const onHeaderClick = (key: string, shiftKey: boolean) => {
     setSorts((prev) => {
@@ -136,6 +137,10 @@ export function CompareThemesTable({
           {displayRows.flatMap((row) => {
             const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
+            const { title, groupPrefix } = splitThemeDisplayName(row.name);
+            const groupLine =
+              groupPrefix ||
+              (!isBenchmark ? String(row.groupName || "").trim() || null : null);
             const nameCell = isBenchmark ? (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 <span className={styles.benchmarkName} title={row.name}>
@@ -148,16 +153,17 @@ export function CompareThemesTable({
             ) : (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 {row.slug ? (
-                  <Link href={`/themes/${row.slug}`} className={styles.themeName}>
-                    {row.name}
+                  <Link href={`/themes/${row.slug}`} className={styles.themeName} title={row.name}>
+                    {title}
                   </Link>
                 ) : (
-                  <span className={styles.themeName}>{row.name}</span>
+                  <span className={styles.themeName} title={row.name}>
+                    {title}
+                  </span>
                 )}
+                {groupLine ? <div className={styles.meta}>{groupLine}</div> : null}
                 {row.tickersPreview ? (
-                  <div className={styles.meta}>{row.tickersPreview}</div>
-                ) : row.groupName ? (
-                  <div className={styles.meta}>{row.groupName}</div>
+                  <div className={`${styles.meta} ${styles.tickersMeta}`}>{row.tickersPreview}</div>
                 ) : null}
               </div>
             );
