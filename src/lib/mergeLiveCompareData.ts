@@ -1,6 +1,7 @@
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import { buildTopMoversTickerItems } from "@/lib/buildTopMoversTicker";
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
+import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import type { CompareThemesRowV0, CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
@@ -58,15 +59,29 @@ export function mergeGroupThemeTableCompareReturns<
 }
 
 export function mergeHomeTrendingCompareReturns<
-  T extends { slug: string | null; name: string; marketBaseline?: boolean; compare_returns?: ThemeCompareReturnsV0 },
+  T extends {
+    slug: string | null;
+    name: string;
+    marketBaseline?: boolean;
+    compare_returns?: ThemeCompareReturnsV0;
+    tickersPreview?: string | null;
+  },
 >(rows: T[], liveRows: CompareThemesRowV0[]): T[] {
   const { bySlug, byName } = indexCompareRows(liveRows);
   return rows.map((row) => {
     if (row.marketBaseline) return row;
     const live =
       (row.slug && bySlug.get(row.slug)) || byName.get(normName(row.name));
-    if (!live?.compare_returns) return row;
-    return { ...row, compare_returns: live.compare_returns };
+    if (!live) return row;
+    const tickersPreview =
+      formatTickersPreviewFromParts(live.tickers_preview, live.tickers_preview_more) ??
+      row.tickersPreview;
+    if (!live.compare_returns && tickersPreview === row.tickersPreview) return row;
+    return {
+      ...row,
+      ...(live.compare_returns ? { compare_returns: live.compare_returns } : {}),
+      tickersPreview,
+    };
   });
 }
 

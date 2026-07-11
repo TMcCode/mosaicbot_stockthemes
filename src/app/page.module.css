@@ -674,7 +674,22 @@
   text-decoration: underline;
 }
 
+/* Desktop: full name + tickers. Mobile: short title + group prefix. */
+.trendingThemeNameShort {
+  display: none;
+}
+
 .trendingThemeGroup {
+  display: none;
+  color: var(--text-muted);
+  font-size: 11px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.trendingThemeTickers {
   display: block;
   color: var(--text-muted);
   font-size: 11px;
@@ -1471,6 +1486,22 @@ a.secondary {
     --trending-theme-col: minmax(170px, 62vw);
     /* Force value columns wide enough so the table overflows and can be panned. */
     --trending-value-col: 88px;
+  }
+
+  .trendingThemeNameFull {
+    display: none;
+  }
+
+  .trendingThemeNameShort {
+    display: inline;
+  }
+
+  .trendingThemeGroup {
+    display: block;
+  }
+
+  .trendingThemeTickers {
+    display: none;
   }
 
   .trendingThemeCell.trendingSticky .trendingThemeName,

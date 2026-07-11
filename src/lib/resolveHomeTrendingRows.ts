@@ -1,5 +1,6 @@
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
+import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
 import type { HomeTrendingRowV0, HomeTrendingV0 } from "@/types/home_trending.v0";
@@ -12,6 +13,8 @@ export type HomeTrendingDetailRow = {
   chart1y: ThemeChart1yV0 | undefined;
   chartPerf: ChartPerfReturns;
   compare_returns?: ThemeCompareReturnsV0;
+  /** Comma-separated tickers (+N); from compare_themes embed. */
+  tickersPreview?: string | null;
   marketBaseline?: boolean;
 };
 
@@ -72,12 +75,18 @@ function rowFromSources(
   const compare_returns = (homeRow?.compare_returns ??
     compareRow?.compare_returns ??
     undefined) as ThemeCompareReturnsV0 | undefined;
+  const tickersPreview =
+    formatTickersPreviewFromParts(
+      compareRow?.tickers_preview,
+      compareRow?.tickers_preview_more,
+    ) ?? null;
   return {
     slug,
     name,
     chart1y,
     chartPerf: computePerfFromChartPerformance(chart1y?.performance),
     compare_returns,
+    tickersPreview,
   };
 }
 

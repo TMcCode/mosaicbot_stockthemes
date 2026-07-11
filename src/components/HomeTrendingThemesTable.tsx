@@ -22,6 +22,8 @@ export type HomeTrendingRow = {
   marketBaseline?: boolean;
   compare_returns?: ThemeCompareReturnsV0;
   chartPerf: ChartPerfReturns;
+  /** Comma-separated tickers (+N); desktop second line. */
+  tickersPreview?: string | null;
 };
 
 type Props = {
@@ -146,10 +148,14 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
                       className={styles.trendingThemeName}
                       title={row.name}
                     >
-                      {title}
+                      <span className={styles.trendingThemeNameFull}>{row.name}</span>
+                      <span className={styles.trendingThemeNameShort}>{title}</span>
                     </Link>
                     {groupPrefix ? (
                       <div className={styles.trendingThemeGroup}>{groupPrefix}</div>
+                    ) : null}
+                    {row.tickersPreview ? (
+                      <div className={styles.trendingThemeTickers}>{row.tickersPreview}</div>
                     ) : null}
                   </div>
                 </div>
