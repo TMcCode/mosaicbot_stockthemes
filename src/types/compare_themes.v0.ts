@@ -12,6 +12,10 @@ export type CompareThemesRowV0 = {
   rank_10d?: ThemeRank10dV0 | null;
   /** Mean constituent USD market cap (theme ETL). */
   avg_market_cap_usd?: number;
+  /** Sample tickers (weight then mcap); same as group themes[].tickers_preview. */
+  tickers_preview?: string[];
+  /** Count of additional tickers not listed in tickers_preview. */
+  tickers_preview_more?: number;
 };
 
 export type CompareThemesV0 = {

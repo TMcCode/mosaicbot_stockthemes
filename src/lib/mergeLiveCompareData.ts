@@ -1,9 +1,10 @@
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import { buildTopMoversTickerItems } from "@/lib/buildTopMoversTicker";
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import type { CompareThemesRowV0, CompareThemesV0 } from "@/types/compare_themes.v0";
-import type { HomeTrendingRowV0, HomeTrendingV0 } from "@/types/home_trending.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
+import type { HomeTrendingRowV0, HomeTrendingV0 } from "@/types/home_trending.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 function normName(value: string | undefined): string {
@@ -74,6 +75,7 @@ export type ComparePageRow = {
   name: string;
   groupSlug?: string | null;
   groupName?: string | null;
+  spySector?: string | null;
   tickersPreview?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
@@ -95,7 +97,14 @@ export function pickTopMoversWithLiveBundle(
   serverBundle: HomeTopMoversV0 | null | undefined,
   liveBundle: HomeTopMoversV0 | null | undefined,
   period: TopMoverTickerPeriod,
+  compareBundle?: CompareThemesV0 | null,
 ): TopMoverTickerItem[] {
+  // Full re-rank from compare (short-aware) beats precomputed movers on legacy CDN.
+  const compareRows = compareBundle?.rows;
+  if (Array.isArray(compareRows) && compareRows.length > 0) {
+    const fromCompare = buildTopMoversTickerItems(compareRows, { period });
+    if (fromCompare.length > 0) return fromCompare;
+  }
   const liveItems = pickHomeTopMovers(liveBundle, period);
   if (liveItems.length > 0) return liveItems;
   return pickHomeTopMovers(serverBundle, period);

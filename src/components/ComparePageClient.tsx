@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
@@ -11,6 +11,7 @@ import {
   availableCompareSummaryPeriods,
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
+import { isCompareSectorFilterInactive, COMPARE_SECTOR_UNMAPPED } from "@/lib/compareSectorFilter";
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
@@ -26,6 +27,7 @@ type Row = {
   name: string;
   groupSlug?: string | null;
   groupName?: string | null;
+  spySector?: string | null;
   tickersPreview?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
@@ -37,6 +39,9 @@ type Props = {
   rows: Row[];
   columns: string[];
   groupOptions: string[];
+  /** Group display name → normalized spy_sector (Other / Unmapped / …). */
+  groupSectorByName: Record<string, string>;
+  sectorOptions: string[];
   yearOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
   serverCompareBundle?: CompareThemesV0 | null;
@@ -49,6 +54,8 @@ export function ComparePageClient({
   rows,
   columns,
   groupOptions,
+  groupSectorByName,
+  sectorOptions,
   yearOptions,
   selectedDates,
   serverCompareBundle,
@@ -59,6 +66,7 @@ export function ComparePageClient({
     () => mergeComparePageRows(rows, compareBundle?.rows ?? []),
     [rows, compareBundle?.rows],
   );
+  const [selectedSectors, setSelectedSectors] = useState<string[]>(() => [...sectorOptions]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
@@ -72,15 +80,47 @@ export function ComparePageClient({
     return availablePeriods[0] ?? "10D";
   });
 
+  const sectorInactive = isCompareSectorFilterInactive(selectedSectors, sectorOptions);
+
+  const visibleGroupOptions = useMemo(() => {
+    if (sectorInactive) return groupOptions;
+    const allowed = new Set(selectedSectors);
+    return groupOptions.filter(
+      (name) => allowed.has(groupSectorByName[name] ?? COMPARE_SECTOR_UNMAPPED),
+    );
+  }, [sectorInactive, groupOptions, selectedSectors, groupSectorByName]);
+
+  useEffect(() => {
+    setSelectedGroups((prev) => {
+      const allowed = new Set(visibleGroupOptions);
+      const next = prev.filter((g) => allowed.has(g));
+      if (next.length === prev.length) return prev;
+      if (next.length === 0 && visibleGroupOptions.length > 0) {
+        return [...visibleGroupOptions];
+      }
+      return next;
+    });
+  }, [visibleGroupOptions]);
+
   const filtered = useMemo(
     () =>
       filterCompareRows(rowsWithLiveCompare, {
-        groupOptions,
+        groupOptions: visibleGroupOptions,
         yearOptions,
+        sectorOptions,
         selectedGroups,
         selectedYears,
+        selectedSectors,
       }),
-    [rowsWithLiveCompare, groupOptions, yearOptions, selectedGroups, selectedYears],
+    [
+      rowsWithLiveCompare,
+      visibleGroupOptions,
+      yearOptions,
+      sectorOptions,
+      selectedGroups,
+      selectedYears,
+      selectedSectors,
+    ],
   );
 
   const tableBenchmarkRows = useMemo(() => {
@@ -98,16 +138,30 @@ export function ComparePageClient({
           <h1>Theme returns table</h1>
           <p className={pageStyles.introLead}>
             Rank every theme by return across daily, calendar, and earnings horizons—plus custom
-            date windows. Filter by group or vintage year; click a column to sort, shift-click for
-            a secondary sort.
+            date windows. Filter by sector, group, or vintage year; click a column to sort,
+            shift-click for a secondary sort.
           </p>
           <p>
-            {rows.length} themes · {visibleColumns.length} metrics
+            {filtered.length === rows.length
+              ? `${rows.length} themes`
+              : `${filtered.length} of ${rows.length} themes`}{" "}
+            · {visibleColumns.length} metrics
           </p>
           <div className={pageStyles.compareHeroFilters}>
+            {sectorOptions.length > 0 ? (
+              <CheckboxMultiSelectDropdown
+                label="Sectors"
+                options={sectorOptions}
+                selected={selectedSectors}
+                onChange={setSelectedSectors}
+                emptyLabel="All sectors"
+                emptyMeansAll
+                layout="inline"
+              />
+            ) : null}
             <CheckboxMultiSelectDropdown
               label="Groups"
-              options={groupOptions}
+              options={visibleGroupOptions}
               selected={selectedGroups}
               onChange={setSelectedGroups}
               emptyLabel="All groups"

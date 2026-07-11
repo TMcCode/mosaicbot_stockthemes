@@ -140,13 +140,14 @@ export default async function Home() {
     HOME_FEED_MAX_DAYS,
   );
   /** Full merged list (including outside the 10-day window) is on `/feed`; show link if anything is left off the home strip. */
-  const precomputedTopMovers = pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
+  // Prefer compare_themes re-rank (short-aware) over precomputed movers on legacy CDN.
+  const fromCompare = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
+    period: topMoversPeriod,
+  });
   const topMoversTicker =
-    precomputedTopMovers.length > 0
-      ? precomputedTopMovers
-      : buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
-          period: topMoversPeriod,
-        });
+    fromCompare.length > 0
+      ? fromCompare
+      : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
 
   const details = resolveHomeTrendingRows(
     trendingNames,
@@ -250,6 +251,7 @@ export default async function Home() {
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
             tickerPerformanceAsOf={manifest.ticker_performance_as_of}
+            serverCompareBundle={compareRes?.bundle ?? null}
             serverTopMoversBundle={topMoversRes?.bundle ?? null}
           />
 

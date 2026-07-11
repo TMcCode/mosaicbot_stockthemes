@@ -7,6 +7,7 @@ import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { pickTopMoversWithLiveBundle } from "@/lib/mergeLiveCompareData";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
   period?: TopMoverTickerPeriod;
   asOfLabel?: string;
   tickerPerformanceAsOf?: string;
+  serverCompareBundle?: CompareThemesV0 | null;
   serverTopMoversBundle?: HomeTopMoversV0 | null;
 };
 
@@ -22,17 +24,23 @@ export function HomeTopMoversTickerLive({
   period,
   asOfLabel,
   tickerPerformanceAsOf,
+  serverCompareBundle,
   serverTopMoversBundle,
 }: Props) {
-  const { topMoversBundle, liveTickerPerformanceAsOf } = useLiveCompareBundles(
-    null,
+  const { topMoversBundle, compareBundle, liveTickerPerformanceAsOf } = useLiveCompareBundles(
+    serverCompareBundle,
     serverTopMoversBundle,
   );
   const liveItems = useMemo(() => {
     if (!period) return items;
-    const fromBundle = pickTopMoversWithLiveBundle(serverTopMoversBundle, topMoversBundle, period);
+    const fromBundle = pickTopMoversWithLiveBundle(
+      serverTopMoversBundle,
+      topMoversBundle,
+      period,
+      compareBundle,
+    );
     return fromBundle.length > 0 ? fromBundle : items;
-  }, [items, period, serverTopMoversBundle, topMoversBundle]);
+  }, [items, period, serverTopMoversBundle, topMoversBundle, compareBundle]);
 
   const liveAsOfLabel = useMemo(() => {
     const iso =

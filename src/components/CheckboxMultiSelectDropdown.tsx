@@ -11,15 +11,22 @@ type Props = {
   selected: string[];
   onChange: (next: string[]) => void;
   emptyLabel?: string;
+  /** When nothing is checked, show emptyLabel instead of "None selected" (filter = all). */
+  emptyMeansAll?: boolean;
   /** Inline label + trigger on one row (compare hero filters). */
   layout?: "stacked" | "inline";
   /** Narrow trigger for tight toolbars (overlay sector picker). */
   compact?: boolean;
 };
 
-function summaryLabel(selected: string[], options: string[], allLabel: string): string {
+function summaryLabel(
+  selected: string[],
+  options: string[],
+  allLabel: string,
+  emptyMeansAll: boolean,
+): string {
   if (options.length === 0) return allLabel;
-  if (selected.length === 0) return "None selected";
+  if (selected.length === 0) return emptyMeansAll ? allLabel : "None selected";
   if (selected.length >= options.length) return allLabel;
   if (selected.length === 1) return selected[0];
   return `${selected.length} selected`;
@@ -31,6 +38,7 @@ export function CheckboxMultiSelectDropdown({
   selected,
   onChange,
   emptyLabel = "All",
+  emptyMeansAll = false,
   layout = "stacked",
   compact = false,
 }: Props) {
@@ -170,7 +178,9 @@ export function CheckboxMultiSelectDropdown({
         aria-labelledby={`${listId}-label`}
         onClick={() => setOpen((v) => !v)}
       >
-        <span className={styles.triggerText}>{summaryLabel(selected, options, emptyLabel)}</span>
+        <span className={styles.triggerText}>
+          {summaryLabel(selected, options, emptyLabel, emptyMeansAll)}
+        </span>
         <span className={styles.chevron} aria-hidden>
           ▾
         </span>

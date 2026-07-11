@@ -6,12 +6,16 @@ import { PageSurface } from "@/components/PageSurface";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
 import { getFactorSpreadsCached } from "@/lib/getFactorSpreadsCached";
-import { getGroupTickersPreviewMapCached } from "@/lib/getGroupTickersPreviewMapCached";
 import {
   mapEtfBenchmarksToCompareRows,
   mapFactorSpreadsToCompareRows,
   type CompareBenchmarkRow,
 } from "@/lib/compareBenchmarkRows";
+import {
+  normalizeCompareSpySector,
+  orderCompareSectorOptions,
+} from "@/lib/compareSectorFilter";
+import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -33,28 +37,39 @@ function deriveYearTag(name: string): string | null {
 }
 
 export default async function ComparePage() {
-  const [{ manifest, source }, compareRes, previewBySlug, benchmarksRes, factorSpreadsRes, spyPerf] =
+  const [{ manifest, source }, compareRes, benchmarksRes, factorSpreadsRes, spyPerf] =
     await Promise.all([
       getManifestCached(),
       getCompareThemesCached(),
-      getGroupTickersPreviewMapCached(),
       getEtfBenchmarksCached(),
       getFactorSpreadsCached(),
       getSpyMarketPerfCached(),
     ]);
   const groupBySlug = new Map(
-    (manifest.groups || []).map((g) => [String(g.slug || "").trim(), String(g.name || "").trim()]),
+    (manifest.groups || []).map((g) => {
+      const slug = String(g.slug || "").trim();
+      return [
+        slug,
+        {
+          name: String(g.name || "").trim(),
+          spySector: normalizeCompareSpySector(g.spy_sector),
+        },
+      ] as const;
+    }),
   );
   const rows = (compareRes?.bundle.rows || []).map((r) => {
     const slug = String(r.slug || "").trim();
+    const groupSlug = String(r.group_slug || "").trim();
+    const groupMeta = groupSlug ? groupBySlug.get(groupSlug) : undefined;
     return {
       slug,
       name: String(r.name || "").trim(),
       groupSlug: r.group_slug ?? null,
       groupName:
-        String(r.group_name || "").trim() ||
-        (r.group_slug ? (groupBySlug.get(String(r.group_slug || "").trim()) ?? "") : ""),
-      tickersPreview: previewBySlug.get(slug) ?? null,
+        String(r.group_name || "").trim() || groupMeta?.name || "",
+      spySector: groupMeta?.spySector ?? normalizeCompareSpySector(null),
+      tickersPreview:
+        formatTickersPreviewFromParts(r.tickers_preview, r.tickers_preview_more) ?? null,
       compareReturns: r.compare_returns ?? undefined,
     };
   });
@@ -84,9 +99,16 @@ export default async function ComparePage() {
     return [];
   })();
   const factorSpreadRows = mapFactorSpreadsToCompareRows(factorSpreadsRes?.bundle);
-  const groupOptions = Array.from(
-    new Set(rows.map((r) => String(r.groupName || "").trim()).filter(Boolean)),
-  ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
+  const groupSectorByName = new Map<string, string>();
+  for (const r of rows) {
+    const name = String(r.groupName || "").trim();
+    if (!name || groupSectorByName.has(name)) continue;
+    groupSectorByName.set(name, r.spySector);
+  }
+  const groupOptions = Array.from(groupSectorByName.keys()).sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
+  const sectorOptions = orderCompareSectorOptions(groupSectorByName.values());
   const yearOptions = Array.from(
     new Set(rows.map((r) => deriveYearTag(r.name)).filter((x): x is string => Boolean(x))),
   ).sort();
@@ -102,6 +124,8 @@ export default async function ComparePage() {
             rows={rows}
             columns={columns}
             groupOptions={groupOptions}
+            groupSectorByName={Object.fromEntries(groupSectorByName)}
+            sectorOptions={sectorOptions}
             yearOptions={yearOptions}
             selectedDates={manifest.selected_dates}
             serverCompareBundle={compareRes?.bundle ?? null}

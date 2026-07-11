@@ -1,6 +1,9 @@
+import { isCompareSectorFilterInactive } from "@/lib/compareSectorFilter";
+
 export type CompareFilterRow = {
   name: string;
   groupName?: string | null;
+  spySector?: string | null;
 };
 
 export function deriveCompareYearTag(name: string): string | null {
@@ -13,11 +16,23 @@ export function filterCompareRows<T extends CompareFilterRow>(
   options: {
     groupOptions: string[];
     yearOptions: string[];
+    sectorOptions?: string[];
     selectedGroups: string[];
     selectedYears: string[];
+    selectedSectors?: string[];
   },
 ): T[] {
-  const { groupOptions, yearOptions, selectedGroups, selectedYears } = options;
+  const {
+    groupOptions,
+    yearOptions,
+    sectorOptions = [],
+    selectedGroups,
+    selectedYears,
+    selectedSectors = [],
+  } = options;
+
+  const sectorInactive = isCompareSectorFilterInactive(selectedSectors, sectorOptions);
+  const filterSectors = !sectorInactive;
   const filterGroups =
     groupOptions.length > 0 &&
     selectedGroups.length > 0 &&
@@ -28,6 +43,10 @@ export function filterCompareRows<T extends CompareFilterRow>(
     selectedYears.length < yearOptions.length;
 
   return rows.filter((r) => {
+    if (filterSectors) {
+      const sector = String(r.spySector || "").trim();
+      if (!selectedSectors.includes(sector)) return false;
+    }
     if (filterGroups) {
       const g = String(r.groupName || "");
       if (!selectedGroups.includes(g)) return false;

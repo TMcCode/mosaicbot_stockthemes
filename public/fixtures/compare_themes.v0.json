@@ -10,6 +10,8 @@
       "group_slug": "artificial-intelligence",
       "group_name": "Artificial Intelligence",
       "avg_market_cap_usd": 85000000000,
+      "tickers_preview": ["NVDA", "AMD", "AVGO", "TSM", "ASML", "AMAT"],
+      "tickers_preview_more": 4,
       "compare_returns": {
         "source": "fixture",
         "columns": ["1D", "10D", "MTD", "YTD", "Period"],
