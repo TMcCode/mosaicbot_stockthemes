@@ -97,17 +97,9 @@
   text-overflow: ellipsis;
 }
 
-.tickersMeta {
-  margin-top: 1px;
-}
-
 @media (max-width: 640px) {
   .scrollWrap {
     --compare-theme-col: minmax(160px, 58vw);
-  }
-
-  .tickersMeta {
-    display: none;
   }
 }
 

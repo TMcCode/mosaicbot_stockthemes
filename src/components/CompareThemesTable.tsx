@@ -168,9 +168,6 @@ export function CompareThemesTable({
                   </span>
                 )}
                 {groupLine ? <div className={styles.meta}>{groupLine}</div> : null}
-                {row.tickersPreview ? (
-                  <div className={`${styles.meta} ${styles.tickersMeta}`}>{row.tickersPreview}</div>
-                ) : null}
               </div>
             );
             const valueCells = columns.map((col) => {
