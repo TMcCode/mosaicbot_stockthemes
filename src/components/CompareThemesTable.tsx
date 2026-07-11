@@ -9,7 +9,6 @@ import {
   metricColumnHeaderTooltip,
 } from "@/lib/customDateColumnHelp";
 import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
-import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -137,10 +136,6 @@ export function CompareThemesTable({
           {displayRows.flatMap((row) => {
             const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
-            const { title, groupPrefix } = splitThemeDisplayName(row.name);
-            const groupLine =
-              groupPrefix ||
-              (!isBenchmark ? String(row.groupName || "").trim() || null : null);
             const nameCell = isBenchmark ? (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 <span className={styles.benchmarkName} title={row.name}>
@@ -160,14 +155,16 @@ export function CompareThemesTable({
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 {row.slug ? (
                   <Link href={`/themes/${row.slug}`} className={styles.themeName} title={row.name}>
-                    {title}
+                    {row.name}
                   </Link>
                 ) : (
                   <span className={styles.themeName} title={row.name}>
-                    {title}
+                    {row.name}
                   </span>
                 )}
-                {groupLine ? <div className={styles.meta}>{groupLine}</div> : null}
+                {row.tickersPreview ? (
+                  <div className={`${styles.meta} ${styles.tickersMeta}`}>{row.tickersPreview}</div>
+                ) : null}
               </div>
             );
             const valueCells = columns.map((col) => {
