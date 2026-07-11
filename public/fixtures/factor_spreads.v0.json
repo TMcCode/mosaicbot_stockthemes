@@ -1,0 +1,62 @@
+{
+  "schema_version": "factor_spreads.v0",
+  "as_of": "2026-05-30T08:05:04Z",
+  "source": "fixture_factor_spreads",
+  "columns": ["1D", "10D", "MTD", "YTD", "Period", "IranWar", "LibDay"],
+  "rows": [
+    {
+      "factor_id": "AI_INNOVATION",
+      "name": "AI / Innovation Narrative Exposure",
+      "proxy": "AIQ − SPY",
+      "compare_returns": {
+        "source": "fixture_ai_innovation",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period", "IranWar", "LibDay"],
+        "metrics": {
+          "1D": 0.21,
+          "10D": 1.4,
+          "MTD": 1.8,
+          "YTD": 4.2,
+          "Period": 18.5,
+          "IranWar": 2.1,
+          "LibDay": 18.5
+        }
+      }
+    },
+    {
+      "factor_id": "MOMENTUM",
+      "name": "Momentum Exposure",
+      "proxy": "MTUM − SPY",
+      "compare_returns": {
+        "source": "fixture_momentum",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period", "IranWar", "LibDay"],
+        "metrics": {
+          "1D": -0.05,
+          "10D": 0.3,
+          "MTD": 0.4,
+          "YTD": 1.1,
+          "Period": 6.2,
+          "IranWar": 0.8,
+          "LibDay": 6.2
+        }
+      }
+    },
+    {
+      "factor_id": "CRYPTO",
+      "name": "Crypto Sensitivity",
+      "proxy": "IBIT − SPY",
+      "compare_returns": {
+        "source": "fixture_crypto",
+        "columns": ["1D", "10D", "MTD", "YTD", "Period", "IranWar", "LibDay"],
+        "metrics": {
+          "1D": 0.55,
+          "10D": 2.8,
+          "MTD": 3.1,
+          "YTD": 12.4,
+          "Period": 28.0,
+          "IranWar": 5.2,
+          "LibDay": 28.0
+        }
+      }
+    }
+  ]
+}

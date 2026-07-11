@@ -33,6 +33,7 @@ type Row = {
 type Props = {
   eyebrow: string;
   benchmarkRows: CompareBenchmarkRow[];
+  factorSpreadRows?: CompareBenchmarkRow[];
   rows: Row[];
   columns: string[];
   groupOptions: string[];
@@ -44,6 +45,7 @@ type Props = {
 export function ComparePageClient({
   eyebrow,
   benchmarkRows,
+  factorSpreadRows = [],
   rows,
   columns,
   groupOptions,
@@ -60,6 +62,7 @@ export function ComparePageClient({
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
+  const [showFactorSpreads, setShowFactorSpreads] = useState(false);
   const availablePeriods = useMemo(
     () => availableCompareSummaryPeriods(visibleColumns),
     [visibleColumns],
@@ -79,6 +82,13 @@ export function ComparePageClient({
       }),
     [rowsWithLiveCompare, groupOptions, yearOptions, selectedGroups, selectedYears],
   );
+
+  const tableBenchmarkRows = useMemo(() => {
+    const out: CompareBenchmarkRow[] = [];
+    if (showBenchmarks) out.push(...benchmarkRows);
+    if (showFactorSpreads) out.push(...factorSpreadRows);
+    return out;
+  }, [showBenchmarks, benchmarkRows, showFactorSpreads, factorSpreadRows]);
 
   return (
     <>
@@ -121,6 +131,16 @@ export function ComparePageClient({
                 Sector ETFs
               </label>
             ) : null}
+            {factorSpreadRows.length > 0 ? (
+              <label className={styles.benchmarkToggle}>
+                <input
+                  type="checkbox"
+                  checked={showFactorSpreads}
+                  onChange={(e) => setShowFactorSpreads(e.target.checked)}
+                />
+                Factor Spreads
+              </label>
+            ) : null}
           </div>
         </div>
         <CompareSummaryPanel
@@ -132,7 +152,7 @@ export function ComparePageClient({
       </div>
       <section className={`${pageStyles.section} ${pageStyles.compareSectionTight}`}>
         <CompareThemesTable
-          benchmarkRows={showBenchmarks ? benchmarkRows : []}
+          benchmarkRows={tableBenchmarkRows}
           rows={filtered}
           columns={visibleColumns}
           selectedDates={selectedDates}

@@ -5,8 +5,13 @@ import { ComparePageClient } from "@/components/ComparePageClient";
 import { PageSurface } from "@/components/PageSurface";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
+import { getFactorSpreadsCached } from "@/lib/getFactorSpreadsCached";
 import { getGroupTickersPreviewMapCached } from "@/lib/getGroupTickersPreviewMapCached";
-import { mapEtfBenchmarksToCompareRows, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import {
+  mapEtfBenchmarksToCompareRows,
+  mapFactorSpreadsToCompareRows,
+  type CompareBenchmarkRow,
+} from "@/lib/compareBenchmarkRows";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -28,14 +33,15 @@ function deriveYearTag(name: string): string | null {
 }
 
 export default async function ComparePage() {
-  const [{ manifest, source }, compareRes, previewBySlug, benchmarksRes, spyPerf] =
+  const [{ manifest, source }, compareRes, previewBySlug, benchmarksRes, factorSpreadsRes, spyPerf] =
     await Promise.all([
-    getManifestCached(),
-    getCompareThemesCached(),
-    getGroupTickersPreviewMapCached(),
-    getEtfBenchmarksCached(),
-    getSpyMarketPerfCached(),
-  ]);
+      getManifestCached(),
+      getCompareThemesCached(),
+      getGroupTickersPreviewMapCached(),
+      getEtfBenchmarksCached(),
+      getFactorSpreadsCached(),
+      getSpyMarketPerfCached(),
+    ]);
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => [String(g.slug || "").trim(), String(g.name || "").trim()]),
   );
@@ -70,12 +76,14 @@ export default async function ComparePage() {
           name: "S&P 500 (SPY)",
           ticker: "SPY",
           marketBaseline: true,
+          kind: "sector_etf" as const,
           compareReturns: spyPerf.compareReturns,
         },
       ];
     }
     return [];
   })();
+  const factorSpreadRows = mapFactorSpreadsToCompareRows(factorSpreadsRes?.bundle);
   const groupOptions = Array.from(
     new Set(rows.map((r) => String(r.groupName || "").trim()).filter(Boolean)),
   ).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: "base" }));
@@ -90,6 +98,7 @@ export default async function ComparePage() {
           <ComparePageClient
             eyebrow={catalogEyebrowText("Theme returns table", source)}
             benchmarkRows={benchmarkRows}
+            factorSpreadRows={factorSpreadRows}
             rows={rows}
             columns={columns}
             groupOptions={groupOptions}

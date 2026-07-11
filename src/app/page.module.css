@@ -1349,6 +1349,13 @@ a.secondary {
     font-size: 16px;
   }
 
+  /* Theme returns (/compare): keep the blurb compact so the table stays above the fold. */
+  .heroMainCompare .introLead {
+    font-size: 13px;
+    line-height: 1.4;
+    font-weight: 400;
+  }
+
   .intro .introCopy {
     font-size: 10px;
     line-height: 1.3;

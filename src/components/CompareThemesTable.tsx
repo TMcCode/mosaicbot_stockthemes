@@ -147,7 +147,13 @@ export function CompareThemesTable({
                   {row.name}
                 </span>
                 {row.ticker ? (
-                  <div className={styles.benchmarkMeta}>Benchmark · {row.ticker}</div>
+                  <div className={styles.benchmarkMeta}>
+                    {row.kind === "factor_spread"
+                      ? `Factor spread · ${row.ticker}`
+                      : `Benchmark · ${row.ticker}`}
+                  </div>
+                ) : row.kind === "factor_spread" ? (
+                  <div className={styles.benchmarkMeta}>Factor spread</div>
                 ) : null}
               </div>
             ) : (
