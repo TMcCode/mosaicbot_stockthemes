@@ -7,6 +7,45 @@ function numericValues(values: (number | string)[] | undefined): number[] {
   return (values ?? []).map((v) => Number(v)).filter((v) => Number.isFinite(v));
 }
 
+/**
+ * When candidate starts earlier than baseline (5Y sidecar vs ~1Y embed), rebase the
+ * candidate onto the baseline's first date so end levels share an index base.
+ * Absolute 5Y vs 1Y levels are not comparable (multi-baggers look like spikes).
+ */
+function candidateLastAlignedToBaseline(
+  candidate: ChartPerformanceV0,
+  candidateVals: number[],
+  baseline: ChartPerformanceV0,
+  baselineVals: number[],
+): number | null {
+  const candDates = candidate.dates;
+  const baseDates = baseline.dates;
+  if (!candDates?.length || !baseDates?.length || baselineVals.length < 1) return null;
+
+  const baseFirstIso = String(baseDates[0] ?? "").slice(0, 10);
+  const candFirstIso = String(candDates[0] ?? "").slice(0, 10);
+  if (!baseFirstIso || !candFirstIso) return null;
+
+  const last = candidateVals[candidateVals.length - 1];
+  if (!Number.isFinite(last)) return null;
+
+  // Same (or longer) embed window — absolute levels already share an index base.
+  if (candFirstIso >= baseFirstIso) return last;
+
+  const n = Math.min(candDates.length, candidateVals.length);
+  let pivot = -1;
+  for (let i = 0; i < n; i++) {
+    if (String(candDates[i]).slice(0, 10) >= baseFirstIso) {
+      pivot = i;
+      break;
+    }
+  }
+  const pivotVal = pivot >= 0 ? candidateVals[pivot] : NaN;
+  const baseFirst = baselineVals[0];
+  if (!(pivotVal > 0) || !(baseFirst > 0) || !Number.isFinite(baseFirst)) return null;
+  return (last / pivotVal) * baseFirst;
+}
+
 /** Reject sidecar tails with a bogus cliff (e.g. chained slim row scaled to ~0). */
 export function isSuspiciousChartPerformanceCliff(
   candidate: ChartPerformanceV0,
@@ -21,10 +60,14 @@ export function isSuspiciousChartPerformanceCliff(
   if (prev > 50 && last < 5) return true;
   if (isSuspiciousChartPerformanceSpike(candidate)) return true;
   const baseVals = numericValues(baseline?.values);
-  if (baseVals.length >= 1) {
+  if (baseVals.length >= 1 && baseline) {
     const baseLast = baseVals[baseVals.length - 1];
-    if (Number.isFinite(baseLast) && baseLast > 10 && last < baseLast * 0.2) return true;
-    if (Number.isFinite(baseLast) && baseLast > 30 && last > baseLast * 2.5) return true;
+    if (!Number.isFinite(baseLast)) return false;
+    const compareLast = candidateLastAlignedToBaseline(candidate, vals, baseline, baseVals);
+    // Longer sidecar that cannot be date-aligned: keep within-series checks only.
+    if (compareLast == null) return false;
+    if (baseLast > 10 && compareLast < baseLast * 0.2) return true;
+    if (baseLast > 30 && compareLast > baseLast * 2.5) return true;
   }
   return false;
 }
