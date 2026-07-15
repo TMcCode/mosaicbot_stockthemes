@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
@@ -8,7 +8,17 @@ import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
-import { CONSTITUENT_EARNINGS_COLUMNS } from "@/lib/constituentEarningsColumnHelp";
+import {
+  CONSTITUENT_EARNINGS_COLUMNS,
+  type ConstituentEarningsColumnId,
+} from "@/lib/constituentEarningsColumnHelp";
+import {
+  compareNullableNumbers,
+  compareText,
+  DEFAULT_CONSTITUENT_SORT,
+  toggleConstituentSort,
+  type ConstituentSortState,
+} from "@/lib/constituentTableSort";
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatWeight } from "@/lib/formatWeight";
@@ -16,6 +26,7 @@ import { publicAssetPath } from "@/lib/siteUrl";
 import {
   formatConstituentPct,
   priceReturnStat,
+  type ConstituentTableRow,
   type ThemeConstituentTableModel,
 } from "@/lib/themeConstituentTableModel";
 import {
@@ -40,6 +51,77 @@ type Props = {
   dataBaseUrl?: string;
 };
 
+function earningsSortValue(
+  row: ConstituentTableRow,
+  id: ConstituentEarningsColumnId,
+): number | string | null {
+  const { earnings, constituent } = row;
+  switch (id) {
+    case "prev_report_date":
+      return constituent.last_report_date ?? earnings.lastReportDateCell;
+    case "current_quarter_report_date":
+      return constituent.next_report_date ?? earnings.reportDateCell;
+    case "last_quarter_earnings_move":
+      return earnings.lastQuarterEarningsMoveValue;
+    case "earnings_move":
+      return earnings.earningsPerfValue;
+    case "intra_quarter_move":
+      return earnings.intraQtrValue;
+    case "since_last_report":
+      return earnings.sinceQtrRptValue;
+    default:
+      return null;
+  }
+}
+
+function compareConstituentRows(
+  a: ConstituentTableRow,
+  b: ConstituentTableRow,
+  sorts: ConstituentSortState[],
+): number {
+  for (const s of sorts) {
+    if (s.key === "company") {
+      const cmp = compareText(
+        a.constituent.name?.trim() || a.constituent.ticker,
+        b.constituent.name?.trim() || b.constituent.ticker,
+        s.dir,
+      );
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    if (s.key === "weight") {
+      const cmp = compareNullableNumbers(a.weight, b.weight, s.dir);
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    if (s.key === "mcap") {
+      const cmp = compareNullableNumbers(a.marketCapUsd, b.marketCapUsd, s.dir);
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    const earningsCol = CONSTITUENT_EARNINGS_COLUMNS.find((c) => c.id === s.key);
+    if (earningsCol) {
+      const va = earningsSortValue(a, earningsCol.id);
+      const vb = earningsSortValue(b, earningsCol.id);
+      if (typeof va === "string" || typeof vb === "string") {
+        const cmp = compareText(String(va ?? ""), String(vb ?? ""), s.dir);
+        if (cmp !== 0) return cmp;
+        continue;
+      }
+      const cmp = compareNullableNumbers(va, vb, s.dir);
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    const cmp = compareNullableNumbers(a.priceReturns[s.key], b.priceReturns[s.key], s.dir);
+    if (cmp !== 0) return cmp;
+  }
+  return compareText(
+    a.constituent.name?.trim() || a.constituent.ticker,
+    b.constituent.name?.trim() || b.constituent.ticker,
+    "asc",
+  );
+}
+
 export function ThemeConstituentsTable({
   detail,
   model,
@@ -49,12 +131,14 @@ export function ThemeConstituentsTable({
   dataBaseUrl,
 }: Props) {
   const [view, setView] = useState<TableView>("returns");
+  const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
   const needsRevenueSidecar = view === "revenue" || view === "revisions";
   const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
   );
+  const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
 
   const {
     hasWeight,
@@ -98,6 +182,28 @@ export function ThemeConstituentsTable({
     maxWeight,
   } = model;
 
+  const sortedRows = useMemo(() => {
+    const out = [...constituentRows];
+    out.sort((a, b) => compareConstituentRows(a, b, sorts));
+    return out;
+  }, [constituentRows, sorts]);
+
+  const onHeaderClick = (key: string, shiftKey: boolean) => {
+    setSorts((prev) => toggleConstituentSort(prev, key, shiftKey));
+  };
+
+  const renderSortHead = (key: string, label: ReactNode, title?: string) => (
+    <button
+      type="button"
+      className={`${tableStyles.sortHead} ${activeSortKeys.has(key) ? tableStyles.sortHeadActive : ""}`}
+      onClick={(e) => onHeaderClick(key, e.shiftKey)}
+      onPointerDown={(e) => e.stopPropagation()}
+      title={title}
+    >
+      {label}
+    </button>
+  );
+
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
@@ -126,7 +232,7 @@ export function ThemeConstituentsTable({
     const tooltip = metricColumnHeaderTooltip(col, selectedDateByKey);
     return (
       <th key={col} scope="col" title={tooltip}>
-        {trendingColumnHeader(col)}
+        {renderSortHead(col, trendingColumnHeader(col), tooltip)}
       </th>
     );
   };
@@ -205,23 +311,25 @@ export function ThemeConstituentsTable({
             <table className={styles.dataTable}>
               <thead>
                 <tr>
-                  <th scope="col">Company</th>
-                  {hasWeight ? <th scope="col">Wgt</th> : null}
+                  <th scope="col">{renderSortHead("company", "Company")}</th>
+                  {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
                   {showReturns && hasPriceReturns
                     ? priceReturnColumns.map((col) => priceHeader(col))
                     : null}
                   {showEarnings
                     ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
                         <th key={col.id} scope="col" title={col.tooltip}>
-                          {col.label}
+                          {renderSortHead(col.id, col.label, col.tooltip)}
                         </th>
                       ))
                     : null}
-                  {showReturns && hasMcap ? <th scope="col">Mkt Cap</th> : null}
+                  {showReturns && hasMcap ? (
+                    <th scope="col">{renderSortHead("mcap", "Mkt Cap")}</th>
+                  ) : null}
                 </tr>
               </thead>
               <tbody>
-                {constituentRows.map((row) => {
+                {sortedRows.map((row) => {
                   const c = row.constituent;
                   const earnings = row.earnings;
                   return (
@@ -535,6 +643,9 @@ export function ThemeConstituentsTable({
               EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
             </p>
           ) : null}
+          <p className={tableStyles.sortHint}>
+            Default: Wgt ↓ · Click headers to sort · Shift+click secondary
+          </p>
           <div className={styles.tableWatermark} aria-hidden="true">
             <img
               src={publicAssetPath("/brand/logo-full-dark-tight.png")}

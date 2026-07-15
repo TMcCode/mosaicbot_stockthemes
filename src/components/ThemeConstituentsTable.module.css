@@ -111,3 +111,35 @@
   color: #f07178;
   font-weight: 600;
 }
+
+.sortHint {
+  margin: 4px 0 0;
+  font-size: 9px;
+  line-height: 1.2;
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+.sortHead {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  font: inherit;
+  font-weight: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  color: inherit;
+  text-align: inherit;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.sortHead:hover {
+  color: var(--accent, #26fcd6);
+}
+
+.sortHeadActive {
+  color: var(--accent, #26fcd6);
+}

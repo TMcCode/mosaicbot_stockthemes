@@ -1,12 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { type ReactNode, useMemo, useState } from "react";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { TickerBadge } from "@/components/TickerBadge";
 import type { ThemeRevenueSidecarState } from "@/hooks/useThemeRevenueSidecar";
+import {
+  compareNullableNumbers,
+  compareText,
+  DEFAULT_CONSTITUENT_SORT,
+  toggleConstituentSort,
+  type ConstituentSortState,
+} from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
 import { publicAssetPath } from "@/lib/siteUrl";
 import {
@@ -30,6 +37,8 @@ type Props = {
   sidecarState: ThemeRevenueSidecarState;
 };
 
+type RevenueRow = ReturnType<typeof mergeRevenueConstituents>[number];
+
 const STAT_ROWS: RevenueStatRowKey[] = [
   "average",
   "median",
@@ -38,6 +47,39 @@ const STAT_ROWS: RevenueStatRowKey[] = [
   "max",
   "positive_tickers_pct",
 ];
+
+function compareRevenueRows(
+  a: RevenueRow,
+  b: RevenueRow,
+  sorts: ConstituentSortState[],
+  mode: RevenueDisplayMode,
+  columns: RevenueColumnDef[],
+): number {
+  for (const s of sorts) {
+    if (s.key === "company") {
+      const cmp = compareText(a.name?.trim() || a.ticker, b.name?.trim() || b.ticker, s.dir);
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    if (s.key === "weight") {
+      const cmp = compareNullableNumbers(a.weight, b.weight, s.dir);
+      if (cmp !== 0) return cmp;
+      continue;
+    }
+    const col = columns.find((c) => c.id === s.key);
+    if (col) {
+      const metricsA = mode === "growth" ? a.revenue.growth : a.revenue.accel;
+      const metricsB = mode === "growth" ? b.revenue.growth : b.revenue.accel;
+      const cmp = compareNullableNumbers(
+        revenueCellValue(metricsA, col, mode),
+        revenueCellValue(metricsB, col, mode),
+        s.dir,
+      );
+      if (cmp !== 0) return cmp;
+    }
+  }
+  return compareText(a.name?.trim() || a.ticker, b.name?.trim() || b.ticker, "asc");
+}
 
 function RevenueFooterRows({
   columns,
@@ -99,6 +141,8 @@ function RevenueFooterRows({
 
 export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
   const [mode, setMode] = useState<RevenueDisplayMode>("growth");
+  const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
+  const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
 
   const rows = useMemo(() => {
     if (sidecarState.status !== "ok") return [];
@@ -106,7 +150,29 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
   }, [sidecarState, detail.constituents]);
 
   const hasWeight = detail.constituents.some((c) => c.weight != null && Number.isFinite(c.weight));
-  const columns = filterGrowthColumns(mode);
+  const columns = useMemo(() => filterGrowthColumns(mode), [mode]);
+
+  const sortedRows = useMemo(() => {
+    const out = [...rows];
+    out.sort((a, b) => compareRevenueRows(a, b, sorts, mode, columns));
+    return out;
+  }, [rows, sorts, mode, columns]);
+
+  const onHeaderClick = (key: string, shiftKey: boolean) => {
+    setSorts((prev) => toggleConstituentSort(prev, key, shiftKey));
+  };
+
+  const renderSortHead = (key: string, label: ReactNode, title?: string) => (
+    <button
+      type="button"
+      className={`${tableStyles.sortHead} ${activeSortKeys.has(key) ? tableStyles.sortHeadActive : ""}`}
+      onClick={(e) => onHeaderClick(key, e.shiftKey)}
+      onPointerDown={(e) => e.stopPropagation()}
+      title={title}
+    >
+      {label}
+    </button>
+  );
 
   if (sidecarState.status === "idle" || sidecarState.status === "loading") {
     return <p className={styles.muted}>Loading revenue estimates…</p>;
@@ -160,22 +226,25 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
             <table className={styles.dataTable}>
               <thead>
                 <tr>
-                  <th scope="col">Company</th>
-                  {hasWeight ? <th scope="col">Wgt</th> : null}
+                  <th scope="col">{renderSortHead("company", "Company")}</th>
+                  {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
                   {columns.map((col) => (
                     <th key={col.id} scope="col">
-                      {col.label.split("\n").map((line, i) => (
-                        <span key={line}>
-                          {i > 0 ? <br /> : null}
-                          {line}
-                        </span>
-                      ))}
+                      {renderSortHead(
+                        col.id,
+                        col.label.split("\n").map((line, i) => (
+                          <span key={line}>
+                            {i > 0 ? <br /> : null}
+                            {line}
+                          </span>
+                        )),
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {rows.map((row) => {
+                {sortedRows.map((row) => {
                   const metrics = mode === "growth" ? row.revenue.growth : row.revenue.accel;
                   return (
                     <tr key={row.ticker}>
@@ -225,6 +294,9 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
           <p className={styles.tableFootnote}>
             Manual theme weights for the theme row; footer stats are equal-weight across constituents.
             {mode === "accel" ? " Accel = change in growth (percentage points)." : null}
+          </p>
+          <p className={tableStyles.sortHint}>
+            Default: Wgt ↓ · Click headers to sort · Shift+click secondary
           </p>
           <div className={styles.tableWatermark} aria-hidden="true">
             <img src={publicAssetPath("/brand/logo-full-dark-tight.png")} alt="" loading="lazy" decoding="async" />
