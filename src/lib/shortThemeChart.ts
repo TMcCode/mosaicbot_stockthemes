@@ -31,14 +31,14 @@ export type ShortThemeCompareReturns = {
   metrics?: Record<string, number | null>;
   short_display_inverted?: boolean;
   /**
-   * Set by ETL when Premarket/1D/10D were written in short-display PnL after
-   * constituent overrides. Absent on legacy CDN where those keys stayed long.
-   */
+ * Set by ETL when Premarket/1D/Postmarket/10D were written in short-display PnL after
+ * constituent overrides. Absent on legacy CDN where those keys stayed long.
+ */
   short_constituent_horizons_inverted?: boolean;
 };
 
 /** Horizons overwritten from long constituent price_returns after short inversion. */
-const SHORT_CONSTITUENT_HORIZON_KEYS = ["Premarket", "1D", "10D"] as const;
+const SHORT_CONSTITUENT_HORIZON_KEYS = ["Premarket", "1D", "Postmarket", "10D"] as const;
 
 function negateFiniteMetrics(
   metrics: Record<string, number | null>,
@@ -65,7 +65,7 @@ export function applyShortThemeCompareReturnsDisplay<T extends ShortThemeCompare
     return block ?? undefined;
   }
   if (block.short_display_inverted === true) {
-    // Legacy CDN: long-horizon metrics inverted, but Premarket/1D/10D still long.
+    // Legacy CDN: long-horizon metrics inverted, but Premarket/1D/Postmarket/10D still long.
     if (block.short_constituent_horizons_inverted === true) {
       return block;
     }

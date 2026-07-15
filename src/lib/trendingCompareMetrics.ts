@@ -12,12 +12,23 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
   Period: "y1",
 };
 
-const DEFAULT_COLUMN_ORDER = ["Premarket", "1D", "10D", "MTD", "YTD", "Period", "2Y", "5Y"] as const;
+const DEFAULT_COLUMN_ORDER = [
+  "Premarket",
+  "1D",
+  "Postmarket",
+  "10D",
+  "MTD",
+  "YTD",
+  "Period",
+  "2Y",
+  "5Y",
+] as const;
 
 /** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
   "Premarket",
   "1D",
+  "Postmarket",
   "10D",
   "MTD",
   "LstRpt %",
@@ -74,6 +85,8 @@ export function resolveTrendingColumnOrder(
 export function trendingColumnHeader(key: string): string {
   const labels: Record<string, string> = {
     "1D": "1D %",
+    Premarket: "Pre %",
+    Postmarket: "Post %",
     "10D": "10D %",
     SinceLstRpt: "Since LstRpt %",
     "LstRpt %": "LstRpt %",
@@ -92,6 +105,7 @@ export function compareColumnHeader(key: string): string {
   const labels: Record<string, string> = {
     "1D": "1D",
     Premarket: "Pre",
+    Postmarket: "Post",
     "10D": "10D",
     SinceLstRpt: "Since LstRpt",
     "LstRpt %": "LstRpt",
@@ -107,6 +121,10 @@ export function compareColumnHeader(key: string): string {
 
 const COMPARE_COLUMN_TOOLTIPS: Record<string, string> = {
   Premarket: "Return from prior session close through the latest premarket quote (4:00–9:30 AM ET).",
+  Postmarket:
+    "Return from today's regular-session close through the latest after-hours quote (4:30–10:00 PM ET).",
+  "1D":
+    "Regular-session close-to-close return. During after-hours, 1D stays frozen at today's RTH close vs prior close; Post holds the live AH move.",
   "LstRpt %":
     "On average return since each ticker's last earnings report date.",
   SinceLstRpt:

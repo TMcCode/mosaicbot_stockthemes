@@ -6,28 +6,56 @@ const ET_SESSION_PARTS = new Intl.DateTimeFormat("en-US", {
   hourCycle: "h23",
 });
 
-/** US premarket session: 4:00–9:30 AM ET on weekdays. */
-export function isUsPremarketSession(at: Date = new Date()): boolean {
+function etWeekdayMins(at: Date): { weekday: string; mins: number } | null {
   const parts = ET_SESSION_PARTS.formatToParts(at);
   const weekday = parts.find((p) => p.type === "weekday")?.value ?? "";
-  if (weekday === "Sat" || weekday === "Sun") return false;
-
   const hour = Number(parts.find((p) => p.type === "hour")?.value);
   const minute = Number(parts.find((p) => p.type === "minute")?.value);
-  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return false;
+  if (!Number.isFinite(hour) || !Number.isFinite(minute)) return null;
+  return { weekday, mins: hour * 60 + minute };
+}
 
-  const mins = hour * 60 + minute;
-  return mins >= 4 * 60 && mins < 9 * 60 + 30;
+/** US premarket session: 4:00–9:30 AM ET on weekdays. */
+export function isUsPremarketSession(at: Date = new Date()): boolean {
+  const et = etWeekdayMins(at);
+  if (!et || et.weekday === "Sat" || et.weekday === "Sun") return false;
+  return et.mins >= 4 * 60 && et.mins < 9 * 60 + 30;
+}
+
+/** US post-market session: 4:30–10:00 PM ET on weekdays. */
+export function isUsPostmarketSession(at: Date = new Date()): boolean {
+  const et = etWeekdayMins(at);
+  if (!et || et.weekday === "Sat" || et.weekday === "Sun") return false;
+  return et.mins >= 16 * 60 + 30 && et.mins <= 22 * 60;
 }
 
 export function shouldShowPremarketColumn(at: Date = new Date()): boolean {
   return isUsPremarketSession(at);
 }
 
+export function shouldShowPostmarketColumn(at: Date = new Date()): boolean {
+  return isUsPostmarketSession(at);
+}
+
+/** Drop Premarket/Postmarket columns outside their active ET sessions. */
+export function withoutSessionOnlyColumnsUnlessActive<T extends string>(
+  cols: readonly T[],
+  at: Date = new Date(),
+): T[] {
+  let out = [...cols];
+  if (!shouldShowPremarketColumn(at)) {
+    out = out.filter((c) => c !== "Premarket");
+  }
+  if (!shouldShowPostmarketColumn(at)) {
+    out = out.filter((c) => c !== "Postmarket");
+  }
+  return out;
+}
+
+/** @deprecated Prefer withoutSessionOnlyColumnsUnlessActive */
 export function withoutPremarketUnlessActive<T extends string>(
   cols: readonly T[],
   at: Date = new Date(),
 ): T[] {
-  if (shouldShowPremarketColumn(at)) return [...cols];
-  return cols.filter((c) => c !== "Premarket");
+  return withoutSessionOnlyColumnsUnlessActive(cols, at);
 }
