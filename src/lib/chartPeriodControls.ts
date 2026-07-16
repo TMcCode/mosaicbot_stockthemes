@@ -40,7 +40,12 @@ export function mergeExtendedChartPerformance(
   if (!base?.dates?.length) return extended;
   const baseFirst = isoDay(String(base.dates[0]));
   const extFirst = isoDay(String(extended.dates[0]));
-  if (extFirst < baseFirst || extended.dates.length > base.dates.length) return extended;
+  const baseLast = isoDay(String(base.dates[base.dates.length - 1]));
+  const extLast = isoDay(String(extended.dates[extended.dates.length - 1]));
+  // Prefer sidecar when it starts earlier, is longer, or has a newer session tail.
+  if (extFirst < baseFirst || extended.dates.length > base.dates.length || extLast > baseLast) {
+    return extended;
+  }
   return base;
 }
 
@@ -87,6 +92,31 @@ export function compositionTickersNeedingExtendedHistory(
     if (performanceNeedsExtendedHistory(merged, period, referenceLastIso, customAnchorIso)) {
       out.push(key);
     }
+  }
+  return out;
+}
+
+/**
+ * Constituent composition lines often lag the live theme performance tail during market hours:
+ * price-only publishes update ``chart_1y.performance`` / slim sidecars, but skip ``composition_indexed``.
+ * Fetch ticker (or child-theme) chart sidecars when a series ends before the live reference day.
+ */
+export function compositionTickersNeedingLiveTail(
+  chart1y: ThemeChart1yV0 | undefined,
+  referenceLastIso: string | undefined,
+  extendedByTicker?: Record<string, ChartPerformanceV0 | undefined>,
+): string[] {
+  const series = chart1y?.composition_indexed?.series;
+  const ref = referenceLastIso ? isoDay(referenceLastIso) : "";
+  if (!series?.length || !ref) return [];
+  const out: string[] = [];
+  for (const s of series) {
+    if (!s.dates?.length || !s.values?.length) continue;
+    const key = s.ticker.trim().toUpperCase();
+    const embedded: ChartPerformanceV0 = { dates: s.dates, values: s.values };
+    const merged = mergeExtendedChartPerformance(embedded, extendedByTicker?.[key]);
+    const last = isoDay(String(merged?.dates?.[merged.dates.length - 1] ?? ""));
+    if (last && last < ref) out.push(key);
   }
   return out;
 }

@@ -30,6 +30,7 @@ import {
   chartPeriodWindowLabel,
   compositionSeriesSidecarKind,
   compositionTickersNeedingExtendedHistory,
+  compositionTickersNeedingLiveTail,
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
   mergeExtendedChartPerformance,
@@ -984,16 +985,25 @@ export function Chart1yLightweight({
     : null;
 
   const compositionTickersNeedingFetch = useMemo(() => {
-    if (!showPeriodControls || activeView !== "composition" || !compositionSidecarKind) {
+    if (activeView !== "composition" || !compositionSidecarKind) {
       return [];
     }
-    return compositionTickersNeedingExtendedHistory(
+    const forHistory =
+      showPeriodControls
+        ? compositionTickersNeedingExtendedHistory(
+            chart1yForRender,
+            period,
+            referenceLastIso,
+            customAnchorIso,
+            extendedCompositionByTicker,
+          )
+        : [];
+    const forLiveTail = compositionTickersNeedingLiveTail(
       chart1yForRender,
-      period,
       referenceLastIso,
-      customAnchorIso,
       extendedCompositionByTicker,
     );
+    return Array.from(new Set([...forHistory, ...forLiveTail]));
   }, [
     showPeriodControls,
     activeView,
@@ -1006,6 +1016,10 @@ export function Chart1yLightweight({
   ]);
 
   const compositionTickersFetchKey = compositionTickersNeedingFetch.slice().sort().join("\0");
+  const compositionLiveTailFetch = useMemo(() => {
+    if (!referenceLastIso || !chart1yForRender?.composition_indexed?.series?.length) return false;
+    return compositionTickersNeedingLiveTail(chart1yForRender, referenceLastIso).length > 0;
+  }, [chart1yForRender, referenceLastIso]);
   const compSeriesRef = useRef(chart1yForRender?.composition_indexed?.series);
   compSeriesRef.current = chart1yForRender?.composition_indexed?.series;
 
@@ -1017,7 +1031,9 @@ export function Chart1yLightweight({
     void Promise.all(
       tickersToFetch.map(async (tickerKey) => {
         const slug = normalizeCompositionSidecarSlug(compositionSidecarKind, tickerKey);
-        const sidecar = await fetchChartSidecar(compositionSidecarKind, slug);
+        const sidecar = await fetchChartSidecar(compositionSidecarKind, slug, undefined, {
+          live: compositionLiveTailFetch,
+        });
         if (!sidecar?.performance?.dates?.length) return null;
         const series = compSeriesRef.current?.find(
           (s) => s.ticker.trim().toUpperCase() === tickerKey,
@@ -1047,7 +1063,7 @@ export function Chart1yLightweight({
     return () => {
       cancelled = true;
     };
-  }, [compositionSidecarKind, compositionTickersFetchKey]);
+  }, [compositionSidecarKind, compositionTickersFetchKey, compositionLiveTailFetch]);
 
   const chart1yWithHistory = useMemo(() => {
     const withPerf = chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance);
