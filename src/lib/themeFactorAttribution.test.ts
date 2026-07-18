@@ -35,6 +35,13 @@ const fixture = {
       market_adjusted_median_correlation: 0.35,
       valid_constituents: 1,
       coverage_pct: 100,
+      global_rank: 25,
+      global_theme_count: 900,
+      global_percentile: 97.3,
+      market_adjusted_global_percentile: 95.6,
+      group_rank: 2,
+      group_theme_count: 18,
+      group_percentile: 94.1,
       constituents: [
         {
           ticker: "aaa",
@@ -54,6 +61,8 @@ test("parses factor attribution, horizons, and constituent fit", () => {
   const parsed = parseThemeFactorAttribution(JSON.stringify(fixture));
   assert.equal(parsed.horizons["1Y"]?.contributions[0].factor_id, "MARKET");
   assert.equal(parsed.cohesion["1Y"]?.constituents[0].ticker, "AAA");
+  assert.equal(parsed.cohesion["1Y"]?.global_rank, 25);
+  assert.equal(parsed.cohesion["1Y"]?.group_percentile, 94.1);
   assert.deepEqual(availableFactorAttributionHorizons(parsed), ["1Y"]);
   assert.equal(factorAttributionHasContent(parsed), true);
 });

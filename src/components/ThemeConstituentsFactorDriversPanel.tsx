@@ -29,6 +29,23 @@ function percent(value: number | undefined, digits = 0): string {
   return value == null || !Number.isFinite(value) ? "—" : `${value.toFixed(digits)}%`;
 }
 
+function percentile(value: number | undefined): string {
+  if (value == null || !Number.isFinite(value)) return "—";
+  const rounded = Math.round(value);
+  const mod100 = rounded % 100;
+  const suffix =
+    mod100 >= 11 && mod100 <= 13
+      ? "th"
+      : rounded % 10 === 1
+        ? "st"
+        : rounded % 10 === 2
+          ? "nd"
+          : rounded % 10 === 3
+            ? "rd"
+            : "th";
+  return `${rounded}${suffix} percentile`;
+}
+
 export default function ThemeConstituentsFactorDriversPanel({
   detail,
   slug,
@@ -245,6 +262,16 @@ export default function ThemeConstituentsFactorDriversPanel({
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.median_correlation)}
               </span>
+              {cohesion.global_percentile != null ? (
+                <span className={panelStyles.metricContext}>
+                  {percentile(cohesion.global_percentile)} across all themes
+                  {cohesion.group_rank != null && cohesion.group_theme_count != null ? (
+                    <>
+                      <br />#{cohesion.group_rank} of {cohesion.group_theme_count} within its group
+                    </>
+                  ) : null}
+                </span>
+              ) : null}
             </div>
             <div
               className={panelStyles.metricCard}
@@ -254,6 +281,18 @@ export default function ThemeConstituentsFactorDriversPanel({
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.market_adjusted_median_correlation)}
               </span>
+              {cohesion.market_adjusted_global_percentile != null ? (
+                <span className={panelStyles.metricContext}>
+                  {percentile(cohesion.market_adjusted_global_percentile)} across all themes
+                  {cohesion.market_adjusted_group_rank != null &&
+                  cohesion.market_adjusted_group_theme_count != null ? (
+                    <>
+                      <br />#{cohesion.market_adjusted_group_rank} of{" "}
+                      {cohesion.market_adjusted_group_theme_count} within its group
+                    </>
+                  ) : null}
+                </span>
+              ) : null}
             </div>
             <div
               className={panelStyles.metricCard}
@@ -273,7 +312,7 @@ export default function ThemeConstituentsFactorDriversPanel({
             </div>
             <div
               className={panelStyles.metricCard}
-              title="Average valid-observation coverage across the constituent fit calculations."
+              title={`Average share of the selected ${horizon} period with overlapping valid returns for each stock, its leave-one-out theme basket, and SPY. ${Math.round(cohesion.coverage_pct)}% is approximately ${Math.round((attribution.sample_size * cohesion.coverage_pct) / 100)} of ${attribution.sample_size} sessions per constituent. Foreign-market calendars, newer listings, suspended trading, and missing prices can reduce coverage. This is a data-confidence measure, not a quality score.`}
             >
               <p className={panelStyles.metricLabel}>Fit coverage</p>
               <span className={panelStyles.metricValue}>{percent(cohesion.coverage_pct)}</span>

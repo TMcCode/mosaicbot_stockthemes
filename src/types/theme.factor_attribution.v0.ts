@@ -47,6 +47,18 @@ export type ThemeCohesionHorizonV0 = {
   pct_negative?: number;
   valid_constituents: number;
   coverage_pct: number;
+  global_rank?: number;
+  global_theme_count?: number;
+  global_percentile?: number;
+  market_adjusted_global_rank?: number;
+  market_adjusted_global_theme_count?: number;
+  market_adjusted_global_percentile?: number;
+  group_rank?: number;
+  group_theme_count?: number;
+  group_percentile?: number;
+  market_adjusted_group_rank?: number;
+  market_adjusted_group_theme_count?: number;
+  market_adjusted_group_percentile?: number;
   constituents: ThemeConstituentFitV0[];
 };
 

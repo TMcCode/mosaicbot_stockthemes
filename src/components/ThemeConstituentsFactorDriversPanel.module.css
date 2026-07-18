@@ -25,7 +25,9 @@
 .asOf {
   margin: 4px 0 0;
   color: var(--text-muted, #788582);
-  font-size: 11px;
+  font-size: 9px;
+  line-height: 1.25;
+  opacity: 0.72;
 }
 
 .horizonControl {
@@ -54,7 +56,18 @@
   gap: 8px;
 }
 
+.metricContext {
+  display: block;
+  margin-top: auto;
+  padding-top: 5px;
+  color: var(--text-muted, #788582);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
 .metricCard {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 12px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
@@ -150,20 +163,26 @@
 }
 
 .company {
-  display: grid;
-  gap: 2px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .companyName {
+  max-width: 240px;
+  overflow: hidden;
   color: var(--text-primary, #f2f7f6);
   font-weight: 650;
+  text-overflow: ellipsis;
 }
 
 .disclosure {
   margin: 0;
   color: var(--text-muted, #788582);
-  font-size: 11px;
-  line-height: 1.5;
+  font-size: 9px;
+  line-height: 1.35;
+  opacity: 0.72;
 }
 
 @media (max-width: 780px) {

@@ -126,6 +126,18 @@ function cohesionHorizon(value: unknown): ThemeCohesionHorizonV0 | null {
     dispersion: finite(row.dispersion),
     pct_above_0_50: finite(row.pct_above_0_50),
     pct_negative: finite(row.pct_negative),
+    global_rank: finite(row.global_rank),
+    global_theme_count: finite(row.global_theme_count),
+    global_percentile: finite(row.global_percentile),
+    market_adjusted_global_rank: finite(row.market_adjusted_global_rank),
+    market_adjusted_global_theme_count: finite(row.market_adjusted_global_theme_count),
+    market_adjusted_global_percentile: finite(row.market_adjusted_global_percentile),
+    group_rank: finite(row.group_rank),
+    group_theme_count: finite(row.group_theme_count),
+    group_percentile: finite(row.group_percentile),
+    market_adjusted_group_rank: finite(row.market_adjusted_group_rank),
+    market_adjusted_group_theme_count: finite(row.market_adjusted_group_theme_count),
+    market_adjusted_group_percentile: finite(row.market_adjusted_group_percentile),
   };
   return {
     valid_constituents: Math.max(0, Math.round(validConstituents)),
