@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
@@ -30,9 +31,17 @@ import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 type Props = {
   detail: ThemeDetailV0;
   sidecarState: ThemeQualityRiskSidecarState;
+  slug: string;
+  dataBaseUrl: string;
 };
 
 type QualityRiskRow = ReturnType<typeof mergeQualityRiskConstituents>[number];
+type QualityRiskPanelMode = QualityRiskDisplayMode | "factor_drivers";
+
+const ThemeConstituentsFactorDriversPanel = dynamic(
+  () => import("@/components/ThemeConstituentsFactorDriversPanel"),
+  { loading: () => <p className={styles.muted}>Loading factor drivers…</p> },
+);
 
 const STAT_ROWS: QualityRiskStatRowKey[] = [
   "average",
@@ -85,8 +94,13 @@ function headerTooltip(column: QualityRiskColumnDef, rows: QualityRiskRow[], sum
   return periodText ? `${column.tooltip} Period ends: ${periodText}.` : column.tooltip;
 }
 
-export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState }: Props) {
-  const [mode, setMode] = useState<QualityRiskDisplayMode>("quarterly");
+export default function ThemeConstituentsQualityRiskPanel({
+  detail,
+  sidecarState,
+  slug,
+  dataBaseUrl,
+}: Props) {
+  const [mode, setMode] = useState<QualityRiskPanelMode>("quarterly");
   const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
   const activeSortKeys = useMemo(() => new Set(sorts.map((sort) => sort.key)), [sorts]);
   const columnLabels = sidecarState.status === "ok" ? sidecarState.data.column_labels : undefined;
@@ -98,6 +112,7 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
   }, [detail.constituents, sidecarState]);
 
   const columns = useMemo(() => {
+    if (mode === "factor_drivers") return [];
     const available = qualityRiskColumns(mode, columnLabels);
     if (mode !== "fiscal_ebitda") return available;
     return available.filter(
@@ -146,7 +161,7 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
 
   const data = sidecarState.data;
   const summary = data.summary ?? {};
-  const stats = data.table_stats?.[mode];
+  const stats = mode === "factor_drivers" ? undefined : data.table_stats?.[mode];
 
   return (
     <>
@@ -177,9 +192,25 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
             >
               Risk
             </button>
+            <button
+              type="button"
+              className={mode === "factor_drivers" ? tableStyles.active : undefined}
+              aria-pressed={mode === "factor_drivers"}
+              onClick={() => setMode("factor_drivers")}
+            >
+              Factor Drivers
+            </button>
           </div>
         </div>
       </div>
+      {mode === "factor_drivers" ? (
+        <ThemeConstituentsFactorDriversPanel
+          detail={detail}
+          slug={slug}
+          dataBaseUrl={dataBaseUrl}
+        />
+      ) : (
+        <>
       <p className={styles.mobileTableScrollHint}>Swipe horizontally to see all metrics.</p>
       <div className={styles.tableWrap}>
         <HorizontalScrollArea
@@ -306,6 +337,8 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
           </div>
         </div>
       </div>
+        </>
+      )}
     </>
   );
 }

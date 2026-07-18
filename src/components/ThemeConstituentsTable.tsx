@@ -370,7 +370,12 @@ export function ThemeConstituentsTable({
         <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
       ) : null}
       {hasProtectedAccess && showQualityRisk && slug && dataBaseUrl ? (
-        <ThemeConstituentsQualityRiskPanel detail={detail} sidecarState={qualityRiskState} />
+        <ThemeConstituentsQualityRiskPanel
+          detail={detail}
+          sidecarState={qualityRiskState}
+          slug={slug}
+          dataBaseUrl={dataBaseUrl}
+        />
       ) : null}
       {hasProtectedAccess && (showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
