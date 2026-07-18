@@ -2,11 +2,13 @@
 
 import { type ReactNode, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import {
@@ -37,10 +39,24 @@ import {
 } from "@/lib/themeConstituentThemeReturn";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
-import { ThemeConstituentsRevenuePanel } from "@/components/ThemeConstituentsRevenuePanel";
-import { ThemeConstituentsRevisionsPanel } from "@/components/ThemeConstituentsRevisionsPanel";
 import { useThemeQualityRiskSidecar } from "@/hooks/useThemeQualityRiskSidecar";
 import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
+
+const ThemeConstituentsRevenuePanel = dynamic(
+  () =>
+    import("@/components/ThemeConstituentsRevenuePanel").then(
+      (module) => module.ThemeConstituentsRevenuePanel,
+    ),
+  { loading: () => <p className={styles.muted}>Loading revenue view…</p> },
+);
+
+const ThemeConstituentsRevisionsPanel = dynamic(
+  () =>
+    import("@/components/ThemeConstituentsRevisionsPanel").then(
+      (module) => module.ThemeConstituentsRevisionsPanel,
+    ),
+  { loading: () => <p className={styles.muted}>Loading revenue revisions view…</p> },
+);
 
 const ThemeConstituentsQualityRiskPanel = dynamic(
   () => import("@/components/ThemeConstituentsQualityRiskPanel"),
@@ -57,6 +73,20 @@ type Props = {
   slug?: string;
   dataBaseUrl?: string;
 };
+
+function ProtectedTablePrompt({ signInHref }: { signInHref: string }) {
+  return (
+    <div className={tableStyles.protectedPrompt} aria-label="Sign in required">
+      <p className={tableStyles.protectedTitle}>Sign in to view this analysis</p>
+      <p className={tableStyles.protectedCopy}>
+        Revenue, revenue revisions, and quality and risk metrics are available with a free account.
+      </p>
+      <Link href={signInHref} className={tableStyles.protectedSignIn}>
+        Sign in free
+      </Link>
+    </div>
+  );
+}
 
 function earningsSortValue(
   row: ConstituentTableRow,
@@ -139,13 +169,19 @@ export function ThemeConstituentsTable({
 }: Props) {
   const [view, setView] = useState<TableView>("returns");
   const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
-  const needsRevenueSidecar = view === "revenue" || view === "revisions";
+  const { configured, loading: authLoading, user } = useSupabaseAuth();
+  const hasProtectedAccess = configured && !authLoading && Boolean(user);
+  const protectedLocked = !authLoading && !hasProtectedAccess;
+  const isProtectedView = view === "revenue" || view === "revisions" || view === "quality_risk";
+  const needsRevenueSidecar =
+    hasProtectedAccess && (view === "revenue" || view === "revisions");
   const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
   const qualityRiskState = useThemeQualityRiskSidecar(
     slug,
     dataBaseUrl,
-    view === "quality_risk",
+    hasProtectedAccess && view === "quality_risk",
   );
+  const signInHref = `/sign-in?next=${encodeURIComponent(slug ? `/themes/${slug}` : "/themes")}`;
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
@@ -283,47 +319,65 @@ export function ThemeConstituentsTable({
               type="button"
               className={showRevenue ? tableStyles.active : undefined}
               aria-pressed={showRevenue}
-              title="Analyst revenue growth estimates and valuation ratios"
+              title={
+                protectedLocked
+                  ? "Sign in to view analyst revenue growth estimates and valuation ratios"
+                  : "Analyst revenue growth estimates and valuation ratios"
+              }
               onClick={() => setView("revenue")}
             >
-              Revenue
+              Revenue {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
             </button>
             <button
               type="button"
               className={showRevisions ? tableStyles.active : undefined}
               aria-pressed={showRevisions}
-              title="Lock-quarter revenue estimate revisions"
+              title={
+                protectedLocked
+                  ? "Sign in to view lock-quarter revenue estimate revisions"
+                  : "Lock-quarter revenue estimate revisions"
+              }
               onClick={() => setView("revisions")}
             >
-              Rev Revisions
+              Rev Revisions {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
             </button>
             <button
               type="button"
               className={showQualityRisk ? tableStyles.active : undefined}
               aria-pressed={showQualityRisk}
-              title="Reported margins, fiscal EBITDA, and balance-sheet and cash-flow risk metrics"
+              title={
+                protectedLocked
+                  ? "Sign in to view quality and risk metrics"
+                  : "Reported margins, fiscal EBITDA, and balance-sheet and cash-flow risk metrics"
+              }
               onClick={() => setView("quality_risk")}
             >
-              Quality &amp; Risk
+              Quality &amp; Risk {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
             </button>
           </div>
         </HorizontalScrollArea>
       </div>
-      {showRevenue && slug && dataBaseUrl ? (
+      {isProtectedView && authLoading ? (
+        <p className={styles.muted}>Checking sign-in…</p>
+      ) : null}
+      {isProtectedView && !authLoading && !hasProtectedAccess ? (
+        <ProtectedTablePrompt signInHref={signInHref} />
+      ) : null}
+      {hasProtectedAccess && showRevenue && slug && dataBaseUrl ? (
         <ThemeConstituentsRevenuePanel detail={detail} sidecarState={sidecarState} />
       ) : null}
-      {showRevisions && slug && dataBaseUrl ? (
+      {hasProtectedAccess && showRevisions && slug && dataBaseUrl ? (
         <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
       ) : null}
-      {showQualityRisk && slug && dataBaseUrl ? (
+      {hasProtectedAccess && showQualityRisk && slug && dataBaseUrl ? (
         <ThemeConstituentsQualityRiskPanel detail={detail} sidecarState={qualityRiskState} />
       ) : null}
-      {(showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
+      {hasProtectedAccess && (showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
           Revenue data is not available in this build.
         </p>
       ) : null}
-      {showQualityRisk && (!slug || !dataBaseUrl) ? (
+      {hasProtectedAccess && showQualityRisk && (!slug || !dataBaseUrl) ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
           Quality and risk data is not available in this build.
         </p>

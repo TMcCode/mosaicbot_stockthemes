@@ -42,12 +42,20 @@ export const QUALITY_RISK_STAT_ROW_LABELS: Record<QualityRiskStatRowKey, string>
 };
 
 const QUARTER_SLOTS: ThemeQualityRiskQuarterSlotV0[] = [
+  "q_minus_4",
   "q_minus_3",
   "q_minus_2",
   "q_minus_1",
   "lq",
 ];
-const FISCAL_SLOTS: ThemeQualityRiskFiscalSlotV0[] = ["ly", "cy", "ny", "n2y"];
+const FISCAL_SLOTS: ThemeQualityRiskFiscalSlotV0[] = [
+  "l3y",
+  "l2y",
+  "ly",
+  "cy",
+  "ny",
+  "n2y",
+];
 const STAT_ROWS: QualityRiskStatRowKey[] = [
   "average",
   "median",
@@ -58,12 +66,15 @@ const STAT_ROWS: QualityRiskStatRowKey[] = [
 ];
 
 const QUARTER_ALIASES: Record<ThemeQualityRiskQuarterSlotV0, string[]> = {
+  q_minus_4: ["q_minus_4", "q_4", "q4", "Q-4"],
   q_minus_3: ["q_minus_3", "q_3", "q3", "Q-3"],
   q_minus_2: ["q_minus_2", "q_2", "q2", "Q-2"],
   q_minus_1: ["q_minus_1", "q_1", "q1", "Q-1"],
   lq: ["lq", "latest", "latest_quarter", "LQ"],
 };
 const FISCAL_ALIASES: Record<ThemeQualityRiskFiscalSlotV0, string[]> = {
+  l3y: ["l3y", "last_3_year", "L3Y"],
+  l2y: ["l2y", "last_2_year", "L2Y"],
   ly: ["ly", "last_year", "LY"],
   cy: ["cy", "current_year", "CY"],
   ny: ["ny", "next_year", "NY"],
@@ -129,7 +140,16 @@ function normalizeQuarter(
     firstRecord(firstValue(quarterly, aliases), firstValue(quarters, aliases)) ??
     findArraySlot(quarterly, aliases) ??
     findArraySlot(root, aliases);
-  const prefix = slot === "q_minus_3" ? "q3" : slot === "q_minus_2" ? "q2" : slot === "q_minus_1" ? "q1" : "lq";
+  const prefix =
+    slot === "q_minus_4"
+      ? "q4"
+      : slot === "q_minus_3"
+        ? "q3"
+        : slot === "q_minus_2"
+          ? "q2"
+          : slot === "q_minus_1"
+            ? "q1"
+            : "lq";
   const periodEnd = text(
     firstValue(item, ["period_end", "date", "fiscal_date"]) ??
       firstValue(quarterly, [`${prefix}_period_end`, `${prefix}_date`]) ??
@@ -180,10 +200,15 @@ function normalizeFiscal(root: Record<string, unknown>): ThemeQualityRiskFiscalE
   for (const slot of FISCAL_SLOTS) {
     const aliases = FISCAL_ALIASES[slot];
     const item = firstRecord(firstValue(source, aliases));
-    const pct = finiteNumber(
-      firstValue(item, ["pct", "ebitda_pct", "ebitda_margin_pct"]) ??
+    const ebitdaPct = finiteNumber(
+      firstValue(item, ["ebitda_pct", "ebitda_margin_pct", "pct"]) ??
         firstValue(source, [`${slot}_pct`, `${slot}_ebitda_pct`]) ??
         firstValue(root, [`${slot}_ebitda_pct`]),
+    );
+    const grossPct = finiteNumber(
+      firstValue(item, ["gross_pct", "gross_margin_pct"]) ??
+        firstValue(source, [`${slot}_gross_pct`]) ??
+        firstValue(root, [`${slot}_gross_pct`]),
     );
     const rawKind =
       text(firstValue(item, ["kind", "type", "status"])) ??
@@ -198,8 +223,19 @@ function normalizeFiscal(root: Record<string, unknown>): ThemeQualityRiskFiscalE
       firstValue(item, ["period_end", "date", "fiscal_date"]) ??
         firstValue(source, [`${slot}_period_end`, `${slot}_date`]),
     );
-    if (pct !== undefined || kind !== undefined || periodEnd !== undefined) {
-      out[slot] = { pct, kind, period_end: periodEnd };
+    if (
+      ebitdaPct !== undefined ||
+      grossPct !== undefined ||
+      kind !== undefined ||
+      periodEnd !== undefined
+    ) {
+      out[slot] = {
+        pct: ebitdaPct,
+        ebitda_pct: ebitdaPct,
+        gross_pct: grossPct,
+        kind,
+        period_end: periodEnd,
+      };
     }
   }
   return Object.keys(out).length ? out : undefined;
@@ -251,6 +287,7 @@ export function qualityRiskColumns(
 ): QualityRiskColumnDef[] {
   if (mode === "quarterly") {
     const periods: Array<[ThemeQualityRiskQuarterSlotV0, string]> = [
+      ["q_minus_4", "YoY Qtr"],
       ["q_minus_3", "Q-3"],
       ["q_minus_2", "Q-2"],
       ["q_minus_1", "Q-1"],
@@ -298,15 +335,30 @@ export function qualityRiskColumns(
     ];
   }
   if (mode === "fiscal_ebitda") {
-    return FISCAL_SLOTS.map((slot) => ({
-      id: `${slot}_ebitda_pct`,
-      label: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()}\nEBITDA`,
-      tooltip: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()} fiscal EBITDA margin; E denotes an estimate. Hover includes the fiscal period end.`,
-      format: "pct",
-      getValue: (metrics) => metrics?.fiscal_ebitda?.[slot]?.pct,
-      getPeriod: (metrics) => metrics?.fiscal_ebitda?.[slot]?.period_end,
-      getKind: (metrics) => metrics?.fiscal_ebitda?.[slot]?.kind,
-    }));
+    return [
+      ...FISCAL_SLOTS.map((slot) => ({
+        id: `${slot}_gross_pct`,
+        label: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()}\nGross`,
+        tooltip: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()} reported fiscal gross margin. Hover includes the fiscal period end.`,
+        format: "pct" as const,
+        getValue: (metrics: ThemeQualityRiskMetricsV0 | undefined) =>
+          metrics?.fiscal_ebitda?.[slot]?.gross_pct,
+        getPeriod: (metrics: ThemeQualityRiskMetricsV0 | undefined) =>
+          metrics?.fiscal_ebitda?.[slot]?.period_end,
+      })),
+      ...FISCAL_SLOTS.map((slot) => ({
+        id: `${slot}_ebitda_pct`,
+        label: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()}\nEBITDA`,
+        tooltip: `${columnLabels?.fiscal_ebitda?.[slot] ?? slot.toUpperCase()} fiscal EBITDA margin; E denotes an estimate. Hover includes the fiscal period end.`,
+        format: "pct" as const,
+        getValue: (metrics: ThemeQualityRiskMetricsV0 | undefined) =>
+          metrics?.fiscal_ebitda?.[slot]?.ebitda_pct,
+        getPeriod: (metrics: ThemeQualityRiskMetricsV0 | undefined) =>
+          metrics?.fiscal_ebitda?.[slot]?.period_end,
+        getKind: (metrics: ThemeQualityRiskMetricsV0 | undefined) =>
+          metrics?.fiscal_ebitda?.[slot]?.kind,
+      })),
+    ];
   }
   return [
     {

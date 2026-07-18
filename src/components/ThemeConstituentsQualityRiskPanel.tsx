@@ -90,15 +90,23 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
   const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
   const activeSortKeys = useMemo(() => new Set(sorts.map((sort) => sort.key)), [sorts]);
   const columnLabels = sidecarState.status === "ok" ? sidecarState.data.column_labels : undefined;
-  const columns = useMemo(
-    () => qualityRiskColumns(mode, columnLabels),
-    [columnLabels, mode],
-  );
+  const summaryMetrics = sidecarState.status === "ok" ? sidecarState.data.summary : undefined;
 
   const rows = useMemo(() => {
     if (sidecarState.status !== "ok") return [];
     return mergeQualityRiskConstituents(detail.constituents, sidecarState.data);
   }, [detail.constituents, sidecarState]);
+
+  const columns = useMemo(() => {
+    const available = qualityRiskColumns(mode, columnLabels);
+    if (mode !== "fiscal_ebitda") return available;
+    return available.filter(
+      (column) =>
+        !column.id.endsWith("_gross_pct") ||
+        column.getValue(summaryMetrics) != null ||
+        rows.some((row) => column.getValue(row.metrics) != null),
+    );
+  }, [columnLabels, mode, rows, summaryMetrics]);
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
@@ -143,33 +151,36 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
   return (
     <>
       <div className={tableStyles.revenueToolbar}>
-        <div className={tableStyles.toggle} role="group" aria-label="Quality and risk display mode">
-          <button
-            type="button"
-            className={mode === "quarterly" ? tableStyles.active : undefined}
-            aria-pressed={mode === "quarterly"}
-            onClick={() => setMode("quarterly")}
-          >
-            Quarterly
-          </button>
-          <button
-            type="button"
-            className={mode === "fiscal_ebitda" ? tableStyles.active : undefined}
-            aria-pressed={mode === "fiscal_ebitda"}
-            onClick={() => setMode("fiscal_ebitda")}
-          >
-            Fiscal EBITDA
-          </button>
-          <button
-            type="button"
-            className={mode === "risk" ? tableStyles.active : undefined}
-            aria-pressed={mode === "risk"}
-            onClick={() => setMode("risk")}
-          >
-            Risk
-          </button>
+        <div className={tableStyles.toggleScroll}>
+          <div className={tableStyles.toggle} role="group" aria-label="Quality and risk display mode">
+            <button
+              type="button"
+              className={mode === "quarterly" ? tableStyles.active : undefined}
+              aria-pressed={mode === "quarterly"}
+              onClick={() => setMode("quarterly")}
+            >
+              Quarterly
+            </button>
+            <button
+              type="button"
+              className={mode === "fiscal_ebitda" ? tableStyles.active : undefined}
+              aria-pressed={mode === "fiscal_ebitda"}
+              onClick={() => setMode("fiscal_ebitda")}
+            >
+              Fiscal Margins
+            </button>
+            <button
+              type="button"
+              className={mode === "risk" ? tableStyles.active : undefined}
+              aria-pressed={mode === "risk"}
+              onClick={() => setMode("risk")}
+            >
+              Risk
+            </button>
+          </div>
         </div>
       </div>
+      <p className={styles.mobileTableScrollHint}>Swipe horizontally to see all metrics.</p>
       <div className={styles.tableWrap}>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
@@ -277,9 +288,9 @@ export default function ThemeConstituentsQualityRiskPanel({ detail, sidecarState
           <p className={styles.tableFootnote}>
             Theme row uses manual weights; footer stats are equal-weight across constituents.
             {mode === "quarterly"
-              ? " Q-3 through LQ and TTM use reported quarters only."
+              ? " Displayed quarters and TTM use reported periods only."
               : mode === "fiscal_ebitda"
-                ? " E = estimate."
+                ? " Gross margins use reported fiscal data; E = EBITDA estimate."
                 : null}
           </p>
           <p className={tableStyles.sortHint}>

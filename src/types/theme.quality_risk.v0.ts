@@ -1,5 +1,10 @@
-export type ThemeQualityRiskQuarterSlotV0 = "q_minus_3" | "q_minus_2" | "q_minus_1" | "lq";
-export type ThemeQualityRiskFiscalSlotV0 = "ly" | "cy" | "ny" | "n2y";
+export type ThemeQualityRiskQuarterSlotV0 =
+  | "q_minus_4"
+  | "q_minus_3"
+  | "q_minus_2"
+  | "q_minus_1"
+  | "lq";
+export type ThemeQualityRiskFiscalSlotV0 = "l3y" | "l2y" | "ly" | "cy" | "ny" | "n2y";
 export type ThemeQualityRiskModeV0 = "quarterly" | "fiscal_ebitda" | "risk";
 export type ThemeQualityRiskColumnLabelsV0 = {
   quarterly?: Partial<Record<ThemeQualityRiskQuarterSlotV0 | "ttm", string>>;
@@ -27,7 +32,10 @@ export type ThemeQualityRiskQuarterlyV0 = Partial<
 };
 
 export type ThemeQualityRiskFiscalEbitdaPeriodV0 = {
+  /** Backward-compatible alias for EBITDA margin. */
   pct?: number | null;
+  gross_pct?: number | null;
+  ebitda_pct?: number | null;
   kind?: "actual" | "estimate" | null;
   period_end?: string | null;
 };

@@ -925,6 +925,10 @@ a.feedTitle:hover {
   color: var(--text-muted);
 }
 
+.mobileTableScrollHint {
+  display: none;
+}
+
 .constituentsScrollWrap:active {
   cursor: grabbing;
 }
@@ -1341,6 +1345,41 @@ a.secondary {
 }
 
 @media (max-width: 600px) {
+  .mobileTableScrollHint {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 10px;
+    line-height: 1.35;
+    color: var(--text-muted);
+  }
+
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] {
+    scrollbar-gutter: auto;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable {
+    font-size: 11px;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th,
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td {
+    padding: 7px 8px;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th:first-child,
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td:first-child {
+    min-width: 150px;
+    max-width: 170px;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .companyCell {
+    gap: 6px;
+  }
+
+  .tableFooter {
+    flex-wrap: wrap;
+  }
+
   .main {
     border-radius: 14px;
     padding: 24px 18px;

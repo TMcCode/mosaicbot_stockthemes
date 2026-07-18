@@ -94,6 +94,46 @@
   margin-bottom: 8px;
 }
 
+.protectedPrompt {
+  padding: 22px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.protectedTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  font-weight: 650;
+}
+
+.protectedCopy {
+  max-width: 620px;
+  margin: 7px 0 15px;
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.protectedSignIn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 36px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+:global(.st-theme[data-theme="light"]) .protectedPrompt {
+  background: rgba(0, 0, 0, 0.02);
+}
+
 .acceleratingNote {
   margin: 0;
   font-size: 12px;
