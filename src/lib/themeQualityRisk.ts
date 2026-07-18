@@ -287,6 +287,7 @@ export function qualityRiskColumns(
 ): QualityRiskColumnDef[] {
   if (mode === "quarterly") {
     const periods: Array<[ThemeQualityRiskQuarterSlotV0, string]> = [
+      ["q_minus_4", "Q-4"],
       ["q_minus_3", "Q-3"],
       ["q_minus_2", "Q-2"],
       ["q_minus_1", "Q-1"],
@@ -309,7 +310,14 @@ export function qualityRiskColumns(
       getPeriod: (metrics) => metrics?.quarterly?.q_minus_4?.period_end,
     });
     return [
-      yoyBps("gross_pct", "Gross"),
+      {
+        id: "ttm_gross_pct",
+        label: "TTM\nGross",
+        tooltip: "TTM gross margin calculated strictly from reported quarters, with no estimate periods.",
+        format: "pct",
+        getValue: (metrics) => metrics?.quarterly?.ttm?.gross_pct,
+        getPeriod: (metrics) => metrics?.quarterly?.ttm?.period_end,
+      },
       ...periods.map(([slot, fallbackLabel]) => {
         const label = columnLabels?.quarterly?.[slot] ?? fallbackLabel;
         return {
@@ -321,15 +329,15 @@ export function qualityRiskColumns(
           getPeriod: (metrics: ThemeQualityRiskMetricsV0 | undefined) => metrics?.quarterly?.[slot]?.period_end,
         };
       }),
+      yoyBps("gross_pct", "Gross"),
       {
-        id: "ttm_gross_pct",
-        label: "TTM\nGross",
-        tooltip: "TTM gross margin calculated strictly from reported quarters, with no estimate periods.",
+        id: "ttm_ebitda_pct",
+        label: "TTM\nEBITDA",
+        tooltip: "TTM EBITDA margin calculated strictly from reported quarters, with no estimate periods.",
         format: "pct",
-        getValue: (metrics) => metrics?.quarterly?.ttm?.gross_pct,
+        getValue: (metrics) => metrics?.quarterly?.ttm?.ebitda_pct,
         getPeriod: (metrics) => metrics?.quarterly?.ttm?.period_end,
       },
-      yoyBps("ebitda_pct", "EBITDA"),
       ...periods.map(([slot, fallbackLabel]) => {
         const label = columnLabels?.quarterly?.[slot] ?? fallbackLabel;
         return {
@@ -341,14 +349,7 @@ export function qualityRiskColumns(
           getPeriod: (metrics: ThemeQualityRiskMetricsV0 | undefined) => metrics?.quarterly?.[slot]?.period_end,
         };
       }),
-      {
-        id: "ttm_ebitda_pct",
-        label: "TTM\nEBITDA",
-        tooltip: "TTM EBITDA margin calculated strictly from reported quarters, with no estimate periods.",
-        format: "pct",
-        getValue: (metrics) => metrics?.quarterly?.ttm?.ebitda_pct,
-        getPeriod: (metrics) => metrics?.quarterly?.ttm?.period_end,
-      },
+      yoyBps("ebitda_pct", "EBITDA"),
     ];
   }
   if (mode === "fiscal_ebitda") {
