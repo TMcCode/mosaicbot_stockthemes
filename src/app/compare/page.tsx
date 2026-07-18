@@ -128,7 +128,6 @@ export default async function ComparePage() {
             sectorOptions={sectorOptions}
             yearOptions={yearOptions}
             selectedDates={manifest.selected_dates}
-            serverCompareBundle={compareRes?.bundle ?? null}
           />
         </div>
       </main>

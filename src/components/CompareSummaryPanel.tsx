@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
 
 import {
   COMPARE_SUMMARY_PERIODS,
@@ -27,6 +26,7 @@ type Props = {
   period: CompareSummaryPeriod;
   onPeriodChange: (period: CompareSummaryPeriod) => void;
   availablePeriods: CompareSummaryPeriod[];
+  entityKind?: "theme" | "group";
 };
 
 function fmtPct(v?: number | null): string {
@@ -40,16 +40,18 @@ function summaryMetaLine(
   withDataCount: number,
   periodLabel: string,
   positivePct: number | null,
+  entityKind: "theme" | "group",
 ): string {
+  const plural = entityKind === "group" ? "groups" : "themes";
   const positive =
     positivePct != null ? ` · ${Math.round(positivePct)}% positive` : "";
   if (withDataCount === 0) {
-    return `No themes with ${periodLabel}% in this filter`;
+    return `No ${plural} with ${periodLabel}% in this filter`;
   }
   if (withDataCount >= filteredCount) {
-    return `${filteredCount.toLocaleString()} themes${positive}`;
+    return `${filteredCount.toLocaleString()} ${plural}${positive}`;
   }
-  return `${withDataCount.toLocaleString()} of ${filteredCount.toLocaleString()} themes with ${periodLabel}%${positive}`;
+  return `${withDataCount.toLocaleString()} of ${filteredCount.toLocaleString()} ${plural} with ${periodLabel}%${positive}`;
 }
 
 function GroupLine({ label, group }: { label: string; group: CompareGroupExtreme }) {
@@ -75,17 +77,19 @@ function ExtremeLine({
   slug,
   name,
   value,
+  entityKind,
 }: {
   label: string;
   slug: string;
   name: string;
   value: number;
+  entityKind: "theme" | "group";
 }) {
   return (
     <li>
       <span className={styles.detailLabel}>{label}</span>
       {slug ? (
-        <Link href={`/themes/${slug}`} className={styles.detailLink}>
+        <Link href={`/${entityKind === "group" ? "groups" : "themes"}/${slug}`} className={styles.detailLink}>
           {name}
         </Link>
       ) : (
@@ -96,16 +100,19 @@ function ExtremeLine({
   );
 }
 
-export function CompareSummaryPanel({ rows, period, onPeriodChange, availablePeriods }: Props) {
+export function CompareSummaryPanel({
+  rows,
+  period,
+  onPeriodChange,
+  availablePeriods,
+  entityKind = "theme",
+}: Props) {
   const periods = COMPARE_SUMMARY_PERIODS.filter((p) => availablePeriods.includes(p.key));
   const activePeriod = periods.some((p) => p.key === period)
     ? period
     : (periods[0]?.key ?? "10D");
 
-  const summary = useMemo(
-    () => computeComparePeriodSummary(rows, activePeriod),
-    [rows, activePeriod],
-  );
+  const summary = computeComparePeriodSummary(rows, activePeriod);
 
   const medianHeat =
     summary.median != null && Number.isFinite(summary.median)
@@ -115,7 +122,7 @@ export function CompareSummaryPanel({ rows, period, onPeriodChange, availablePer
   const periodLabel = periods.find((p) => p.key === activePeriod)?.label ?? activePeriod;
 
   return (
-    <aside className={styles.panel} aria-label="Filtered theme return summary">
+    <aside className={styles.panel} aria-label={`Filtered ${entityKind} return summary`}>
       <div>
         <span className={styles.toolbarLabel}>Summary</span>
         {periods.length > 1 ? (
@@ -166,6 +173,7 @@ export function CompareSummaryPanel({ rows, period, onPeriodChange, availablePer
           summary.withDataCount,
           periodLabel,
           summary.positivePct,
+          entityKind,
         )}
       </p>
 
@@ -176,6 +184,7 @@ export function CompareSummaryPanel({ rows, period, onPeriodChange, availablePer
             slug={summary.best.slug}
             name={summary.best.name}
             value={summary.best.value}
+            entityKind={entityKind}
           />
         ) : null}
         {summary.worst ? (
@@ -184,10 +193,15 @@ export function CompareSummaryPanel({ rows, period, onPeriodChange, availablePer
             slug={summary.worst.slug}
             name={summary.worst.name}
             value={summary.worst.value}
+            entityKind={entityKind}
           />
         ) : null}
-        {summary.topGroup ? <GroupLine label="Top group" group={summary.topGroup} /> : null}
-        {summary.bottomGroup && summary.bottomGroup.name !== summary.topGroup?.name ? (
+        {entityKind === "theme" && summary.topGroup ? (
+          <GroupLine label="Top group" group={summary.topGroup} />
+        ) : null}
+        {entityKind === "theme" &&
+        summary.bottomGroup &&
+        summary.bottomGroup.name !== summary.topGroup?.name ? (
           <GroupLine label="Bottom group" group={summary.bottomGroup} />
         ) : null}
       </ul>

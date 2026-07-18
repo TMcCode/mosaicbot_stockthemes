@@ -23,6 +23,7 @@ type Row = {
   groupName?: string | null;
   /** Comma-separated tickers (+N); same ETL as group composition legend. */
   tickersPreview?: string | null;
+  themeCount?: number | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
@@ -35,6 +36,7 @@ type Props = {
   rows: Row[];
   columns: string[];
   selectedDates?: ManifestSelectedDateV0[];
+  entityKind?: "theme" | "group";
 };
 
 function isBenchmarkRow(row: DisplayRow): row is CompareBenchmarkRow {
@@ -52,6 +54,7 @@ export function CompareThemesTable({
   rows,
   columns,
   selectedDates,
+  entityKind = "theme",
 }: Props) {
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
   const selectedDateByKey = useMemo(
@@ -107,7 +110,7 @@ export function CompareThemesTable({
             className={`${styles.head} ${styles.sticky}`}
             onClick={(e) => onHeaderClick("Theme", e.shiftKey)}
           >
-            Theme
+            {entityKind === "group" ? "Group" : "Theme"}
           </button>
           {columns.map((col) => {
             const help = metricColumnHeaderTooltip(col, selectedDateByKey);
@@ -154,7 +157,11 @@ export function CompareThemesTable({
             ) : (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 {row.slug ? (
-                  <Link href={`/themes/${row.slug}`} className={styles.themeName} title={row.name}>
+                  <Link
+                    href={`/${entityKind === "group" ? "groups" : "themes"}/${row.slug}`}
+                    className={styles.themeName}
+                    title={row.name}
+                  >
                     {row.name}
                   </Link>
                 ) : (
@@ -164,6 +171,10 @@ export function CompareThemesTable({
                 )}
                 {row.tickersPreview ? (
                   <div className={`${styles.meta} ${styles.tickersMeta}`}>{row.tickersPreview}</div>
+                ) : entityKind === "group" && row.themeCount != null ? (
+                  <div className={styles.meta}>
+                    {row.themeCount.toLocaleString()} {row.themeCount === 1 ? "theme" : "themes"}
+                  </div>
                 ) : null}
               </div>
             );

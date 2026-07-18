@@ -6,18 +6,24 @@ import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
-import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import {
+  useLazyCompareGroups,
+  useLiveCompareThemes,
+} from "@/hooks/useCompareReturnsData";
 import {
   availableCompareSummaryPeriods,
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
-import { isCompareSectorFilterInactive, COMPARE_SECTOR_UNMAPPED } from "@/lib/compareSectorFilter";
+import {
+  isCompareSectorFilterInactive,
+  normalizeCompareSpySector,
+  COMPARE_SECTOR_UNMAPPED,
+} from "@/lib/compareSectorFilter";
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
-import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 import styles from "./ComparePageClient.module.css";
@@ -29,8 +35,11 @@ type Row = {
   groupName?: string | null;
   spySector?: string | null;
   tickersPreview?: string | null;
+  themeCount?: number | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
+
+type ViewMode = "themes" | "groups";
 
 type Props = {
   eyebrow: string;
@@ -44,7 +53,6 @@ type Props = {
   sectorOptions: string[];
   yearOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
-  serverCompareBundle?: CompareThemesV0 | null;
 };
 
 export function ComparePageClient({
@@ -58,13 +66,35 @@ export function ComparePageClient({
   sectorOptions,
   yearOptions,
   selectedDates,
-  serverCompareBundle,
 }: Props) {
-  const { compareBundle } = useLiveCompareBundles(serverCompareBundle, null);
-  const visibleColumns = useMemo(() => withoutPremarketUnlessActive(columns), [columns]);
+  const [viewMode, setViewMode] = useState<ViewMode>("themes");
+  const liveCompareBundle = useLiveCompareThemes();
+  const {
+    bundle: groupBundle,
+    loading: groupsLoading,
+    failed: groupsFailed,
+  } = useLazyCompareGroups(viewMode === "groups");
+  const activeColumns = viewMode === "groups" && groupBundle?.columns?.length
+    ? groupBundle.columns
+    : columns;
+  const visibleColumns = useMemo(
+    () => withoutPremarketUnlessActive(activeColumns),
+    [activeColumns],
+  );
   const rowsWithLiveCompare = useMemo(
-    () => mergeComparePageRows(rows, compareBundle?.rows ?? []),
-    [rows, compareBundle?.rows],
+    () => mergeComparePageRows(rows, liveCompareBundle?.rows ?? []),
+    [rows, liveCompareBundle?.rows],
+  );
+  const groupRows = useMemo<Row[]>(
+    () =>
+      (groupBundle?.rows ?? []).map((row) => ({
+        slug: String(row.slug || "").trim(),
+        name: String(row.name || "").trim(),
+        spySector: normalizeCompareSpySector(row.spy_sector),
+        themeCount: row.theme_count ?? null,
+        compareReturns: row.compare_returns ?? null,
+      })),
+    [groupBundle?.rows],
   );
   const [selectedSectors, setSelectedSectors] = useState<string[]>(() => [...sectorOptions]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
@@ -80,6 +110,24 @@ export function ComparePageClient({
     return availablePeriods[0] ?? "10D";
   });
 
+  useEffect(() => {
+    const applyUrlView = () => {
+      const value = new URLSearchParams(window.location.search).get("view");
+      setViewMode(value === "groups" ? "groups" : "themes");
+    };
+    applyUrlView();
+    window.addEventListener("popstate", applyUrlView);
+    return () => window.removeEventListener("popstate", applyUrlView);
+  }, []);
+
+  const selectView = (next: ViewMode) => {
+    setViewMode(next);
+    const url = new URL(window.location.href);
+    if (next === "groups") url.searchParams.set("view", "groups");
+    else url.searchParams.delete("view");
+    window.history.replaceState(window.history.state, "", `${url.pathname}${url.search}${url.hash}`);
+  };
+
   const sectorInactive = isCompareSectorFilterInactive(selectedSectors, sectorOptions);
 
   const visibleGroupOptions = useMemo(() => {
@@ -90,25 +138,21 @@ export function ComparePageClient({
     );
   }, [sectorInactive, groupOptions, selectedSectors, groupSectorByName]);
 
-  useEffect(() => {
-    setSelectedGroups((prev) => {
-      const allowed = new Set(visibleGroupOptions);
-      const next = prev.filter((g) => allowed.has(g));
-      if (next.length === prev.length) return prev;
-      if (next.length === 0 && visibleGroupOptions.length > 0) {
-        return [...visibleGroupOptions];
-      }
-      return next;
-    });
-  }, [visibleGroupOptions]);
+  const visibleSelectedGroups = useMemo(() => {
+    const allowed = new Set(visibleGroupOptions);
+    const selected = selectedGroups.filter((group) => allowed.has(group));
+    return selected.length > 0 || visibleGroupOptions.length === 0
+      ? selected
+      : visibleGroupOptions;
+  }, [selectedGroups, visibleGroupOptions]);
 
-  const filtered = useMemo(
+  const filteredThemes = useMemo(
     () =>
       filterCompareRows(rowsWithLiveCompare, {
         groupOptions: visibleGroupOptions,
         yearOptions,
         sectorOptions,
-        selectedGroups,
+        selectedGroups: visibleSelectedGroups,
         selectedYears,
         selectedSectors,
       }),
@@ -117,11 +161,26 @@ export function ComparePageClient({
       visibleGroupOptions,
       yearOptions,
       sectorOptions,
-      selectedGroups,
+      visibleSelectedGroups,
       selectedYears,
       selectedSectors,
     ],
   );
+  const filteredGroups = useMemo(
+    () =>
+      filterCompareRows(groupRows, {
+        groupOptions: [],
+        yearOptions: [],
+        sectorOptions,
+        selectedGroups: [],
+        selectedYears: [],
+        selectedSectors,
+      }),
+    [groupRows, sectorOptions, selectedSectors],
+  );
+  const filtered = viewMode === "groups" ? filteredGroups : filteredThemes;
+  const totalRows = viewMode === "groups" ? groupRows.length : rows.length;
+  const entityLabel = viewMode === "groups" ? "groups" : "themes";
 
   const tableBenchmarkRows = useMemo(() => {
     const out: CompareBenchmarkRow[] = [];
@@ -137,16 +196,36 @@ export function ComparePageClient({
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
           <h1>Theme returns table</h1>
           <p className={pageStyles.introLead}>
-            Rank every theme by return across daily, calendar, and earnings horizons—plus custom
-            date windows. Filter by sector, group, or vintage year; click a column to sort,
+            Rank every {viewMode === "groups" ? "group" : "theme"} by return across daily,
+            calendar, and earnings horizons—plus custom date windows. Filter the universe; click a column to sort,
             shift-click for a secondary sort.
           </p>
           <p>
-            {filtered.length === rows.length
-              ? `${rows.length} themes`
-              : `${filtered.length} of ${rows.length} themes`}{" "}
+            {viewMode === "groups" && groupsLoading && totalRows === 0
+              ? "Loading groups"
+              : filtered.length === totalRows
+                ? `${totalRows} ${entityLabel}`
+                : `${filtered.length} of ${totalRows} ${entityLabel}`}{" "}
             · {visibleColumns.length} metrics
           </p>
+          <div className={styles.viewToggle} role="group" aria-label="Compare themes or groups">
+            <button
+              type="button"
+              className={viewMode === "themes" ? styles.viewToggleActive : undefined}
+              aria-pressed={viewMode === "themes"}
+              onClick={() => selectView("themes")}
+            >
+              Themes
+            </button>
+            <button
+              type="button"
+              className={viewMode === "groups" ? styles.viewToggleActive : undefined}
+              aria-pressed={viewMode === "groups"}
+              onClick={() => selectView("groups")}
+            >
+              Groups
+            </button>
+          </div>
           <div className={pageStyles.compareHeroFilters}>
             {sectorOptions.length > 0 ? (
               <CheckboxMultiSelectDropdown
@@ -159,22 +238,26 @@ export function ComparePageClient({
                 layout="inline"
               />
             ) : null}
-            <CheckboxMultiSelectDropdown
-              label="Groups"
-              options={visibleGroupOptions}
-              selected={selectedGroups}
-              onChange={setSelectedGroups}
-              emptyLabel="All groups"
-              layout="inline"
-            />
-            <CheckboxMultiSelectDropdown
-              label="Years"
-              options={yearOptions}
-              selected={selectedYears}
-              onChange={setSelectedYears}
-              emptyLabel="All years"
-              layout="inline"
-            />
+            {viewMode === "themes" ? (
+              <>
+                <CheckboxMultiSelectDropdown
+                  label="Groups"
+                  options={visibleGroupOptions}
+                  selected={visibleSelectedGroups}
+                  onChange={setSelectedGroups}
+                  emptyLabel="All groups"
+                  layout="inline"
+                />
+                <CheckboxMultiSelectDropdown
+                  label="Years"
+                  options={yearOptions}
+                  selected={selectedYears}
+                  onChange={setSelectedYears}
+                  emptyLabel="All years"
+                  layout="inline"
+                />
+              </>
+            ) : null}
             {benchmarkRows.length > 0 ? (
               <label className={styles.benchmarkToggle}>
                 <input
@@ -202,6 +285,7 @@ export function ComparePageClient({
           period={summaryPeriod}
           onPeriodChange={setSummaryPeriod}
           availablePeriods={availablePeriods}
+          entityKind={viewMode === "groups" ? "group" : "theme"}
         />
       </div>
       <section className={`${pageStyles.section} ${pageStyles.compareSectionTight}`}>
@@ -210,7 +294,11 @@ export function ComparePageClient({
           rows={filtered}
           columns={visibleColumns}
           selectedDates={selectedDates}
+          entityKind={viewMode === "groups" ? "group" : "theme"}
         />
+        {viewMode === "groups" && groupsFailed && groupRows.length === 0 ? (
+          <p className={styles.loadError}>Group returns are temporarily unavailable.</p>
+        ) : null}
       </section>
     </>
   );

@@ -14,3 +14,39 @@
   margin: 0;
   accent-color: var(--accent, #26fcd6);
 }
+
+.viewToggle {
+  display: inline-flex;
+  align-self: flex-start;
+  width: fit-content;
+  gap: 4px;
+  margin-top: 10px;
+  padding: 3px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.viewToggle button {
+  min-width: 78px;
+  padding: 6px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.viewToggleActive {
+  background: rgba(38, 252, 214, 0.14) !important;
+  color: var(--text-primary) !important;
+}
+
+.loadError {
+  margin: 12px 0 0;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
