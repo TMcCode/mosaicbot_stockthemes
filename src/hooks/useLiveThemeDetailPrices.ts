@@ -5,7 +5,6 @@ import { useEffect, useMemo, useSyncExternalStore } from "react";
 import {
   getLiveThemeDetailEntry,
   liveThemeDetailCacheKey,
-  mergeThemeDetailLiveFields,
   refreshLiveThemeDetail,
   seedLiveThemeDetail,
   subscribeLiveThemeDetail,
@@ -55,12 +54,12 @@ export function useLiveThemeDetailPrices(
 
     let cancelled = false;
     const run = () => {
-      const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${priceReturnsBrowserCacheBusterQuery()}`;
+      const query = priceReturnsBrowserCacheBusterQuery();
       refreshLiveThemeDetail({
         slug,
         dataBaseUrl,
         serverDetail,
-        fetchJson: async () => fetchThemeJson(url),
+        fetchJson: (url) => fetchThemeJson(`${url}?${query}`),
         mergeOptions: {
           prices: stockthemesLivePriceReturnsEnabled(),
           compareReturns: stockthemesLivePriceReturnsEnabled(),

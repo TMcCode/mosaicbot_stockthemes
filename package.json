@@ -16,9 +16,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "serve:out": "npx --yes serve out -l 3000",
+    "serve:out": "bash scripts/serve-out.sh",
     "og:png": "node scripts/generate-og-png.mjs",
     "icons:generate": "node scripts/generate-favicon.mjs",
+    "verify:budgets": "node scripts/verify-build-budgets.mjs",
     "verify:cdn": "node scripts/verify-cdn.mjs"
   },
   "dependencies": {

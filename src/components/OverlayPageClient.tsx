@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { OverlayAddCombobox, type OverlayPick } from "@/components/OverlayAddCombobox";
-import { OverlayMultiChart, type OverlayChartSeries } from "@/components/OverlayMultiChart";
+import type { OverlayChartSeries } from "@/components/OverlayMultiChart";
 import { OverlaySectorEtfControls } from "@/components/OverlaySectorEtfControls";
 import chartLegendStyles from "@/components/Chart1yPanel.module.css";
 import {
@@ -37,6 +38,16 @@ import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import pageStyles from "@/app/page.module.css";
 
 import styles from "./OverlayPageClient.module.css";
+
+const OverlayMultiChart = dynamic(
+  () => import("@/components/OverlayMultiChart").then((mod) => mod.OverlayMultiChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div style={{ minHeight: 420 }} aria-busy="true" aria-label="Loading overlay chart" />
+    ),
+  },
+);
 
 const MAX_SERIES = 12;
 
@@ -215,7 +226,7 @@ export function OverlayPageClient({
             : p,
         ),
       );
-    } catch (e) {
+    } catch {
       if (ac.signal.aborted) return;
       setItems((prev) =>
         prev.map((p) =>

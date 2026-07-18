@@ -27,6 +27,7 @@
 
 # CI/static-export GCS mirror (see scripts/sync-build-cache.mjs)
 /.cache/stockthemes-public/
+/.cache/generated-assets/
 
 # production
 /build

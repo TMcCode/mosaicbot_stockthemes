@@ -15,7 +15,6 @@ import {
   mergeLiveHomeTrendingRows,
 } from "@/lib/mergeLiveCompareData";
 import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
-import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTrendingRowV0 } from "@/types/home_trending.v0";
 
 type Props = {
@@ -23,7 +22,6 @@ type Props = {
   columns: string[];
   columnHelp: Record<string, string | undefined>;
   sortPeriod: TopMoverTickerPeriod;
-  serverCompareBundle?: CompareThemesV0 | null;
 };
 
 export function HomeTrendingThemesTableLive({
@@ -31,9 +29,8 @@ export function HomeTrendingThemesTableLive({
   columns,
   columnHelp,
   sortPeriod,
-  serverCompareBundle,
 }: Props) {
-  const { compareBundle, liveHomeTrending, liveSpyPerf } = useLiveCompareBundles(serverCompareBundle, null);
+  const { compareBundle, liveHomeTrending, liveSpyPerf } = useLiveCompareBundles(null, null);
 
   const baseRows = useMemo(() => {
     if (!liveHomeTrending || homeTrendingListsMatch(rows, liveHomeTrending)) {

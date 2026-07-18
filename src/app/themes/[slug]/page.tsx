@@ -18,6 +18,10 @@ import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader"
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
+import {
+  themeChartPerformanceSeed,
+  themeDetailLiveSeed,
+} from "@/lib/themeDetailClientSeed";
 import styles from "../../page.module.css";
 
 import {
@@ -112,6 +116,8 @@ export default async function ThemeDetailPage({ params }: Props) {
     getThemeFactorProfileCached(slug),
   ]);
   const detail = loaded?.detail;
+  const liveDetailSeed = detail ? themeDetailLiveSeed(detail) : undefined;
+  const chartPerformanceSeed = detail ? themeChartPerformanceSeed(detail) : undefined;
   const rank10d =
     rank10dFromPayload(detail?.rank_10d) ??
     rank10dFromPayload(theme.rank_10d) ??
@@ -230,7 +236,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   <ThemeHeroTreemapLive
                     slug={slug}
                     dataBaseUrl={dataBaseUrl}
-                    serverDetail={detail}
+                    serverDetail={liveDetailSeed ?? detail}
                     themeName={theme.name}
                     defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
                   />
@@ -264,8 +270,8 @@ export default async function ThemeDetailPage({ params }: Props) {
                   key={slug}
                   slug={slug}
                   dataBaseUrl={dataBaseUrl}
-                  serverChart={detail.chart_1y}
-                  serverDetail={detail}
+                  serverChart={chartPerformanceSeed}
+                  serverDetail={liveDetailSeed}
                   compositionMetaByTicker={compositionMetaByTicker}
                   performanceTitle={theme.name}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
@@ -302,7 +308,7 @@ export default async function ThemeDetailPage({ params }: Props) {
               <ThemeConstituentsTableLive
                 slug={slug}
                 dataBaseUrl={dataBaseUrl}
-                serverDetail={detail}
+                serverDetail={liveDetailSeed ?? detail}
                 selectedDates={selectedDates}
               />
             ) : (

@@ -1,10 +1,10 @@
 "use client";
 
 import { type FormEvent, useEffect, useId, useLayoutEffect, useState } from "react";
-import posthog from "posthog-js";
 
 import { useBeehiivApiConfigured } from "@/components/NewsletterRuntimeProvider";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
+import { capturePostHog, getPostHogRequestContext } from "@/lib/posthogClient";
 
 import styles from "./NewsletterSignup.module.css";
 
@@ -92,6 +92,8 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
 
   useLayoutEffect(() => {
     const mq = window.matchMedia(NEWSLETTER_NARROW_VIEWPORT_MQ);
+    // Synchronize the initial client-only media-query result before paint.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setNarrowViewport(mq.matches);
     const onChange = () => setNarrowViewport(mq.matches);
     mq.addEventListener("change", onChange);
@@ -119,20 +121,21 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
       return;
     }
     setApiStatus("loading");
-    posthog.capture("newsletter_signup_submitted", { variant });
+    capturePostHog("newsletter_signup_submitted", { variant });
     try {
+      const posthogContext = await getPostHogRequestContext();
       const res = await fetch("/api/newsletter/subscribe", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "X-POSTHOG-DISTINCT-ID": posthog.get_distinct_id() ?? "",
-          "X-POSTHOG-SESSION-ID": posthog.get_session_id() ?? "",
+          "X-POSTHOG-DISTINCT-ID": posthogContext.distinctId,
+          "X-POSTHOG-SESSION-ID": posthogContext.sessionId,
         },
         body: JSON.stringify({ email }),
       });
       const data = (await res.json().catch(() => ({}))) as { error?: string };
       if (!res.ok) {
-        posthog.capture("newsletter_signup_failed", {
+        capturePostHog("newsletter_signup_failed", {
           variant,
           error: data.error ?? "unknown",
           http_status: res.status,
@@ -141,12 +144,12 @@ export function NewsletterSignup({ variant = "panel", className }: Props) {
         setApiErrorMessage(data.error ?? "Something went wrong. Try again.");
         return;
       }
-      posthog.capture("newsletter_signup_succeeded", { variant });
+      capturePostHog("newsletter_signup_succeeded", { variant });
       setApiStatus("success");
       setApiEmail("");
       form.reset();
     } catch (err) {
-      posthog.capture("newsletter_signup_failed", {
+      capturePostHog("newsletter_signup_failed", {
         variant,
         error: err instanceof Error ? err.message : "network_error",
         http_status: null,

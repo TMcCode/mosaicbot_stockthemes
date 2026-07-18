@@ -1,7 +1,7 @@
 "use client";
 
-import posthog from "posthog-js";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
+import { capturePostHog } from "@/lib/posthogClient";
 
 import styles from "./SiteNav.module.css";
 
@@ -37,7 +37,7 @@ export function ThemeToggle() {
   const isDark = theme === "dark";
 
   function handleToggle() {
-    posthog.capture("theme_toggled", { from: theme, to: isDark ? "light" : "dark" });
+    capturePostHog("theme_toggled", { from: theme, to: isDark ? "light" : "dark" });
     toggleTheme();
   }
 

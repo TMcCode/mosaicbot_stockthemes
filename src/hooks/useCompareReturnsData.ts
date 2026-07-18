@@ -2,16 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 
-import { parseCompareThemesJson } from "@/lib/mergeLiveCompareData";
 import {
   priceReturnsBrowserCacheBusterQuery,
   priceReturnsRevalidateSeconds,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
-import { stockthemesLiveCompareReturnsEnabled } from "@/lib/stockthemesClientConfig";
 import { stockthemesBrowserSidecarFetchBase } from "@/lib/stockthemesPublicBase";
 import type { CompareGroupsV0 } from "@/types/compare_groups.v0";
-import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, {
@@ -27,36 +24,6 @@ function parseCompareGroups(value: unknown): CompareGroupsV0 | null {
   const bundle = value as Partial<CompareGroupsV0>;
   if (bundle.schema_version !== 0 || !bundle.as_of || !Array.isArray(bundle.rows)) return null;
   return bundle as CompareGroupsV0;
-}
-
-export function useLiveCompareThemes(): CompareThemesV0 | null {
-  const enabled = stockthemesLiveCompareReturnsEnabled();
-  const base = stockthemesBrowserSidecarFetchBase();
-  const [bundle, setBundle] = useState<CompareThemesV0 | null>(null);
-
-  useEffect(() => {
-    if (!enabled || !base) return;
-    let cancelled = false;
-    const refresh = async () => {
-      try {
-        const raw = await fetchJson(
-          `${base}/compare_themes.v0.json?${priceReturnsBrowserCacheBusterQuery()}`,
-        );
-        const parsed = parseCompareThemesJson(raw);
-        if (!cancelled && parsed) setBundle(parsed);
-      } catch {
-        /* Keep the statically rendered rows. */
-      }
-    };
-    void refresh();
-    const id = window.setInterval(refresh, priceReturnsRevalidateSeconds() * 1000);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [enabled, base]);
-
-  return bundle;
 }
 
 export function useLazyCompareGroups(active: boolean): {

@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 
-import { SiteSearch } from "@/components/SiteSearch";
 import styles from "./SiteSearch.module.css";
 
 const SiteSearchDynamic = dynamic(
@@ -36,7 +35,7 @@ export function LazySiteSearch() {
   }, [active, isProd]);
 
   if (!isProd) {
-    return <SiteSearch />;
+    return <SiteSearchDynamic />;
   }
 
   if (active) return <SiteSearchDynamic />;

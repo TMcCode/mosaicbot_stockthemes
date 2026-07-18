@@ -1,17 +1,18 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ColorType, LineStyle, createChart, type ISeriesApi, type MouseEventParams } from "lightweight-charts";
 
+import type { FactorChartSeries } from "@/components/FactorTrendChart";
 import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
 import type { FactorMethodologyItem } from "@/lib/loadFactorMethodology";
 import { loadFactorIndex } from "@/lib/loadFactorIndex";
 import { loadFactorRows } from "@/lib/loadFactorRows";
 import { loadFactorTimeseries } from "@/lib/loadFactorTimeseries";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
-import { publicAssetPath } from "@/lib/siteUrl";
 import {
+  priceReturnsRevalidateSeconds,
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
@@ -165,193 +166,17 @@ const COMPARE_COLORS = [
 ];
 const FACTOR_LINE_COLOR = "#26fcd6";
 
-function toDay(d: string): string {
-  if (d.length >= 10 && d[4] === "-" && d[7] === "-") return d.slice(0, 10);
-  const t = Date.parse(d);
-  if (Number.isNaN(t)) return d;
-  return new Date(t).toISOString().slice(0, 10);
-}
-
-function toPoints(dates: string[], values: number[]) {
-  const n = Math.min(dates.length, values.length);
-  const out: { time: string; value: number }[] = [];
-  for (let i = 0; i < n; i++) {
-    const v = Number(values[i]);
-    if (!Number.isFinite(v)) continue;
-    const day = toDay(String(dates[i]));
-    if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) continue;
-    out.push({ time: day, value: v });
-  }
-  out.sort((a, b) => a.time.localeCompare(b.time));
-  return out;
-}
-
-function formatTooltipDate(time: MouseEventParams["time"] | undefined): string {
-  if (!time) return "";
-  if (typeof time === "string") return time;
-  if (typeof time === "number") {
-    const d = new Date(time * 1000);
-    return Number.isNaN(d.getTime()) ? "" : d.toISOString().slice(0, 10);
-  }
-  if (typeof time === "object" && "year" in time && "month" in time && "day" in time) {
-    const y = Number((time as { year: number }).year);
-    const m = Number((time as { month: number }).month);
-    const d = Number((time as { day: number }).day);
-    if (!Number.isFinite(y) || !Number.isFinite(m) || !Number.isFinite(d)) return "";
-    return `${String(y).padStart(4, "0")}-${String(m).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
-  }
-  return "";
-}
-
-function lineDataValue(data: unknown): number | null {
-  if (data && typeof data === "object" && "value" in data) {
-    const v = Number((data as { value: unknown }).value);
-    return Number.isFinite(v) ? v : null;
-  }
-  return null;
-}
-
-type FactorChartSeries = {
-  id: string;
-  label: string;
-  dates: string[];
-  values: number[];
-  color: string;
-  dashed?: boolean;
-};
-
-function FactorTrendChart({
-  series,
-  ariaLabel,
-}: {
-  series: FactorChartSeries[];
-  ariaLabel: string;
-}) {
-  const wrapRef = useRef<HTMLDivElement>(null);
-  const tipRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const el = wrapRef.current;
-    if (!el || !series.length) return;
-
-    const chart = createChart(el, {
-      autoSize: false,
-      width: Math.max(el.clientWidth, 200),
-      height: 400,
-      layout: {
-        background: { type: ColorType.Solid, color: "#0f1115" },
-        textColor: "#a6abb9",
-        fontSize: 12,
-        fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
-        attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.06)" },
-        horzLines: { color: "rgba(255,255,255,0.06)" },
-      },
-      crosshair: {
-        vertLine: { visible: false, labelVisible: false },
-        horzLine: { visible: false, labelVisible: false },
-      },
-      handleScale: { mouseWheel: false, pinch: false, axisPressedMouseMove: false },
-      handleScroll: false,
-      rightPriceScale: {
-        borderColor: "rgba(255,255,255,0.08)",
-        scaleMargins: { top: 0.1, bottom: 0.15 },
-      },
-      timeScale: {
-        borderColor: "rgba(255,255,255,0.08)",
-        timeVisible: true,
-        secondsVisible: false,
-      },
-    });
-
-    const lineMeta = new Map<ISeriesApi<"Line">, { id: string; label: string }>();
-    for (const s of series) {
-      const api = chart.addLineSeries({
-        color: s.color,
-        lineWidth: s.id === "factor" ? 3 : 2,
-        lineStyle: s.dashed ? LineStyle.Dotted : LineStyle.Solid,
-        title: "",
-        priceLineVisible: false,
-        lastValueVisible: false,
-        crosshairMarkerVisible: s.id === "factor",
-      });
-      api.setData(toPoints(s.dates, s.values));
-      lineMeta.set(api, { id: s.id, label: s.label });
-    }
-    chart.timeScale().fitContent();
-
-    const onCrosshairMove = (param: MouseEventParams) => {
-      const tip = tipRef.current;
-      if (!tip || !param.point || !param.seriesData?.size) {
-        if (tip) tip.style.display = "none";
-        return;
-      }
-
-      let picked: ISeriesApi<"Line"> | undefined;
-      let bestDist = Number.POSITIVE_INFINITY;
-      for (const [rawApi, rawData] of param.seriesData) {
-        const api = rawApi as ISeriesApi<"Line">;
-        if (!lineMeta.has(api)) continue;
-        const v = lineDataValue(rawData);
-        if (v == null) continue;
-        const y = api.priceToCoordinate(v);
-        if (y == null) continue;
-        const d = Math.abs(y - param.point.y);
-        if (d < bestDist) {
-          bestDist = d;
-          picked = api;
-        }
-      }
-      if (!picked) {
-        tip.style.display = "none";
-        return;
-      }
-      const data = param.seriesData.get(picked);
-      const v = lineDataValue(data);
-      const meta = lineMeta.get(picked);
-      if (!meta || v == null) {
-        tip.style.display = "none";
-        return;
-      }
-      const date = formatTooltipDate(param.time);
-      tip.textContent = `${date ? `${date} · ` : ""}${meta.label} — ${v.toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
-      tip.style.display = "block";
-      tip.style.left = `${Math.round(param.point.x + 10)}px`;
-      tip.style.top = `${Math.round(param.point.y + 10)}px`;
-    };
-    chart.subscribeCrosshairMove(onCrosshairMove);
-
-    const ro =
-      typeof ResizeObserver !== "undefined"
-        ? new ResizeObserver(() => {
-            if (!wrapRef.current) return;
-            chart.applyOptions({ width: Math.max(wrapRef.current.clientWidth, 200) });
-            chart.timeScale().fitContent();
-          })
-        : null;
-    ro?.observe(el);
-
-    return () => {
-      ro?.disconnect();
-      chart.unsubscribeCrosshairMove(onCrosshairMove);
-      try {
-        chart.remove();
-      } catch {}
-    };
-  }, [series]);
-
-  return (
-    <div className={styles.factorChartCanvasWrap}>
-      <div ref={wrapRef} className={styles.factorChartCanvas} role="img" aria-label={ariaLabel} />
-      <div className={styles.factorChartBrand} aria-hidden="true">
-        <img src={publicAssetPath("/brand/logo-full-dark-tight.png")} alt="" loading="lazy" decoding="async" />
+const FactorTrendChart = dynamic(
+  () => import("@/components/FactorTrendChart").then((mod) => mod.FactorTrendChart),
+  {
+    ssr: false,
+    loading: () => (
+      <div className={styles.factorChartCanvasWrap} aria-busy="true" aria-label="Loading chart">
+        <div className={styles.factorChartCanvas} />
       </div>
-      <div ref={tipRef} className={styles.factorChartTooltip} />
-    </div>
-  );
-}
+    ),
+  },
+);
 
 function normalizeRows(rawEntries: unknown[]): DisplayRow[] {
   if (!rawEntries.length) return [];
@@ -533,28 +358,40 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   const [leastSort, setLeastSort] = useState<TableSort>({ column: "rank", direction: "desc" });
   const [status, setStatus] = useState<"loading" | "ok" | "empty" | "error">("loading");
   const themeSeriesCacheRef = useRef(themeSeriesCache);
-  themeSeriesCacheRef.current = themeSeriesCache;
+
+  useEffect(() => {
+    themeSeriesCacheRef.current = themeSeriesCache;
+  }, [themeSeriesCache]);
 
   useEffect(() => {
     let cancelled = false;
-    Promise.all([loadFactorIndex(dataBaseUrl), loadFactorTimeseries(dataBaseUrl)])
-      .then(([next, ts]) => {
-        if (cancelled) return;
-        if (!next || !Object.keys(next.factors || {}).length) {
-          setStatus("empty");
-          return;
-        }
-        setIndexPayload(next);
-        setTimeseries(ts);
-        const opts = factorOptions(next);
-        setSelectedFactorId(opts[0]?.id || "");
-        setStatus("ok");
-      })
-      .catch(() => {
-        if (!cancelled) setStatus("error");
-      });
+    const load = () => {
+      Promise.all([loadFactorIndex(dataBaseUrl), loadFactorTimeseries(dataBaseUrl)])
+        .then(([next, ts]) => {
+          if (cancelled) return;
+          if (!next || !Object.keys(next.factors || {}).length) {
+            setStatus((prev) => (prev === "ok" ? prev : "empty"));
+            return;
+          }
+          setIndexPayload(next);
+          if (ts) setTimeseries(ts);
+          setSelectedFactorId((prev) => {
+            if (prev && next.factors?.[prev]) return prev;
+            return factorOptions(next)[0]?.id || "";
+          });
+          setStatus("ok");
+        })
+        .catch(() => {
+          if (!cancelled) setStatus((prev) => (prev === "ok" ? prev : "error"));
+        });
+    };
+
+    load();
+    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
+    const id = window.setInterval(load, intervalMs);
     return () => {
       cancelled = true;
+      window.clearInterval(id);
     };
   }, [dataBaseUrl]);
 
@@ -588,6 +425,8 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   const compareCap = isMobileCompare ? 3 : 8;
 
   useEffect(() => {
+    // Keep the selection valid when the responsive comparison cap changes.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedThemes((prev) => prev.slice(0, compareCap));
   }, [compareCap]);
 
@@ -645,7 +484,10 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   }, [dataBaseUrl, selectedThemes]);
 
   const options = useMemo(() => (indexPayload ? factorOptions(indexPayload) : []), [indexPayload]);
-  const rows = rowsCache[selectedFactorId] ?? [];
+  const rows = useMemo(
+    () => rowsCache[selectedFactorId] ?? [],
+    [rowsCache, selectedFactorId],
+  );
   const hasStandaloneScores = useMemo(
     () => rows.some((r) => r.scoreStandalone != null && Number.isFinite(r.scoreStandalone)),
     [rows],
@@ -653,6 +495,8 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   const effectiveScoreMode: ScoreMode = hasStandaloneScores ? scoreMode : "incremental";
 
   useEffect(() => {
+    // Reset table intent when switching factor or score interpretation.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setClosestSort({ column: "rank", direction: "asc" });
     setLeastSort({ column: "rank", direction: "desc" });
   }, [selectedFactorId, effectiveScoreMode]);

@@ -16,13 +16,9 @@ import styles from "../../page.module.css";
 import { pickDefaultTreemapPeriod } from "@/lib/buildConstituentTreemapNodes";
 import { buildGroupThemeTreemapNodes } from "@/lib/buildGroupThemeTreemapNodes";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
-import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getGroupDetailCached } from "@/lib/getGroupDetailCached";
 import { getManifestCached } from "@/lib/getManifestCached";
-import {
-  computeGroup10DRanks,
-  rank10dFromGroupPayload,
-} from "@/lib/groupCompareRank";
+import { rank10dFromGroupPayload } from "@/lib/groupCompareRank";
 import {
   mergeGroupThemeTableRows,
   resolveGroupThemesMetricColumns,
@@ -109,15 +105,12 @@ export default async function GroupDetailPage({ params }: Props) {
     notFound();
   }
 
-  const [loaded, compareRes] = await Promise.all([
-    getGroupDetailCached(slug),
-    getCompareThemesCached(),
-  ]);
+  const loaded = await getGroupDetailCached(slug);
   const detail = loaded?.detail;
   const rank10d =
     rank10dFromGroupPayload(detail?.rank_10d) ??
     rank10dFromGroupPayload(group.rank_10d) ??
-    (compareRes ? computeGroup10DRanks(slug, compareRes.bundle.rows) : null);
+    null;
   const themeBySlug = new Map(manifest.themes.map((t) => [t.slug, t]));
   const fromSlugs = group.theme_slugs
     ?.map((s) => themeBySlug.get(s))
@@ -129,11 +122,11 @@ export default async function GroupDetailPage({ params }: Props) {
 
   const tableRows: GroupDetailChildThemeV0[] =
     detail?.themes?.length ? detail.themes : childRowFromManifest(manifestChildren);
-  const groupThemeTableRows = mergeGroupThemeTableRows(
-    tableRows,
-    compareRes?.bundle.rows,
-  );
+  const groupThemeTableRows = mergeGroupThemeTableRows(tableRows, undefined);
   const groupThemeMetricColumns = resolveGroupThemesMetricColumns(groupThemeTableRows);
+  const groupChartPerformance = detail?.chart_1y?.performance
+    ? { performance: detail.chart_1y.performance }
+    : undefined;
 
   const dataBaseUrl = stockthemesPublicDataBase() ?? null;
   const groupTreemapNodes = buildGroupThemeTreemapNodes(detail?.theme_treemap);
@@ -234,7 +227,7 @@ export default async function GroupDetailPage({ params }: Props) {
                   key={slug}
                   slug={slug}
                   dataBaseUrl={dataBaseUrl}
-                  serverChart={detail?.chart_1y}
+                  serverChart={groupChartPerformance}
                   chartJsonFolder="groups"
                   performanceTitle={group.name}
                   compositionMetaByTicker={groupChartMetaBySlug}
@@ -283,7 +276,6 @@ export default async function GroupDetailPage({ params }: Props) {
               rows={groupThemeTableRows}
               metricColumns={groupThemeMetricColumns}
               selectedDates={selectedDates}
-              serverCompareBundle={compareRes?.bundle ?? null}
             />
           </section>
           <p>

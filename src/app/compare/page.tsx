@@ -15,7 +15,6 @@ import {
   normalizeCompareSpySector,
   orderCompareSectorOptions,
 } from "@/lib/compareSectorFilter";
-import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -68,13 +67,12 @@ export default async function ComparePage() {
       groupName:
         String(r.group_name || "").trim() || groupMeta?.name || "",
       spySector: groupMeta?.spySector ?? normalizeCompareSpySector(null),
-      tickersPreview:
-        formatTickersPreviewFromParts(r.tickers_preview, r.tickers_preview_more) ?? null,
-      compareReturns: r.compare_returns ?? undefined,
     };
   });
   const fallbackColumns = resolveTrendingColumnOrder(
-    rows.map((r) => ({ compare_returns: r.compareReturns })),
+    (compareRes?.bundle.rows || []).map((r) => ({
+      compare_returns: r.compare_returns ?? undefined,
+    })),
   );
   const rawColumns =
     Array.isArray(compareRes?.bundle.columns) && compareRes?.bundle.columns.length

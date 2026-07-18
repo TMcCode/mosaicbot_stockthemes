@@ -8,10 +8,18 @@ import path from "path";
 import sharp from "sharp";
 import { fileURLToPath } from "url";
 
+import {
+  generatedAssetHash,
+  generatedAssetsCurrent,
+  writeGeneratedAssetMarker,
+} from "./lib/generatedAssetGate.mjs";
+
+const scriptPath = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
 const outPath = path.join(root, "public", "og.png");
 const lockupPath = path.join(root, "public", "brand", "logo-og-lockup.jpg");
+const markerPath = path.join(root, ".cache", "generated-assets", "og.sha256");
 
 const W = 1200;
 const H = 630;
@@ -24,6 +32,12 @@ async function main() {
   if (!fs.existsSync(lockupPath)) {
     console.error(`generate-og-png: missing ${lockupPath}`);
     process.exit(1);
+  }
+
+  const inputHash = generatedAssetHash([scriptPath, lockupPath], "og-v1");
+  if (generatedAssetsCurrent({ markerPath, hash: inputHash, outputs: [outPath] })) {
+    console.log("generate-og-png: inputs unchanged — skip");
+    return;
   }
 
   const resizedBuf = await sharp(lockupPath)
@@ -51,6 +65,7 @@ async function main() {
     .png({ compressionLevel: 9 })
     .toFile(outPath);
 
+  writeGeneratedAssetMarker(markerPath, inputHash);
   console.log(`generate-og-png: wrote ${outPath}`);
 }
 

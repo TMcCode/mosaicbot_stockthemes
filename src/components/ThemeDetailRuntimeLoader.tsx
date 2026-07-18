@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import posthog from "posthog-js";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DetailAboutIntro } from "@/components/DetailAboutIntro";
@@ -10,6 +9,7 @@ import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
+import { capturePostHog, capturePostHogException } from "@/lib/posthogClient";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -67,6 +67,8 @@ export function ThemeDetailRuntimeLoader({
 
   useEffect(() => {
     if (stockthemesLiveHydrationDisabled()) {
+      // This branch is a static configuration outcome, not a fetch subscription.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setState({
         status: "error",
         message: stockthemesDevBuildHintsEnabled()
@@ -88,14 +90,14 @@ export function ThemeDetailRuntimeLoader({
       .then((raw) => {
         if (cancelled) return;
         const detail = parseDetail(raw);
-        posthog.capture("theme_detail_runtime_loaded", { slug });
+        capturePostHog("theme_detail_runtime_loaded", { slug });
         setState({ status: "ok", detail });
       })
       .catch((e: unknown) => {
         if (cancelled) return;
         const message = e instanceof Error ? e.message : String(e);
-        posthog.captureException(e, { slug });
-        posthog.capture("theme_detail_runtime_error", { slug, error: message });
+        capturePostHogException(e, { slug });
+        capturePostHog("theme_detail_runtime_error", { slug, error: message });
         setState({ status: "error", message });
       });
     return () => {

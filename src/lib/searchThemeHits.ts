@@ -1,5 +1,6 @@
 import type Fuse from "fuse.js";
 
+import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
@@ -18,7 +19,7 @@ export function parseSearchIndex(raw: string): SearchIndexV0 {
   if (!Array.isArray(data.themes)) {
     throw new Error("Invalid search index JSON");
   }
-  return data;
+  return hydrateSearchIndex(data);
 }
 
 export async function loadSearchIndexClient(): Promise<SearchIndexV0 | null> {

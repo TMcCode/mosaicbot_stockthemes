@@ -1,9 +1,12 @@
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
-
 import type { WatchlistItemRow, WatchlistItemType } from "@/lib/watchlist/types";
 
+async function getWatchlistSupabase() {
+  const { getBrowserSupabase } = await import("@/lib/supabase/browserClient");
+  return getBrowserSupabase();
+}
+
 export async function fetchWatchlistItems(userId: string): Promise<WatchlistItemRow[]> {
-  const supabase = getBrowserSupabase();
+  const supabase = await getWatchlistSupabase();
   if (!supabase) {
     return [];
   }
@@ -24,7 +27,7 @@ export async function insertWatchlistItem(
   itemType: WatchlistItemType,
   itemKey: string,
 ): Promise<void> {
-  const supabase = getBrowserSupabase();
+  const supabase = await getWatchlistSupabase();
   if (!supabase) {
     throw new Error("Supabase is not configured.");
   }
@@ -43,7 +46,7 @@ export async function deleteWatchlistItem(
   itemType: WatchlistItemType,
   itemKey: string,
 ): Promise<void> {
-  const supabase = getBrowserSupabase();
+  const supabase = await getWatchlistSupabase();
   if (!supabase) {
     throw new Error("Supabase is not configured.");
   }

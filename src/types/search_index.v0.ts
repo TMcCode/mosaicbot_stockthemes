@@ -5,8 +5,8 @@ export type SearchIndexTickerRowV0 = {
   ticker: string;
   name?: string;
   theme_slugs: string[];
-  theme_names: string[];
-  aliases: string[];
+  theme_names?: string[];
+  aliases?: string[];
 };
 
 export type SearchIndexThemeRowV0 = {
@@ -14,7 +14,7 @@ export type SearchIndexThemeRowV0 = {
   name: string;
   group_slug?: string | null;
   group_name?: string | null;
-  aliases: string[];
+  aliases?: string[];
 };
 
 export type SearchIndexGroupRowV0 = {
@@ -22,7 +22,7 @@ export type SearchIndexGroupRowV0 = {
   name: string;
   spy_sector?: string;
   blurb_snippet?: string;
-  aliases: string[];
+  aliases?: string[];
 };
 
 export type SearchIndexV0 = {

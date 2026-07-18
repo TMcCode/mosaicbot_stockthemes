@@ -6,10 +6,8 @@ import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
-import {
-  useLazyCompareGroups,
-  useLiveCompareThemes,
-} from "@/hooks/useCompareReturnsData";
+import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import { useLazyCompareGroups } from "@/hooks/useCompareReturnsData";
 import {
   availableCompareSummaryPeriods,
   type CompareSummaryPeriod,
@@ -68,18 +66,19 @@ export function ComparePageClient({
   selectedDates,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("themes");
-  const liveCompareBundle = useLiveCompareThemes();
+  const {
+    compareBundle: liveCompareBundle,
+    compareLoading: themesLoading,
+    compareFailed: themesFailed,
+  } = useLiveCompareBundles(null, null);
   const {
     bundle: groupBundle,
     loading: groupsLoading,
     failed: groupsFailed,
   } = useLazyCompareGroups(viewMode === "groups");
-  const activeColumns = viewMode === "groups" && groupBundle?.columns?.length
-    ? groupBundle.columns
-    : columns;
   const visibleColumns = useMemo(
-    () => withoutPremarketUnlessActive(activeColumns),
-    [activeColumns],
+    () => withoutPremarketUnlessActive(columns),
+    [columns],
   );
   const rowsWithLiveCompare = useMemo(
     () => mergeComparePageRows(rows, liveCompareBundle?.rows ?? []),
@@ -258,44 +257,62 @@ export function ComparePageClient({
                 />
               </>
             ) : null}
-            {benchmarkRows.length > 0 ? (
-              <label className={styles.benchmarkToggle}>
-                <input
-                  type="checkbox"
-                  checked={showBenchmarks}
-                  onChange={(e) => setShowBenchmarks(e.target.checked)}
-                />
-                Sector ETFs
-              </label>
-            ) : null}
-            {factorSpreadRows.length > 0 ? (
-              <label className={styles.benchmarkToggle}>
-                <input
-                  type="checkbox"
-                  checked={showFactorSpreads}
-                  onChange={(e) => setShowFactorSpreads(e.target.checked)}
-                />
-                Factor Spreads
-              </label>
+            {benchmarkRows.length > 0 || factorSpreadRows.length > 0 ? (
+              <div className={styles.referenceToggles}>
+                {benchmarkRows.length > 0 ? (
+                  <label className={styles.benchmarkToggle}>
+                    <input
+                      type="checkbox"
+                      checked={showBenchmarks}
+                      onChange={(e) => setShowBenchmarks(e.target.checked)}
+                    />
+                    Sector ETFs
+                  </label>
+                ) : null}
+                {factorSpreadRows.length > 0 ? (
+                  <label className={styles.benchmarkToggle}>
+                    <input
+                      type="checkbox"
+                      checked={showFactorSpreads}
+                      onChange={(e) => setShowFactorSpreads(e.target.checked)}
+                    />
+                    Factor Spreads
+                  </label>
+                ) : null}
+              </div>
             ) : null}
           </div>
         </div>
-        <CompareSummaryPanel
-          rows={filtered}
-          period={summaryPeriod}
-          onPeriodChange={setSummaryPeriod}
-          availablePeriods={availablePeriods}
-          entityKind={viewMode === "groups" ? "group" : "theme"}
-        />
+        {viewMode === "groups" || liveCompareBundle ? (
+          <CompareSummaryPanel
+            rows={filtered}
+            period={summaryPeriod}
+            onPeriodChange={setSummaryPeriod}
+            availablePeriods={availablePeriods}
+            entityKind={viewMode === "groups" ? "group" : "theme"}
+          />
+        ) : (
+          <p className={pageStyles.muted}>
+            {themesFailed ? "Theme returns are temporarily unavailable." : "Loading theme returns…"}
+          </p>
+        )}
       </div>
       <section className={`${pageStyles.section} ${pageStyles.compareSectionTight}`}>
-        <CompareThemesTable
-          benchmarkRows={tableBenchmarkRows}
-          rows={filtered}
-          columns={visibleColumns}
-          selectedDates={selectedDates}
-          entityKind={viewMode === "groups" ? "group" : "theme"}
-        />
+        {viewMode === "groups" || liveCompareBundle ? (
+          <CompareThemesTable
+            benchmarkRows={tableBenchmarkRows}
+            rows={filtered}
+            columns={visibleColumns}
+            selectedDates={selectedDates}
+            entityKind={viewMode === "groups" ? "group" : "theme"}
+          />
+        ) : (
+          <p className={pageStyles.muted} aria-live="polite">
+            {themesFailed && !themesLoading
+              ? "Theme returns are temporarily unavailable."
+              : "Loading the latest theme returns…"}
+          </p>
+        )}
         {viewMode === "groups" && groupsFailed && groupRows.length === 0 ? (
           <p className={styles.loadError}>Group returns are temporarily unavailable.</p>
         ) : null}

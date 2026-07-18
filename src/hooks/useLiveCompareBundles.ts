@@ -1,12 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useSyncExternalStore } from "react";
 
-import {
-  parseCompareThemesJson,
-  parseHomeTopMoversJson,
-  parseHomeTrendingJson,
-} from "@/lib/mergeLiveCompareData";
+import { parseCompareThemesJson } from "@/lib/mergeLiveCompareData";
 import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
 import type { SpyMarketPerf } from "@/lib/parseSpySnapshot";
 import {
@@ -28,6 +24,88 @@ async function fetchJson(url: string): Promise<unknown> {
   return res.json();
 }
 
+type LiveCompareSnapshot = {
+  liveCompare: CompareThemesV0 | null;
+  liveSpyPerf: SpyMarketPerf | null;
+  compareLoading: boolean;
+  compareFailed: boolean;
+};
+
+const EMPTY_SNAPSHOT: LiveCompareSnapshot = {
+  liveCompare: null,
+  liveSpyPerf: null,
+  compareLoading: false,
+  compareFailed: false,
+};
+
+let snapshot = EMPTY_SNAPSHOT;
+let refreshPromise: Promise<void> | null = null;
+let intervalId: number | null = null;
+const listeners = new Set<() => void>();
+
+function emit(next: LiveCompareSnapshot) {
+  snapshot = next;
+  listeners.forEach((listener) => listener());
+}
+
+function refreshLiveBundles(): Promise<void> {
+  if (refreshPromise) return refreshPromise;
+  const base = stockthemesPublicDataBase();
+  if (!base) return Promise.resolve();
+
+  refreshPromise = (async () => {
+    const q = priceReturnsBrowserCacheBusterQuery();
+    emit({ ...snapshot, compareLoading: true, compareFailed: false });
+    try {
+      const [compareRaw, spyRaw] = await Promise.all([
+        fetchJson(`${base}/compare_themes.v0.json?${q}`),
+        fetchJson(`${base}/spy_snapshot.v0.json?${q}`),
+      ]);
+      const compare = parseCompareThemesJson(compareRaw);
+      const spy = parseSpySnapshotJson(spyRaw);
+      emit({
+        liveCompare: compare ?? snapshot.liveCompare,
+        liveSpyPerf: spy ?? snapshot.liveSpyPerf,
+        compareLoading: false,
+        compareFailed: !compare && !snapshot.liveCompare,
+      });
+    } catch {
+      emit({ ...snapshot, compareLoading: false, compareFailed: !snapshot.liveCompare });
+    }
+  })().finally(() => {
+    refreshPromise = null;
+  });
+  return refreshPromise;
+}
+
+function subscribe(listener: () => void) {
+  listeners.add(listener);
+  if (listeners.size === 1 && stockthemesPublicDataBase()) {
+    void refreshLiveBundles();
+    if (stockthemesLiveCompareReturnsEnabled()) {
+      intervalId = window.setInterval(
+        () => void refreshLiveBundles(),
+        priceReturnsRevalidateSeconds() * 1000,
+      );
+    }
+  }
+  return () => {
+    listeners.delete(listener);
+    if (!listeners.size && intervalId !== null) {
+      window.clearInterval(intervalId);
+      intervalId = null;
+    }
+  };
+}
+
+function getSnapshot() {
+  return snapshot;
+}
+
+function getServerSnapshot() {
+  return EMPTY_SNAPSHOT;
+}
+
 export function useLiveCompareBundles(
   serverCompare: CompareThemesV0 | null | undefined,
   serverTopMovers: HomeTopMoversV0 | null | undefined,
@@ -38,68 +116,29 @@ export function useLiveCompareBundles(
   liveSpyPerf: SpyMarketPerf | null;
   liveTickerPerformanceAsOf: string | null;
   liveCompare: boolean;
+  compareLoading: boolean;
+  compareFailed: boolean;
 } {
   const enabled = stockthemesLiveCompareReturnsEnabled();
-  const base = stockthemesPublicDataBase();
-  const [liveCompare, setLiveCompare] = useState<CompareThemesV0 | null>(null);
-  const [liveTopMovers, setLiveTopMovers] = useState<HomeTopMoversV0 | null>(null);
-  const [liveHomeTrending, setLiveHomeTrending] = useState<HomeTrendingV0 | null>(null);
-  const [liveSpyPerf, setLiveSpyPerf] = useState<SpyMarketPerf | null>(null);
-  const [liveTickerPerformanceAsOf, setLiveTickerPerformanceAsOf] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!enabled || !base) return;
-
-    let cancelled = false;
-    const refresh = async () => {
-      const q = priceReturnsBrowserCacheBusterQuery();
-      try {
-        const [compareRaw, moversRaw, trendingRaw, manifestRaw, spyRaw] = await Promise.all([
-          fetchJson(`${base}/compare_themes.v0.json?${q}`),
-          fetchJson(`${base}/home_top_movers.v0.json?${q}`),
-          fetchJson(`${base}/home_trending.v0.json?${q}`),
-          fetchJson(`${base}/manifest.json?${q}`),
-          fetchJson(`${base}/spy_snapshot.v0.json?${q}`),
-        ]);
-        if (cancelled) return;
-        const compare = parseCompareThemesJson(compareRaw);
-        const movers = parseHomeTopMoversJson(moversRaw);
-        const trending = parseHomeTrendingJson(trendingRaw);
-        const spy = parseSpySnapshotJson(spyRaw);
-        if (compare) setLiveCompare(compare);
-        if (movers) setLiveTopMovers(movers);
-        if (trending) setLiveHomeTrending(trending);
-        if (spy) setLiveSpyPerf(spy);
-        const perfAsOf =
-          manifestRaw &&
-          typeof manifestRaw === "object" &&
-          typeof (manifestRaw as { ticker_performance_as_of?: unknown }).ticker_performance_as_of ===
-            "string"
-            ? String((manifestRaw as { ticker_performance_as_of: string }).ticker_performance_as_of)
-            : null;
-        if (perfAsOf) setLiveTickerPerformanceAsOf(perfAsOf);
-      } catch {
-        /* keep server snapshot */
-      }
-    };
-
-    refresh();
-    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
-    const id = window.setInterval(refresh, intervalMs);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
-  }, [enabled, base]);
+  const live = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const compareBundle = useMemo(
-    () => liveCompare ?? serverCompare,
-    [liveCompare, serverCompare],
+    () => live.liveCompare ?? serverCompare,
+    [live.liveCompare, serverCompare],
   );
   const topMoversBundle = useMemo(
-    () => liveTopMovers ?? serverTopMovers,
-    [liveTopMovers, serverTopMovers],
+    () => serverTopMovers,
+    [serverTopMovers],
   );
 
-  return { compareBundle, topMoversBundle, liveHomeTrending, liveSpyPerf, liveTickerPerformanceAsOf, liveCompare: enabled && Boolean(liveCompare) };
+  return {
+    compareBundle,
+    topMoversBundle,
+    liveHomeTrending: null,
+    liveSpyPerf: live.liveSpyPerf,
+    liveTickerPerformanceAsOf: live.liveCompare?.as_of ?? null,
+    liveCompare: enabled && Boolean(live.liveCompare),
+    compareLoading: live.compareLoading,
+    compareFailed: live.compareFailed,
+  };
 }

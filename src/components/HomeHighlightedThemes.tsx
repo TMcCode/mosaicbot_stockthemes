@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { HomeHighlightedThemeChart } from "@/components/HomeHighlightedThemeChart";
-import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
 import pageStyles from "@/app/page.module.css";
 import styles from "@/components/HomeHighlightedThemes.module.css";
@@ -12,7 +12,6 @@ import styles from "@/components/HomeHighlightedThemes.module.css";
 type HighlightedThemeItem = {
   slug: string;
   name: string;
-  chart1y?: ThemeChart1yV0;
 };
 
 type Props = {
@@ -92,7 +91,6 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
         <HomeHighlightedThemeChart
           slug={active.slug}
           name={active.name}
-          chart1y={active.chart1y}
           benchmarkPerformance={benchmarkPerformance}
         />
       </div>

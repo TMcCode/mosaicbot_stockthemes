@@ -1,6 +1,7 @@
 import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
 import type Fuse from "fuse.js";
 
+import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
@@ -34,7 +35,7 @@ export function parseSiteSearchIndex(raw: string): SearchIndexV0 {
   if (!Array.isArray(data.tickers) || !Array.isArray(data.themes) || !Array.isArray(data.groups)) {
     throw new Error("Invalid search index JSON");
   }
-  return data;
+  return hydrateSearchIndex(data);
 }
 
 export function buildSiteSearchFuseRows(index: SearchIndexV0): SiteSearchFuseRow[] {

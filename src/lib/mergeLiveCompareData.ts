@@ -103,8 +103,14 @@ export function mergeComparePageRows(
   return serverRows.map((row) => {
     const live =
       bySlug.get(String(row.slug || "").trim()) || byName.get(normName(row.name));
-    if (!live?.compare_returns) return row;
-    return { ...row, compareReturns: live.compare_returns };
+    if (!live) return row;
+    return {
+      ...row,
+      compareReturns: live.compare_returns ?? row.compareReturns,
+      tickersPreview:
+        formatTickersPreviewFromParts(live.tickers_preview, live.tickers_preview_more) ??
+        row.tickersPreview,
+    };
   });
 }
 

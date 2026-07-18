@@ -161,12 +161,17 @@ export default async function Home() {
     chart1y: undefined as ThemeChart1yV0 | undefined,
     chartPerf: spyPerf?.chartPerf ?? {},
     compare_returns: spyPerf?.compareReturns,
+    tickersPreview: null as string | null,
     marketBaseline: true,
   };
   // Weekdays: 1D (matches ticker); Sat/Sun ET: 10D when markets are closed.
   const detailsSorted = sortHomeTrendingRows([...details, marketRow], topMoversPeriod);
   const rowsForTable = detailsSorted.map((row) => ({
-    ...row,
+    slug: row.slug,
+    name: row.name,
+    chartPerf: row.chartPerf,
+    compare_returns: row.compare_returns,
+    tickersPreview: row.tickersPreview,
     marketBaseline: row.marketBaseline === true,
   }));
   const trendingColumns = resolveTrendingColumnOrder(detailsSorted).filter(
@@ -251,8 +256,6 @@ export default async function Home() {
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
             tickerPerformanceAsOf={manifest.ticker_performance_as_of}
-            serverCompareBundle={compareRes?.bundle ?? null}
-            serverTopMoversBundle={topMoversRes?.bundle ?? null}
           />
 
           <div className={styles.homeFeedStack}>
@@ -274,7 +277,6 @@ export default async function Home() {
                 columnHelp={Object.fromEntries(
                   trendingColumns.map((col) => [col, customDateHelpText(col, selectedDateByKey)]),
                 )}
-                serverCompareBundle={compareRes?.bundle ?? null}
               />
             </section>
 
@@ -285,7 +287,6 @@ export default async function Home() {
                   .map((d) => ({
                     slug: d.slug as string,
                     name: d.name,
-                    chart1y: d.chart1y,
                   }))}
                 benchmarkPerformance={spyPerf?.benchmarkPerformance}
               />

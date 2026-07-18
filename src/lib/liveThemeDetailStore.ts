@@ -1,5 +1,6 @@
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
+import type { ThemePriceReturnsSidecarV0 } from "@/types/theme.price_returns.v0";
 
 export function mergeThemeDetailPriceReturns(
   server: ThemeDetailV0,
@@ -65,6 +66,37 @@ function parseThemeDetail(raw: unknown): ThemeDetailV0 {
   return data;
 }
 
+export function parseThemePriceReturnsSidecar(
+  raw: unknown,
+): ThemePriceReturnsSidecarV0 {
+  const data = raw as ThemePriceReturnsSidecarV0;
+  if (data.schema_version !== "theme.price_returns.v0") {
+    throw new Error(`Unsupported price returns schema_version: ${data.schema_version}`);
+  }
+  if (!data.slug || !data.name || !Array.isArray(data.constituents)) {
+    throw new Error("Invalid theme price returns sidecar");
+  }
+  for (const constituent of data.constituents) {
+    if (!constituent?.ticker || !constituent.price_returns) {
+      throw new Error("Invalid theme price returns constituent");
+    }
+  }
+  return data;
+}
+
+function sidecarAsThemeDetail(sidecar: ThemePriceReturnsSidecarV0): ThemeDetailV0 {
+  return {
+    schema_version: 0,
+    slug: sidecar.slug,
+    name: sidecar.name,
+    as_of: sidecar.as_of,
+    build_id: sidecar.build_id,
+    ticker_performance_as_of: sidecar.ticker_performance_as_of,
+    constituents: sidecar.constituents,
+    compare_returns: sidecar.compare_returns,
+  };
+}
+
 type Entry = {
   merged: ThemeDetailV0;
   fetchedAtMs: number;
@@ -121,8 +153,20 @@ export async function refreshLiveThemeDetail({
   if (existing) return existing;
 
   const promise = (async () => {
-    const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json`;
-    const live = parseThemeDetail(await fetchJson(url));
+    const encodedSlug = encodeURIComponent(slug);
+    let live: ThemeDetailV0;
+    try {
+      const sidecar = parseThemePriceReturnsSidecar(
+        await fetchJson(
+          `${dataBaseUrl}/themes/${encodedSlug}.price_returns.v0.json`,
+        ),
+      );
+      live = sidecarAsThemeDetail(sidecar);
+    } catch {
+      live = parseThemeDetail(
+        await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
+      );
+    }
     const merged = mergeThemeDetailLiveFields(serverDetail, live, mergeOptions);
     entries.set(key, {
       merged,

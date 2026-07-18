@@ -9,10 +9,9 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
 type SupabaseAuthContextValue = {
   configured: boolean;
@@ -96,18 +95,27 @@ function captureAuthPostHog(user: User) {
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const configured = useMemo(() => Boolean(getSupabasePublicConfig()), []);
-  const client = useMemo(() => getBrowserSupabase(), [configured]);
-
-  const [loading, setLoading] = useState(true);
+  const [client, setClient] = useState<SupabaseClient | null>(null);
+  const [loading, setLoading] = useState(configured);
   const [session, setSession] = useState<Session | null>(null);
 
   useEffect(() => {
+    if (!configured) return;
+    let cancelled = false;
+    void import("@/lib/supabase/browserClient").then(({ getBrowserSupabase }) => {
+      if (!cancelled) setClient(getBrowserSupabase());
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [configured]);
+
+  useEffect(() => {
+    if (!configured) return;
     if (!client) {
-      setLoading(false);
       return;
     }
 
-    let unsub: { subscription: { unsubscribe: () => void } } | undefined;
     let settled = false;
 
     const finishLoading = () => {
@@ -134,7 +142,7 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         finishLoading();
       });
 
-    const { data } = client.auth.onAuthStateChange((_event, s) => {
+    const { data: unsub } = client.auth.onAuthStateChange((_event, s) => {
       setSession(s);
       finishLoading();
       if (_event === "SIGNED_IN" && s?.user) {
@@ -144,13 +152,11 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
         posthogReset();
       }
     });
-    unsub = data;
-
     return () => {
       window.clearTimeout(failSafe);
       unsub?.subscription.unsubscribe();
     };
-  }, [client]);
+  }, [client, configured]);
 
   const signOut = useCallback(async () => {
     if (!client) return;

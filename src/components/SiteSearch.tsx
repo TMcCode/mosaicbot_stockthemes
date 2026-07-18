@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import posthog from "posthog-js";
 
 import { WatchlistStar } from "@/components/WatchlistStar";
+import { capturePostHog } from "@/lib/posthogClient";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
 import {
   collectSiteSearchHits,
@@ -86,7 +86,7 @@ export function SiteSearch() {
     if (engine && debounced.trim() && hits.length === 0) {
       if (noResultsReportedRef.current !== debounced) {
         noResultsReportedRef.current = debounced;
-        posthog.capture("search_no_results", { query: debounced });
+        capturePostHog("search_no_results", { query: debounced });
       }
     } else {
       noResultsReportedRef.current = null;
@@ -96,7 +96,7 @@ export function SiteSearch() {
   const goToHit = useCallback(
     (h: SiteSearchHit) => {
       const slug = h.kind === "ticker" ? h.ref.theme_slugs[0] ?? null : h.ref.slug;
-      posthog.capture("search_result_clicked", {
+      capturePostHog("search_result_clicked", {
         query: query.trim(),
         result_kind: h.kind,
         result_slug: slug,
@@ -247,7 +247,7 @@ export function SiteSearch() {
                                         setQuery("");
                                       }}
                                     >
-                                      {h.ref.theme_names[j] ?? slug}
+                                      {h.ref.theme_names?.[j] ?? slug}
                                     </Link>
                                   </span>
                                 ))}

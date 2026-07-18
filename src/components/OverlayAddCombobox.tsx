@@ -59,10 +59,11 @@ function expandHitsForOverlay(hits: SiteSearchHit[], selectedKeys: Set<string>):
     const tickerKey = `ticker:${ticker}`;
     if (selectedKeys.has(tickerKey)) continue;
     const title = hit.ref.name ? `${ticker} · ${hit.ref.name}` : ticker;
+    const themeNames = hit.ref.theme_names ?? [];
     const themeHint =
-      hit.ref.theme_names.length > 0
-        ? hit.ref.theme_names.slice(0, 2).join(", ") +
-          (hit.ref.theme_names.length > 2 ? ` +${hit.ref.theme_names.length - 2}` : "")
+      themeNames.length > 0
+        ? themeNames.slice(0, 2).join(", ") +
+          (themeNames.length > 2 ? ` +${themeNames.length - 2}` : "")
         : undefined;
     rows.push({
       key: hit.key,

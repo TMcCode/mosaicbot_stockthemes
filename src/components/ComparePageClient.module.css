@@ -1,3 +1,10 @@
+.referenceToggles {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  white-space: nowrap;
+}
+
 .benchmarkToggle {
   display: inline-flex;
   align-items: center;

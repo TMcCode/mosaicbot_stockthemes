@@ -24,7 +24,7 @@ export type QualityRiskColumnDef = {
   id: string;
   label: string;
   tooltip: string;
-  format: "pct" | "multiple";
+  format: "pct" | "multiple" | "bps";
   getValue: (metrics: ThemeQualityRiskMetricsV0 | undefined) => number | null | undefined;
   getPeriod?: (metrics: ThemeQualityRiskMetricsV0 | undefined) => string | null | undefined;
   getKind?: (
@@ -287,13 +287,29 @@ export function qualityRiskColumns(
 ): QualityRiskColumnDef[] {
   if (mode === "quarterly") {
     const periods: Array<[ThemeQualityRiskQuarterSlotV0, string]> = [
-      ["q_minus_4", "YoY Qtr"],
       ["q_minus_3", "Q-3"],
       ["q_minus_2", "Q-2"],
       ["q_minus_1", "Q-1"],
       ["lq", "LQ"],
     ];
+    const yearAgoLabel = columnLabels?.quarterly?.q_minus_4 ?? "the same quarter last year";
+    const yoyBps = (
+      metric: "gross_pct" | "ebitda_pct",
+      label: string,
+    ): QualityRiskColumnDef => ({
+      id: `yoy_qtr_${metric.replace("_pct", "")}_bps`,
+      label: `YoY Qtr\n${label}`,
+      tooltip: `Latest reported ${label.toLowerCase()} margin change versus ${yearAgoLabel}, in basis points.`,
+      format: "bps",
+      getValue: (metrics) => {
+        const latest = metrics?.quarterly?.lq?.[metric];
+        const yearAgo = metrics?.quarterly?.q_minus_4?.[metric];
+        return latest != null && yearAgo != null ? (latest - yearAgo) * 100 : null;
+      },
+      getPeriod: (metrics) => metrics?.quarterly?.q_minus_4?.period_end,
+    });
     return [
+      yoyBps("gross_pct", "Gross"),
       ...periods.map(([slot, fallbackLabel]) => {
         const label = columnLabels?.quarterly?.[slot] ?? fallbackLabel;
         return {
@@ -313,6 +329,7 @@ export function qualityRiskColumns(
         getValue: (metrics) => metrics?.quarterly?.ttm?.gross_pct,
         getPeriod: (metrics) => metrics?.quarterly?.ttm?.period_end,
       },
+      yoyBps("ebitda_pct", "EBITDA"),
       ...periods.map(([slot, fallbackLabel]) => {
         const label = columnLabels?.quarterly?.[slot] ?? fallbackLabel;
         return {
@@ -460,7 +477,9 @@ export function formatQualityRiskValue(
   format: QualityRiskColumnDef["format"],
 ): string {
   if (value == null || !Number.isFinite(value)) return "—";
-  return format === "multiple" ? `${value.toFixed(2)}x` : `${value.toFixed(1)}%`;
+  if (format === "multiple") return `${value.toFixed(2)}x`;
+  if (format === "bps") return `${value > 0 ? "+" : ""}${Math.round(value)} bps`;
+  return `${value.toFixed(1)}%`;
 }
 
 export function mergeQualityRiskConstituents(

@@ -62,7 +62,9 @@ jobs:
       - name: Restore deploy meta cache
         uses: actions/cache@v4
         with:
-          path: .cache/stockthemes-public
+          path: |
+            .cache/stockthemes-public
+            .cache/generated-assets
           # Fixed key: do not tie to _pages_deploy_meta.json (new as_of invalidates cache → full R2 re-sync).
           key: stockthemes-public-v4
           restore-keys: |
@@ -100,7 +102,9 @@ jobs:
       - name: Restore R2 build cache
         uses: actions/cache@v4
         with:
-          path: .cache/stockthemes-public
+          path: |
+            .cache/stockthemes-public
+            .cache/generated-assets
           key: stockthemes-public-v4
           restore-keys: |
             stockthemes-public-v4
@@ -128,8 +132,9 @@ jobs:
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
 
       - name: Build static export
-        run: npm run build && node scripts/write-pages-deploy-meta.mjs
+        run: npm run build && npm run verify:budgets && node scripts/write-pages-deploy-meta.mjs
         env:
+          STOCKTHEMES_ENFORCE_BUNDLE_BUDGET: ${{ vars.STOCKTHEMES_ENFORCE_BUNDLE_BUDGET }}
           STOCKTHEMES_STATIC_PAGES: "1"
           STOCKTHEMES_BUILD_CACHE: "1"
           STOCKTHEMES_SYNC_VIA_R2: "1"
