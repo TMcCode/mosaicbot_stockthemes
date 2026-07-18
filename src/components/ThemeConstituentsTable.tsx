@@ -1,6 +1,7 @@
 "use client";
 
 import { type ReactNode, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
@@ -38,9 +39,15 @@ import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import { ThemeConstituentsRevenuePanel } from "@/components/ThemeConstituentsRevenuePanel";
 import { ThemeConstituentsRevisionsPanel } from "@/components/ThemeConstituentsRevisionsPanel";
+import { useThemeQualityRiskSidecar } from "@/hooks/useThemeQualityRiskSidecar";
 import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
 
-type TableView = "returns" | "earnings" | "revenue" | "revisions";
+const ThemeConstituentsQualityRiskPanel = dynamic(
+  () => import("@/components/ThemeConstituentsQualityRiskPanel"),
+  { loading: () => <p className={styles.muted}>Loading quality and risk view…</p> },
+);
+
+type TableView = "returns" | "earnings" | "revenue" | "revisions" | "quality_risk";
 
 type Props = {
   detail: ThemeDetailV0;
@@ -134,6 +141,11 @@ export function ThemeConstituentsTable({
   const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
   const needsRevenueSidecar = view === "revenue" || view === "revisions";
   const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
+  const qualityRiskState = useThemeQualityRiskSidecar(
+    slug,
+    dataBaseUrl,
+    view === "quality_risk",
+  );
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
@@ -208,6 +220,7 @@ export function ThemeConstituentsTable({
   const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
   const showRevisions = view === "revisions";
+  const showQualityRisk = view === "quality_risk";
   const themeCompare = detail.compare_returns;
   const showThemeReturnRow =
     (view === "returns" || view === "earnings") &&
@@ -284,6 +297,15 @@ export function ThemeConstituentsTable({
             >
               Rev Revisions
             </button>
+            <button
+              type="button"
+              className={showQualityRisk ? tableStyles.active : undefined}
+              aria-pressed={showQualityRisk}
+              title="Reported margins, fiscal EBITDA, and balance-sheet and cash-flow risk metrics"
+              onClick={() => setView("quality_risk")}
+            >
+              Quality &amp; Risk
+            </button>
           </div>
         </HorizontalScrollArea>
       </div>
@@ -293,12 +315,20 @@ export function ThemeConstituentsTable({
       {showRevisions && slug && dataBaseUrl ? (
         <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
       ) : null}
+      {showQualityRisk && slug && dataBaseUrl ? (
+        <ThemeConstituentsQualityRiskPanel detail={detail} sidecarState={qualityRiskState} />
+      ) : null}
       {(showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
           Revenue data is not available in this build.
         </p>
       ) : null}
-      {!showRevenue && !showRevisions ? (
+      {showQualityRisk && (!slug || !dataBaseUrl) ? (
+        <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>
+          Quality and risk data is not available in this build.
+        </p>
+      ) : null}
+      {!showRevenue && !showRevisions && !showQualityRisk ? (
       <div className={styles.tableWrap}>
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
