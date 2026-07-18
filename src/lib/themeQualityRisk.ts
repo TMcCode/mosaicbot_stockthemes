@@ -24,7 +24,7 @@ export type QualityRiskColumnDef = {
   id: string;
   label: string;
   tooltip: string;
-  format: "pct" | "multiple" | "bps";
+  format: "pct" | "multiple" | "bps" | "number" | "score";
   getValue: (metrics: ThemeQualityRiskMetricsV0 | undefined) => number | null | undefined;
   getPeriod?: (metrics: ThemeQualityRiskMetricsV0 | undefined) => string | null | undefined;
   getKind?: (
@@ -246,8 +246,31 @@ function normalizeRisk(root: Record<string, unknown>): ThemeQualityRiskRiskV0 | 
   const out: ThemeQualityRiskRiskV0 = {
     invest_pct: finiteNumber(firstValue(source, ["invest_pct", "investment_pct"])),
     fcf_to_ebitda_pct: finiteNumber(firstValue(source, ["fcf_to_ebitda_pct", "fcf_ebitda_pct"])),
+    cfo_to_net_income: finiteNumber(
+      firstValue(source, ["cfo_to_net_income", "operating_cash_flow_to_net_income"]),
+    ),
+    working_capital_drag_pct: finiteNumber(
+      firstValue(source, ["working_capital_drag_pct", "working_capital_to_revenue_pct"]),
+    ),
     stock_comp_pct: finiteNumber(firstValue(source, ["stock_comp_pct", "stock_based_comp_pct", "sbc_pct"])),
     debt_to_ebitda: finiteNumber(firstValue(source, ["debt_to_ebitda", "net_debt_to_ebitda"])),
+    interest_coverage: finiteNumber(
+      firstValue(source, ["interest_coverage", "interest_coverage_ratio"]),
+    ),
+    current_ratio: finiteNumber(firstValue(source, ["current_ratio"])),
+    net_debt_yoy_pct: finiteNumber(
+      firstValue(source, ["net_debt_yoy_pct", "yoy_net_debt_pct"]),
+    ),
+    diluted_shares_yoy_pct: finiteNumber(
+      firstValue(source, ["diluted_shares_yoy_pct", "yoy_diluted_shares_pct"]),
+    ),
+    altman_z_score: finiteNumber(
+      firstValue(source, ["altman_z_score", "altmanZScore"]),
+    ),
+    piotroski_score: finiteNumber(
+      firstValue(source, ["piotroski_score", "piotroskiScore"]),
+    ),
+    beta: finiteNumber(firstValue(source, ["beta", "fmp_beta"])),
     short_float_pct: finiteNumber(firstValue(source, ["short_float_pct", "short_pct_float"])),
   };
   return Object.values(out).some((value) => value !== undefined) ? out : undefined;
@@ -382,35 +405,98 @@ export function qualityRiskColumns(
     {
       id: "invest_pct",
       label: "Invest\n%",
-      tooltip: "Invest = (R&D + CapEx) / TTM revenue.",
+      tooltip: "R&D plus capital expenditures as a percentage of TTM revenue. Higher values mean heavier reinvestment, which can support growth but also raises execution and cash-spending risk. Compare with similar businesses.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.invest_pct,
     },
     {
       id: "fcf_to_ebitda_pct",
       label: "FCF /\nEBITDA",
-      tooltip: "FCF/EBITDA measures TTM free-cash-flow conversion from TTM EBITDA.",
+      tooltip: "TTM free cash flow as a percentage of TTM EBITDA. Higher is generally better: above 100% is strong conversion, while low or negative values indicate weak cash conversion. Working-capital cycles can make individual periods noisy.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.fcf_to_ebitda_pct,
     },
     {
+      id: "cfo_to_net_income",
+      label: "CFO /\nNet Income",
+      tooltip: "TTM operating cash flow divided by TTM net income. Around 1x or higher generally supports reported earnings quality; persistently below 1x can signal heavy accruals. Not meaningful when net income is zero or negative.",
+      format: "multiple",
+      getValue: (metrics) => metrics?.risk?.cfo_to_net_income,
+    },
+    {
+      id: "working_capital_drag_pct",
+      label: "WC Drag /\nRevenue",
+      tooltip: "TTM change in working capital as a percentage of TTM revenue. Positive values indicate cash consumed by receivables, inventory, or other working capital; negative values indicate a cash release. Large positive values are generally riskier.",
+      format: "pct",
+      getValue: (metrics) => metrics?.risk?.working_capital_drag_pct,
+    },
+    {
       id: "stock_comp_pct",
       label: "StockComp\n%",
-      tooltip: "TTM stock-based compensation as a percentage of TTM revenue.",
+      tooltip: "TTM stock-based compensation as a percentage of TTM revenue. Lower is generally better for existing shareholders; high or rising values indicate greater dilution risk. Compare with peers and growth rate.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.stock_comp_pct,
     },
     {
       id: "debt_to_ebitda",
       label: "Debt /\nEBITDA",
-      tooltip: "Debt/EBITDA uses net debt divided by TTM EBITDA.",
+      tooltip: "Net debt divided by TTM EBITDA. Lower is generally safer: below 2x is often modest, 2–4x is moderate, and above 4x is elevated. Thresholds vary by industry, and the ratio is not meaningful with negative EBITDA.",
       format: "multiple",
       getValue: (metrics) => metrics?.risk?.debt_to_ebitda,
     },
     {
+      id: "interest_coverage",
+      label: "Interest\nCoverage",
+      tooltip: "TTM operating income divided by absolute TTM interest expense. Higher is safer: above 5x is generally comfortable, 2–5x is moderate, and below 2x suggests limited debt-service headroom. Industry capital intensity matters.",
+      format: "multiple",
+      getValue: (metrics) => metrics?.risk?.interest_coverage,
+    },
+    {
+      id: "current_ratio",
+      label: "Current\nRatio",
+      tooltip: "Latest reported current assets divided by current liabilities. Above 1x means current assets cover current obligations; below 1x can indicate tighter liquidity. Very high values may also signal inefficient working capital.",
+      format: "multiple",
+      getValue: (metrics) => metrics?.risk?.current_ratio,
+    },
+    {
+      id: "net_debt_yoy_pct",
+      label: "Net Debt\nYoY",
+      tooltip: "Net debt change versus the same reported quarter one year earlier. Positive means leverage increased and is generally riskier; negative means debt declined or cash increased. Not meaningful when prior-year net debt was zero or negative.",
+      format: "pct",
+      getValue: (metrics) => metrics?.risk?.net_debt_yoy_pct,
+    },
+    {
+      id: "altman_z_score",
+      label: "Altman\nZ-Score",
+      tooltip: "Current FMP bankruptcy-risk score. Above 2.99 is traditionally considered safer, 1.81–2.99 is the gray zone, and below 1.81 signals elevated distress risk. The original model is less meaningful for banks, insurers, utilities, and some non-manufacturers.",
+      format: "number",
+      getValue: (metrics) => metrics?.risk?.altman_z_score,
+    },
+    {
+      id: "piotroski_score",
+      label: "Piotroski\nScore",
+      tooltip: "Current FMP financial-strength score from 0 to 9. Higher is stronger: 7–9 is generally strong, 4–6 is mixed, and 0–3 is weak. It combines profitability, leverage/liquidity, and operating-efficiency signals.",
+      format: "score",
+      getValue: (metrics) => metrics?.risk?.piotroski_score,
+    },
+    {
+      id: "diluted_shares_yoy_pct",
+      label: "Diluted Shares\nYoY",
+      tooltip: "Diluted weighted-average share count change versus the same reported quarter one year earlier. Positive values indicate dilution; negative values usually indicate net share repurchases. Lower is generally better for existing shareholders.",
+      format: "pct",
+      getValue: (metrics) => metrics?.risk?.diluted_shares_yoy_pct,
+    },
+    {
+      id: "beta",
+      label: "FMP\nBeta",
+      tooltip: "Current market beta reported by FMP. Around 1 means market-like sensitivity, above 1 indicates greater market sensitivity, and below 1 indicates lower sensitivity. FMP does not expose a historical series or calculation window here.",
+      format: "number",
+      getValue: (metrics) => metrics?.risk?.beta,
+    },
+    {
       id: "short_float_pct",
       label: "Short %\nFloat",
-      tooltip: "Shares sold short as a percentage of public float.",
+      tooltip: "Shares sold short as a percentage of public float. Higher values indicate greater bearish positioning and potential financing or sentiment concern, but can also increase short-squeeze risk. Compare with sector peers.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.short_float_pct,
     },
@@ -480,6 +566,10 @@ export function formatQualityRiskValue(
   if (value == null || !Number.isFinite(value)) return "—";
   if (format === "multiple") return `${value.toFixed(2)}x`;
   if (format === "bps") return `${value > 0 ? "+" : ""}${Math.round(value)} bps`;
+  if (format === "number") return value.toFixed(2);
+  if (format === "score") {
+    return `${Number.isInteger(value) ? value.toFixed(0) : value.toFixed(1)}/9`;
+  }
   return `${value.toFixed(1)}%`;
 }
 

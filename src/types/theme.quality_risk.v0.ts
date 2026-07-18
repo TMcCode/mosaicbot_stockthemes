@@ -49,10 +49,28 @@ export type ThemeQualityRiskRiskV0 = {
   invest_pct?: number | null;
   /** TTM free cash flow / TTM EBITDA, in percent points. */
   fcf_to_ebitda_pct?: number | null;
+  /** TTM operating cash flow / TTM net income, expressed as a multiple. */
+  cfo_to_net_income?: number | null;
+  /** TTM change in working capital / TTM revenue, in percent points. */
+  working_capital_drag_pct?: number | null;
   /** TTM stock-based compensation / TTM revenue, in percent points. */
   stock_comp_pct?: number | null;
   /** Net debt / TTM EBITDA, expressed as a multiple. */
   debt_to_ebitda?: number | null;
+  /** TTM operating income / absolute TTM interest expense, expressed as a multiple. */
+  interest_coverage?: number | null;
+  /** Latest current assets / current liabilities, expressed as a multiple. */
+  current_ratio?: number | null;
+  /** Latest net debt change versus the same quarter one year earlier. */
+  net_debt_yoy_pct?: number | null;
+  /** Latest diluted share count change versus the same quarter one year earlier. */
+  diluted_shares_yoy_pct?: number | null;
+  /** Current FMP Altman Z-Score. */
+  altman_z_score?: number | null;
+  /** Current FMP Piotroski score, normally an integer from 0 through 9. */
+  piotroski_score?: number | null;
+  /** Current beta reported by the FMP company profile. */
+  beta?: number | null;
   short_float_pct?: number | null;
 };
 
