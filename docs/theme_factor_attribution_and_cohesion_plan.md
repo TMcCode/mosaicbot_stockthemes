@@ -666,6 +666,23 @@ days and republishes only changed sidecars. If the private daily attribution
 artifact is missing, Fetch 8 exits successfully without starting an accidental
 full-history backfill.
 
+Optimized daily behavior:
+
+- If the latest complete theme/factor date is already represented in the
+  horizon artifact, Fetch 8 exits before downloading or rewriting the
+  2.4-million-row daily attribution parquet.
+- On a new trading date, only the new attribution date is calculated; the full
+  daily parquet is rewritten only when rows actually changed.
+- Cohesion is a slower-moving structural measure and defaults to a seven
+  calendar-day refresh cadence. Daily runs reuse the last valid cohesion
+  artifact.
+- Override the cohesion cadence with
+  `FACTOR_COHESION_REFRESH_DAYS=<days>`.
+- Force an exceptional cohesion rebuild with
+  `FACTOR_COHESION_FORCE_REFRESH=1`.
+- Force attribution/horizon regeneration with
+  `FACTOR_ATTRIBUTION_FORCE_REFRESH=1`.
+
 ### Prohibited daily implementation
 
 Do not recalculate every rolling regression for every historical date on every
