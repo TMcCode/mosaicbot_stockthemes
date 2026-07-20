@@ -88,12 +88,12 @@ type Props = {
  * Static export may embed detail JSON from build time; CDN can be newer (e.g. charts added later).
  * When the server snapshot has no drawable chart, fetch themes/… or groups/… in the browser.
  *
- * Also: when the build embeds `performance` but not yet `composition_indexed` (themes), we fetch once
- * and merge composition from the bucket so the Performance / Composition toggle can appear without
- * rebuilding the site.
+ * Also: when the build embeds `performance` but not `composition_indexed` (themes strip composition
+ * from Flight via `themeChartPerformanceSeed`), we fetch once and merge composition from the bucket
+ * so the Performance / Composition toggle can appear without rebuilding the site.
  *
- * Group composition refresh is independent of `DISABLE_LIVE_HYDRATE` (R2 has no egress fees; table
- * already live-fetches compare_themes.v0.json).
+ * Theme and group composition refresh are independent of `DISABLE_LIVE_HYDRATE` when
+ * `LIVE_COMPOSITION` is on (R2 has no egress fees; price_returns sidecars omit chart_1y).
  */
 export function ThemeChartLiveHydrate({
   slug,
@@ -205,8 +205,17 @@ export function ThemeChartLiveHydrate({
       stockthemesLiveCompositionEnabled() &&
       chartHasRenderableData(serverChartWithComposition) &&
       groupCompositionNeedsLiveRefresh(serverChartWithComposition, expectedCompositionSeriesCount);
+    /** Pages build sets DISABLE_LIVE_HYDRATE=1 but LIVE_COMPOSITION=1 — still need one full JSON pull. */
+    const refreshThemeCompositionFromCdn =
+      chartJsonFolder === "themes" &&
+      stockthemesLiveCompositionEnabled() &&
+      needCompositionOnly;
 
-    if (stockthemesLiveHydrationDisabled() && !refreshGroupCompositionFromCdn) {
+    if (
+      stockthemesLiveHydrationDisabled() &&
+      !refreshGroupCompositionFromCdn &&
+      !refreshThemeCompositionFromCdn
+    ) {
       return;
     }
 
@@ -215,7 +224,8 @@ export function ThemeChartLiveHydrate({
       !needCompositionOnly &&
       !refreshLiveInDev &&
       !refreshGroupChartFromCdn &&
-      !refreshGroupCompositionFromCdn
+      !refreshGroupCompositionFromCdn &&
+      !refreshThemeCompositionFromCdn
     ) {
       return;
     }

@@ -154,7 +154,9 @@ export async function refreshLiveThemeDetail({
 
   const promise = (async () => {
     const encodedSlug = encodeURIComponent(slug);
+    const previous = entries.get(key)?.merged;
     let live: ThemeDetailV0;
+    let usedPriceReturnsSidecar = false;
     try {
       const sidecar = parseThemePriceReturnsSidecar(
         await fetchJson(
@@ -162,10 +164,32 @@ export async function refreshLiveThemeDetail({
         ),
       );
       live = sidecarAsThemeDetail(sidecar);
+      usedPriceReturnsSidecar = true;
     } catch {
       live = parseThemeDetail(
         await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
       );
+    }
+    // Slim price_returns sidecars omit chart_1y; composition needs the full theme JSON once.
+    if (
+      mergeOptions?.composition &&
+      usedPriceReturnsSidecar &&
+      !live.chart_1y?.composition_indexed
+    ) {
+      if (previous?.chart_1y?.composition_indexed) {
+        live = { ...live, chart_1y: previous.chart_1y };
+      } else {
+        try {
+          const full = parseThemeDetail(
+            await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
+          );
+          if (full.chart_1y?.composition_indexed) {
+            live = { ...live, chart_1y: full.chart_1y };
+          }
+        } catch {
+          /* keep price_returns-only merge; ThemeChartLiveHydrate may still fetch composition */
+        }
+      }
     }
     const merged = mergeThemeDetailLiveFields(serverDetail, live, mergeOptions);
     entries.set(key, {
