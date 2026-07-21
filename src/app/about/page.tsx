@@ -65,7 +65,7 @@ export default async function AboutPage() {
           <div
             className={`${styles.introCopyWrap} ${styles.aboutProse} ${styles.aboutLead} ${styles.aboutBasketCard}`}
           >
-            <h2 id="about-founder-note">Why we built stockthemes.ai</h2>
+            <h2 id="about-founder-note">Why I built stockthemes.ai</h2>
             {introParagraphs.map((p, i) => renderIntroParagraph(p, i))}
             <p className={styles.introCopy}>{ABOUT_FOUNDER_FEEDBACK}</p>
             <p className={styles.introCopy}>
@@ -91,16 +91,16 @@ export default async function AboutPage() {
               when you want the full list of names tied to a narrative.
             </p>
             <p className={styles.introCopy}>
-              Baskets are built by hand after extensive research—not auto-generated from a prompt. We
+              Baskets are built by hand after extensive research—not auto-generated from a prompt. I
               review company filings, earnings commentary, product roadmaps, and initiative-level
               signals to map which public companies are actually exposed to each theme. General-purpose
               LLM lists often miss this: non-public names, stale narratives, or exposure that no
               longer matches what companies are doing today.
             </p>
             <p className={styles.introCopy}>
-              Missing a narrative or think a basket needs updating? Use our{" "}
+              Missing a narrative or think a basket needs updating? Use my{" "}
               <Link href="/account/suggest">suggestion form</Link> to propose a new group, a new theme,
-              or edits to an existing basket (sign-in required). We review every submission.
+              or edits to an existing basket (sign-in required). I review every submission.
             </p>
             <p className={styles.introCopy}>
               For a clinical breakdown of construction rules, weights, return calculations, and refresh
@@ -132,7 +132,7 @@ export default async function AboutPage() {
             </p>
           </section>
           <p className={styles.introCopy}>
-            Questions or feedback? See our <Link href="/contact">contact page</Link>.
+            Questions or feedback? See my <Link href="/contact">contact page</Link>.
           </p>
           <p>
             <Link href="/" style={{ fontWeight: 500 }}>
