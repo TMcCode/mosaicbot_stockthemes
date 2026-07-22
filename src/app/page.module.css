@@ -87,17 +87,27 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 12px 20px;
+  gap: 8px 16px;
   padding-top: 2px;
   position: relative;
   z-index: 2;
 }
 
 .compareSectionTight {
-  margin-top: 12px;
+  width: 100%;
+  min-width: 0;
+  margin-top: 0;
   position: relative;
   z-index: 1;
   isolation: isolate;
+}
+
+/* Desktop: pull checkbox/table block slightly into empty space under the filter row
+   (left column is shorter than the summary panel). */
+@media (min-width: 1101px) {
+  .compareSectionTight {
+    margin-top: -12px;
+  }
 }
 
 .themeHeroRail {

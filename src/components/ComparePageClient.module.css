@@ -1,8 +1,10 @@
 .referenceToggles {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
-  white-space: nowrap;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .benchmarkToggle {
@@ -22,12 +24,25 @@
   accent-color: var(--accent, #26fcd6);
 }
 
+.metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  width: 100%;
+}
+
+.metaCount {
+  margin: 0;
+  max-width: none;
+}
+
 .viewToggle {
   display: inline-flex;
-  align-self: flex-start;
+  align-self: center;
   width: fit-content;
   gap: 4px;
-  margin-top: 10px;
+  margin-top: 0;
   padding: 3px;
   border: 1px solid var(--button-secondary-border);
   border-radius: 999px;

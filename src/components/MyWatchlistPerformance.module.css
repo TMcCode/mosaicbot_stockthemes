@@ -79,9 +79,9 @@
 }
 
 .sortHint {
-  margin: 0 0 8px;
-  font-size: 11px;
-  line-height: 1.35;
+  margin: 0 0 4px;
+  font-size: 9px;
+  line-height: 1.25;
   color: var(--text-muted, #6e7d7b);
 }
 

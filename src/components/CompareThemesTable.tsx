@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import {
@@ -9,6 +9,7 @@ import {
   metricColumnHeaderTooltip,
 } from "@/lib/customDateColumnHelp";
 import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import { downloadCompareThemesCsv } from "@/lib/compareThemesCsv";
 import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -37,6 +38,7 @@ type Props = {
   columns: string[];
   selectedDates?: ManifestSelectedDateV0[];
   entityKind?: "theme" | "group";
+  toolbarStart?: ReactNode;
 };
 
 function isBenchmarkRow(row: DisplayRow): row is CompareBenchmarkRow {
@@ -55,6 +57,7 @@ export function CompareThemesTable({
   columns,
   selectedDates,
   entityKind = "theme",
+  toolbarStart,
 }: Props) {
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
   const selectedDateByKey = useMemo(
@@ -99,9 +102,44 @@ export function CompareThemesTable({
     });
   };
 
+  const onDownload = () => {
+    downloadCompareThemesCsv(displayRows, columns, { entityKind });
+  };
+
   return (
     <section className={styles.wrap}>
-      <div className={styles.hint}>Click a header to sort. Shift+click adds secondary sort.</div>
+      {toolbarStart ? <div className={styles.toolbarTop}>{toolbarStart}</div> : null}
+      <div className={styles.toolbar}>
+        <p className={styles.hint} style={{ fontSize: 8, lineHeight: 1.2, margin: 0, maxWidth: "none" }}>
+          Click a header to sort. Shift+click adds secondary sort.
+        </p>
+        <button
+          type="button"
+          className={styles.downloadBtn}
+          onClick={onDownload}
+          disabled={displayRows.length === 0}
+          title="Download filtered table as CSV"
+          aria-label="Download filtered table as CSV"
+        >
+          <svg
+            className={styles.downloadIcon}
+            viewBox="0 0 24 24"
+            width="13"
+            height="13"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d="M12 3v10m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.75"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
 
       <div className={styles.scrollWrap}>
         <div className={styles.table} style={{ gridTemplateColumns }}>

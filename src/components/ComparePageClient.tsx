@@ -199,31 +199,33 @@ export function ComparePageClient({
             calendar, and earnings horizons—plus custom date windows. Filter the universe; click a column to sort,
             shift-click for a secondary sort.
           </p>
-          <p>
-            {viewMode === "groups" && groupsLoading && totalRows === 0
-              ? "Loading groups"
-              : filtered.length === totalRows
-                ? `${totalRows} ${entityLabel}`
-                : `${filtered.length} of ${totalRows} ${entityLabel}`}{" "}
-            · {visibleColumns.length} metrics
-          </p>
-          <div className={styles.viewToggle} role="group" aria-label="Compare themes or groups">
-            <button
-              type="button"
-              className={viewMode === "themes" ? styles.viewToggleActive : undefined}
-              aria-pressed={viewMode === "themes"}
-              onClick={() => selectView("themes")}
-            >
-              Themes
-            </button>
-            <button
-              type="button"
-              className={viewMode === "groups" ? styles.viewToggleActive : undefined}
-              aria-pressed={viewMode === "groups"}
-              onClick={() => selectView("groups")}
-            >
-              Groups
-            </button>
+          <div className={styles.metaRow}>
+            <div className={styles.viewToggle} role="group" aria-label="Compare themes or groups">
+              <button
+                type="button"
+                className={viewMode === "themes" ? styles.viewToggleActive : undefined}
+                aria-pressed={viewMode === "themes"}
+                onClick={() => selectView("themes")}
+              >
+                Themes
+              </button>
+              <button
+                type="button"
+                className={viewMode === "groups" ? styles.viewToggleActive : undefined}
+                aria-pressed={viewMode === "groups"}
+                onClick={() => selectView("groups")}
+              >
+                Groups
+              </button>
+            </div>
+            <p className={styles.metaCount}>
+              {viewMode === "groups" && groupsLoading && totalRows === 0
+                ? "Loading groups"
+                : filtered.length === totalRows
+                  ? `${totalRows} ${entityLabel}`
+                  : `${filtered.length} of ${totalRows} ${entityLabel}`}{" "}
+              · {visibleColumns.length} metrics
+            </p>
           </div>
           <div className={pageStyles.compareHeroFilters}>
             {sectorOptions.length > 0 ? (
@@ -257,30 +259,6 @@ export function ComparePageClient({
                 />
               </>
             ) : null}
-            {benchmarkRows.length > 0 || factorSpreadRows.length > 0 ? (
-              <div className={styles.referenceToggles}>
-                {benchmarkRows.length > 0 ? (
-                  <label className={styles.benchmarkToggle}>
-                    <input
-                      type="checkbox"
-                      checked={showBenchmarks}
-                      onChange={(e) => setShowBenchmarks(e.target.checked)}
-                    />
-                    Sector ETFs
-                  </label>
-                ) : null}
-                {factorSpreadRows.length > 0 ? (
-                  <label className={styles.benchmarkToggle}>
-                    <input
-                      type="checkbox"
-                      checked={showFactorSpreads}
-                      onChange={(e) => setShowFactorSpreads(e.target.checked)}
-                    />
-                    Factor Spreads
-                  </label>
-                ) : null}
-              </div>
-            ) : null}
           </div>
         </div>
         {viewMode === "groups" || liveCompareBundle ? (
@@ -297,7 +275,7 @@ export function ComparePageClient({
           </p>
         )}
       </div>
-      <section className={`${pageStyles.section} ${pageStyles.compareSectionTight}`}>
+      <section className={pageStyles.compareSectionTight}>
         {viewMode === "groups" || liveCompareBundle ? (
           <CompareThemesTable
             benchmarkRows={tableBenchmarkRows}
@@ -305,6 +283,32 @@ export function ComparePageClient({
             columns={visibleColumns}
             selectedDates={selectedDates}
             entityKind={viewMode === "groups" ? "group" : "theme"}
+            toolbarStart={
+              benchmarkRows.length > 0 || factorSpreadRows.length > 0 ? (
+                <div className={styles.referenceToggles}>
+                  {benchmarkRows.length > 0 ? (
+                    <label className={styles.benchmarkToggle}>
+                      <input
+                        type="checkbox"
+                        checked={showBenchmarks}
+                        onChange={(e) => setShowBenchmarks(e.target.checked)}
+                      />
+                      Sector ETFs
+                    </label>
+                  ) : null}
+                  {factorSpreadRows.length > 0 ? (
+                    <label className={styles.benchmarkToggle}>
+                      <input
+                        type="checkbox"
+                        checked={showFactorSpreads}
+                        onChange={(e) => setShowFactorSpreads(e.target.checked)}
+                      />
+                      Factor Spreads
+                    </label>
+                  ) : null}
+                </div>
+              ) : null
+            }
           />
         ) : (
           <p className={pageStyles.muted} aria-live="polite">

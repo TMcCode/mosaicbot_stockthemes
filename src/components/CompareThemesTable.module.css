@@ -1,18 +1,68 @@
 .wrap {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 4px;
+}
+
+.toolbarTop {
+  display: flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .toolbar {
   display: flex;
-  gap: 10px;
+  align-items: center;
   flex-wrap: wrap;
+  justify-content: flex-start;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
 }
 
-.hint {
-  font-size: 11px;
+/* Must beat page.module.css `.intro p` (compare page wraps content in .intro). */
+.toolbar p.hint {
+  margin: 0;
+  max-width: none;
+  font-size: 8px;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
   color: var(--text-muted);
+  opacity: 0.8;
+  text-wrap: unset;
+}
+
+.downloadBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.downloadBtn:hover:not(:disabled) {
+  color: var(--text-primary);
+  border-color: var(--button-secondary-border);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.downloadBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.downloadIcon {
+  display: block;
+  width: 13px;
+  height: 13px;
 }
 
 .scrollWrap {
