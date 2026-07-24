@@ -19,6 +19,7 @@ import {
   isDetailJsonRel,
   readObjectMetaSidecar,
   recordObjectMeta,
+  remoteMetaMatchesCached,
   selectJobsToDownload,
   themeSlugFingerprint,
   writeObjectMetaSidecar,
@@ -42,6 +43,9 @@ const BUNDLE_FILES = [
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
   "etf_benchmarks.v0.json",
+  // Intraday slim ETL refreshes this without bumping manifest.as_of; must be in the
+  // warm set or Pages keeps a forever-stale copy via STOCKTHEMES_BUILD_CACHE.
+  "factor_spreads.v0.json",
   "website_content.v0.json",
   "home_feed.v0.json",
 ];
@@ -49,6 +53,12 @@ const BUNDLE_FILES = [
 /** Not required for CI — published from admin; seed fixture until first publish. */
 const OPTIONAL_BUNDLE_FILES = ["home_commentary.v0.json"];
 const COMMENTARY_FIXTURE = path.join(root, "public", "fixtures", "home_commentary.v0.json");
+
+/**
+ * Slim ETL updates these without bumping manifest.as_of. Always ETag-refresh in CI,
+ * including the "as_of unchanged" fast path, so /compare factor rows stay live.
+ */
+const INTRADAY_BUNDLE_FILES = ["etf_benchmarks.v0.json", "factor_spreads.v0.json"];
 
 function manifestUrl() {
   const explicit = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL;
@@ -179,6 +189,39 @@ async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
       if (rel === "home_commentary.v0.json") seedHomeCommentaryFromFixture();
     }
   }
+}
+
+async function syncIntradayBundles(base, objectMeta, { force = false } = {}) {
+  let refreshed = 0;
+  let skipped = 0;
+  for (const rel of INTRADAY_BUNDLE_FILES) {
+    const url = `${base}/${rel}`;
+    if (!force && cacheFileOk(rel)) {
+      try {
+        const remoteMeta = await fetchRemoteObjectMetadata({ rel, url });
+        if (remoteMeta && remoteMetaMatchesCached(rel, remoteMeta, objectMeta)) {
+          skipped += 1;
+          continue;
+        }
+      } catch {
+        /* fall through to download */
+      }
+    }
+    try {
+      await fetchToCache(url, rel, objectMeta);
+      refreshed += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("404")) {
+        console.warn(`sync-build-cache: intraday ${rel} missing on bucket`);
+        continue;
+      }
+      console.warn(`sync-build-cache: intraday ${rel} failed:`, msg);
+    }
+  }
+  console.log(
+    `sync-build-cache: intraday bundles refreshed=${refreshed} skipped_unchanged=${skipped}`,
+  );
 }
 
 function themeSidecarBaseSlug(filename) {
@@ -381,8 +424,10 @@ async function main() {
       );
       process.exit(1);
     }
+    await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta);
     await syncFactorProfileSidecars(manifestJson, base, objectMeta);
+    writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
       console.warn(
@@ -477,8 +522,10 @@ async function main() {
       warmedAt: new Date().toISOString(),
     });
 
+    await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta, { force });
     await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
+    writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   }
 
   const searchCached = cachePath("search_index.v0.json");
