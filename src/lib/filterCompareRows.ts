@@ -43,6 +43,9 @@ export function filterCompareRows<T extends CompareFilterRow>(
     selectedYears.length < yearOptions.length;
 
   return rows.filter((r) => {
+    if (sectorOptions.length > 0 && selectedSectors.length === 0) {
+      return false;
+    }
     if (filterSectors) {
       const sector = String(r.spySector || "").trim();
       if (!selectedSectors.includes(sector)) return false;

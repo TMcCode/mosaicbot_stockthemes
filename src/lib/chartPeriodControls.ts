@@ -1,6 +1,7 @@
 import {
   computeOverlaySupportedCustomPeriodKeys,
   computeOverlaySupportedPeriods,
+  hasIndexedPerformanceFromAnchor,
   periodAnchorIso,
   sliceAndRebaseIndexedPerformance,
   type OverlayChartPeriod,
@@ -16,7 +17,15 @@ function isoDay(raw: string): string {
 
 const SHORT_DETAIL_PERIODS: Set<OverlayChartPeriod> = new Set(["1W", "1M", "YTD", "1Y"]);
 
-/** Embedded theme JSON is ~1Y; 2Y/5Y/custom need the slim chart sidecar when anchor precedes first point. */
+/**
+ * Embedded theme JSON is ~1Y; 2Y/5Y/custom need the slim chart sidecar when the
+ * loaded series cannot yet be sliced from the period anchor.
+ *
+ * Use the same criterion as period-button enablement (not a strict calendar
+ * ``first > anchor`` check): a 5Y sidecar that starts one trading day after the
+ * calendar anchor is still enough history and must not keep re-fetching / racing
+ * the "unsupported → snap back to 1Y" effect.
+ */
 export function performanceNeedsExtendedHistory(
   perf: ChartPerformanceV0 | undefined,
   period: OverlayChartPeriod,
@@ -28,8 +37,7 @@ export function performanceNeedsExtendedHistory(
   if (!dates?.length) return false;
   const ref = referenceLastIso ? isoDay(referenceLastIso) : isoDay(String(dates[dates.length - 1]));
   const anchor = customAnchorIso ? isoDay(customAnchorIso) : periodAnchorIso(ref, period);
-  const first = isoDay(String(dates[0]));
-  return first > anchor;
+  return !hasIndexedPerformanceFromAnchor(perf, anchor);
 }
 
 export function mergeExtendedChartPerformance(
@@ -99,7 +107,8 @@ export function compositionTickersNeedingExtendedHistory(
 /**
  * Constituent composition lines often lag the live theme performance tail during market hours:
  * price-only publishes update ``chart_1y.performance`` / slim sidecars, but skip ``composition_indexed``.
- * Fetch ticker (or child-theme) chart sidecars when a series ends before the live reference day.
+ * Prefer extending with live constituent 1D % (``extendCompositionIndexedWithLiveDayReturns``);
+ * fall back to ticker (or child-theme) chart sidecars when a series still ends before the live reference day.
  */
 export function compositionTickersNeedingLiveTail(
   chart1y: ThemeChart1yV0 | undefined,

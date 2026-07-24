@@ -41,7 +41,25 @@ export function isCompareSectorFilterInactive(
   sectorOptions: string[],
 ): boolean {
   if (sectorOptions.length === 0) return true;
-  if (selectedSectors.length === 0) return true;
+  // Empty selection is an active filter (show nothing), same as Groups/Years Unselect all.
   if (selectedSectors.length >= sectorOptions.length) return true;
   return false;
+}
+
+/**
+ * Groups still selected after the sector-narrowed option list is applied.
+ * Explicit Unselect all (`[]`) stays empty. If a sector change pruned every
+ * still-selected group out of view, fall back to all currently visible options.
+ */
+export function resolveVisibleSelectedGroups(
+  selectedGroups: string[],
+  visibleGroupOptions: string[],
+): string[] {
+  if (selectedGroups.length === 0) return [];
+  const allowed = new Set(visibleGroupOptions);
+  const selected = selectedGroups.filter((group) => allowed.has(group));
+  if (selected.length === 0 && visibleGroupOptions.length > 0) {
+    return visibleGroupOptions;
+  }
+  return selected;
 }

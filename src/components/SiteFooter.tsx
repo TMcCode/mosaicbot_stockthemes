@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { NewsletterSignup } from "@/components/NewsletterSignup";
+import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 
 import styles from "./SiteFooter.module.css";
@@ -37,11 +36,13 @@ export function SiteFooter({ dataAsOf }: Props) {
           </div>
           <nav className={styles.nav} aria-label="Footer">
             <span className={styles.navLinks}>
-              <Link href="/privacy">Privacy</Link>
-              <Link href="/cookie-policy#manage-cookies">Manage cookies</Link>
-              <Link href="/terms">Terms of Service</Link>
-              <Link href="/about">About</Link>
-              <Link href="/contact">Contact</Link>
+              <PrefetchIntentLink href="/privacy">Privacy</PrefetchIntentLink>
+              <PrefetchIntentLink href="/cookie-policy#manage-cookies">
+                Manage cookies
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/terms">Terms of Service</PrefetchIntentLink>
+              <PrefetchIntentLink href="/about">About</PrefetchIntentLink>
+              <PrefetchIntentLink href="/contact">Contact</PrefetchIntentLink>
               <a
                 href="https://www.tradingview.com/"
                 target="_blank"

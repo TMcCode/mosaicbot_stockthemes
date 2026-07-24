@@ -1,6 +1,5 @@
-import Link from "next/link";
-
 import { LazySiteSearch } from "@/components/LazySiteSearch";
+import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { SiteNavAuth } from "@/components/SiteNavAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { publicAssetPath } from "@/lib/siteUrl";
@@ -11,7 +10,7 @@ export function SiteNav() {
   return (
     <header className={styles.wrap}>
       <nav className={styles.row} aria-label="Primary">
-        <Link href="/" className={styles.brand}>
+        <PrefetchIntentLink href="/" className={styles.brand}>
           <img
             className={styles.brandMark}
             src={publicAssetPath("/brand/logo-icon-custom.png")}
@@ -24,7 +23,7 @@ export function SiteNav() {
           <span className={styles.brandLabel} style={{ position: "relative", top: 12 }}>
             stockthemes.ai
           </span>
-        </Link>
+        </PrefetchIntentLink>
         <LazySiteSearch />
         <div className={styles.links}>
           <div className={styles.browseMenu}>
@@ -35,28 +34,28 @@ export function SiteNav() {
               </span>
             </button>
             <div className={styles.menuPanel} role="menu">
-              <Link href="/groups" className={styles.menuItem} role="menuitem">
+              <PrefetchIntentLink href="/groups" className={styles.menuItem} role="menuitem">
                 All groups
-              </Link>
-              <Link href="/themes" className={styles.menuItem} role="menuitem">
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/themes" className={styles.menuItem} role="menuitem">
                 All themes
-              </Link>
+              </PrefetchIntentLink>
               <div className={styles.menuDivider} role="separator" />
-              <Link href="/compare" className={styles.menuItem} role="menuitem">
+              <PrefetchIntentLink href="/compare" className={styles.menuItem} role="menuitem">
                 Theme returns table
-              </Link>
-              <Link href="/overlay" className={styles.menuItem} role="menuitem">
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/overlay" className={styles.menuItem} role="menuitem">
                 Theme compare chart
-              </Link>
-              <Link href="/heatmap" className={styles.menuItem} role="menuitem">
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/heatmap" className={styles.menuItem} role="menuitem">
                 Market heatmap
-              </Link>
-              <Link href="/rotation" className={styles.menuItem} role="menuitem">
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/rotation" className={styles.menuItem} role="menuitem">
                 Theme rotation map
-              </Link>
-              <Link href="/factors" className={styles.menuItem} role="menuitem">
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure
-              </Link>
+              </PrefetchIntentLink>
             </div>
           </div>
           <span className={styles.sep} aria-hidden="true">

@@ -28,6 +28,46 @@ async function fetchThemeJson(url: string): Promise<unknown> {
   return res.json();
 }
 
+/** One interval per theme page — treemap/chart/table hooks share it. */
+type SharedPoll = {
+  count: number;
+  timerId: number | null;
+  run: () => void;
+  lastStartedAt: number;
+};
+const sharedPolls = new Map<string, SharedPoll>();
+
+function startSharedLivePoll(key: string, intervalMs: number, run: () => void): () => void {
+  let entry = sharedPolls.get(key);
+  if (!entry) {
+    entry = { count: 0, timerId: null, run, lastStartedAt: 0 };
+    sharedPolls.set(key, entry);
+  }
+  entry.run = run;
+  entry.count += 1;
+  const now = Date.now();
+  // Coalesce mount storms from multiple hooks on the same page.
+  if (!entry.timerId) {
+    entry.lastStartedAt = now;
+    entry.run();
+    entry.timerId = window.setInterval(() => {
+      sharedPolls.get(key)?.run();
+    }, intervalMs);
+  } else if (now - entry.lastStartedAt > Math.min(intervalMs, 5_000)) {
+    entry.lastStartedAt = now;
+    entry.run();
+  }
+
+  return () => {
+    const current = sharedPolls.get(key);
+    if (!current) return;
+    current.count -= 1;
+    if (current.count > 0) return;
+    if (current.timerId != null) window.clearInterval(current.timerId);
+    sharedPolls.delete(key);
+  };
+}
+
 export function useLiveThemeDetailPrices(
   slug: string,
   dataBaseUrl: string,
@@ -52,10 +92,10 @@ export function useLiveThemeDetailPrices(
   useEffect(() => {
     if (!enabled) return;
 
-    let cancelled = false;
-    const run = () => {
+    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
+    return startSharedLivePoll(key, intervalMs, () => {
       const query = priceReturnsBrowserCacheBusterQuery();
-      refreshLiveThemeDetail({
+      void refreshLiveThemeDetail({
         slug,
         dataBaseUrl,
         serverDetail,
@@ -66,19 +106,9 @@ export function useLiveThemeDetailPrices(
           composition: stockthemesLiveCompositionEnabled(),
         },
       }).catch(() => {
-        if (!cancelled) {
-          // Keep server snapshot on fetch failure.
-        }
+        // Keep server snapshot on fetch failure.
       });
-    };
-
-    run();
-    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
-    const id = window.setInterval(run, intervalMs);
-    return () => {
-      cancelled = true;
-      window.clearInterval(id);
-    };
+    });
   }, [enabled, slug, dataBaseUrl, serverDetail, key]);
 
   const detail = useMemo(() => entry?.merged ?? serverDetail, [entry?.merged, serverDetail]);

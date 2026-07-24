@@ -9,28 +9,35 @@
 .img {
   position: absolute;
   max-width: none;
-  height: auto;
   opacity: var(--page-deco-opacity, 0.36);
   user-select: none;
-}
-
-/* Default SSR theme is light (ThemeRoot) */
-.light {
-  display: block;
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
   filter: saturate(1.05);
 }
 
-.dark {
-  display: none;
+:global(.st-theme[data-theme="dark"]) .img {
   filter: saturate(1.12) brightness(1.06);
 }
 
-:global(.st-theme[data-theme="dark"]) .light {
-  display: none;
+/* Aspect ratios match the SVG viewBoxes (480x360 / 420x340). */
+.galaxy {
+  aspect-ratio: 4 / 3;
+  background-image: var(--deco-galaxy);
 }
 
-:global(.st-theme[data-theme="dark"]) .dark {
-  display: block;
+:global(.st-theme[data-theme="dark"]) .galaxy {
+  background-image: var(--deco-galaxy-dark);
+}
+
+.spring {
+  aspect-ratio: 21 / 17;
+  background-image: var(--deco-spring);
+}
+
+:global(.st-theme[data-theme="dark"]) .spring {
+  background-image: var(--deco-spring-dark);
 }
 
 .galaxyTR {
@@ -70,11 +77,6 @@
 
   .galaxyBL,
   .springTL {
-    display: none;
-  }
-
-  :global(.st-theme[data-theme="dark"]) .galaxyBL.dark,
-  :global(.st-theme[data-theme="dark"]) .springTL.dark {
     display: none;
   }
 }

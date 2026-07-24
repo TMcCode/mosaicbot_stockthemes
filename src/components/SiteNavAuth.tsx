@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-
+import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 
 import styles from "./SiteNav.module.css";
@@ -16,18 +15,22 @@ export function SiteNavAuth() {
   if (user) {
     return (
       <span className={styles.authNav}>
-        <Link href="/my">Watchlist</Link>
+        <PrefetchIntentLink href="/my">Watchlist</PrefetchIntentLink>
         <span className={styles.sep} aria-hidden="true">
           ·
         </span>
-        <Link href="/account">Account</Link>
+        <PrefetchIntentLink href="/account">Account</PrefetchIntentLink>
       </span>
     );
   }
 
   return (
-    <Link href="/sign-in" className={styles.authNav} aria-busy={loading || undefined}>
+    <PrefetchIntentLink
+      href="/sign-in"
+      className={styles.authNav}
+      aria-busy={loading || undefined}
+    >
       Sign in
-    </Link>
+    </PrefetchIntentLink>
   );
 }

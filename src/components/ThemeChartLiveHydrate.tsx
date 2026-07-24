@@ -9,8 +9,8 @@ import { fetchChartSidecar } from "@/lib/chartSidecar";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
 
 import {
-  stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
+  priceReturnsBrowserCacheBusterQuery,
   priceReturnsRevalidateSeconds,
 } from "@/lib/stockthemesCache";
 import {
@@ -22,10 +22,16 @@ import {
 } from "@/lib/stockthemesBuildHints";
 import { useLiveThemeDetailPrices } from "@/hooks/useLiveThemeDetailPrices";
 import { groupCompositionNeedsLiveRefresh } from "@/lib/chart1yRenderable";
+import { priceReturnMetric } from "@/lib/constituentPriceReturns";
+import {
+  extendCompositionIndexedWithLiveDayReturns,
+  liveDayReturnsStructuralKey,
+} from "@/lib/extendCompositionLiveTail";
 import {
   stockthemesLiveChartPerformanceEnabled,
   stockthemesLiveCompositionEnabled,
   stockthemesLiveHydrationDisabled,
+  stockthemesLivePriceReturnsEnabled,
 } from "@/lib/stockthemesClientConfig";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -153,6 +159,22 @@ export function ThemeChartLiveHydrate({
     return `${pl}\x1f${p!.dates![pl - 1]}\x1f${p!.values?.[pl - 1] ?? ""}`;
   }, [livePerformance]);
 
+  /** Live 1D % by ticker — extends composition when ticker chart sidecars still lag EOD. */
+  const liveDayReturnPctByTicker = useMemo(() => {
+    if (!stockthemesLivePriceReturnsEnabled() || chartJsonFolder !== "themes") {
+      return undefined;
+    }
+    const out: Record<string, number> = {};
+    for (const c of liveDetail?.constituents ?? []) {
+      const ticker = String(c.ticker || "").trim().toUpperCase();
+      const dayReturn = priceReturnMetric(c, "1D");
+      if (!ticker || dayReturn == null) continue;
+      out[ticker] = dayReturn;
+    }
+    return Object.keys(out).length ? out : undefined;
+  }, [liveDetail?.constituents, chartJsonFolder]);
+  const liveDayReturnsKey = liveDayReturnsStructuralKey(liveDayReturnPctByTicker);
+
   const chart1y = useMemo(() => {
     const sc = serverChartRef.current;
     const fd = fetchedRef.current;
@@ -170,12 +192,20 @@ export function ThemeChartLiveHydrate({
     if (base && livePerformance?.dates?.length && livePerformance?.values?.length) {
       const sanitizedLive = sanitizeChartPerformanceForDisplay(livePerformance);
       if (sanitizedLive && !isSuspiciousChartPerformanceCliff(sanitizedLive, base.performance)) {
-        return { ...base, performance: sanitizedLive } satisfies ThemeChart1yV0;
+        base = { ...base, performance: sanitizedLive } satisfies ThemeChart1yV0;
       }
     }
-    return base;
+    const sessionIso =
+      base?.performance?.dates?.at(-1) ??
+      livePerformance?.dates?.at(-1) ??
+      sc?.performance?.dates?.at(-1);
+    return extendCompositionIndexedWithLiveDayReturns(
+      base,
+      liveDayReturnPctByTicker,
+      sessionIso,
+    );
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
-  }, [serverKey, fetchedKey, livePerfKey]);
+  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(
@@ -205,11 +235,16 @@ export function ThemeChartLiveHydrate({
       stockthemesLiveCompositionEnabled() &&
       chartHasRenderableData(serverChartWithComposition) &&
       groupCompositionNeedsLiveRefresh(serverChartWithComposition, expectedCompositionSeriesCount);
-    /** Pages build sets DISABLE_LIVE_HYDRATE=1 but LIVE_COMPOSITION=1 — still need one full JSON pull. */
+    /**
+     * Pages build sets DISABLE_LIVE_HYDRATE=1 but LIVE_COMPOSITION=1 — still need one full JSON pull.
+     * Skipped when `compositionLive`: `useLiveThemeDetailPrices` already pulls the same theme JSON
+     * (composition + earnings schedule), so fetching here duplicates that payload.
+     */
     const refreshThemeCompositionFromCdn =
       chartJsonFolder === "themes" &&
       stockthemesLiveCompositionEnabled() &&
-      needCompositionOnly;
+      needCompositionOnly &&
+      !compositionLive;
 
     if (
       stockthemesLiveHydrationDisabled() &&
@@ -231,7 +266,9 @@ export function ThemeChartLiveHydrate({
     }
 
     let cancelled = false;
-    const url = `${dataBaseUrl}/${chartJsonFolder}/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
+    // Same cache bucket as `useLiveThemeDetailPrices`: a different `ts` on the same URL
+    // costs a second full detail payload instead of a browser cache hit.
+    const url = `${dataBaseUrl}/${chartJsonFolder}/${encodeURIComponent(slug)}.json?${priceReturnsBrowserCacheBusterQuery()}`;
     setLastFetchUrl(url);
     fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
       .then((res) => {
@@ -280,7 +317,14 @@ export function ThemeChartLiveHydrate({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- serverChart identity can thrash; sig captures chart-relevant changes
-  }, [slug, dataBaseUrl, serverChartFetchSig, chartJsonFolder, expectedCompositionSeriesCount]);
+  }, [
+    slug,
+    dataBaseUrl,
+    serverChartFetchSig,
+    chartJsonFolder,
+    expectedCompositionSeriesCount,
+    compositionLive,
+  ]);
 
   const overlayKind = chartJsonFolder === "groups" ? "group" : "theme";
 

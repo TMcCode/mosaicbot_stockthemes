@@ -69,12 +69,13 @@ function isEffectiveReportedInEt(reportDate: Date, bamRaw: string | undefined, n
   const nowYmdEt = ET_YMD_FORMATTER.format(now);
   if (reportYmdEt < nowYmdEt) return true;
   if (reportYmdEt > nowYmdEt) return false;
+  // Same ET calendar day:
+  // AMC stays "next" through the print day; becomes last the following day.
+  if (bam === "AMC" || bam === "AFTERMARKET") return false;
   const { hour, minute } = etNowParts(now);
   const etMinutes = hour * 60 + minute;
   const marketOpenMinutes = 9 * 60 + 30;
-  const marketCloseMinutes = 16 * 60;
   if (bam === "BMO" || bam === "BEFOREMARKET") return etMinutes >= marketOpenMinutes;
-  if (bam === "AMC" || bam === "AFTERMARKET") return etMinutes > marketCloseMinutes;
   return etMinutes >= marketOpenMinutes;
 }
 

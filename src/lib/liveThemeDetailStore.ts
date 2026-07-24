@@ -22,10 +22,58 @@ export function mergeThemeDetailPriceReturns(
   };
 }
 
+/** Refresh Prev/Next report dates from full theme JSON (price_returns sidecars omit them). */
+export function mergeThemeDetailEarningsSchedule(
+  server: ThemeDetailV0,
+  live: ThemeDetailV0,
+): ThemeDetailV0 {
+  const liveByTicker = new Map(
+    (live.constituents || []).map((c) => [String(c.ticker || "").trim().toUpperCase(), c]),
+  );
+  let changed = false;
+  const constituents = (server.constituents || []).map((c) => {
+    const liveC = liveByTicker.get(String(c.ticker || "").trim().toUpperCase());
+    if (!liveC) return c;
+    const next: ThemeDetailConstituentV0 = { ...c };
+    let rowChanged = false;
+    const copyKeys = [
+      "last_report_date",
+      "next_report_date",
+      "last_before_after_market",
+      "next_before_after_market",
+      "earnings_percent_last_report",
+      "earnings_percent_prev_report",
+      "pre_earnings_percent_last_report",
+      "since_last_rpt_percent",
+      "last_rpt_percent",
+      "last_rpt_live_percent",
+      "last_rpt_final_percent",
+      "last_rpt_is_final",
+    ] as const;
+    for (const key of copyKeys) {
+      if (!Object.prototype.hasOwnProperty.call(liveC, key)) continue;
+      const value = liveC[key as keyof ThemeDetailConstituentV0];
+      if (next[key as keyof ThemeDetailConstituentV0] !== value) {
+        Object.assign(next, { [key]: value });
+        rowChanged = true;
+      }
+    }
+    if (rowChanged) {
+      changed = true;
+      return next;
+    }
+    return c;
+  });
+  if (!changed) return server;
+  return { ...server, constituents };
+}
+
 export type MergeThemeDetailLiveOptions = {
   prices?: boolean;
   compareReturns?: boolean;
   composition?: boolean;
+  /** Merge Prev/Next report dates from live theme JSON (default true). */
+  earningsSchedule?: boolean;
 };
 
 /** Merge selected live fields from CDN theme JSON into the build-time snapshot. */
@@ -37,8 +85,13 @@ export function mergeThemeDetailLiveFields(
   const prices = options.prices !== false;
   const compareReturns = options.compareReturns === true;
   const composition = options.composition === true;
+  const earningsSchedule = options.earningsSchedule !== false;
 
   let merged = prices ? mergeThemeDetailPriceReturns(server, live) : { ...server };
+
+  if (earningsSchedule) {
+    merged = mergeThemeDetailEarningsSchedule(merged, live);
+  }
 
   if (compareReturns && live.compare_returns) {
     merged = { ...merged, compare_returns: live.compare_returns };
@@ -170,28 +223,45 @@ export async function refreshLiveThemeDetail({
         await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
       );
     }
-    // Slim price_returns sidecars omit chart_1y; composition needs the full theme JSON once.
-    if (
-      mergeOptions?.composition &&
-      usedPriceReturnsSidecar &&
-      !live.chart_1y?.composition_indexed
-    ) {
-      if (previous?.chart_1y?.composition_indexed) {
+    // Slim price_returns sidecars omit chart_1y and earnings schedule dates.
+    let scheduleSource: ThemeDetailV0 | null = null;
+    if (usedPriceReturnsSidecar) {
+      const needComposition =
+        mergeOptions?.composition === true && !live.chart_1y?.composition_indexed;
+      if (needComposition && previous?.chart_1y?.composition_indexed) {
         live = { ...live, chart_1y: previous.chart_1y };
-      } else {
+      }
+      const needFull =
+        mergeOptions?.earningsSchedule !== false ||
+        (needComposition && !live.chart_1y?.composition_indexed);
+      if (needFull) {
         try {
           const full = parseThemeDetail(
             await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
           );
+          scheduleSource = full;
           if (full.chart_1y?.composition_indexed) {
-            live = { ...live, chart_1y: full.chart_1y };
+            live = {
+              ...live,
+              chart_1y: {
+                ...(live.chart_1y ?? {}),
+                composition_indexed: full.chart_1y.composition_indexed,
+              },
+            };
           }
         } catch {
           /* keep price_returns-only merge; ThemeChartLiveHydrate may still fetch composition */
         }
       }
     }
-    const merged = mergeThemeDetailLiveFields(serverDetail, live, mergeOptions);
+    let merged = mergeThemeDetailLiveFields(serverDetail, live, {
+      ...mergeOptions,
+      // Earnings come from full theme JSON when available (sidecar omits them).
+      earningsSchedule: scheduleSource ? false : mergeOptions?.earningsSchedule !== false,
+    });
+    if (scheduleSource) {
+      merged = mergeThemeDetailEarningsSchedule(merged, scheduleSource);
+    }
     entries.set(key, {
       merged,
       fetchedAtMs: Date.now(),

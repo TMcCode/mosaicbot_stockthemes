@@ -18,9 +18,18 @@ export function hasIndexedPerformanceFromAnchor(
   const dates = perf?.dates;
   if (!Array.isArray(dates) || dates.length < 2) return false;
   const anchor = isoDay(anchorIso);
+  const first = isoDay(String(dates[0] || ""));
   const last = isoDay(String(dates[dates.length - 1] || ""));
-  if (!anchor || !last || anchor > last) return false;
-  // Match sliceAndRebaseIndexedPerformance: first trading day on/after anchor needs 2+ points.
+  if (!anchor || !first || !last || anchor > last) return false;
+  // Require the series to actually reach back to the anchor. A ~1Y embed has many
+  // points *after* a 5Y anchor, which must not count as 5Y support (otherwise the
+  // button looks clickable but only re-slices the same year — a no-op).
+  // Allow a few calendar days for weekends/holidays after the calendar anchor.
+  const anchorMs = Date.parse(`${anchor}T12:00:00.000Z`);
+  const firstMs = Date.parse(`${first}T12:00:00.000Z`);
+  if (!Number.isFinite(anchorMs) || !Number.isFinite(firstMs)) return false;
+  const GRACE_MS = 10 * 24 * 60 * 60 * 1000;
+  if (firstMs - anchorMs > GRACE_MS) return false;
   const start = firstIndexOnOrAfter(dates, anchor);
   return dates.length - start >= 2;
 }

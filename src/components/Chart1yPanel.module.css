@@ -141,6 +141,32 @@
   background: #0f1115;
 }
 
+.chartStage {
+  position: relative;
+  width: 100%;
+}
+
+.chartStageUpdating .chartBox {
+  opacity: 0.72;
+  transition: opacity 160ms ease;
+}
+
+.chartUpdatingHint {
+  position: absolute;
+  right: 12px;
+  top: 12px;
+  z-index: 8;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(15, 17, 21, 0.88);
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
 .chartBrandMark {
   position: absolute;
   left: 10px;

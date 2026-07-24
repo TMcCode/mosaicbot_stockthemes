@@ -15,6 +15,7 @@ import {
 import {
   isCompareSectorFilterInactive,
   normalizeCompareSpySector,
+  resolveVisibleSelectedGroups,
   COMPARE_SECTOR_UNMAPPED,
 } from "@/lib/compareSectorFilter";
 import { filterCompareRows } from "@/lib/filterCompareRows";
@@ -137,13 +138,10 @@ export function ComparePageClient({
     );
   }, [sectorInactive, groupOptions, selectedSectors, groupSectorByName]);
 
-  const visibleSelectedGroups = useMemo(() => {
-    const allowed = new Set(visibleGroupOptions);
-    const selected = selectedGroups.filter((group) => allowed.has(group));
-    return selected.length > 0 || visibleGroupOptions.length === 0
-      ? selected
-      : visibleGroupOptions;
-  }, [selectedGroups, visibleGroupOptions]);
+  const visibleSelectedGroups = useMemo(
+    () => resolveVisibleSelectedGroups(selectedGroups, visibleGroupOptions),
+    [selectedGroups, visibleGroupOptions],
+  );
 
   const filteredThemes = useMemo(
     () =>
@@ -235,7 +233,6 @@ export function ComparePageClient({
                 selected={selectedSectors}
                 onChange={setSelectedSectors}
                 emptyLabel="All sectors"
-                emptyMeansAll
                 layout="inline"
               />
             ) : null}

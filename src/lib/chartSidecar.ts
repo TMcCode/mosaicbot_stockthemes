@@ -85,6 +85,24 @@ function performanceFromDetailJson(raw: string, kind: OverlayEntityKind, slug: s
 const sidecarResultCache = new Map<string, ChartPerformanceSidecarV0 | null>();
 const sidecarInflight = new Map<string, Promise<ChartPerformanceSidecarV0 | null>>();
 
+/**
+ * Live fetches skip the long-lived cache, but several components request the same sidecar
+ * moments apart (chart performance poll, then composition live tail). Reuse a result for
+ * this window so those become one request instead of one each.
+ */
+const LIVE_SIDECAR_TTL_MS = 60_000;
+const liveSidecarCache = new Map<string, { at: number; value: ChartPerformanceSidecarV0 | null }>();
+
+function liveSidecarCached(key: string): { value: ChartPerformanceSidecarV0 | null } | null {
+  const hit = liveSidecarCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > LIVE_SIDECAR_TTL_MS) {
+    liveSidecarCache.delete(key);
+    return null;
+  }
+  return { value: hit.value };
+}
+
 async function fetchSidecarText(url: string, signal?: AbortSignal): Promise<string | null> {
   try {
     const res = await fetch(url, {
@@ -112,6 +130,12 @@ export async function fetchChartSidecar(
   const live = Boolean(options?.live);
   const cacheEnabled = process.env.NODE_ENV !== "development" && !live;
   if (cacheEnabled && sidecarResultCache.has(key)) return sidecarResultCache.get(key)!;
+
+  const liveCacheEnabled = process.env.NODE_ENV !== "development" && live;
+  if (liveCacheEnabled) {
+    const hit = liveSidecarCached(key);
+    if (hit) return hit.value;
+  }
 
   const inflight = sidecarInflight.get(key);
   if (inflight) return inflight;
@@ -166,6 +190,7 @@ export async function fetchChartSidecar(
   try {
     const result = await promise;
     if (result && cacheEnabled) sidecarResultCache.set(key, result);
+    if (result && liveCacheEnabled) liveSidecarCache.set(key, { at: Date.now(), value: result });
     return result;
   } finally {
     sidecarInflight.delete(key);

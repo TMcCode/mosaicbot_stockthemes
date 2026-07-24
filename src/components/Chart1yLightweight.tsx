@@ -2,6 +2,7 @@
 
 import {
   memo,
+  startTransition,
   useCallback,
   useEffect,
   useMemo,
@@ -827,6 +828,8 @@ export function Chart1yLightweight({
     return { ...next, performance: perf };
   }, [chart1ySorted, performanceTitle]);
 
+  // Sidecar JSON is already multi-year (max_window 5y). Keep it across 1Y↔2Y↔5Y so
+  // period switches only re-slice — no N-ticker refetch or blank flash.
   useEffect(() => {
     setExtendedPerformance(undefined);
     setExtendedCompositionByTicker({});
@@ -835,7 +838,7 @@ export function Chart1yLightweight({
     extendedBenchmarkRef.current = undefined;
     performanceSidecarFetchedRef.current = "";
     benchmarkFetchedRef.current = "";
-  }, [sidecarEntity?.kind, sidecarEntity?.slug, period]);
+  }, [sidecarEntity?.kind, sidecarEntity?.slug]);
 
   const referenceLastIso = useMemo(
     () =>
@@ -858,6 +861,30 @@ export function Chart1yLightweight({
   const customAnchorIso = isStandardPeriod(period)
     ? undefined
     : customAnchorByKey.get(period);
+
+  // Prefetch multi-year theme/group sidecar once so the first 2Y/5Y click only re-slices.
+  useEffect(() => {
+    if (!showPeriodControls || !sidecarEntity) return;
+    let cancelled = false;
+    void fetchChartSidecar(sidecarEntity.kind, sidecarEntity.slug)
+      .then((sidecar) => {
+        if (cancelled || !sidecar?.performance?.dates?.length) return;
+        let perf = sanitizeChartPerformanceForDisplay(sidecar.performance) ?? sidecar.performance;
+        const title = performanceTitle?.trim() ?? "";
+        const values = applyShortThemePerformanceDisplay(title, perf.values, perf);
+        if (values !== perf.values) perf = { ...perf, values };
+        if (isSuspiciousChartPerformanceCliff(perf, chart1yForRender?.performance)) return;
+        setExtendedPerformance(perf);
+      })
+      .catch(() => {
+        /* keep embedded window on CDN miss */
+      });
+    return () => {
+      cancelled = true;
+    };
+    // Only on entity change — period switches reuse this cache.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount/entity prefetch
+  }, [showPeriodControls, sidecarEntity?.kind, sidecarEntity?.slug]);
 
   const needsExtendedHistory = useMemo(
     () =>
@@ -1016,23 +1043,42 @@ export function Chart1yLightweight({
   ]);
 
   const compositionTickersFetchKey = compositionTickersNeedingFetch.slice().sort().join("\0");
-  const compositionLiveTailFetch = useMemo(() => {
-    if (!referenceLastIso || !chart1yForRender?.composition_indexed?.series?.length) return false;
-    return compositionTickersNeedingLiveTail(chart1yForRender, referenceLastIso).length > 0;
-  }, [chart1yForRender, referenceLastIso]);
+  const compositionLiveTailTickerSet = useMemo(() => {
+    if (!referenceLastIso || !chart1yForRender?.composition_indexed?.series?.length) {
+      return new Set<string>();
+    }
+    return new Set(
+      compositionTickersNeedingLiveTail(
+        chart1yForRender,
+        referenceLastIso,
+        extendedCompositionByTicker,
+      ),
+    );
+  }, [chart1yForRender, referenceLastIso, extendedCompositionByTicker]);
+  const compositionLiveTailFetchKey = Array.from(compositionLiveTailTickerSet).sort().join("\0");
   const compSeriesRef = useRef(chart1yForRender?.composition_indexed?.series);
   compSeriesRef.current = chart1yForRender?.composition_indexed?.series;
+  const [compositionHistoryLoading, setCompositionHistoryLoading] = useState(false);
 
   useEffect(() => {
-    if (!compositionSidecarKind || !compositionTickersFetchKey) return;
+    if (!compositionSidecarKind || !compositionTickersFetchKey) {
+      setCompositionHistoryLoading(false);
+      return;
+    }
 
     const tickersToFetch = compositionTickersFetchKey.split("\0").filter(Boolean);
+    const liveTail = new Set(
+      compositionLiveTailFetchKey ? compositionLiveTailFetchKey.split("\0").filter(Boolean) : [],
+    );
     let cancelled = false;
+    setCompositionHistoryLoading(true);
     void Promise.all(
       tickersToFetch.map(async (tickerKey) => {
         const slug = normalizeCompositionSidecarSlug(compositionSidecarKind, tickerKey);
+        // Only bust cache for series that need a live tail — history-only names reuse
+        // the in-memory / HTTP-cached sidecar (full 5y payload).
         const sidecar = await fetchChartSidecar(compositionSidecarKind, slug, undefined, {
-          live: compositionLiveTailFetch,
+          live: liveTail.has(tickerKey),
         });
         if (!sidecar?.performance?.dates?.length) return null;
         const series = compSeriesRef.current?.find(
@@ -1053,17 +1099,22 @@ export function Chart1yLightweight({
           if (!row) continue;
           updates[row.tickerKey] = row.perf;
         }
-        if (Object.keys(updates).length === 0) return;
-        setExtendedCompositionByTicker((prev) => ({ ...prev, ...updates }));
+        startTransition(() => {
+          if (Object.keys(updates).length > 0) {
+            setExtendedCompositionByTicker((prev) => ({ ...prev, ...updates }));
+          }
+          setCompositionHistoryLoading(false);
+        });
       })
       .catch(() => {
+        if (!cancelled) setCompositionHistoryLoading(false);
         /* keep embedded composition window on CDN miss */
       });
 
     return () => {
       cancelled = true;
     };
-  }, [compositionSidecarKind, compositionTickersFetchKey, compositionLiveTailFetch]);
+  }, [compositionSidecarKind, compositionTickersFetchKey, compositionLiveTailFetchKey]);
 
   const chart1yWithHistory = useMemo(() => {
     const withPerf = chart1yWithExtendedPerformance(chart1yForRender, extendedPerformance);
@@ -1075,24 +1126,37 @@ export function Chart1yLightweight({
     [chart1yWithHistory, activeView],
   );
 
-  const supportedPeriods = useMemo(
-    () => computeOverlaySupportedPeriods(referenceLastIso, performancesForSupport),
-    [referenceLastIso, performancesForSupport],
-  );
+  const supportedPeriods = useMemo(() => {
+    const supported = computeOverlaySupportedPeriods(referenceLastIso, performancesForSupport);
+    // Theme/group detail can lazy-load the 5Y chart sidecar — keep 2Y/5Y clickable so the
+    // fetch can start. Without this, buttons stay disabled until history arrives and clicks
+    // do nothing.
+    if (showPeriodControls && sidecarEntity) {
+      supported.add("2Y");
+      supported.add("5Y");
+    }
+    return supported;
+  }, [referenceLastIso, performancesForSupport, showPeriodControls, sidecarEntity]);
 
-  const supportedCustomPeriodKeys = useMemo(
-    () =>
+  const supportedCustomPeriodKeys = useMemo(() => {
+    const supported =
       showPeriodControls
         ? computeOverlaySupportedCustomPeriodKeys(
             performancesForSupport,
             customPeriods.map((c) => ({ key: c.key, date: c.date })),
           )
-        : new Set<string>(),
-    [showPeriodControls, performancesForSupport, customPeriods],
-  );
+        : new Set<string>();
+    if (showPeriodControls && sidecarEntity) {
+      for (const c of customPeriods) supported.add(c.key);
+    }
+    return supported;
+  }, [showPeriodControls, performancesForSupport, customPeriods, sidecarEntity]);
 
   useEffect(() => {
     if (!showPeriodControls) return;
+    // Keep the user's selection while the extended sidecar is in flight. Snapping
+    // back to 1Y here made 2Y/5Y clicks look like no-ops on slow networks.
+    if (needsExtendedHistory) return;
     if (isStandardPeriod(period) && !supportedPeriods.has(period)) {
       setPeriod("1Y");
     } else if (
@@ -1102,7 +1166,14 @@ export function Chart1yLightweight({
     ) {
       setPeriod("1Y");
     }
-  }, [showPeriodControls, period, supportedPeriods, supportedCustomPeriodKeys, customPeriods]);
+  }, [
+    showPeriodControls,
+    period,
+    supportedPeriods,
+    supportedCustomPeriodKeys,
+    customPeriods,
+    needsExtendedHistory,
+  ]);
 
   const chart1yForCanvas = useMemo(() => {
     if (!showPeriodControls || !chart1yWithHistory) return chart1yWithHistory;
@@ -1196,34 +1267,50 @@ export function Chart1yLightweight({
             <button
               type="button"
               className={activeView === "performance" ? styles.active : undefined}
-              onClick={() => setView("performance")}
+              onClick={() => startTransition(() => setView("performance"))}
             >
               Performance
             </button>
             <button
               type="button"
               className={activeView === "composition" ? styles.active : undefined}
-              onClick={() => setView("composition")}
+              onClick={() => startTransition(() => setView("composition"))}
             >
               Composition (line)
             </button>
           </div>
         ) : null}
       </div>
-      <Chart1yCanvas
-        chart1y={canvasChart1y}
-        benchmarkPerformance={canvasBenchmark}
-        activeView={activeView}
-        hiddenSeries={hiddenSeries}
-        lineApisRef={lineApisRef}
-        compositionMetaRef={compositionMetaRef}
-        performanceTitleRef={performanceTitleRef}
-      />
+      <div
+        className={
+          compositionHistoryLoading
+            ? `${styles.chartStage} ${styles.chartStageUpdating}`
+            : styles.chartStage
+        }
+        aria-busy={compositionHistoryLoading || undefined}
+      >
+        <Chart1yCanvas
+          chart1y={canvasChart1y}
+          benchmarkPerformance={canvasBenchmark}
+          activeView={activeView}
+          hiddenSeries={hiddenSeries}
+          lineApisRef={lineApisRef}
+          compositionMetaRef={compositionMetaRef}
+          performanceTitleRef={performanceTitleRef}
+        />
+        {compositionHistoryLoading ? (
+          <span className={styles.chartUpdatingHint} aria-live="polite">
+            Updating history…
+          </span>
+        ) : null}
+      </div>
       {showPeriodControls ? (
         <div className={styles.periodBar}>
           <ChartPeriodToolbar
             period={period}
-            onPeriodChange={setPeriod}
+            onPeriodChange={(next) => {
+              startTransition(() => setPeriod(next));
+            }}
             supportedPeriods={supportedPeriods}
             supportedCustomPeriodKeys={supportedCustomPeriodKeys}
             customPeriods={customPeriods}
