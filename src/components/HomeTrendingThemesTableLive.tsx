@@ -7,6 +7,7 @@ import {
   type HomeTrendingRow,
 } from "@/components/HomeTrendingThemesTable";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import type { TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import { computePerfFromChartPerformance } from "@/lib/computeThemePerf";
 import {
@@ -14,7 +15,7 @@ import {
   mergeHomeTrendingCompareReturns,
   mergeLiveHomeTrendingRows,
 } from "@/lib/mergeLiveCompareData";
-import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
+import { resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { HomeTrendingRowV0 } from "@/types/home_trending.v0";
 
 type Props = {
@@ -59,7 +60,12 @@ export function HomeTrendingThemesTableLive({
         );
     return withSpy;
   }, [baseRows, compareBundle?.rows, liveSpyPerf]);
-  const visibleColumns = useMemo(() => withoutPremarketUnlessActive(columns), [columns]);
+  const fullColumns = useMemo(() => {
+    const fromRows = resolveTrendingColumnOrder(liveRows);
+    const resolved = fromRows.length > 0 ? fromRows : columns;
+    return resolved.filter((col) => col !== "LstRpt %" && col !== "SinceLstRpt");
+  }, [liveRows, columns]);
+  const visibleColumns = useSessionVisibleColumns(fullColumns);
   const visibleColumnHelp = useMemo(
     () =>
       Object.fromEntries(

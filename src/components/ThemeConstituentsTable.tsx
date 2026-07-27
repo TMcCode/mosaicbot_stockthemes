@@ -40,6 +40,7 @@ import {
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import { useThemeQualityRiskSidecar } from "@/hooks/useThemeQualityRiskSidecar";
+import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
 
 const ThemeConstituentsRevenuePanel = dynamic(
@@ -192,7 +193,7 @@ export function ThemeConstituentsTable({
     hasWeight,
     hasMcap,
     hasPriceReturns,
-    priceReturnColumns,
+    priceReturnColumns: modelPriceReturnColumns,
     constituentRows,
     avgEarningsPerf,
     avgLastQuarterEarningsMove,
@@ -229,6 +230,7 @@ export function ThemeConstituentsTable({
     maxMarketCap,
     maxWeight,
   } = model;
+  const priceReturnColumns = useSessionVisibleColumns(modelPriceReturnColumns);
 
   const sortedRows = useMemo(() => {
     const out = [...constituentRows];

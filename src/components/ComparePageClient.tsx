@@ -7,6 +7,7 @@ import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useLazyCompareGroups } from "@/hooks/useCompareReturnsData";
 import {
   availableCompareSummaryPeriods,
@@ -21,7 +22,7 @@ import {
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
-import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
+import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
@@ -77,14 +78,21 @@ export function ComparePageClient({
     loading: groupsLoading,
     failed: groupsFailed,
   } = useLazyCompareGroups(viewMode === "groups");
-  const visibleColumns = useMemo(
-    () => withoutPremarketUnlessActive(columns),
-    [columns],
-  );
   const rowsWithLiveCompare = useMemo(
     () => mergeComparePageRows(rows, liveCompareBundle?.rows ?? []),
     [rows, liveCompareBundle?.rows],
   );
+  const fullColumns = useMemo(() => {
+    const fromRows = normalizeCompareColumnOrder(
+      resolveTrendingColumnOrder(
+        rowsWithLiveCompare.map((row) => ({
+          compare_returns: row.compareReturns ?? undefined,
+        })),
+      ),
+    );
+    return fromRows.length > 0 ? fromRows : columns;
+  }, [rowsWithLiveCompare, columns]);
+  const visibleColumns = useSessionVisibleColumns(fullColumns);
   const groupRows = useMemo<Row[]>(
     () =>
       (groupBundle?.rows ?? []).map((row) => ({

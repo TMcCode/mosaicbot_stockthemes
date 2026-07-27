@@ -1,4 +1,3 @@
-import { withoutPremarketUnlessActive } from "@/lib/usMarketSession";
 import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 
 /** Standard calendar price-return columns (matches compare / ticker_performance_latest.parquet). */
@@ -37,7 +36,7 @@ export function normalizeConstituentPriceReturnColumnOrder(cols: string[]): stri
     (c) => !CONSTITUENT_RETURN_SKIP.has(c) && !(head as string[]).includes(c),
   );
   const period = cols.includes(CONSTITUENT_PERIOD_COL) ? [CONSTITUENT_PERIOD_COL] : [];
-  return withoutPremarketUnlessActive([...head, ...custom, ...period]);
+  return [...head, ...custom, ...period];
 }
 
 export function resolveConstituentPriceReturnColumns(

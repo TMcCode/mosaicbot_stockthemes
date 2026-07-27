@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { GroupThemesTable } from "@/components/GroupThemesTable";
+import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { mergeGroupThemeTableCompareReturns } from "@/lib/mergeLiveCompareData";
 import { resolveGroupThemesMetricColumns, type GroupThemeTableRow } from "@/lib/groupThemesTable";
@@ -27,10 +28,11 @@ export function GroupThemesTableLive({
   const liveMetricColumns = useMemo(() => resolveGroupThemesMetricColumns(liveRows), [liveRows]);
   const metricColumnsResolved =
     liveMetricColumns.length > 0 ? liveMetricColumns : metricColumns;
+  const visibleMetricColumns = useSessionVisibleColumns(metricColumnsResolved);
   return (
     <GroupThemesTable
       rows={liveRows}
-      metricColumns={metricColumnsResolved}
+      metricColumns={visibleMetricColumns}
       selectedDates={selectedDates}
     />
   );
