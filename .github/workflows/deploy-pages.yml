@@ -6,9 +6,9 @@
 # - Actions cache key stockthemes-public-v4 is stable across as_of bumps (incremental R2 sync).
 # - STOCKTHEMES_BUILD_CACHE + sync-build-cache.mjs use per-object ETag (not full-catalog pulls on as_of bump).
 # - NEXT_PUBLIC_STOCKTHEMES_DISABLE_LIVE_HYDRATE=1 — no full theme JSON hydrate for chart performance.
-# - NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS=1 — refresh constituent price_returns from CDN (~15 min).
-# - NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE=1 — refresh performance chart via chart sidecar (~15 min).
-# - NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS=1 — refresh home/compare aggregates (~15 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_PRICE_RETURNS=1 — refresh constituent price_returns from CDN (~5 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE=1 — refresh performance chart via chart sidecar (~5 min).
+# - NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS=1 — refresh home/compare aggregates (~5 min).
 # - NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION=1 — one-shot full theme/group JSON for composition_indexed
 #   (Pages seeds only performance; price_returns sidecars omit chart_1y; bypasses DISABLE_LIVE_HYDRATE).
 # - Default manifest URL: https://storage.stockthemes.ai (R2 custom domain), not storage.googleapis.com.
@@ -147,7 +147,7 @@ jobs:
           NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE: "1"
           NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS: "1"
           NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPOSITION: "1"
-          NEXT_PUBLIC_STOCKTHEMES_PRICE_REVALIDATE_SEC: "900"
+          NEXT_PUBLIC_STOCKTHEMES_PRICE_REVALIDATE_SEC: "300"
           NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL }}
           NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL: ${{ vars.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL }}
           NEXT_PUBLIC_SITE_URL: ${{ vars.NEXT_PUBLIC_SITE_URL }}

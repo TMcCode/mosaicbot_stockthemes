@@ -64,9 +64,9 @@ export function commentaryBrowserFetchCache(): RequestCache {
   return process.env.NODE_ENV === "development" ? "no-store" : "default";
 }
 
-const DEFAULT_PRICE_REVALIDATE_SEC = 15 * 60;
+const DEFAULT_PRICE_REVALIDATE_SEC = 5 * 60;
 
-/** Browser refresh window for live constituent price_returns (matches slim ETL cadence). */
+/** Browser refresh window for live constituent price_returns (aligns with ~10 min slim ETL). */
 export function priceReturnsRevalidateSeconds(): number {
   const raw =
     process.env.NEXT_PUBLIC_STOCKTHEMES_PRICE_REVALIDATE_SEC?.trim() ||

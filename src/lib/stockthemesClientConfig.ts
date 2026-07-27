@@ -17,7 +17,7 @@ export function stockthemesLivePriceReturnsEnabled(): boolean {
 }
 
 /**
- * Client-side refresh of theme/group performance chart via slim chart sidecar (~15 min).
+ * Client-side refresh of theme/group performance chart via slim chart sidecar (~5 min).
  * Follows live price_returns unless NEXT_PUBLIC_STOCKTHEMES_LIVE_CHART_PERFORMANCE=0.
  */
 export function stockthemesLiveChartPerformanceEnabled(): boolean {
@@ -31,7 +31,7 @@ export function stockthemesLiveChartPerformanceEnabled(): boolean {
 }
 
 /**
- * Client-side refresh of theme compare_returns via compare_themes.v0.json (~15 min).
+ * Client-side refresh of theme compare_returns via compare_themes.v0.json (~5 min).
  */
 export function stockthemesLiveCompareReturnsEnabled(): boolean {
   if (process.env.NEXT_PUBLIC_STOCKTHEMES_LIVE_COMPARE_RETURNS === "0") {
@@ -45,7 +45,7 @@ export function stockthemesLiveCompareReturnsEnabled(): boolean {
 
 /**
  * Client-side refresh of chart composition_indexed from CDN detail JSON.
- * Themes: themes/<slug>.json (~15 min via useLiveThemeDetailPrices).
+ * Themes: themes/<slug>.json (~5 min via useLiveThemeDetailPrices).
  * Groups: groups/<slug>.json on page load when baked series lag membership (2h cache bucket).
  */
 export function stockthemesLiveCompositionEnabled(): boolean {
