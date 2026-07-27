@@ -16,8 +16,12 @@ import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTrendingV0 } from "@/types/home_trending.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 
-async function fetchJson(url: string): Promise<unknown> {
-  const res = await fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() });
+async function fetchJson(url: string, init?: RequestInit): Promise<unknown> {
+  const res = await fetch(url, {
+    credentials: "omit",
+    cache: stockthemesBrowserFetchCache(),
+    ...init,
+  });
   if (!res.ok) {
     throw new Error(`HTTP ${res.status}`);
   }
@@ -55,11 +59,14 @@ function refreshLiveBundles(): Promise<void> {
 
   refreshPromise = (async () => {
     const q = priceReturnsBrowserCacheBusterQuery();
+    // Spy Premarket/Postmarket can land between theme compare ticks; never reuse a
+    // stale browser/CDN response for the compact SPY snapshot within a 15m bucket.
+    const spyQ = `ts=${Date.now()}`;
     emit({ ...snapshot, compareLoading: true, compareFailed: false });
     try {
       const [compareRaw, spyRaw] = await Promise.all([
         fetchJson(`${base}/compare_themes.v0.json?${q}`),
-        fetchJson(`${base}/spy_snapshot.v0.json?${q}`),
+        fetchJson(`${base}/spy_snapshot.v0.json?${spyQ}`, { cache: "no-store" }),
       ]);
       const compare = parseCompareThemesJson(compareRaw);
       const spy = parseSpySnapshotJson(spyRaw);
