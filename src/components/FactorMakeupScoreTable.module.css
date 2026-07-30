@@ -1,0 +1,304 @@
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 12px;
+  min-height: 1.25rem;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.headHint {
+  font-size: 11px;
+  color: var(--text-muted, #8c9a98);
+}
+
+.rankingsLink {
+  font-size: 12px;
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.rankingsLink:hover {
+  text-decoration: underline;
+}
+
+.tableScroll {
+  overflow: auto;
+  max-height: min(560px, 70vh);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+
+.table th,
+.table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(8, 10, 12, 0.98);
+  font-weight: 600;
+  color: var(--text-secondary, #9aa8a6);
+  text-align: left;
+}
+
+.table thead tr:nth-child(2) th {
+  position: static;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted, #8c9a98);
+  border-bottom-color: rgba(255, 255, 255, 0.1);
+  white-space: nowrap;
+  background: rgba(8, 10, 12, 0.98);
+}
+
+.factorCol {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  min-width: 108px;
+  white-space: nowrap;
+  vertical-align: bottom;
+  background: rgba(8, 10, 12, 0.98);
+  box-shadow: 6px 0 10px -6px rgba(0, 0, 0, 0.65);
+}
+
+.themeCol {
+  width: 11rem;
+  max-width: 13rem;
+  min-width: 10rem;
+  text-align: left;
+  vertical-align: bottom;
+  white-space: normal;
+}
+
+.subCol {
+  width: 3.5rem;
+  min-width: 3.25rem;
+  max-width: 4rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.themeHead {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  width: 100%;
+  text-align: left;
+}
+
+.swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.themeNameStack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.themeGroupLine,
+.themeTitleLine {
+  display: block;
+  color: var(--text-primary, #e8edec);
+  font-weight: 500;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.themeGroupLine {
+  color: var(--text-secondary, #9aa8a6);
+  font-weight: 500;
+  font-size: 11px;
+}
+
+.themeTitleLine {
+  font-weight: 600;
+}
+
+.factorCell {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  text-align: left;
+  font-weight: 500;
+  white-space: nowrap;
+  background: rgba(8, 10, 12, 0.98);
+  box-shadow: 6px 0 10px -6px rgba(0, 0, 0, 0.65);
+}
+
+.factorBtn {
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--text-secondary, #9aa8a6);
+  cursor: pointer;
+  text-align: left;
+}
+
+.factorBtn:hover,
+.rowSelected .factorBtn {
+  color: var(--accent, #26fcd6);
+}
+
+.table tbody tr {
+  cursor: pointer;
+}
+
+.table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.table tbody tr:hover .factorCell {
+  background: #101214;
+}
+
+.rowSelected {
+  background: rgba(38, 252, 214, 0.08);
+}
+
+.rowSelected .factorCell {
+  background: #0c1816;
+}
+
+.rowSelected:hover {
+  background: rgba(38, 252, 214, 0.11);
+}
+
+.rowSelected:hover .factorCell {
+  background: #0e1c19;
+}
+
+.scoreCell,
+.rankCell {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  color: var(--text-primary, #e8edec);
+}
+
+.rankCell {
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.scoreAbove {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.scoreBelow {
+  color: #f87171;
+  font-weight: 600;
+}
+
+.legend {
+  margin: 0;
+  font-size: 11px;
+  color: var(--text-muted, #8c9a98);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.tableWatermark {
+  flex: 0 0 auto;
+  margin-left: auto;
+  pointer-events: none;
+}
+
+.legendHigh {
+  color: #34d399;
+  font-weight: 600;
+}
+
+.legendLow {
+  color: #f87171;
+  font-weight: 600;
+}
+
+:global(.st-theme[data-theme="light"]) .tableScroll {
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .table thead th,
+:global(.st-theme[data-theme="light"]) .table thead tr:nth-child(2) th,
+:global(.st-theme[data-theme="light"]) .factorCol,
+:global(.st-theme[data-theme="light"]) .factorCell {
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 6px 0 10px -6px rgba(0, 0, 0, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .table th,
+:global(.st-theme[data-theme="light"]) .table td {
+  border-bottom-color: rgba(0, 0, 0, 0.06);
+}
+
+:global(.st-theme[data-theme="light"]) .table tbody tr:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:global(.st-theme[data-theme="light"]) .table tbody tr:hover .factorCell {
+  background: #f3f5f4;
+}
+
+:global(.st-theme[data-theme="light"]) .rowSelected {
+  background: rgba(14, 140, 120, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .rowSelected .factorCell {
+  background: #e8f5f2;
+}
+
+:global(.st-theme[data-theme="light"]) .rowSelected:hover .factorCell {
+  background: #e2f2ee;
+}

@@ -2,10 +2,16 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import type { FactorChartSeries } from "@/components/FactorTrendChart";
+import type { FactorMakeupTheme } from "@/components/FactorMakeupPanel";
 import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
+import {
+  FACTOR_MAKEUP_DESKTOP_CAP,
+  FACTOR_MAKEUP_MOBILE_CAP,
+} from "@/lib/factorMakeupAxes";
 import type { FactorMethodologyItem } from "@/lib/loadFactorMethodology";
 import { loadFactorIndex } from "@/lib/loadFactorIndex";
 import { loadFactorRows } from "@/lib/loadFactorRows";
@@ -20,6 +26,34 @@ import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { FactorIndexV0 } from "@/types/factor_index.v0";
 import type { FactorTimeseriesV0 } from "@/types/factor_timeseries.v0";
 import styles from "@/components/FactorsPageClient.module.css";
+
+const FactorMakeupPanel = dynamic(
+  () => import("@/components/FactorMakeupPanel").then((m) => m.FactorMakeupPanel),
+  {
+    ssr: false,
+    loading: () => <p className={styles.empty}>Loading factor makeup…</p>,
+  },
+);
+
+type FactorsTab = "rankings" | "makeup";
+
+function parseFactorsTab(raw: string | null): FactorsTab {
+  return raw === "makeup" ? "makeup" : "rankings";
+}
+
+function parseMakeupThemesParam(raw: string | null): FactorMakeupTheme[] {
+  if (!raw?.trim()) return [];
+  const seen = new Set<string>();
+  const out: FactorMakeupTheme[] = [];
+  for (const part of raw.split(",")) {
+    const slug = part.trim();
+    if (!slug || seen.has(slug)) continue;
+    seen.add(slug);
+    out.push({ slug, theme: slug });
+    if (out.length >= FACTOR_MAKEUP_DESKTOP_CAP) break;
+  }
+  return out;
+}
 
 type Props = {
   dataBaseUrl: string;
@@ -344,6 +378,20 @@ function FactorRankingTable({
 }
 
 export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [activeTab, setActiveTab] = useState<FactorsTab>(() =>
+    parseFactorsTab(searchParams.get("tab")),
+  );
+  const [makeupVisited, setMakeupVisited] = useState(
+    () => parseFactorsTab(searchParams.get("tab")) === "makeup",
+  );
+  const [rankingsVisited, setRankingsVisited] = useState(
+    () => parseFactorsTab(searchParams.get("tab")) !== "makeup",
+  );
+  const [makeupThemes, setMakeupThemes] = useState<FactorMakeupTheme[]>(() =>
+    parseMakeupThemesParam(searchParams.get("themes")),
+  );
   const [indexPayload, setIndexPayload] = useState<FactorIndexV0 | null>(null);
   const [timeseries, setTimeseries] = useState<FactorTimeseriesV0 | null>(null);
   const [selectedFactorId, setSelectedFactorId] = useState<string>("");
@@ -364,6 +412,59 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   }, [themeSeriesCache]);
 
   useEffect(() => {
+    const tab = parseFactorsTab(searchParams.get("tab"));
+    const themes = parseMakeupThemesParam(searchParams.get("themes"));
+    const factorFromUrl = (searchParams.get("factor") || "").trim();
+    // Sync local tab/theme state from the URL (back/forward + shared links).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setActiveTab(tab);
+    if (tab === "makeup") setMakeupVisited(true);
+    else setRankingsVisited(true);
+    if (factorFromUrl) {
+      setSelectedFactorId((prev) => (prev === factorFromUrl ? prev : factorFromUrl));
+    }
+    setMakeupThemes((prev) => {
+      const prevKey = prev.map((t) => t.slug).join(",");
+      const nextKey = themes.map((t) => t.slug).join(",");
+      if (prevKey === nextKey) return prev;
+      const nameBySlug = new Map(prev.map((t) => [t.slug, t.theme]));
+      return themes.map((t) => ({
+        slug: t.slug,
+        theme: nameBySlug.get(t.slug) || t.theme,
+      }));
+    });
+  }, [searchParams]);
+
+  const syncUrl = useCallback((tab: FactorsTab, themes: FactorMakeupTheme[]) => {
+    const params = new URLSearchParams();
+    if (tab === "makeup") params.set("tab", "makeup");
+    if (themes.length) params.set("themes", themes.map((t) => t.slug).join(","));
+    const qs = params.toString();
+    const next = qs ? `/factors?${qs}` : "/factors";
+    if (typeof window !== "undefined") {
+      const current = `${window.location.pathname}${window.location.search}`;
+      if (current === next) return;
+    }
+    router.replace(next, { scroll: false });
+  }, [router]);
+
+  const selectTab = (tab: FactorsTab) => {
+    setActiveTab(tab);
+    if (tab === "makeup") setMakeupVisited(true);
+    if (tab === "rankings") setRankingsVisited(true);
+    syncUrl(tab, makeupThemes);
+  };
+
+  const onMakeupThemesChange = useCallback(
+    (next: FactorMakeupTheme[]) => {
+      setMakeupThemes(next);
+      syncUrl(activeTab, next);
+    },
+    [activeTab, syncUrl],
+  );
+
+  useEffect(() => {
+    if (!rankingsVisited) return;
     let cancelled = false;
     const load = () => {
       Promise.all([loadFactorIndex(dataBaseUrl), loadFactorTimeseries(dataBaseUrl)])
@@ -376,6 +477,8 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
           setIndexPayload(next);
           if (ts) setTimeseries(ts);
           setSelectedFactorId((prev) => {
+            const fromUrl = (searchParams.get("factor") || "").trim();
+            if (fromUrl && next.factors?.[fromUrl]) return fromUrl;
             if (prev && next.factors?.[prev]) return prev;
             return factorOptions(next)[0]?.id || "";
           });
@@ -393,11 +496,11 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
       cancelled = true;
       window.clearInterval(id);
     };
-  }, [dataBaseUrl]);
+  }, [dataBaseUrl, rankingsVisited, searchParams]);
 
   useEffect(() => {
     let cancelled = false;
-    if (!selectedFactorId) return;
+    if (!rankingsVisited || !selectedFactorId) return;
     loadFactorRows(dataBaseUrl, selectedFactorId)
       .then((res) => {
         if (cancelled || !res?.entries) return;
@@ -411,7 +514,7 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [dataBaseUrl, selectedFactorId]);
+  }, [dataBaseUrl, selectedFactorId, rankingsVisited]);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -423,12 +526,18 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
   }, []);
 
   const compareCap = isMobileCompare ? 3 : 8;
+  const makeupCap = isMobileCompare ? FACTOR_MAKEUP_MOBILE_CAP : FACTOR_MAKEUP_DESKTOP_CAP;
 
   useEffect(() => {
     // Keep the selection valid when the responsive comparison cap changes.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setSelectedThemes((prev) => prev.slice(0, compareCap));
   }, [compareCap]);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMakeupThemes((prev) => prev.slice(0, makeupCap));
+  }, [makeupCap]);
 
   useEffect(() => {
     let cancelled = false;
@@ -565,187 +674,257 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
     return ((last / first - 1) * 100).toFixed(1);
   }, [series]);
 
-  if (status === "loading") return <p className={styles.empty}>Loading factor rankings…</p>;
-  if (status === "empty") return <p className={styles.empty}>No factor ranking data is available yet.</p>;
-  if (status === "error" || !indexPayload) return <p className={styles.empty}>Could not load factor rankings.</p>;
-
   return (
     <div className={styles.factorsRoot}>
-      <div className={styles.chartSection}>
-        <div className={styles.chartSectionTop}>
-          <div className={styles.factorSelectBlock}>
-            <label htmlFor="factor-select" className={styles.label}>
-              Factor
-            </label>
-            <div className={styles.factorSelectWrap}>
-              <select
-                id="factor-select"
-                className={styles.factorSelect}
-                value={selectedFactorId}
-                onChange={(e) => {
-                  setSelectedFactorId(e.target.value);
-                  setVisibleClosestCount(50);
-                  setVisibleLeastCount(50);
-                }}
-              >
-                {options.map((opt) => (
-                  <option key={opt.id} value={opt.id}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-          {selectedMethod ? (
-            <div className={styles.factorExplainerBlock}>
-              <span id="factor-explainer-heading" className={styles.label}>
-                Explanation
-              </span>
-              <aside className={styles.factorExplainerBox} aria-labelledby="factor-explainer-heading">
-                <p className={styles.factorExplainerText}>{selectedMethod.summary}</p>
-              </aside>
-            </div>
-          ) : null}
-        </div>
-        {series?.values?.length ? (
-          <div className={styles.chartWrap}>
-          <div className={styles.chartHead}>
-            <p className={styles.chartTitle}>
-              {selectedFactorLabel} factor trend (1Y)
-              {seriesChange ? (
-                <span className={styles.chartDelta}> · {Number(seriesChange) >= 0 ? "+" : ""}{seriesChange}%</span>
+      <div className={styles.pageTabs} role="tablist" aria-label="Factors views">
+        <button
+          type="button"
+          role="tab"
+          id="factors-tab-rankings"
+          aria-selected={activeTab === "rankings"}
+          aria-controls="factors-panel-rankings"
+          className={`${styles.pageTab} ${activeTab === "rankings" ? styles.pageTabActive : ""}`}
+          onClick={() => selectTab("rankings")}
+        >
+          Rankings
+        </button>
+        <button
+          type="button"
+          role="tab"
+          id="factors-tab-makeup"
+          aria-selected={activeTab === "makeup"}
+          aria-controls="factors-panel-makeup"
+          className={`${styles.pageTab} ${activeTab === "makeup" ? styles.pageTabActive : ""}`}
+          onClick={() => selectTab("makeup")}
+        >
+          Factor makeup
+        </button>
+      </div>
+
+      <div
+        id="factors-panel-rankings"
+        role="tabpanel"
+        aria-labelledby="factors-tab-rankings"
+        hidden={activeTab !== "rankings"}
+        className={styles.tabPanel}
+      >
+        {activeTab === "rankings" && status === "loading" ? (
+          <p className={styles.empty}>Loading factor rankings…</p>
+        ) : null}
+        {activeTab === "rankings" && status === "empty" ? (
+          <p className={styles.empty}>No factor ranking data is available yet.</p>
+        ) : null}
+        {activeTab === "rankings" && (status === "error" || (!indexPayload && status !== "loading")) ? (
+          <p className={styles.empty}>Could not load factor rankings.</p>
+        ) : null}
+        {indexPayload && status === "ok" && rankingsVisited ? (
+          <>
+            <div className={styles.chartSection}>
+              <div className={styles.chartSectionTop}>
+                <div className={styles.factorSelectBlock}>
+                  <label htmlFor="factor-select" className={styles.label}>
+                    Factor
+                  </label>
+                  <div className={styles.factorSelectWrap}>
+                    <select
+                      id="factor-select"
+                      className={styles.factorSelect}
+                      value={selectedFactorId}
+                      onChange={(e) => {
+                        setSelectedFactorId(e.target.value);
+                        setVisibleClosestCount(50);
+                        setVisibleLeastCount(50);
+                      }}
+                    >
+                      {options.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+                {selectedMethod ? (
+                  <div className={styles.factorExplainerBlock}>
+                    <span id="factor-explainer-heading" className={styles.label}>
+                      Explanation
+                    </span>
+                    <aside className={styles.factorExplainerBox} aria-labelledby="factor-explainer-heading">
+                      <p className={styles.factorExplainerText}>{selectedMethod.summary}</p>
+                    </aside>
+                  </div>
+                ) : null}
+              </div>
+              {series?.values?.length ? (
+                <div className={styles.chartWrap}>
+                  <div className={styles.chartHead}>
+                    <p className={styles.chartTitle}>
+                      {selectedFactorLabel} factor trend (1Y)
+                      {seriesChange ? (
+                        <span className={styles.chartDelta}>
+                          {" "}
+                          · {Number(seriesChange) >= 0 ? "+" : ""}
+                          {seriesChange}%
+                        </span>
+                      ) : null}
+                    </p>
+                    <div className={styles.compareControls}>
+                      <span className={styles.compareHint}>
+                        Compare themes ({selectedThemes.length}/{compareCap})
+                      </span>
+                      {selectedThemes.length ? (
+                        <button
+                          type="button"
+                          className={styles.clearBtn}
+                          onClick={() => setSelectedThemes([])}
+                        >
+                          Clear
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <FactorTrendChart
+                    series={chartSeries}
+                    ariaLabel={`${selectedFactorLabel} factor chart`}
+                  />
+                  <div className={styles.compareLegend}>
+                    <span className={styles.legendItem}>
+                      <span className={styles.legendSwatch} style={{ background: FACTOR_LINE_COLOR }} />
+                      {selectedFactorLabel} factor
+                    </span>
+                    {selectedThemeSeries.map((item) => (
+                      <span key={`legend-${item.slug}`} className={styles.legendItem}>
+                        <span className={styles.legendSwatch} style={{ background: item.color }} />
+                        {item.theme}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ) : null}
+            </div>
+            {hasStandaloneScores ? (
+              <div className={styles.rankingToolbar}>
+                <div className={styles.rankingToolbarMain}>
+                  <span className={styles.rankingToolbarLabel}>Rank by</span>
+                  <div className={styles.scoreModeSwitch} role="group" aria-label="Rank by score type">
+                    <button
+                      type="button"
+                      className={`${styles.scoreModeOption} ${effectiveScoreMode === "standalone" ? styles.scoreModeOptionActive : ""}`}
+                      aria-pressed={effectiveScoreMode === "standalone"}
+                      onClick={() => setScoreMode("standalone")}
+                    >
+                      Co-movement
+                    </button>
+                    <button
+                      type="button"
+                      className={`${styles.scoreModeOption} ${effectiveScoreMode === "incremental" ? styles.scoreModeOptionActive : ""}`}
+                      aria-pressed={effectiveScoreMode === "incremental"}
+                      onClick={() => setScoreMode("incremental")}
+                    >
+                      Incremental
+                    </button>
+                  </div>
+                  <span className={styles.rankingToolbarHint}>
+                    {SCORE_MODE_COPY[effectiveScoreMode].description}
+                  </span>
+                  <span className={styles.rankingToolbarMeta}>
+                    {totalRows ? `${totalRows.toLocaleString()} themes` : null}
+                    {indexPayload.as_of ? ` · ${indexPayload.as_of.slice(0, 10)}` : null}
+                  </span>
+                </div>
+              </div>
+            ) : null}
+            <div className={styles.rankingGrid}>
+              <section className={styles.panel} aria-label="Closest themes">
+                <h3 className={styles.panelTitle}>
+                  {SCORE_MODE_COPY[effectiveScoreMode].label} (Top{" "}
+                  {Math.min(visibleClosestCount, 250)})
+                </h3>
+                <div className={styles.tableWrap}>
+                  <FactorRankingTable
+                    tableKey="closest"
+                    rows={closestRows}
+                    sort={closestSort}
+                    onSortChange={setClosestSort}
+                    effectiveScoreMode={effectiveScoreMode}
+                    hasStandaloneScores={hasStandaloneScores}
+                    selectedFactorId={selectedFactorId}
+                    compareCap={compareCap}
+                    selectedCompareCount={selectedThemes.length}
+                    isSelectedTheme={isSelectedTheme}
+                    onToggleTheme={toggleThemeSelection}
+                  />
+                </div>
+                {visibleClosestCount < 250 ? (
+                  <div className={styles.panelActions}>
+                    <button
+                      type="button"
+                      className={styles.moreBtn}
+                      onClick={() => setVisibleClosestCount((n) => Math.min(n + 50, 250))}
+                    >
+                      Show 50 more
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+              <section className={styles.panel} aria-label="Least close themes">
+                <h3 className={styles.panelTitle}>
+                  Lowest {SCORE_MODE_COPY[effectiveScoreMode].label.toLowerCase()} (Bottom{" "}
+                  {Math.min(visibleLeastCount, 250)}
+                  {totalRows ? ` of ${totalRows.toLocaleString()}` : ""})
+                </h3>
+                <div className={styles.tableWrap}>
+                  <FactorRankingTable
+                    tableKey="least"
+                    rows={leastRows}
+                    sort={leastSort}
+                    onSortChange={setLeastSort}
+                    effectiveScoreMode={effectiveScoreMode}
+                    hasStandaloneScores={hasStandaloneScores}
+                    selectedFactorId={selectedFactorId}
+                    compareCap={compareCap}
+                    selectedCompareCount={selectedThemes.length}
+                    isSelectedTheme={isSelectedTheme}
+                    onToggleTheme={toggleThemeSelection}
+                  />
+                </div>
+                {visibleLeastCount < 250 ? (
+                  <div className={styles.panelActions}>
+                    <button
+                      type="button"
+                      className={styles.moreBtn}
+                      onClick={() => setVisibleLeastCount((n) => Math.min(n + 50, 250))}
+                    >
+                      Show 50 more
+                    </button>
+                  </div>
+                ) : null}
+              </section>
+            </div>
+            <p className={styles.caption}>
+              {totalRows ? totalRows.toLocaleString() : "—"} ranked themes
+              {indexPayload.as_of ? ` · As of ${indexPayload.as_of.slice(0, 10)}` : ""}
             </p>
-            <div className={styles.compareControls}>
-              <span className={styles.compareHint}>
-                Compare themes ({selectedThemes.length}/{compareCap})
-              </span>
-              {selectedThemes.length ? (
-                <button type="button" className={styles.clearBtn} onClick={() => setSelectedThemes([])}>
-                  Clear
-                </button>
-              ) : null}
-            </div>
-          </div>
-          <FactorTrendChart series={chartSeries} ariaLabel={`${selectedFactorLabel} factor chart`} />
-          <div className={styles.compareLegend}>
-            <span className={styles.legendItem}>
-              <span className={styles.legendSwatch} style={{ background: FACTOR_LINE_COLOR }} />
-              {selectedFactorLabel} factor
-            </span>
-            {selectedThemeSeries.map((item) => (
-              <span key={`legend-${item.slug}`} className={styles.legendItem}>
-                <span className={styles.legendSwatch} style={{ background: item.color }} />
-                {item.theme}
-              </span>
-            ))}
-          </div>
-        </div>
+          </>
         ) : null}
       </div>
-      {hasStandaloneScores ? (
-        <div className={styles.rankingToolbar}>
-          <div className={styles.rankingToolbarMain}>
-            <span className={styles.rankingToolbarLabel}>Rank by</span>
-            <div className={styles.scoreModeSwitch} role="group" aria-label="Rank by score type">
-              <button
-                type="button"
-                className={`${styles.scoreModeOption} ${effectiveScoreMode === "standalone" ? styles.scoreModeOptionActive : ""}`}
-                aria-pressed={effectiveScoreMode === "standalone"}
-                onClick={() => setScoreMode("standalone")}
-              >
-                Co-movement
-              </button>
-              <button
-                type="button"
-                className={`${styles.scoreModeOption} ${effectiveScoreMode === "incremental" ? styles.scoreModeOptionActive : ""}`}
-                aria-pressed={effectiveScoreMode === "incremental"}
-                onClick={() => setScoreMode("incremental")}
-              >
-                Incremental
-              </button>
-            </div>
-            <span className={styles.rankingToolbarHint}>
-              {SCORE_MODE_COPY[effectiveScoreMode].description}
-            </span>
-            <span className={styles.rankingToolbarMeta}>
-              {totalRows ? `${totalRows.toLocaleString()} themes` : null}
-              {indexPayload.as_of ? ` · ${indexPayload.as_of.slice(0, 10)}` : null}
-            </span>
-          </div>
+
+      {makeupVisited ? (
+        <div
+          id="factors-panel-makeup"
+          role="tabpanel"
+          aria-labelledby="factors-tab-makeup"
+          hidden={activeTab !== "makeup"}
+          className={styles.tabPanel}
+        >
+          <FactorMakeupPanel
+            dataBaseUrl={dataBaseUrl}
+            themes={makeupThemes}
+            maxThemes={makeupCap}
+            onThemesChange={onMakeupThemesChange}
+          />
         </div>
       ) : null}
-      <div className={styles.rankingGrid}>
-        <section className={styles.panel} aria-label="Closest themes">
-          <h3 className={styles.panelTitle}>
-            {SCORE_MODE_COPY[effectiveScoreMode].label} (Top{" "}
-            {Math.min(visibleClosestCount, 250)})
-          </h3>
-          <div className={styles.tableWrap}>
-            <FactorRankingTable
-              tableKey="closest"
-              rows={closestRows}
-              sort={closestSort}
-              onSortChange={setClosestSort}
-              effectiveScoreMode={effectiveScoreMode}
-              hasStandaloneScores={hasStandaloneScores}
-              selectedFactorId={selectedFactorId}
-              compareCap={compareCap}
-              selectedCompareCount={selectedThemes.length}
-              isSelectedTheme={isSelectedTheme}
-              onToggleTheme={toggleThemeSelection}
-            />
-          </div>
-          {visibleClosestCount < 250 ? (
-            <div className={styles.panelActions}>
-              <button
-                type="button"
-                className={styles.moreBtn}
-                onClick={() => setVisibleClosestCount((n) => Math.min(n + 50, 250))}
-              >
-                Show 50 more
-              </button>
-            </div>
-          ) : null}
-        </section>
-        <section className={styles.panel} aria-label="Least close themes">
-          <h3 className={styles.panelTitle}>
-            Lowest {SCORE_MODE_COPY[effectiveScoreMode].label.toLowerCase()} (Bottom{" "}
-            {Math.min(visibleLeastCount, 250)}
-            {totalRows ? ` of ${totalRows.toLocaleString()}` : ""})
-          </h3>
-          <div className={styles.tableWrap}>
-            <FactorRankingTable
-              tableKey="least"
-              rows={leastRows}
-              sort={leastSort}
-              onSortChange={setLeastSort}
-              effectiveScoreMode={effectiveScoreMode}
-              hasStandaloneScores={hasStandaloneScores}
-              selectedFactorId={selectedFactorId}
-              compareCap={compareCap}
-              selectedCompareCount={selectedThemes.length}
-              isSelectedTheme={isSelectedTheme}
-              onToggleTheme={toggleThemeSelection}
-            />
-          </div>
-          {visibleLeastCount < 250 ? (
-            <div className={styles.panelActions}>
-              <button
-                type="button"
-                className={styles.moreBtn}
-                onClick={() => setVisibleLeastCount((n) => Math.min(n + 50, 250))}
-              >
-                Show 50 more
-              </button>
-            </div>
-          ) : null}
-        </section>
-      </div>
-      <p className={styles.caption}>
-        {totalRows ? totalRows.toLocaleString() : "—"} ranked themes
-        {indexPayload.as_of ? ` · As of ${indexPayload.as_of.slice(0, 10)}` : ""}
-      </p>
     </div>
   );
 }

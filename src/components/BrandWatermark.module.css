@@ -1,0 +1,28 @@
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  pointer-events: none;
+  line-height: 1;
+  color: var(--nav-fg, var(--text-primary, #eaf2f0));
+  font-family: var(--font-geist-sans);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  opacity: 0.92;
+}
+
+.mark {
+  display: block;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  max-width: 16px;
+  max-height: 16px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.label {
+  white-space: nowrap;
+}

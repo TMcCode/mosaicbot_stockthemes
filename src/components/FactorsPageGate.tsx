@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { Suspense } from "react";
 
 import { FactorsPageClient } from "@/components/FactorsPageClient";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
@@ -38,7 +39,8 @@ export function FactorsPageGate({ dataBaseUrl, factorMethodology }: Props) {
         <div className={localStyles.signInPrompt}>
           <p className={localStyles.signInTitle}>Sign in to browse factor rankings</p>
           <p className={localStyles.signInCopy}>
-            Factor exposure scores and theme compare charts are available to signed-in accounts.
+            Factor exposure scores, theme compare charts, and factor makeup are available to
+            signed-in accounts.
           </p>
           <p className={localStyles.signInActions}>
             <Link href="/sign-in?next=%2Ffactors" className={localStyles.signInBtn}>
@@ -55,7 +57,9 @@ export function FactorsPageGate({ dataBaseUrl, factorMethodology }: Props) {
 
   return (
     <section className={`${styles.section} ${localStyles.content}`}>
-      <FactorsPageClient dataBaseUrl={dataBaseUrl} factorMethodology={factorMethodology} />
+      <Suspense fallback={<p className={styles.introCopy}>Loading…</p>}>
+        <FactorsPageClient dataBaseUrl={dataBaseUrl} factorMethodology={factorMethodology} />
+      </Suspense>
     </section>
   );
 }

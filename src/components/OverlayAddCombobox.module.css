@@ -77,3 +77,28 @@
   font-size: 11px;
   color: var(--color-text-muted, #a6abb9);
 }
+
+:global(.st-theme[data-theme="light"]) .input {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--color-border, rgba(0, 0, 0, 0.12));
+  color: var(--color-text, #12151a);
+}
+
+:global(.st-theme[data-theme="light"]) .input::placeholder {
+  color: var(--color-text-muted, #6e7d7b);
+}
+
+:global(.st-theme[data-theme="light"]) .input:focus {
+  outline-color: rgba(14, 140, 120, 0.35);
+}
+
+:global(.st-theme[data-theme="light"]) .panel {
+  background: var(--color-surface-elevated, #f7f5f2);
+  border-color: var(--color-border, rgba(0, 0, 0, 0.12));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .optionActive {
+  background: rgba(14, 140, 120, 0.1);
+}
+

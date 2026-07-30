@@ -10,7 +10,7 @@ import localStyles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Factor rankings",
-  description: "Browse theme rankings by factor exposure.",
+  description: "Browse theme rankings by factor exposure and compare theme factor makeup.",
   path: "/factors",
 });
 
@@ -25,7 +25,9 @@ export default async function FactorsPage() {
           <p className={styles.eyebrow}>Factor rankings</p>
           <div className={localStyles.introHeadingGroup}>
             <h1>Rank themes by factor exposure</h1>
-            <p className={styles.introLead}>Choose a factor and view every theme ranked by exposure score.</p>
+            <p className={styles.introLead}>
+              Choose a factor for rankings, or compare theme factor makeup across ETF spreads.
+            </p>
           </div>
           {!dataBaseUrl ? (
             <p className={styles.introLead}>Public factor data source is unavailable in this environment.</p>

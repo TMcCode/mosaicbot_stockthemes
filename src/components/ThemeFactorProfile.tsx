@@ -312,8 +312,11 @@ export function ThemeFactorProfile({
         <h2 id="factor-profile-heading" className={styles.heroTitle}>
           Factor Profile
         </h2>
-        <Link href="/factors" className={styles.heroLink}>
-          Browse all factor rankings
+        <Link
+          href={`/factors?tab=makeup&themes=${encodeURIComponent(slug)}`}
+          className={styles.heroLink}
+        >
+          Compare factor makeup
         </Link>
       </div>
       <FactorProfileBody state={state} />

@@ -1,0 +1,174 @@
+.wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  margin: 10px 0 0 18px;
+  min-height: 100%;
+  box-sizing: border-box;
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.brandMark {
+  margin-top: auto;
+  align-self: flex-end;
+  padding-top: 10px;
+  pointer-events: none;
+}
+
+.gridRing {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.08);
+  stroke-width: 1;
+}
+
+.medianRing {
+  fill: none;
+  stroke: rgba(38, 252, 214, 0.35);
+  stroke-width: 1.25;
+  stroke-dasharray: 4 4;
+}
+
+.spoke {
+  stroke: rgba(255, 255, 255, 0.1);
+  stroke-width: 1;
+}
+
+.spokeSelected {
+  stroke: rgba(38, 252, 214, 0.55);
+  stroke-width: 2;
+}
+
+.seriesGroup {
+  cursor: pointer;
+}
+
+.seriesPoly {
+  transition: fill-opacity 0.15s ease, stroke-width 0.15s ease;
+}
+
+.point {
+  stroke: rgba(4, 5, 6, 0.55);
+  stroke-width: 1;
+}
+
+.axisHit {
+  pointer-events: auto;
+}
+
+.axisLabel {
+  fill: var(--text-secondary, #9aa8a6);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+.axisLabelSelected {
+  fill: var(--accent, #26fcd6);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  pointer-events: none;
+}
+
+.medianLabel {
+  fill: rgba(38, 252, 214, 0.7);
+  font-size: 10px;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.tooltip {
+  position: absolute;
+  left: 50%;
+  bottom: 30px;
+  transform: translateX(-50%);
+  width: min(340px, calc(100% - 16px));
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(8, 10, 12, 0.92);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.tooltipTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-primary, #e8edec);
+}
+
+.tooltipSwatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.tooltipAxis {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.tooltipScore {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--text-primary, #e8edec);
+}
+
+.tooltipMethod {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-muted, #8c9a98);
+}
+
+:global(.st-theme[data-theme="light"]) .gridRing {
+  stroke: rgba(0, 0, 0, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .spoke {
+  stroke: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .spokeSelected {
+  stroke: rgba(14, 140, 120, 0.55);
+}
+
+:global(.st-theme[data-theme="light"]) .medianRing {
+  stroke: rgba(14, 140, 120, 0.45);
+}
+
+:global(.st-theme[data-theme="light"]) .tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  border-color: rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .point {
+  stroke: rgba(255, 255, 255, 0.7);
+}
+
+@media (max-width: 700px) {
+  .axisLabel,
+  .axisLabelSelected {
+    font-size: 9.5px;
+  }
+
+  .tooltip {
+    bottom: 8px;
+  }
+}

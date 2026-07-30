@@ -3,6 +3,53 @@
   min-width: 0;
 }
 
+.pageTabs {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 2px;
+  margin: 0 0 14px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.pageTab {
+  border: none;
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+.pageTab:hover {
+  color: var(--text-primary, #e8edec);
+}
+
+.pageTabActive {
+  background: rgba(38, 252, 214, 0.14);
+  color: var(--accent, #26fcd6);
+}
+
+.tabPanel {
+  width: 100%;
+  min-width: 0;
+}
+
+:global(.st-theme[data-theme="light"]) .pageTabs {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .pageTabActive {
+  background: rgba(14, 140, 120, 0.12);
+}
+
 .chartSection {
   margin: 0 0 10px;
   width: 100%;
