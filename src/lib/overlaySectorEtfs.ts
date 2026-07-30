@@ -22,6 +22,8 @@ export type OverlaySectorEtfCatalogEntry = {
   ticker: string;
   name: string;
   performance?: ChartPerformanceV0;
+  /** Live/session 1D % from etf_benchmarks compare_returns (for session-day chart tail). */
+  dayReturnPct?: number | null;
 };
 
 export function overlaySectorItemKey(ticker: string): string {
@@ -33,6 +35,14 @@ export function parseOverlaySectorItemKey(raw: string): string | null {
   if (!s.startsWith("etf:")) return null;
   const ticker = s.slice(4).trim().toUpperCase();
   return ticker || null;
+}
+
+function dayReturnPctFromCompareMetrics(
+  metrics: Record<string, number | null | undefined> | undefined,
+): number | null {
+  const raw = metrics?.["1D"];
+  if (typeof raw !== "number" || !Number.isFinite(raw)) return null;
+  return raw;
 }
 
 /** Sector SPDRs with indexed performance for overlay chart (excludes SPY). */
@@ -49,7 +59,20 @@ export function mapOverlaySectorEtfCatalog(
       ticker,
       name: String(row.name || ticker).trim(),
       performance: perf,
+      dayReturnPct: dayReturnPctFromCompareMetrics(row.compare_returns?.metrics),
     };
   }
   return out;
+}
+
+/** SPY row 1D from etf_benchmarks (when present). */
+export function spyDayReturnPctFromEtfBenchmarks(
+  bundle: EtfBenchmarksV0 | null | undefined,
+): number | null {
+  for (const row of bundle?.rows ?? []) {
+    const ticker = String(row.ticker || "").trim().toUpperCase();
+    if (ticker !== "SPY") continue;
+    return dayReturnPctFromCompareMetrics(row.compare_returns?.metrics);
+  }
+  return null;
 }

@@ -14,11 +14,18 @@ import {
   overlayItemKey,
   parseOverlayItemKey,
 } from "@/lib/chartSidecar";
+import {
+  etSessionIsoDay,
+  maybeExtendIndexedPerformanceFromLiveDayReturn,
+} from "@/lib/extendCompositionLiveTail";
 import { OVERLAY_CHART_PALETTE } from "@/lib/overlayChartPalette";
 import {
+  mapOverlaySectorEtfCatalog,
   overlaySectorItemKey,
+  spyDayReturnPctFromEtfBenchmarks,
   type OverlaySectorEtfCatalogEntry,
 } from "@/lib/overlaySectorEtfs";
+import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
 import {
   buildThemeTickersPreviewMapFromSearchIndex,
   loadSiteSearchEngine,
@@ -32,7 +39,15 @@ import {
   type OverlayChartPeriod,
   type OverlayStandardPeriod,
 } from "@/lib/sliceIndexedChart";
+import {
+  priceReturnsBrowserCacheBusterQuery,
+  priceReturnsRevalidateSeconds,
+  stockthemesBrowserFetchCache,
+} from "@/lib/stockthemesCache";
+import { stockthemesLiveChartPerformanceEnabled } from "@/lib/stockthemesClientConfig";
+import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
+import type { EtfBenchmarksV0 } from "@/types/etf_benchmarks.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import pageStyles from "@/app/page.module.css";
@@ -137,6 +152,17 @@ export function OverlayPageClient({
   const [selectedSectorTickers, setSelectedSectorTickers] = useState<string[]>(() =>
     sectorsFromSearchParams(searchParams, sectorEtfCatalog),
   );
+  const [liveSectorCatalog, setLiveSectorCatalog] = useState<Record<
+    string,
+    OverlaySectorEtfCatalogEntry
+  > | null>(null);
+  const [liveBenchmarkPerformance, setLiveBenchmarkPerformance] = useState<ChartPerformanceV0 | null>(
+    null,
+  );
+  const [liveSpyDayReturnPct, setLiveSpyDayReturnPct] = useState<number | null>(null);
+
+  const activeSectorCatalog = liveSectorCatalog ?? sectorEtfCatalog;
+  const activeBenchmarkPerformance = liveBenchmarkPerformance ?? benchmarkPerformance;
 
   const customPeriods = useMemo(() => {
     const rows = selectedDates ?? [];
@@ -199,7 +225,7 @@ export function OverlayPageClient({
     });
 
     try {
-      const sidecar = await fetchChartSidecar(pick.kind, pick.slug, ac.signal);
+      const sidecar = await fetchChartSidecar(pick.kind, pick.slug, ac.signal, { live: true });
       if (!sidecar) {
         setItems((prev) =>
           prev.map((p) =>
@@ -251,6 +277,60 @@ export function OverlayPageClient({
     }
     // Initial URL hydration only.
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** One slim etf_benchmarks + spy_snapshot refresh (shared ~5 min bucket). No per-series polls. */
+  useEffect(() => {
+    if (!stockthemesLiveChartPerformanceEnabled()) return;
+    const base = stockthemesPublicDataBase();
+    if (!base) return;
+
+    let cancelled = false;
+    const refresh = () => {
+      const q = priceReturnsBrowserCacheBusterQuery();
+      void Promise.all([
+        fetch(`${base}/etf_benchmarks.v0.json?${q}`, {
+          credentials: "omit",
+          cache: stockthemesBrowserFetchCache(),
+        }).then(async (res) => {
+          if (!res.ok) return null;
+          return (await res.json()) as EtfBenchmarksV0;
+        }),
+        fetch(`${base}/spy_snapshot.v0.json?${q}`, {
+          credentials: "omit",
+          cache: stockthemesBrowserFetchCache(),
+        }).then(async (res) => {
+          if (!res.ok) return null;
+          return parseSpySnapshotJson(await res.json());
+        }),
+      ])
+        .then(([etfBundle, spy]) => {
+          if (cancelled) return;
+          if (etfBundle?.rows?.length) {
+            const mapped = mapOverlaySectorEtfCatalog(etfBundle);
+            if (Object.keys(mapped).length) setLiveSectorCatalog(mapped);
+            setLiveSpyDayReturnPct(spyDayReturnPctFromEtfBenchmarks(etfBundle));
+          }
+          const spyPerf = spy?.benchmarkPerformance;
+          if (spyPerf?.dates?.length && spyPerf?.values?.length) {
+            setLiveBenchmarkPerformance(spyPerf);
+          }
+          const spyMetric1d = spy?.compareReturns?.metrics?.["1D"];
+          if (typeof spyMetric1d === "number" && Number.isFinite(spyMetric1d)) {
+            setLiveSpyDayReturnPct(spyMetric1d);
+          }
+        })
+        .catch(() => {
+          /* keep SSR snapshot on transient CDN errors */
+        });
+    };
+
+    refresh();
+    const id = window.setInterval(refresh, priceReturnsRevalidateSeconds() * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
   }, []);
 
   const themeSlugsNeedingPreview = useMemo(
@@ -383,10 +463,40 @@ export function OverlayPageClient({
     });
   }, []);
 
+  const sessionIso = etSessionIsoDay();
+
+  const resolvedBenchmarkPerformance = useMemo(() => {
+    return (
+      maybeExtendIndexedPerformanceFromLiveDayReturn(
+        activeBenchmarkPerformance,
+        sessionIso,
+        liveSpyDayReturnPct,
+      ) ?? activeBenchmarkPerformance
+    );
+  }, [activeBenchmarkPerformance, sessionIso, liveSpyDayReturnPct]);
+
+  const resolvedSectorCatalog = useMemo(() => {
+    const out: Record<string, OverlaySectorEtfCatalogEntry> = {};
+    for (const [ticker, entry] of Object.entries(activeSectorCatalog)) {
+      const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
+        entry.performance,
+        sessionIso,
+        entry.dayReturnPct,
+      );
+      out[ticker] =
+        extended && extended !== entry.performance
+          ? { ...entry, performance: extended }
+          : entry;
+    }
+    return out;
+  }, [activeSectorCatalog, sessionIso]);
+
   const referenceLastIso = useMemo(() => {
     const ends: string[] = [];
-    if (benchmarkPerformance?.dates?.length) {
-      ends.push(String(benchmarkPerformance.dates[benchmarkPerformance.dates.length - 1]));
+    if (resolvedBenchmarkPerformance?.dates?.length) {
+      ends.push(
+        String(resolvedBenchmarkPerformance.dates[resolvedBenchmarkPerformance.dates.length - 1]),
+      );
     }
     for (const item of items) {
       const d = item.rawPerformance?.dates;
@@ -394,19 +504,25 @@ export function OverlayPageClient({
     }
     if (showSectorEtfs) {
       for (const ticker of activeSectorTickers) {
-        const d = sectorEtfCatalog[ticker]?.performance?.dates;
+        const d = resolvedSectorCatalog[ticker]?.performance?.dates;
         if (d?.length) ends.push(String(d[d.length - 1]));
       }
     }
     const normalized = ends.map((x) => x.trim().slice(0, 10)).filter((x) => x.length >= 10);
     normalized.sort();
     return normalized.at(-1);
-  }, [items, benchmarkPerformance, showSectorEtfs, activeSectorTickers, sectorEtfCatalog]);
+  }, [
+    items,
+    resolvedBenchmarkPerformance,
+    showSectorEtfs,
+    activeSectorTickers,
+    resolvedSectorCatalog,
+  ]);
 
   const loadedChartPerformances = useMemo((): ChartPerformanceV0[] => {
     const performances: ChartPerformanceV0[] = [];
-    if (showBenchmark && benchmarkPerformance?.dates?.length) {
-      performances.push(benchmarkPerformance);
+    if (showBenchmark && resolvedBenchmarkPerformance?.dates?.length) {
+      performances.push(resolvedBenchmarkPerformance);
     }
     for (const item of items) {
       if (!item.loading && !item.error && item.rawPerformance?.dates?.length) {
@@ -415,12 +531,19 @@ export function OverlayPageClient({
     }
     if (showSectorEtfs) {
       for (const ticker of activeSectorTickers) {
-        const perf = sectorEtfCatalog[ticker]?.performance;
+        const perf = resolvedSectorCatalog[ticker]?.performance;
         if (perf?.dates?.length) performances.push(perf);
       }
     }
     return performances;
-  }, [items, benchmarkPerformance, showBenchmark, showSectorEtfs, activeSectorTickers, sectorEtfCatalog]);
+  }, [
+    items,
+    resolvedBenchmarkPerformance,
+    showBenchmark,
+    showSectorEtfs,
+    activeSectorTickers,
+    resolvedSectorCatalog,
+  ]);
 
   const supportedPeriods = useMemo(
     () => computeOverlaySupportedPeriods(referenceLastIso, loadedChartPerformances),
@@ -488,7 +611,7 @@ export function OverlayPageClient({
 
     if (showSectorEtfs) {
       activeSectorTickers.forEach((ticker) => {
-        const entry = sectorEtfCatalog[ticker];
+        const entry = resolvedSectorCatalog[ticker];
         const raw = entry?.performance;
         if (!raw?.dates?.length) return;
         const sliced = sliceAndRebaseIndexedPerformance(raw, period, anchor, referenceLastIso);
@@ -515,21 +638,21 @@ export function OverlayPageClient({
     groupLegendMetaBySlug,
     showSectorEtfs,
     activeSectorTickers,
-    sectorEtfCatalog,
+    resolvedSectorCatalog,
   ]);
 
   const benchmarkSliced = useMemo(() => {
-    if (!benchmarkPerformance) return undefined;
+    if (!resolvedBenchmarkPerformance) return undefined;
     const anchor = isStandardPeriod(period) ? undefined : customAnchorByKey.get(normalizeEventKey(period));
     return (
       sliceAndRebaseIndexedPerformance(
-        benchmarkPerformance,
+        resolvedBenchmarkPerformance,
         period,
         anchor,
         referenceLastIso,
       ) ?? undefined
     );
-  }, [benchmarkPerformance, period, customAnchorByKey, referenceLastIso]);
+  }, [resolvedBenchmarkPerformance, period, customAnchorByKey, referenceLastIso]);
 
   const colorByKey = useMemo(() => {
     const m = new Map<string, string>();
@@ -647,7 +770,7 @@ export function OverlayPageClient({
               </span>
             ))}
             {activeSectorTickers.map((ticker) => {
-              const entry = sectorEtfCatalog[ticker];
+              const entry = activeSectorCatalog[ticker];
               if (!entry) return null;
               return (
                 <span key={overlaySectorItemKey(ticker)} className={styles.chip}>
