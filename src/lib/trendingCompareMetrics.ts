@@ -13,8 +13,8 @@ const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
 
 const DEFAULT_COLUMN_ORDER = [
   "Premarket",
-  "1D",
   "Postmarket",
+  "1D",
   "10D",
   "MTD",
   "YTD",
@@ -26,8 +26,8 @@ const DEFAULT_COLUMN_ORDER = [
 /** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
   "Premarket",
-  "1D",
   "Postmarket",
+  "1D",
   "10D",
   "MTD",
   "LstRpt %",
@@ -48,7 +48,7 @@ const COMPARE_STANDARD_KEYS = new Set<string>([
 
 /**
  * Parquet row column order can put ``Period`` (1Yr) first; homepage should show
- * 1D → 10D → MTD → YTD → 1Yr, then custom SelectedDates columns in source order.
+ * Pre/Post (when active) → 1D → 10D → MTD → YTD → 1Yr, then custom SelectedDates.
  */
 export function normalizeTrendingColumnOrder(cols: string[]): string[] {
   if (!cols.length) return [...DEFAULT_COLUMN_ORDER];

@@ -38,7 +38,7 @@ export type ShortThemeCompareReturns = {
 };
 
 /** Horizons overwritten from long constituent price_returns after short inversion. */
-const SHORT_CONSTITUENT_HORIZON_KEYS = ["Premarket", "1D", "Postmarket", "10D"] as const;
+const SHORT_CONSTITUENT_HORIZON_KEYS = ["Premarket", "Postmarket", "1D", "10D"] as const;
 
 function negateFiniteMetrics(
   metrics: Record<string, number | null>,

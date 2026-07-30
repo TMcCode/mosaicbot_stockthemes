@@ -5,8 +5,8 @@ export const CONSTITUENT_PREMARKET_COL = "Premarket" as const;
 export const CONSTITUENT_POSTMARKET_COL = "Postmarket" as const;
 export const CONSTITUENT_STANDARD_RETURN_HEAD = [
   CONSTITUENT_PREMARKET_COL,
-  "1D",
   CONSTITUENT_POSTMARKET_COL,
+  "1D",
   "10D",
   "MTD",
   "YTD",
