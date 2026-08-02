@@ -33,9 +33,15 @@ const CX = SIZE / 2;
 const CY = SIZE / 2;
 const RADIUS = 168;
 const LABEL_R = RADIUS + 28;
+/**
+ * ViewBox crops empty canvas. Keep horizontal pad tight so east/west labels
+ * (Quality, Spec. Beta, etc.) stay inside the SVG box — page overflow-x:hidden
+ * clips anything painted outside the element.
+ */
+const VIEW_PAD_X = 6;
 /** Modest top crop so the chart sits closer under the title without ballooning. */
-const VIEW_PAD = 44;
 const VIEW_TOP = 40;
+const VIEW_BOTTOM = 44;
 const LEVELS = [20, 40, 50, 60, 80, 100];
 const MEDIAN = 50;
 
@@ -125,7 +131,7 @@ export function FactorMakeupRadar({
     <div className={styles.wrap}>
       <svg
         className={styles.svg}
-        viewBox={`${VIEW_PAD} ${VIEW_TOP} ${SIZE - 2 * VIEW_PAD} ${SIZE - VIEW_TOP - VIEW_PAD}`}
+        viewBox={`${VIEW_PAD_X} ${VIEW_TOP} ${SIZE - 2 * VIEW_PAD_X} ${SIZE - VIEW_TOP - VIEW_BOTTOM}`}
         role="img"
         aria-label={ariaLabel ?? "Factor makeup radar chart"}
       >
@@ -203,12 +209,14 @@ export function FactorMakeupRadar({
           const full = factorDisplayLabel(axisId, short);
           const tip = factorTooltipSummaryForId(axisId);
           const selected = selectedAxisId === axisId;
+          const sin = Math.sin(s.angle);
           const anchor =
-            Math.abs(Math.sin(s.angle)) < 0.2
-              ? "middle"
-              : Math.sin(s.angle) > 0
-                ? "start"
-                : "end";
+            Math.abs(sin) < 0.2 ? "middle" : sin > 0 ? "start" : "end";
+          // Nudge start/end labels slightly inward so long rim text stays in-frame.
+          const labelX =
+            Math.abs(sin) < 0.2
+              ? s.labelPos.x
+              : s.labelPos.x - Math.sign(sin) * 4;
           return (
             <g
               key={`label-${axisId}`}
@@ -218,13 +226,13 @@ export function FactorMakeupRadar({
             >
               <title>{tip ? `${full}: ${tip}` : full}</title>
               <circle
-                cx={s.labelPos.x}
+                cx={labelX}
                 cy={s.labelPos.y}
                 r={18}
                 fill="transparent"
               />
               <text
-                x={s.labelPos.x}
+                x={labelX}
                 y={s.labelPos.y}
                 textAnchor={anchor}
                 dominantBaseline="middle"
