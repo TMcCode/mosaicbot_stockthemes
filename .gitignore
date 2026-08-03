@@ -25,6 +25,9 @@
 # Generated at build (see scripts/fetch-search-index.mjs)
 /public/search_index.v0.json
 
+# Generated at build (revenue + quality_risk same-origin sidecars; see sync-build-cache.mjs)
+/public/data/
+
 # CI/static-export GCS mirror (see scripts/sync-build-cache.mjs)
 /.cache/stockthemes-public/
 /.cache/generated-assets/

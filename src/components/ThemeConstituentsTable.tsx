@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useMemo, useState } from "react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 
@@ -42,6 +42,7 @@ import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import { useThemeQualityRiskSidecar } from "@/hooks/useThemeQualityRiskSidecar";
 import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
+import { prefetchThemeRevenueSidecar } from "@/lib/prefetchThemeRevenueSidecar";
 
 const ThemeConstituentsRevenuePanel = dynamic(
   () =>
@@ -170,18 +171,69 @@ export function ThemeConstituentsTable({
 }: Props) {
   const [view, setView] = useState<TableView>("returns");
   const [sorts, setSorts] = useState<ConstituentSortState[]>(DEFAULT_CONSTITUENT_SORT);
+  const [mountedPanels, setMountedPanels] = useState({
+    revenue: false,
+    revisions: false,
+    quality_risk: false,
+  });
   const { configured, loading: authLoading, user } = useSupabaseAuth();
   const hasProtectedAccess = configured && !authLoading && Boolean(user);
   const protectedLocked = !authLoading && !hasProtectedAccess;
   const isProtectedView = view === "revenue" || view === "revisions" || view === "quality_risk";
+  const showRevenue = view === "revenue";
+  const showRevisions = view === "revisions";
+  const showQualityRisk = view === "quality_risk";
+  const keepRevenueMounted = mountedPanels.revenue || showRevenue;
+  const keepRevisionsMounted = mountedPanels.revisions || showRevisions;
+  const keepQualityRiskMounted = mountedPanels.quality_risk || showQualityRisk;
   const needsRevenueSidecar =
-    hasProtectedAccess && (view === "revenue" || view === "revisions");
+    hasProtectedAccess && (keepRevenueMounted || keepRevisionsMounted);
   const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
   const qualityRiskState = useThemeQualityRiskSidecar(
     slug,
     dataBaseUrl,
-    hasProtectedAccess && view === "quality_risk",
+    hasProtectedAccess && keepQualityRiskMounted,
   );
+
+  useEffect(() => {
+    if (!hasProtectedAccess) return;
+    setMountedPanels((prev) => {
+      const next = {
+        revenue: prev.revenue || showRevenue,
+        revisions: prev.revisions || showRevisions,
+        quality_risk: prev.quality_risk || showQualityRisk,
+      };
+      if (
+        next.revenue === prev.revenue &&
+        next.revisions === prev.revisions &&
+        next.quality_risk === prev.quality_risk
+      ) {
+        return prev;
+      }
+      return next;
+    });
+  }, [hasProtectedAccess, showRevenue, showRevisions, showQualityRisk]);
+
+  // Warm revenue sidecar after sign-in so the first Revenue click skips the cold fetch.
+  useEffect(() => {
+    if (!hasProtectedAccess || !slug || !dataBaseUrl) return;
+    let idleId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const run = () => {
+      void prefetchThemeRevenueSidecar(slug, dataBaseUrl);
+    };
+    if (typeof window !== "undefined" && "requestIdleCallback" in window) {
+      idleId = window.requestIdleCallback(run, { timeout: 2500 });
+    } else {
+      timeoutId = setTimeout(run, 400);
+    }
+    return () => {
+      if (idleId != null && typeof window !== "undefined" && "cancelIdleCallback" in window) {
+        window.cancelIdleCallback(idleId);
+      }
+      if (timeoutId != null) clearTimeout(timeoutId);
+    };
+  }, [hasProtectedAccess, slug, dataBaseUrl]);
   const signInHref = `/sign-in?next=${encodeURIComponent(slug ? `/themes/${slug}` : "/themes")}`;
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
@@ -256,9 +308,6 @@ export function ThemeConstituentsTable({
 
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
-  const showRevenue = view === "revenue";
-  const showRevisions = view === "revisions";
-  const showQualityRisk = view === "quality_risk";
   const themeCompare = detail.compare_returns;
   const showThemeReturnRow =
     (view === "returns" || view === "earnings") &&
@@ -365,19 +414,29 @@ export function ThemeConstituentsTable({
       {isProtectedView && !authLoading && !hasProtectedAccess ? (
         <ProtectedTablePrompt signInHref={signInHref} />
       ) : null}
-      {hasProtectedAccess && showRevenue && slug && dataBaseUrl ? (
-        <ThemeConstituentsRevenuePanel detail={detail} sidecarState={sidecarState} />
-      ) : null}
-      {hasProtectedAccess && showRevisions && slug && dataBaseUrl ? (
-        <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
-      ) : null}
-      {hasProtectedAccess && showQualityRisk && slug && dataBaseUrl ? (
-        <ThemeConstituentsQualityRiskPanel
-          detail={detail}
-          sidecarState={qualityRiskState}
-          slug={slug}
-          dataBaseUrl={dataBaseUrl}
-        />
+      {hasProtectedAccess && slug && dataBaseUrl ? (
+        <>
+          {keepRevenueMounted ? (
+            <div hidden={!showRevenue} aria-hidden={!showRevenue}>
+              <ThemeConstituentsRevenuePanel detail={detail} sidecarState={sidecarState} />
+            </div>
+          ) : null}
+          {keepRevisionsMounted ? (
+            <div hidden={!showRevisions} aria-hidden={!showRevisions}>
+              <ThemeConstituentsRevisionsPanel detail={detail} sidecarState={sidecarState} />
+            </div>
+          ) : null}
+          {keepQualityRiskMounted ? (
+            <div hidden={!showQualityRisk} aria-hidden={!showQualityRisk}>
+              <ThemeConstituentsQualityRiskPanel
+                detail={detail}
+                sidecarState={qualityRiskState}
+                slug={slug}
+                dataBaseUrl={dataBaseUrl}
+              />
+            </div>
+          ) : null}
+        </>
       ) : null}
       {hasProtectedAccess && (showRevenue || showRevisions) && (!slug || !dataBaseUrl) ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>

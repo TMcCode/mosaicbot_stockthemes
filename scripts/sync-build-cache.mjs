@@ -138,6 +138,46 @@ function seedHomeCommentaryFromFixture() {
 }
 
 async function syncFactorProfileSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  return syncThemeSidecarFiles({
+    manifestJson,
+    base,
+    objectMeta,
+    force,
+    suffix: ".factor_profile.v0.json",
+    label: "factor profiles",
+  });
+}
+
+async function syncRevenueSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  return syncThemeSidecarFiles({
+    manifestJson,
+    base,
+    objectMeta,
+    force,
+    suffix: ".revenue.v0.json",
+    label: "revenue sidecars",
+  });
+}
+
+async function syncQualityRiskSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  return syncThemeSidecarFiles({
+    manifestJson,
+    base,
+    objectMeta,
+    force,
+    suffix: ".quality_risk.v0.json",
+    label: "quality/risk sidecars",
+  });
+}
+
+async function syncThemeSidecarFiles({
+  manifestJson,
+  base,
+  objectMeta,
+  force = false,
+  suffix,
+  label,
+}) {
   const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
   if (!themeSlugs.length) return;
 
@@ -145,14 +185,14 @@ async function syncFactorProfileSidecars(manifestJson, base, objectMeta, { force
   let missing = 0;
   const concurrency = Math.max(1, Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)));
   await pool(themeSlugs, concurrency, async (slug) => {
-    const rel = `themes/${slug}.factor_profile.v0.json`;
+    const rel = `themes/${slug}${suffix}`;
     if (!force && cacheFileOk(rel)) {
       ok += 1;
       return;
     }
     try {
       await fetchToCache(
-        `${base}/themes/${encodeURIComponent(slug)}.factor_profile.v0.json`,
+        `${base}/themes/${encodeURIComponent(slug)}${suffix}`,
         rel,
         objectMeta,
       );
@@ -163,11 +203,57 @@ async function syncFactorProfileSidecars(manifestJson, base, objectMeta, { force
         missing += 1;
         return;
       }
-      console.warn(`sync-build-cache: factor profile ${rel} failed:`, msg);
+      console.warn(`sync-build-cache: ${label} ${rel} failed:`, msg);
     }
   });
   console.log(
-    `sync-build-cache: factor profiles ok=${ok} missing=${missing} total=${themeSlugs.length}`,
+    `sync-build-cache: ${label} ok=${ok} missing=${missing} total=${themeSlugs.length}`,
+  );
+}
+
+async function syncDailyThemeSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
+  await syncRevenueSidecars(manifestJson, base, objectMeta, { force });
+  await syncQualityRiskSidecars(manifestJson, base, objectMeta, { force });
+}
+
+/** Copy daily table sidecars into public/ so theme pages can fetch same-origin (no HTML embed). */
+function publishThemeTableSidecarsToPublic(manifestJson) {
+  const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
+  const suffixes = [".revenue.v0.json", ".quality_risk.v0.json"];
+  const outDir = path.join(root, "public", "data", "themes");
+  fs.mkdirSync(outDir, { recursive: true });
+
+  const keep = new Set();
+  let copied = 0;
+  let missing = 0;
+  for (const slug of themeSlugs) {
+    for (const suffix of suffixes) {
+      const fileName = `${slug}${suffix}`;
+      keep.add(fileName);
+      const src = cachePath(`themes/${slug}${suffix}`);
+      const dest = path.join(outDir, fileName);
+      if (!fs.existsSync(src)) {
+        missing += 1;
+        if (fs.existsSync(dest)) fs.unlinkSync(dest);
+        continue;
+      }
+      fs.copyFileSync(src, dest);
+      copied += 1;
+    }
+  }
+
+  let pruned = 0;
+  for (const file of fs.readdirSync(outDir)) {
+    if (!file.endsWith(".json")) continue;
+    if (keep.has(file)) continue;
+    fs.unlinkSync(path.join(outDir, file));
+    pruned += 1;
+  }
+
+  console.log(
+    `sync-build-cache: published table sidecars → public/data/themes/ ` +
+      `copied=${copied} missing=${missing} pruned=${pruned}`,
   );
 }
 
@@ -225,7 +311,9 @@ async function syncIntradayBundles(base, objectMeta, { force = false } = {}) {
 }
 
 function themeSidecarBaseSlug(filename) {
-  const m = String(filename || "").match(/^(.+)\.(factor_profile\.v0|chart\.v0)\.json$/);
+  const m = String(filename || "").match(
+    /^(.+)\.(factor_profile\.v0|chart\.v0|revenue\.v0|quality_risk\.v0)\.json$/,
+  );
   return m ? m[1] : null;
 }
 
@@ -426,7 +514,8 @@ async function main() {
     }
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta);
-    await syncFactorProfileSidecars(manifestJson, base, objectMeta);
+    await syncDailyThemeSidecars(manifestJson, base, objectMeta);
+    publishThemeTableSidecarsToPublic(manifestJson);
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
@@ -524,7 +613,8 @@ async function main() {
 
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta, { force });
-    await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
+    await syncDailyThemeSidecars(manifestJson, base, objectMeta, { force });
+    publishThemeTableSidecarsToPublic(manifestJson);
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   }
 
