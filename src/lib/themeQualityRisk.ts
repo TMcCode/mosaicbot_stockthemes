@@ -272,6 +272,9 @@ function normalizeRisk(root: Record<string, unknown>): ThemeQualityRiskRiskV0 | 
     ),
     beta: finiteNumber(firstValue(source, ["beta", "fmp_beta"])),
     short_float_pct: finiteNumber(firstValue(source, ["short_float_pct", "short_pct_float"])),
+    inside_ownership_pct: finiteNumber(
+      firstValue(source, ["inside_ownership_pct", "percent_insiders", "insider_ownership_pct"]),
+    ),
   };
   return Object.values(out).some((value) => value !== undefined) ? out : undefined;
 }
@@ -499,6 +502,13 @@ export function qualityRiskColumns(
       tooltip: "Shares sold short as a percentage of public float. Higher values indicate greater bearish positioning and potential financing or sentiment concern, but can also increase short-squeeze risk. Compare with sector peers.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.short_float_pct,
+    },
+    {
+      id: "inside_ownership_pct",
+      label: "Inside\nOwnership %",
+      tooltip: "Shares held by corporate insiders as a percentage of shares outstanding. Higher ownership can signal alignment with shareholders; very high values may also reduce free float. Coverage depends on filing data availability.",
+      format: "pct",
+      getValue: (metrics) => metrics?.risk?.inside_ownership_pct,
     },
   ];
 }

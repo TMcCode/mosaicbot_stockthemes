@@ -72,6 +72,8 @@ export type ThemeQualityRiskRiskV0 = {
   /** Current beta reported by the FMP company profile. */
   beta?: number | null;
   short_float_pct?: number | null;
+  /** Insider ownership as a percentage of shares outstanding (percent points). */
+  inside_ownership_pct?: number | null;
 };
 
 export type ThemeQualityRiskMetricsV0 = {

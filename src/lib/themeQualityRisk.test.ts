@@ -123,6 +123,7 @@ test("orders earnings quality, balance sheet, and dilution risk metrics", () => 
       "diluted_shares_yoy_pct",
       "beta",
       "short_float_pct",
+      "inside_ownership_pct",
     ],
   );
 });
