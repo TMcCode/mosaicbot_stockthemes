@@ -83,14 +83,14 @@ export function ComparePageClient({
     [rows, liveCompareBundle?.rows],
   );
   const fullColumns = useMemo(() => {
-    const fromRows = normalizeCompareColumnOrder(
-      resolveTrendingColumnOrder(
-        rowsWithLiveCompare.map((row) => ({
-          compare_returns: row.compareReturns ?? undefined,
-        })),
-      ),
+    const fromLive = resolveTrendingColumnOrder(
+      rowsWithLiveCompare.map((row) => ({
+        compare_returns: row.compareReturns ?? undefined,
+      })),
     );
-    return fromRows.length > 0 ? fromRows : columns;
+    const hasLiveCols = rowsWithLiveCompare.some((r) => (r.compareReturns?.columns?.length ?? 0) > 0);
+    // Always re-normalize so CDN order (1D before Post) cannot leak through.
+    return normalizeCompareColumnOrder(hasLiveCols && fromLive.length ? fromLive : columns);
   }, [rowsWithLiveCompare, columns]);
   const visibleColumns = useSessionVisibleColumns(fullColumns);
   const groupRows = useMemo<Row[]>(
