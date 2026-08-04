@@ -185,7 +185,15 @@ export function CheckboxMultiSelectDropdown({
           ▾
         </span>
       </button>
-      {mounted && panel ? createPortal(panel, document.body) : null}
+      {mounted && panel
+        ? createPortal(
+            panel,
+            // Stay under theme surface so --card-surface / --text-* resolve (body has dark fallbacks only).
+            (wrapRef.current?.closest(".st-surface") as HTMLElement | null) ??
+              (wrapRef.current?.closest(".st-theme") as HTMLElement | null) ??
+              document.body,
+          )
+        : null}
     </div>
   );
 }

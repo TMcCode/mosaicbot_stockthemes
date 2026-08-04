@@ -99,8 +99,38 @@
   border-radius: 8px;
   border: 1px solid var(--button-secondary-border);
   background: var(--card-surface, #151820);
+  color: var(--text-primary, #eaf2f0);
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
   pointer-events: auto;
+}
+
+/* html[data-theme] is set on <html>; covers portal fallback to body outside .st-surface */
+:global(html[data-theme="light"]) .panel {
+  background: var(--card-surface, rgba(255, 255, 255, 0.98));
+  color: var(--text-primary, #1e1c36);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+}
+
+:global(html[data-theme="light"]) .option {
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(html[data-theme="light"]) .option:hover {
+  background: var(--button-secondary-hover, rgba(59, 77, 161, 0.06));
+}
+
+:global(html[data-theme="light"]) .bulkBtn {
+  color: var(--text-secondary, #43405c);
+}
+
+:global(html[data-theme="light"]) .bulkBtn:hover:not(:disabled) {
+  color: var(--text-primary, #1e1c36);
+  background: var(--button-secondary-hover, rgba(59, 77, 161, 0.06));
+}
+
+:global(html[data-theme="light"]) .empty {
+  color: var(--text-muted, #65627f);
 }
 
 .list {
