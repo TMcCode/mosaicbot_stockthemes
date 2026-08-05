@@ -8,6 +8,7 @@ export type TreemapReturnColumn = ConstituentPriceReturnColumn | "Period";
 export const TREEMAP_RETURN_PERIODS: { key: TreemapReturnColumn; label: string }[] = [
   { key: "1D", label: "1D" },
   { key: "10D", label: "10D" },
+  { key: "1M", label: "1M" },
   { key: "MTD", label: "MTD" },
   { key: "YTD", label: "YTD" },
   { key: "Period", label: "1YR" },

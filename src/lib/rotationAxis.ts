@@ -3,13 +3,13 @@ import { compareColumnHeader } from "@/lib/trendingCompareMetrics";
 export type RotationLongAxis = "YTD" | "Period";
 
 /** Shortest → longest compare horizons usable on the rotation map. */
-export const ROTATION_HORIZON_ORDER = ["1D", "10D", "MTD", "YTD", "Period"] as const;
+export const ROTATION_HORIZON_ORDER = ["1D", "10D", "MTD", "1M", "YTD", "Period"] as const;
 
 export type RotationHorizonKey = (typeof ROTATION_HORIZON_ORDER)[number];
 
 export const ROTATION_SHORT_AXIS_OPTIONS: readonly RotationHorizonKey[] = ["1D", "10D", "MTD"];
 
-export const ROTATION_LONG_AXIS_OPTIONS: readonly RotationHorizonKey[] = ["MTD", "YTD", "Period"];
+export const ROTATION_LONG_AXIS_OPTIONS: readonly RotationHorizonKey[] = ["MTD", "1M", "YTD", "Period"];
 
 /** Jan–Feb use trailing 1Yr; from March use YTD (matches compare table long horizon). */
 export function pickRotationLongAxis(asOf: string | Date): RotationLongAxis {

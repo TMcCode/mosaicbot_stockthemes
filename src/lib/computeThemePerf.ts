@@ -44,9 +44,30 @@ function indexYearToDateStart(dates: string[], valuesLength: number): number {
   return -1;
 }
 
+/** First index on/after last_date minus N calendar months (matches chart toolbar 1M). */
+function indexCalendarMonthsAgoStart(
+  dates: string[],
+  valuesLength: number,
+  months: number,
+): number {
+  if (!dates.length || dates.length !== valuesLength || months < 1) return -1;
+  const last = dates[dates.length - 1]?.trim().slice(0, 10);
+  if (!last || last.length < 10) return -1;
+  const d = new Date(`${last}T12:00:00.000Z`);
+  if (Number.isNaN(d.getTime())) return -1;
+  d.setUTCMonth(d.getUTCMonth() - months);
+  const anchor = d.toISOString().slice(0, 10);
+  for (let i = 0; i < dates.length; i++) {
+    const day = dates[i].trim().slice(0, 10);
+    if (day.length >= 10 && day >= anchor) return i;
+  }
+  return -1;
+}
+
 export type ChartPerfReturns = {
   d1?: number;
   d10?: number;
+  m1?: number;
   mtd?: number;
   ytd?: number;
   /** ~1Y chart window: last / first indexed level (matches Compare ``Period``). */
@@ -54,8 +75,9 @@ export type ChartPerfReturns = {
 };
 
 /**
- * 1D / 10D / MTD / YTD / chart-window return from chart_1y.performance indexed levels.
+ * 1D / 10D / 1M / MTD / YTD / chart-window return from chart_1y.performance indexed levels.
  * MTD/YTD use first trading point on or after month/year start of the **last** series date.
+ * 1M uses first trading point on or after last_date minus one calendar month (chart toolbar).
  */
 export function computePerfFromChartPerformance(perf: ChartPerformanceV0 | undefined): ChartPerfReturns {
   const values = perf?.values;
@@ -79,9 +101,17 @@ export function computePerfFromChartPerformance(perf: ChartPerformanceV0 | undef
     y1 = ((last / first) - 1) * 100;
   }
 
+  let m1: number | undefined;
   let mtd: number | undefined;
   let ytd: number | undefined;
   if (Array.isArray(dates) && dates.length === values.length) {
+    const i1m = indexCalendarMonthsAgoStart(dates, values.length, 1);
+    if (i1m >= 0) {
+      const base = Number(values[i1m]);
+      if (Number.isFinite(last) && Number.isFinite(base) && base !== 0) {
+        m1 = ((last / base) - 1) * 100;
+      }
+    }
     const im = indexMonthToDateStart(dates, values.length);
     if (im >= 0) {
       const base = Number(values[im]);
@@ -98,5 +128,5 @@ export function computePerfFromChartPerformance(perf: ChartPerformanceV0 | undef
     }
   }
 
-  return { d1, d10, mtd, ytd, y1 };
+  return { d1, d10, m1, mtd, ytd, y1 };
 }

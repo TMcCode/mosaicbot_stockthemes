@@ -6,6 +6,7 @@ import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 const CHART_FALLBACK: Record<string, keyof ChartPerfReturns> = {
   "1D": "d1",
   "10D": "d10",
+  "1M": "m1",
   MTD: "mtd",
   YTD: "ytd",
   Period: "y1",
@@ -16,6 +17,7 @@ const DEFAULT_COLUMN_ORDER = [
   "Postmarket",
   "1D",
   "10D",
+  "1M",
   "MTD",
   "YTD",
   "Period",
@@ -29,6 +31,7 @@ const COMPARE_COLUMN_ORDER = [
   "Postmarket",
   "1D",
   "10D",
+  "1M",
   "MTD",
   "LstRpt %",
   "SinceLstRpt",
@@ -48,7 +51,7 @@ const COMPARE_STANDARD_KEYS = new Set<string>([
 
 /**
  * Parquet row column order can put ``Period`` (1Yr) first; homepage should show
- * Pre/Post (when active) → 1D → 10D → MTD → YTD → 1Yr, then custom SelectedDates.
+ * Pre/Post (when active) → 1D → 10D → 1M → MTD → YTD → 1Yr, then custom SelectedDates.
  */
 export function normalizeTrendingColumnOrder(cols: string[]): string[] {
   if (!cols.length) return [...DEFAULT_COLUMN_ORDER];
@@ -87,6 +90,7 @@ export function trendingColumnHeader(key: string): string {
     Premarket: "Pre %",
     Postmarket: "Post %",
     "10D": "10D %",
+    "1M": "1M %",
     SinceLstRpt: "Since LstRpt %",
     "LstRpt %": "LstRpt %",
     MTD: "MTD %",
@@ -106,6 +110,7 @@ export function compareColumnHeader(key: string): string {
     Premarket: "Pre",
     Postmarket: "Post",
     "10D": "10D",
+    "1M": "1M",
     SinceLstRpt: "Since LstRpt",
     "LstRpt %": "LstRpt",
     MTD: "MTD",

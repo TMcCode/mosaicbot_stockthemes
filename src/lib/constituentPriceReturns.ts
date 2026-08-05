@@ -8,6 +8,7 @@ export const CONSTITUENT_STANDARD_RETURN_HEAD = [
   CONSTITUENT_POSTMARKET_COL,
   "1D",
   "10D",
+  "1M",
   "MTD",
   "YTD",
 ] as const;
@@ -25,6 +26,8 @@ const CONSTITUENT_RETURN_SKIP = new Set<string>([
   ...CONSTITUENT_STANDARD_RETURN_HEAD,
   CONSTITUENT_PERIOD_COL,
   "1W",
+  "60D",
+  "120D",
   "LstRpt %",
   "SinceLstRpt",
 ]);

@@ -2,6 +2,7 @@
 const HARD_MAX_ABS: Record<string, number> = {
   "1D": 50,
   "10D": 150,
+  "1M": 250,
   MTD: 200,
   YTD: 500,
   Period: 800,

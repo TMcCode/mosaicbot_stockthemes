@@ -4,6 +4,7 @@ import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 export const COMPARE_SUMMARY_PERIODS = [
   { key: "1D", label: "1D" },
   { key: "10D", label: "10D" },
+  { key: "1M", label: "1M" },
   { key: "MTD", label: "MTD" },
   { key: "YTD", label: "YTD" },
 ] as const;

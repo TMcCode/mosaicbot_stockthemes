@@ -354,7 +354,9 @@ export function buildRotationMapSource(input: RotationMapBuildInput): RotationMa
 
   const availableMetrics = ROTATION_HORIZON_ORDER.filter((k) => availableSet.has(k));
   const shortOpts = availableMetrics.filter((k) => k === "1D" || k === "10D" || k === "MTD");
-  const longOpts = availableMetrics.filter((k) => k === "MTD" || k === "YTD" || k === "Period");
+  const longOpts = availableMetrics.filter(
+    (k) => k === "MTD" || k === "1M" || k === "YTD" || k === "Period",
+  );
 
   return {
     asOf: input.asOf,

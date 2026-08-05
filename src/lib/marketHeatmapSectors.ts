@@ -22,7 +22,7 @@ export type HeatmapSectorSpdrReturns = Record<
   Partial<Record<TreemapReturnColumn, number | null>>
 >;
 
-const HEATMAP_SPDR_PERIODS: TreemapReturnColumn[] = ["1D", "10D", "MTD", "YTD", "Period"];
+const HEATMAP_SPDR_PERIODS: TreemapReturnColumn[] = ["1D", "10D", "1M", "MTD", "YTD", "Period"];
 
 /** Build compact sector SPDR returns from ``etf_benchmarks.v0.json`` (no chart series). */
 export function buildHeatmapSectorSpdrReturns(
