@@ -35,6 +35,9 @@ This defines earnings columns on `/themes/[slug]` constituent rows for stockthem
     - provisional: show `last_rpt_live_percent` (current vs pre-report)
     - locked: show `last_rpt_final_percent` (or `last_rpt_percent`)
   - Else: blank (`—`).
+- `Avg Abs Rpt %`
+  - Rolling 16-quarter mean of absolute earnings-day moves (`avg_abs_rpt_percent`).
+  - Expected move size for the ticker (always non-negative).
 - `IntraQtr%`
   - When reported: show `pre_earnings_percent_last_report`.
   - When not yet reported: show `since_last_rpt_percent` (run-up from prior report to now).
@@ -54,6 +57,7 @@ From theme detail payload:
 - `since_last_rpt_percent`
 - `pre_earnings_percent_last_report`
 - `earnings_percent_last_report` (kept for future use)
+- `avg_abs_rpt_percent`
 - `last_rpt_live_percent`
 - `last_rpt_final_percent`
 - `last_rpt_is_final`
@@ -63,3 +67,4 @@ From theme detail payload:
 - `business_info.csv` for report dates and `before_after_market`.
 - `ticker_earnings_metrics.parquet` for `last_rpt` and `since_last_rpt`.
 - `earnings_with_estimates_and_fundamentals_enriched_latest.parquet` for `PreEarnings%` / `Earnings%`.
+- `earnings_dates_history.parquet` for `AvgAbsEarnings%_16Q` → `avg_abs_rpt_percent` (decimal × 100).

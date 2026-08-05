@@ -5,6 +5,7 @@ export type ConstituentEarningsColumnId =
   | "current_quarter_report_date"
   | "last_quarter_earnings_move"
   | "earnings_move"
+  | "avg_abs_rpt"
   | "intra_quarter_move"
   | "since_last_report";
 
@@ -38,6 +39,12 @@ export const CONSTITUENT_EARNINGS_COLUMNS: ConstituentEarningsColumnDef[] = [
     label: "Ern Move %",
     tooltip:
       "Earnings Move % (LstRpt%) — price change from the pre-earnings anchor through two calendar days after the report (BMO/AMC adjusted). Asterisk (*) = still provisional.",
+  },
+  {
+    id: "avg_abs_rpt",
+    label: "Avg Abs Rpt %",
+    tooltip:
+      "Avg Abs Rpt % — average absolute earnings-day move over the last 16 reported quarters (expected move size).",
   },
   {
     id: "intra_quarter_move",

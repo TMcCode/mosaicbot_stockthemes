@@ -104,6 +104,8 @@ function earningsSortValue(
       return earnings.lastQuarterEarningsMoveValue;
     case "earnings_move":
       return earnings.earningsPerfValue;
+    case "avg_abs_rpt":
+      return earnings.avgAbsRptValue;
     case "intra_quarter_move":
       return earnings.intraQtrValue;
     case "since_last_report":
@@ -249,12 +251,14 @@ export function ThemeConstituentsTable({
     constituentRows,
     avgEarningsPerf,
     avgLastQuarterEarningsMove,
+    avgAvgAbsRpt,
     avgIntraQtr,
     avgSinceQtrRpt,
     avgMarketCap,
     avgWeight,
     stdEarningsPerf,
     stdLastQuarterEarningsMove,
+    stdAvgAbsRpt,
     stdIntraQtr,
     stdSinceQtrRpt,
     stdMarketCap,
@@ -265,18 +269,21 @@ export function ThemeConstituentsTable({
     posSinceQtrRpt,
     medianEarningsPerf,
     medianLastQuarterEarningsMove,
+    medianAvgAbsRpt,
     medianIntraQtr,
     medianSinceQtrRpt,
     medianMarketCap,
     medianWeight,
     minEarningsPerf,
     minLastQuarterEarningsMove,
+    minAvgAbsRpt,
     minIntraQtr,
     minSinceQtrRpt,
     minMarketCap,
     minWeight,
     maxEarningsPerf,
     maxLastQuarterEarningsMove,
+    maxAvgAbsRpt,
     maxIntraQtr,
     maxSinceQtrRpt,
     maxMarketCap,
@@ -507,6 +514,7 @@ export function ThemeConstituentsTable({
                             {earnings.earningsPerfCell}
                             {earnings.earningsPerfIsProvisional ? "*" : ""}
                           </td>
+                          <td>{earnings.avgAbsRptCell}</td>
                           <td>{earnings.intraQtrCell}</td>
                           <td>{earnings.sinceQtrRptCell}</td>
                         </>
@@ -577,6 +585,9 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(avgEarningsPerf)}</strong>
                       </td>
                       <td>
+                        <strong>{formatConstituentPct(avgAvgAbsRpt)}</strong>
+                      </td>
+                      <td>
                         <strong>{formatConstituentPct(avgIntraQtr)}</strong>
                       </td>
                       <td>
@@ -615,6 +626,9 @@ export function ThemeConstituentsTable({
                       </td>
                       <td>
                         <strong>{formatConstituentPct(medianEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(medianAvgAbsRpt)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(medianIntraQtr)}</strong>
@@ -657,6 +671,9 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(stdEarningsPerf)}</strong>
                       </td>
                       <td>
+                        <strong>{formatConstituentPct(stdAvgAbsRpt)}</strong>
+                      </td>
+                      <td>
                         <strong>{formatConstituentPct(stdIntraQtr)}</strong>
                       </td>
                       <td>
@@ -695,6 +712,9 @@ export function ThemeConstituentsTable({
                       </td>
                       <td>
                         <strong>{formatConstituentPct(minEarningsPerf)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(minAvgAbsRpt)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(minIntraQtr)}</strong>
@@ -737,6 +757,9 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(maxEarningsPerf)}</strong>
                       </td>
                       <td>
+                        <strong>{formatConstituentPct(maxAvgAbsRpt)}</strong>
+                      </td>
+                      <td>
                         <strong>{formatConstituentPct(maxIntraQtr)}</strong>
                       </td>
                       <td>
@@ -772,6 +795,7 @@ export function ThemeConstituentsTable({
                       <td>
                         <strong>{formatConstituentPct(posEarningsPerf)}</strong>
                       </td>
+                      <td></td>
                       <td>
                         <strong>{formatConstituentPct(posIntraQtr)}</strong>
                       </td>

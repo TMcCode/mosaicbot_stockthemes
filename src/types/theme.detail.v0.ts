@@ -62,6 +62,8 @@ export type ThemeDetailConstituentV0 = {
   earnings_percent_last_report?: number;
   pre_earnings_percent_prev_report?: number;
   earnings_percent_prev_report?: number;
+  /** AvgAbsRpt% — 16Q mean |earnings-day move| in percent units. */
+  avg_abs_rpt_percent?: number;
   last_rpt_live_percent?: number;
   last_rpt_final_percent?: number;
   last_rpt_is_final?: boolean;

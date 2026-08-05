@@ -104,11 +104,13 @@ export type QuarterEarningsRow = {
   reportDateCell: string;
   lastQuarterEarningsMoveCell: string;
   earningsPerfCell: string;
+  avgAbsRptCell: string;
   intraQtrCell: string;
   sinceQtrRptCell: string;
   earningsPerfIsProvisional: boolean;
   lastQuarterEarningsMoveValue: number | null;
   earningsPerfValue: number | null;
+  avgAbsRptValue: number | null;
   intraQtrValue: number | null;
   sinceQtrRptValue: number | null;
 };
@@ -181,16 +183,19 @@ export function buildQuarterEarningsRow(
   const lastQuarterEarningsMoveValue = hasReported
     ? (prevEarningsMove ?? latestEarningsMove)
     : latestEarningsMove;
+  const avgAbsRptValue = finiteOrNull(constituent.avg_abs_rpt_percent);
   return {
     lastReportDateCell,
     reportDateCell,
     lastQuarterEarningsMoveCell: formatConstituentPct(lastQuarterEarningsMoveValue),
     earningsPerfCell: hasReported ? formatConstituentPct(earningsPerfValue) : "—",
+    avgAbsRptCell: formatConstituentPct(avgAbsRptValue),
     intraQtrCell: formatConstituentPct(intraQtrValue),
     sinceQtrRptCell: hasReported ? formatConstituentPct(sinceQtrRptValue) : "—",
     earningsPerfIsProvisional: hasReported && earningsPerfIsProvisional,
     lastQuarterEarningsMoveValue,
     earningsPerfValue: hasReported ? earningsPerfValue : null,
+    avgAbsRptValue,
     intraQtrValue,
     sinceQtrRptValue,
   };
@@ -295,12 +300,14 @@ export type ThemeConstituentTableModel = {
   constituentRows: ConstituentTableRow[];
   avgEarningsPerf: number | null;
   avgLastQuarterEarningsMove: number | null;
+  avgAvgAbsRpt: number | null;
   avgIntraQtr: number | null;
   avgSinceQtrRpt: number | null;
   avgMarketCap: number | null;
   avgWeight: number | null;
   stdEarningsPerf: number | null;
   stdLastQuarterEarningsMove: number | null;
+  stdAvgAbsRpt: number | null;
   stdIntraQtr: number | null;
   stdSinceQtrRpt: number | null;
   stdMarketCap: number | null;
@@ -311,18 +318,21 @@ export type ThemeConstituentTableModel = {
   posSinceQtrRpt: number | null;
   medianEarningsPerf: number | null;
   medianLastQuarterEarningsMove: number | null;
+  medianAvgAbsRpt: number | null;
   medianIntraQtr: number | null;
   medianSinceQtrRpt: number | null;
   medianMarketCap: number | null;
   medianWeight: number | null;
   minEarningsPerf: number | null;
   minLastQuarterEarningsMove: number | null;
+  minAvgAbsRpt: number | null;
   minIntraQtr: number | null;
   minSinceQtrRpt: number | null;
   minMarketCap: number | null;
   minWeight: number | null;
   maxEarningsPerf: number | null;
   maxLastQuarterEarningsMove: number | null;
+  maxAvgAbsRpt: number | null;
   maxIntraQtr: number | null;
   maxSinceQtrRpt: number | null;
   maxMarketCap: number | null;
@@ -366,6 +376,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     avgLastQuarterEarningsMove:
       precomputedStat(detail, "average", "last_quarter_earnings_move_pct") ??
       average(constituentRows.map((r) => r.earnings.lastQuarterEarningsMoveValue)),
+    avgAvgAbsRpt:
+      precomputedStat(detail, "average", "avg_abs_rpt_pct") ??
+      average(constituentRows.map((r) => r.earnings.avgAbsRptValue)),
     avgIntraQtr:
       precomputedStat(detail, "average", "intra_quarter_move_pct") ??
       average(constituentRows.map((r) => r.earnings.intraQtrValue)),
@@ -383,6 +396,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     stdLastQuarterEarningsMove:
       precomputedStat(detail, "std_dev", "last_quarter_earnings_move_pct") ??
       stdDev(constituentRows.map((r) => r.earnings.lastQuarterEarningsMoveValue)),
+    stdAvgAbsRpt:
+      precomputedStat(detail, "std_dev", "avg_abs_rpt_pct") ??
+      stdDev(constituentRows.map((r) => r.earnings.avgAbsRptValue)),
     stdIntraQtr:
       precomputedStat(detail, "std_dev", "intra_quarter_move_pct") ??
       stdDev(constituentRows.map((r) => r.earnings.intraQtrValue)),
@@ -412,6 +428,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     medianLastQuarterEarningsMove:
       precomputedStat(detail, "median", "last_quarter_earnings_move_pct") ??
       median(constituentRows.map((r) => r.earnings.lastQuarterEarningsMoveValue)),
+    medianAvgAbsRpt:
+      precomputedStat(detail, "median", "avg_abs_rpt_pct") ??
+      median(constituentRows.map((r) => r.earnings.avgAbsRptValue)),
     medianIntraQtr:
       precomputedStat(detail, "median", "intra_quarter_move_pct") ??
       median(constituentRows.map((r) => r.earnings.intraQtrValue)),
@@ -429,6 +448,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     minLastQuarterEarningsMove:
       precomputedStat(detail, "min", "last_quarter_earnings_move_pct") ??
       minValue(constituentRows.map((r) => r.earnings.lastQuarterEarningsMoveValue)),
+    minAvgAbsRpt:
+      precomputedStat(detail, "min", "avg_abs_rpt_pct") ??
+      minValue(constituentRows.map((r) => r.earnings.avgAbsRptValue)),
     minIntraQtr:
       precomputedStat(detail, "min", "intra_quarter_move_pct") ??
       minValue(constituentRows.map((r) => r.earnings.intraQtrValue)),
@@ -446,6 +468,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     maxLastQuarterEarningsMove:
       precomputedStat(detail, "max", "last_quarter_earnings_move_pct") ??
       maxValue(constituentRows.map((r) => r.earnings.lastQuarterEarningsMoveValue)),
+    maxAvgAbsRpt:
+      precomputedStat(detail, "max", "avg_abs_rpt_pct") ??
+      maxValue(constituentRows.map((r) => r.earnings.avgAbsRptValue)),
     maxIntraQtr:
       precomputedStat(detail, "max", "intra_quarter_move_pct") ??
       maxValue(constituentRows.map((r) => r.earnings.intraQtrValue)),
