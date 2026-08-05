@@ -22,6 +22,7 @@ import {
 import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
+import { isShortThemeName } from "@/lib/shortThemeChart";
 import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -109,6 +110,7 @@ export function ComparePageClient({
   const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
   const [showFactorSpreads, setShowFactorSpreads] = useState(false);
+  const [excludeShortThemes, setExcludeShortThemes] = useState(false);
   const availablePeriods = useMemo(
     () => availableCompareSummaryPeriods(visibleColumns),
     [visibleColumns],
@@ -151,26 +153,27 @@ export function ComparePageClient({
     [selectedGroups, visibleGroupOptions],
   );
 
-  const filteredThemes = useMemo(
-    () =>
-      filterCompareRows(rowsWithLiveCompare, {
-        groupOptions: visibleGroupOptions,
-        yearOptions,
-        sectorOptions,
-        selectedGroups: visibleSelectedGroups,
-        selectedYears,
-        selectedSectors,
-      }),
-    [
-      rowsWithLiveCompare,
-      visibleGroupOptions,
+  const filteredThemes = useMemo(() => {
+    const base = filterCompareRows(rowsWithLiveCompare, {
+      groupOptions: visibleGroupOptions,
       yearOptions,
       sectorOptions,
-      visibleSelectedGroups,
+      selectedGroups: visibleSelectedGroups,
       selectedYears,
       selectedSectors,
-    ],
-  );
+    });
+    if (!excludeShortThemes) return base;
+    return base.filter((row) => !isShortThemeName(row.name));
+  }, [
+    rowsWithLiveCompare,
+    visibleGroupOptions,
+    yearOptions,
+    sectorOptions,
+    visibleSelectedGroups,
+    selectedYears,
+    selectedSectors,
+    excludeShortThemes,
+  ]);
   const filteredGroups = useMemo(
     () =>
       filterCompareRows(groupRows, {
@@ -289,7 +292,9 @@ export function ComparePageClient({
             selectedDates={selectedDates}
             entityKind={viewMode === "groups" ? "group" : "theme"}
             toolbarStart={
-              benchmarkRows.length > 0 || factorSpreadRows.length > 0 ? (
+              viewMode === "themes" ||
+              benchmarkRows.length > 0 ||
+              factorSpreadRows.length > 0 ? (
                 <div className={styles.referenceToggles}>
                   {benchmarkRows.length > 0 ? (
                     <label className={styles.benchmarkToggle}>
@@ -309,6 +314,16 @@ export function ComparePageClient({
                         onChange={(e) => setShowFactorSpreads(e.target.checked)}
                       />
                       Factor Spreads
+                    </label>
+                  ) : null}
+                  {viewMode === "themes" ? (
+                    <label className={styles.benchmarkToggle}>
+                      <input
+                        type="checkbox"
+                        checked={excludeShortThemes}
+                        onChange={(e) => setExcludeShortThemes(e.target.checked)}
+                      />
+                      Exclude Short Themes
                     </label>
                   ) : null}
                 </div>

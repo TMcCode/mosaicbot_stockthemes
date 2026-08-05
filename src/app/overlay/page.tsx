@@ -5,15 +5,18 @@ import styles from "@/app/page.module.css";
 import { OverlayPageClient } from "@/components/OverlayPageClient";
 import { PageSurface } from "@/components/PageSurface";
 import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
+import { getFactorSpreadsCached } from "@/lib/getFactorSpreadsCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
+import { mapOverlayFactorSpreadOptions } from "@/lib/overlayFactorSpreads";
 import { mapOverlaySectorEtfCatalog } from "@/lib/overlaySectorEtfs";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Theme compare chart",
-  description: "Compare indexed performance for up to 12 themes, groups, tickers, or sector SPDRs on one chart.",
+  description:
+    "Compare indexed performance for up to 12 themes, groups, tickers, sector SPDRs, or factor spreads on one chart.",
   path: "/overlay",
 });
 
@@ -22,12 +25,14 @@ function OverlayFallback() {
 }
 
 export default async function OverlayPage() {
-  const [{ manifest, source }, spyPerf, benchmarksRes] = await Promise.all([
+  const [{ manifest, source }, spyPerf, benchmarksRes, factorSpreadsRes] = await Promise.all([
     getManifestCached(),
     getSpyMarketPerfCached(),
     getEtfBenchmarksCached(),
+    getFactorSpreadsCached(),
   ]);
   const sectorEtfCatalog = mapOverlaySectorEtfCatalog(benchmarksRes?.bundle);
+  const factorSpreadOptions = mapOverlayFactorSpreadOptions(factorSpreadsRes?.bundle);
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const groupLegendMetaBySlug = Object.fromEntries(
     (manifest.groups ?? []).map((g) => [
@@ -50,6 +55,7 @@ export default async function OverlayPage() {
               benchmarkPerformance={spyPerf?.benchmarkPerformance}
               groupLegendMetaBySlug={groupLegendMetaBySlug}
               sectorEtfCatalog={sectorEtfCatalog}
+              factorSpreadOptions={factorSpreadOptions}
             />
           </Suspense>
         </div>

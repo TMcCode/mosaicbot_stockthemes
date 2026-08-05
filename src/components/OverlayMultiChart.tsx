@@ -61,7 +61,7 @@ function formatIndexedValue(v: number): string {
 export type OverlayChartSeries = {
   id: string;
   name: string;
-  kind: "theme" | "group" | "etf" | "ticker";
+  kind: "theme" | "group" | "etf" | "ticker" | "factor";
   color: string;
   performance: ChartPerformanceV0;
   /** Group composition–style legend: comma-separated tickers (+N). */

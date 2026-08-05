@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { OverlayAddCombobox, type OverlayPick } from "@/components/OverlayAddCombobox";
 import type { OverlayChartSeries } from "@/components/OverlayMultiChart";
+import { OverlayFactorSpreadControls } from "@/components/OverlayFactorSpreadControls";
 import { OverlaySectorEtfControls } from "@/components/OverlaySectorEtfControls";
 import chartLegendStyles from "@/components/Chart1yPanel.module.css";
 import {
@@ -18,7 +19,16 @@ import {
   etSessionIsoDay,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
 } from "@/lib/extendCompositionLiveTail";
+import { loadFactorTimeseries } from "@/lib/loadFactorTimeseries";
 import { OVERLAY_CHART_PALETTE } from "@/lib/overlayChartPalette";
+import {
+  factorsFromSearchParams,
+  mapOverlayFactorSpreadOptions,
+  mergeFactorTimeseriesIntoCatalog,
+  overlayFactorSpreadItemKey,
+  type OverlayFactorSpreadCatalogEntry,
+  type OverlayFactorSpreadOption,
+} from "@/lib/overlayFactorSpreads";
 import {
   mapOverlaySectorEtfCatalog,
   overlaySectorItemKey,
@@ -48,6 +58,7 @@ import { stockthemesLiveChartPerformanceEnabled } from "@/lib/stockthemesClientC
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { EtfBenchmarksV0 } from "@/types/etf_benchmarks.v0";
+import type { FactorSpreadsV0 } from "@/types/factor_spreads.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import pageStyles from "@/app/page.module.css";
@@ -91,6 +102,7 @@ type Props = {
   benchmarkPerformance?: ChartPerformanceV0;
   groupLegendMetaBySlug?: Record<string, GroupLegendMeta>;
   sectorEtfCatalog?: Record<string, OverlaySectorEtfCatalogEntry>;
+  factorSpreadOptions?: OverlayFactorSpreadOption[];
 };
 
 function normalizeEventKey(raw: string): string {
@@ -129,6 +141,7 @@ export function OverlayPageClient({
   benchmarkPerformance,
   groupLegendMetaBySlug = {},
   sectorEtfCatalog = {},
+  factorSpreadOptions = [],
 }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -137,6 +150,10 @@ export function OverlayPageClient({
   const availableSectorTickers = useMemo(
     () => new Set(Object.keys(sectorEtfCatalog)),
     [sectorEtfCatalog],
+  );
+  const allowedFactorIds = useMemo(
+    () => new Set(factorSpreadOptions.map((o) => o.factorId)),
+    [factorSpreadOptions],
   );
 
   const [items, setItems] = useState<LoadedSeries[]>([]);
@@ -152,10 +169,24 @@ export function OverlayPageClient({
   const [selectedSectorTickers, setSelectedSectorTickers] = useState<string[]>(() =>
     sectorsFromSearchParams(searchParams, sectorEtfCatalog),
   );
+  const [showFactorSpreads, setShowFactorSpreads] = useState(
+    () => factorsFromSearchParams(searchParams, allowedFactorIds).length > 0,
+  );
+  const [selectedFactorIds, setSelectedFactorIds] = useState<string[]>(() =>
+    factorsFromSearchParams(searchParams, allowedFactorIds),
+  );
   const [liveSectorCatalog, setLiveSectorCatalog] = useState<Record<
     string,
     OverlaySectorEtfCatalogEntry
   > | null>(null);
+  const [liveFactorOptions, setLiveFactorOptions] = useState<OverlayFactorSpreadOption[] | null>(
+    null,
+  );
+  const [factorCatalog, setFactorCatalog] = useState<Record<
+    string,
+    OverlayFactorSpreadCatalogEntry
+  > | null>(null);
+  const [factorTimeseriesLoading, setFactorTimeseriesLoading] = useState(false);
   const [liveBenchmarkPerformance, setLiveBenchmarkPerformance] = useState<ChartPerformanceV0 | null>(
     null,
   );
@@ -163,6 +194,7 @@ export function OverlayPageClient({
 
   const activeSectorCatalog = liveSectorCatalog ?? sectorEtfCatalog;
   const activeBenchmarkPerformance = liveBenchmarkPerformance ?? benchmarkPerformance;
+  const activeFactorOptions = liveFactorOptions ?? factorSpreadOptions;
 
   const customPeriods = useMemo(() => {
     const rows = selectedDates ?? [];
@@ -186,17 +218,32 @@ export function OverlayPageClient({
     () => (showSectorEtfs ? selectedSectorTickers : []),
     [showSectorEtfs, selectedSectorTickers],
   );
+  const activeFactorIds = useMemo(
+    () => (showFactorSpreads ? selectedFactorIds : []),
+    [showFactorSpreads, selectedFactorIds],
+  );
 
-  const countedSeries = items.length + activeSectorTickers.length;
-  const maxSectorSelectable = Math.max(0, MAX_SERIES - items.length);
+  const countedSeries = items.length + activeSectorTickers.length + activeFactorIds.length;
+  const maxSectorSelectable = Math.max(0, MAX_SERIES - items.length - activeFactorIds.length);
+  const maxFactorSelectable = Math.max(0, MAX_SERIES - items.length - activeSectorTickers.length);
 
   const syncUrl = useCallback(
-    (itemKeys: string[], sectorTickers: string[], sectorsEnabled: boolean) => {
+    (args: {
+      itemKeys: string[];
+      sectorTickers: string[];
+      sectorsEnabled: boolean;
+      factorIds: string[];
+      factorsEnabled: boolean;
+    }) => {
       const params = new URLSearchParams(searchParams.toString());
-      if (itemKeys.length) params.set("items", itemKeys.join(","));
+      if (args.itemKeys.length) params.set("items", args.itemKeys.join(","));
       else params.delete("items");
-      if (sectorsEnabled && sectorTickers.length) params.set("sectors", sectorTickers.join(","));
-      else params.delete("sectors");
+      if (args.sectorsEnabled && args.sectorTickers.length) {
+        params.set("sectors", args.sectorTickers.join(","));
+      } else params.delete("sectors");
+      if (args.factorsEnabled && args.factorIds.length) {
+        params.set("factors", args.factorIds.join(","));
+      } else params.delete("factors");
       const qs = params.toString();
       router.replace(qs ? `/overlay?${qs}` : "/overlay", { scroll: false });
     },
@@ -333,6 +380,87 @@ export function OverlayPageClient({
     };
   }, []);
 
+  /** Lazy-load factor timeseries only when Factor Spreads are in use (keeps /overlay light).
+   *  Short (~1Y) first for fast chart; long (~5Y) upgrades in the background so 2Y/5Y/LibDay
+   *  unlock without blocking first paint. Factors page keeps using short only. */
+  useEffect(() => {
+    if (!showFactorSpreads && selectedFactorIds.length === 0) return;
+    const base = stockthemesPublicDataBase();
+    if (!base) return;
+
+    let cancelled = false;
+    let hasLong = false;
+    setFactorTimeseriesLoading(true);
+
+    const applyCatalog = (
+      timeseries: Awaited<ReturnType<typeof loadFactorTimeseries>>,
+      spreads: FactorSpreadsV0 | null,
+    ) => {
+      if (cancelled) return;
+      const options = spreads?.rows?.length
+        ? mapOverlayFactorSpreadOptions(spreads)
+        : activeFactorOptions;
+      if (spreads?.rows?.length) setLiveFactorOptions(options);
+      if (timeseries) {
+        setFactorCatalog(mergeFactorTimeseriesIntoCatalog(options, timeseries));
+      }
+    };
+
+    const loadSpreads = () =>
+      fetch(`${base}/factor_spreads.v0.json?${priceReturnsBrowserCacheBusterQuery()}`, {
+        credentials: "omit",
+        cache: stockthemesBrowserFetchCache(),
+      }).then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as FactorSpreadsV0;
+      });
+
+    const refreshShort = () => {
+      void Promise.all([loadFactorTimeseries(base, "short"), loadSpreads()])
+        .then(([timeseries, spreads]) => {
+          // Never replace a loaded long catalog with the short poll (avoids 2Y flicker).
+          if (hasLong) {
+            if (cancelled) return;
+            if (spreads?.rows?.length) {
+              setLiveFactorOptions(mapOverlayFactorSpreadOptions(spreads));
+            }
+            return;
+          }
+          applyCatalog(timeseries, spreads);
+        })
+        .catch(() => {
+          /* keep prior catalog on transient CDN errors */
+        })
+        .finally(() => {
+          if (!cancelled) setFactorTimeseriesLoading(false);
+        });
+    };
+
+    const refreshLong = () => {
+      void Promise.all([loadFactorTimeseries(base, "long"), loadSpreads()])
+        .then(([longTs, spreads]) => {
+          if (cancelled || !longTs?.factors || !Object.keys(longTs.factors).length) return;
+          hasLong = true;
+          applyCatalog(longTs, spreads);
+        })
+        .catch(() => {
+          /* short catalog remains usable if long is missing/unpublished */
+        });
+    };
+
+    refreshShort();
+    refreshLong();
+    // Poll spreads / short only — long history is static within a session; live day
+    // return extends the tip without re-downloading ~5Y of points every few minutes.
+    const id = window.setInterval(refreshShort, priceReturnsRevalidateSeconds() * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+    // activeFactorOptions intentionally omitted — seed from SSR/live options at enable time.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showFactorSpreads, selectedFactorIds.length]);
+
   const themeSlugsNeedingPreview = useMemo(
     () =>
       items
@@ -374,12 +502,44 @@ export function OverlayPageClient({
     if (selectedSectorTickers.length <= maxSectors) return;
     const next = selectedSectorTickers.slice(0, maxSectors);
     setSelectedSectorTickers(next);
-    syncUrl(
-      items.map((i) => i.key),
-      next,
-      showSectorEtfs,
-    );
-  }, [items, selectedSectorTickers, showSectorEtfs, syncUrl, maxSectorSelectable]);
+    syncUrl({
+      itemKeys: items.map((i) => i.key),
+      sectorTickers: next,
+      sectorsEnabled: showSectorEtfs,
+      factorIds: selectedFactorIds,
+      factorsEnabled: showFactorSpreads,
+    });
+  }, [
+    items,
+    selectedSectorTickers,
+    showSectorEtfs,
+    syncUrl,
+    maxSectorSelectable,
+    selectedFactorIds,
+    showFactorSpreads,
+  ]);
+
+  useEffect(() => {
+    const maxFactors = maxFactorSelectable;
+    if (selectedFactorIds.length <= maxFactors) return;
+    const next = selectedFactorIds.slice(0, maxFactors);
+    setSelectedFactorIds(next);
+    syncUrl({
+      itemKeys: items.map((i) => i.key),
+      sectorTickers: selectedSectorTickers,
+      sectorsEnabled: showSectorEtfs,
+      factorIds: next,
+      factorsEnabled: showFactorSpreads,
+    });
+  }, [
+    items,
+    selectedFactorIds,
+    showFactorSpreads,
+    syncUrl,
+    maxFactorSelectable,
+    selectedSectorTickers,
+    showSectorEtfs,
+  ]);
 
   const selectedKeys = useMemo(() => new Set(items.map((i) => i.key)), [items]);
 
@@ -389,35 +549,98 @@ export function OverlayPageClient({
       if (selectedKeys.has(key)) return;
       if (countedSeries >= MAX_SERIES) return;
       const nextKeys = [...items.map((i) => i.key), key];
-      syncUrl(nextKeys, selectedSectorTickers, showSectorEtfs);
+      syncUrl({
+        itemKeys: nextKeys,
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: selectedFactorIds,
+        factorsEnabled: showFactorSpreads,
+      });
       void loadOne(pick);
     },
-    [items, loadOne, selectedKeys, syncUrl, countedSeries, selectedSectorTickers, showSectorEtfs],
+    [
+      items,
+      loadOne,
+      selectedKeys,
+      syncUrl,
+      countedSeries,
+      selectedSectorTickers,
+      showSectorEtfs,
+      selectedFactorIds,
+      showFactorSpreads,
+    ],
   );
 
   const onSectorTickersChange = useCallback(
     (tickers: string[]) => {
       const capped = tickers.slice(0, maxSectorSelectable);
       setSelectedSectorTickers(capped);
-      syncUrl(
-        items.map((i) => i.key),
-        capped,
-        showSectorEtfs,
-      );
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: capped,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: selectedFactorIds,
+        factorsEnabled: showFactorSpreads,
+      });
     },
-    [items, maxSectorSelectable, showSectorEtfs, syncUrl],
+    [
+      items,
+      maxSectorSelectable,
+      showSectorEtfs,
+      syncUrl,
+      selectedFactorIds,
+      showFactorSpreads,
+    ],
   );
 
   const onSectorEnabledChange = useCallback(
     (enabled: boolean) => {
       setShowSectorEtfs(enabled);
-      syncUrl(
-        items.map((i) => i.key),
-        selectedSectorTickers,
-        enabled,
-      );
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: enabled,
+        factorIds: selectedFactorIds,
+        factorsEnabled: showFactorSpreads,
+      });
     },
-    [items, selectedSectorTickers, syncUrl],
+    [items, selectedSectorTickers, syncUrl, selectedFactorIds, showFactorSpreads],
+  );
+
+  const onFactorIdsChange = useCallback(
+    (ids: string[]) => {
+      const capped = ids.slice(0, maxFactorSelectable);
+      setSelectedFactorIds(capped);
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: capped,
+        factorsEnabled: showFactorSpreads,
+      });
+    },
+    [
+      items,
+      maxFactorSelectable,
+      showFactorSpreads,
+      syncUrl,
+      selectedSectorTickers,
+      showSectorEtfs,
+    ],
+  );
+
+  const onFactorEnabledChange = useCallback(
+    (enabled: boolean) => {
+      setShowFactorSpreads(enabled);
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: selectedFactorIds,
+        factorsEnabled: enabled,
+      });
+    },
+    [items, selectedSectorTickers, showSectorEtfs, syncUrl, selectedFactorIds],
   );
 
   const onRemove = useCallback(
@@ -430,10 +653,16 @@ export function OverlayPageClient({
         return n;
       });
       const nextKeys = items.filter((i) => i.key !== key).map((i) => i.key);
-      syncUrl(nextKeys, selectedSectorTickers, showSectorEtfs);
+      syncUrl({
+        itemKeys: nextKeys,
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: selectedFactorIds,
+        factorsEnabled: showFactorSpreads,
+      });
       setItems((prev) => prev.filter((p) => p.key !== key));
     },
-    [items, syncUrl, selectedSectorTickers, showSectorEtfs],
+    [items, syncUrl, selectedSectorTickers, showSectorEtfs, selectedFactorIds, showFactorSpreads],
   );
 
   const onRemoveSector = useCallback(
@@ -445,13 +674,35 @@ export function OverlayPageClient({
         n.delete(overlaySectorItemKey(ticker));
         return n;
       });
-      syncUrl(
-        items.map((i) => i.key),
-        next,
-        showSectorEtfs,
-      );
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: next,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: selectedFactorIds,
+        factorsEnabled: showFactorSpreads,
+      });
     },
-    [items, selectedSectorTickers, showSectorEtfs, syncUrl],
+    [items, selectedSectorTickers, showSectorEtfs, syncUrl, selectedFactorIds, showFactorSpreads],
+  );
+
+  const onRemoveFactor = useCallback(
+    (factorId: string) => {
+      const next = selectedFactorIds.filter((id) => id !== factorId);
+      setSelectedFactorIds(next);
+      setHiddenIds((prev) => {
+        const n = new Set(prev);
+        n.delete(overlayFactorSpreadItemKey(factorId));
+        return n;
+      });
+      syncUrl({
+        itemKeys: items.map((i) => i.key),
+        sectorTickers: selectedSectorTickers,
+        sectorsEnabled: showSectorEtfs,
+        factorIds: next,
+        factorsEnabled: showFactorSpreads,
+      });
+    },
+    [items, selectedFactorIds, showFactorSpreads, syncUrl, selectedSectorTickers, showSectorEtfs],
   );
 
   const toggleHidden = useCallback((id: string) => {
@@ -491,6 +742,25 @@ export function OverlayPageClient({
     return out;
   }, [activeSectorCatalog, sessionIso]);
 
+  const resolvedFactorCatalog = useMemo(() => {
+    const source = factorCatalog ?? {};
+    const out: Record<string, OverlayFactorSpreadCatalogEntry> = {};
+    for (const [factorId, entry] of Object.entries(source)) {
+      const opt = activeFactorOptions.find((o) => o.factorId === factorId);
+      const dayReturnPct = entry.dayReturnPct ?? opt?.dayReturnPct ?? null;
+      const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
+        entry.performance,
+        sessionIso,
+        dayReturnPct,
+      );
+      out[factorId] =
+        extended && extended !== entry.performance
+          ? { ...entry, performance: extended, dayReturnPct }
+          : { ...entry, dayReturnPct };
+    }
+    return out;
+  }, [factorCatalog, activeFactorOptions, sessionIso]);
+
   const referenceLastIso = useMemo(() => {
     const ends: string[] = [];
     if (resolvedBenchmarkPerformance?.dates?.length) {
@@ -508,6 +778,12 @@ export function OverlayPageClient({
         if (d?.length) ends.push(String(d[d.length - 1]));
       }
     }
+    if (showFactorSpreads) {
+      for (const factorId of activeFactorIds) {
+        const d = resolvedFactorCatalog[factorId]?.performance?.dates;
+        if (d?.length) ends.push(String(d[d.length - 1]));
+      }
+    }
     const normalized = ends.map((x) => x.trim().slice(0, 10)).filter((x) => x.length >= 10);
     normalized.sort();
     return normalized.at(-1);
@@ -517,6 +793,9 @@ export function OverlayPageClient({
     showSectorEtfs,
     activeSectorTickers,
     resolvedSectorCatalog,
+    showFactorSpreads,
+    activeFactorIds,
+    resolvedFactorCatalog,
   ]);
 
   const loadedChartPerformances = useMemo((): ChartPerformanceV0[] => {
@@ -535,6 +814,12 @@ export function OverlayPageClient({
         if (perf?.dates?.length) performances.push(perf);
       }
     }
+    if (showFactorSpreads) {
+      for (const factorId of activeFactorIds) {
+        const perf = resolvedFactorCatalog[factorId]?.performance;
+        if (perf?.dates?.length) performances.push(perf);
+      }
+    }
     return performances;
   }, [
     items,
@@ -543,6 +828,9 @@ export function OverlayPageClient({
     showSectorEtfs,
     activeSectorTickers,
     resolvedSectorCatalog,
+    showFactorSpreads,
+    activeFactorIds,
+    resolvedFactorCatalog,
   ]);
 
   const supportedPeriods = useMemo(
@@ -628,6 +916,25 @@ export function OverlayPageClient({
       });
     }
 
+    if (showFactorSpreads) {
+      activeFactorIds.forEach((factorId) => {
+        const entry = resolvedFactorCatalog[factorId];
+        const raw = entry?.performance;
+        if (!raw?.dates?.length) return;
+        const sliced = sliceAndRebaseIndexedPerformance(raw, period, anchor, referenceLastIso);
+        if (!sliced) return;
+        out.push({
+          id: overlayFactorSpreadItemKey(factorId),
+          name: entry.name,
+          kind: "factor",
+          color: OVERLAY_CHART_PALETTE[colorIndex % OVERLAY_CHART_PALETTE.length],
+          performance: sliced,
+          legendMeta: entry.proxy || factorId,
+        });
+        colorIndex += 1;
+      });
+    }
+
     return out;
   }, [
     items,
@@ -639,6 +946,9 @@ export function OverlayPageClient({
     showSectorEtfs,
     activeSectorTickers,
     resolvedSectorCatalog,
+    showFactorSpreads,
+    activeFactorIds,
+    resolvedFactorCatalog,
   ]);
 
   const benchmarkSliced = useMemo(() => {
@@ -666,7 +976,8 @@ export function OverlayPageClient({
         <p className={pageStyles.eyebrow}>{eyebrow}</p>
         <h1>Theme compare chart</h1>
         <p className={pageStyles.introLead}>
-          Compare up to {MAX_SERIES} themes, groups, tickers, or sector SPDRs on one indexed chart.
+          Compare up to {MAX_SERIES} themes, groups, tickers, sector SPDRs, or factor spreads on one
+          indexed chart.
         </p>
 
         <div className={styles.toolbar}>
@@ -694,6 +1005,17 @@ export function OverlayPageClient({
                 onSelectedTickersChange={onSectorTickersChange}
                 maxSelectable={maxSectorSelectable}
                 availableTickers={availableSectorTickers}
+              />
+            ) : null}
+            {activeFactorOptions.length > 0 ? (
+              <OverlayFactorSpreadControls
+                enabled={showFactorSpreads}
+                onEnabledChange={onFactorEnabledChange}
+                options={activeFactorOptions}
+                selectedFactorIds={selectedFactorIds}
+                onSelectedFactorIdsChange={onFactorIdsChange}
+                maxSelectable={maxFactorSelectable}
+                loading={factorTimeseriesLoading && !factorCatalog}
               />
             ) : null}
           </div>
@@ -739,7 +1061,7 @@ export function OverlayPageClient({
           </div>
         </div>
 
-        {(items.length > 0 || activeSectorTickers.length > 0) ? (
+        {(items.length > 0 || activeSectorTickers.length > 0 || activeFactorIds.length > 0) ? (
           <div className={styles.chips} aria-label="Selected series">
             {items.map((item) => (
               <span
@@ -779,6 +1101,31 @@ export function OverlayPageClient({
                     type="button"
                     className={styles.removeBtn}
                     onClick={() => onRemoveSector(ticker)}
+                  >
+                    Remove
+                  </button>
+                </span>
+              );
+            })}
+            {activeFactorIds.map((factorId) => {
+              const entry =
+                resolvedFactorCatalog[factorId] ??
+                activeFactorOptions.find((o) => o.factorId === factorId);
+              if (!entry) return null;
+              const loading = showFactorSpreads && !resolvedFactorCatalog[factorId]?.performance;
+              return (
+                <span
+                  key={overlayFactorSpreadItemKey(factorId)}
+                  className={`${styles.chip} ${loading ? styles.chipLoading : ""}`}
+                >
+                  <span className={styles.chipLink}>
+                    {entry.name}
+                    {loading ? " …" : null}
+                  </span>
+                  <button
+                    type="button"
+                    className={styles.removeBtn}
+                    onClick={() => onRemoveFactor(factorId)}
                   >
                     Remove
                   </button>
