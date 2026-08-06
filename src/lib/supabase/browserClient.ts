@@ -12,6 +12,10 @@ let singleton: SupabaseClient | null = null;
  * same-origin localStorage survives. Static export has no SSR auth, so cookies are
  * unnecessary.
  *
+ * Relies on supabase-js ≥2.112 lockless auth coordination (no `navigator.locks`).
+ * Older clients deadlocked on React Strict Mode / HMR and left `/auth/callback`
+ * stuck on "Finishing sign-in…".
+ *
  * Returns null when env is not configured (builds/locales without secrets).
  */
 export function getBrowserSupabase(): SupabaseClient | null {

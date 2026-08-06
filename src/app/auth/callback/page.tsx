@@ -24,6 +24,24 @@ function oauthErrorFromUrl(url: URL | null): string | null {
   return code ? `Sign-in was cancelled or denied (${code}).` : null;
 }
 
+function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`${label} timed out after ${Math.round(ms / 1000)}s. Please try again.`));
+    }, ms);
+    promise.then(
+      (value) => {
+        window.clearTimeout(timer);
+        resolve(value);
+      },
+      (err: unknown) => {
+        window.clearTimeout(timer);
+        reject(err);
+      },
+    );
+  });
+}
+
 export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
 
@@ -36,19 +54,31 @@ export default function AuthCallbackPage() {
 
     const client = supabase;
     let cancelled = false;
+    let redirected = false;
 
     const timeout = window.setTimeout(() => {
-      if (!cancelled) {
+      if (!cancelled && !redirected) {
         setError("Sign-in is taking longer than expected. Please try again.");
       }
     }, CALLBACK_TIMEOUT_MS);
 
-    async function finish(next: string) {
-      if (cancelled) {
+    function finish(next: string) {
+      if (redirected) {
+        return;
+      }
+      redirected = true;
+      window.clearTimeout(timeout);
+      // Hard redirect even if Strict Mode already cleaned up this effect — otherwise a
+      // successful exchange can complete after unmount and never leave this page.
+      authHardRedirect(next);
+    }
+
+    function fail(message: string) {
+      if (cancelled || redirected) {
         return;
       }
       window.clearTimeout(timeout);
-      authHardRedirect(next);
+      setError(message);
     }
 
     async function run() {
@@ -56,10 +86,7 @@ export default function AuthCallbackPage() {
         const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
         const oauthError = oauthErrorFromUrl(url);
         if (oauthError) {
-          if (!cancelled) {
-            window.clearTimeout(timeout);
-            setError(oauthError);
-          }
+          fail(oauthError);
           return;
         }
 
@@ -67,39 +94,42 @@ export default function AuthCallbackPage() {
         const next = resolveAuthNextPath(url?.searchParams.get("next") ?? null);
 
         if (code) {
-          const { error: ex } = await exchangePkceCodeOnce(client, code);
+          const { error: ex } = await withTimeout(
+            exchangePkceCodeOnce(client, code),
+            CALLBACK_TIMEOUT_MS,
+            "Sign-in",
+          );
           if (ex) {
-            const { data: after } = await client.auth.getSession();
+            const { data: after } = await withTimeout(
+              client.auth.getSession(),
+              5_000,
+              "Session restore",
+            );
             if (after.session) {
-              await finish(next);
+              finish(next);
               return;
             }
-            if (!cancelled) {
-              window.clearTimeout(timeout);
-              setError(ex.message);
-            }
+            fail(ex.message);
             return;
           }
         } else {
-          const { data: { session }, error: sessErr } = await client.auth.getSession();
-          if (sessErr && !cancelled) {
-            window.clearTimeout(timeout);
-            setError(sessErr.message || "Unable to restore session.");
+          const {
+            data: { session },
+            error: sessErr,
+          } = await withTimeout(client.auth.getSession(), 5_000, "Session restore");
+          if (sessErr) {
+            fail(sessErr.message || "Unable to restore session.");
             return;
           }
-          if (!session && !cancelled) {
-            window.clearTimeout(timeout);
-            setError("Missing authorization code. Please try signing in again.");
+          if (!session) {
+            fail("Missing authorization code. Please try signing in again.");
             return;
           }
         }
 
-        await finish(next);
+        finish(next);
       } catch (e: unknown) {
-        if (!cancelled) {
-          window.clearTimeout(timeout);
-          setError(e instanceof Error ? e.message : String(e));
-        }
+        fail(e instanceof Error ? e.message : String(e));
       }
     }
 
