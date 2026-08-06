@@ -1,16 +1,1 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <style>
-      .teal { fill: #2ACFC8; }
-      .blue { fill: #3B4DA1; }
-      .violet { fill: #6A5CFB; }
-      .red { fill: #E63946; }
-      .center { fill: #FFB86B; }
-    </style>
-  </defs>
-  <circle cx="88" cy="128" r="44" class="teal"></circle>
-  <circle cx="128" cy="172" r="44" class="blue"></circle>
-  <circle cx="168" cy="132" r="44" class="violet"></circle>
-  <circle cx="132" cy="88" r="44" class="red"></circle>
-  <circle cx="132" cy="128" r="14" class="center"></circle>
-</svg>
+<svg width="628" height="619" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" xml:space="preserve" overflow="hidden"><defs><clipPath id="clip0"><rect x="540" y="1448" width="628" height="619"/></clipPath><clipPath id="clip1"><rect x="540" y="1448" width="628" height="619"/></clipPath></defs><g clip-path="url(#clip0)" transform="translate(-540 -1448)"><g clip-path="url(#clip1)"><path d="M545 1758C545 1676.81 611.038 1611 692.5 1611 773.962 1611 840 1676.81 840 1758 840 1839.19 773.962 1905 692.5 1905 611.038 1905 545 1839.19 545 1758Z" fill="#2ACFC8" fill-rule="evenodd" fill-opacity="1"/><path d="M693 1918C693 1836.81 759.038 1771 840.5 1771 921.962 1771 988 1836.81 988 1918 988 1999.19 921.962 2065 840.5 2065 759.038 2065 693 1999.19 693 1918Z" fill="#3B4DA2" fill-rule="evenodd" fill-opacity="1"/><path d="M874 1758C874 1676.81 939.814 1611 1021 1611 1102.19 1611 1168 1676.81 1168 1758 1168 1839.19 1102.19 1905 1021 1905 939.814 1905 874 1839.19 874 1758Z" fill="#695BF8" fill-rule="evenodd" fill-opacity="1"/><path d="M693 1598C693 1516.81 759.038 1451 840.5 1451 921.962 1451 988 1516.81 988 1598 988 1679.19 921.962 1745 840.5 1745 759.038 1745 693 1679.19 693 1598Z" fill="#E63946" fill-rule="evenodd" fill-opacity="1"/><path d="M799 1766.5C799 1739.16 821.386 1717 849 1717 876.614 1717 899 1739.16 899 1766.5 899 1793.84 876.614 1816 849 1816 821.386 1816 799 1793.84 799 1766.5Z" fill="#FFB86A" fill-rule="evenodd" fill-opacity="1"/></g></g></svg>
