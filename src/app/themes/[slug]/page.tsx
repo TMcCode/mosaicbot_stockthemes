@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { DetailAboutIntro } from "@/components/DetailAboutIntro";
@@ -36,6 +36,10 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemeDetailCached } from "@/lib/getThemeDetailCached";
 import { getThemeFactorProfileCached } from "@/lib/loadThemeFactorProfile";
 import { loadManifest } from "@/lib/loadManifest";
+import {
+  loadThemeSlugRedirects,
+  resolveThemeSlugRedirect,
+} from "@/lib/loadThemeSlugRedirects";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
 import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
@@ -49,8 +53,16 @@ type Props = { params: Promise<{ slug: string }> };
 export const dynamicParams = false;
 
 export async function generateStaticParams() {
-  const { manifest } = await loadManifest();
-  return manifest.themes.map((t) => ({ slug: t.slug }));
+  const [{ manifest }, redirectsDoc] = await Promise.all([
+    loadManifest(),
+    loadThemeSlugRedirects(),
+  ]);
+  const slugs = new Set(manifest.themes.map((t) => t.slug));
+  for (const oldSlug of Object.keys(redirectsDoc.redirects || {})) {
+    const s = String(oldSlug || "").trim();
+    if (s) slugs.add(s);
+  }
+  return [...slugs].map((slug) => ({ slug }));
 }
 
 function clipDescription(s: string, max = 158): string {
@@ -100,6 +112,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ThemeDetailPage({ params }: Props) {
   const { slug } = await params;
+  const redirectsDoc = await loadThemeSlugRedirects();
+  const redirected = resolveThemeSlugRedirect(slug, redirectsDoc.redirects || {});
+  if (redirected) {
+    redirect(`/themes/${encodeURIComponent(redirected)}`);
+  }
   const { manifest, source } = await getManifestCached();
   const theme = manifest.themes.find((x) => x.slug === slug);
   if (!theme) {
