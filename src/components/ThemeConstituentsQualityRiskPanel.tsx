@@ -16,7 +16,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
-import { publicAssetPath } from "@/lib/siteUrl";
+import { brandAssetPath } from "@/lib/siteUrl";
 import {
   formatQualityRiskValue,
   mergeQualityRiskConstituents,
@@ -329,7 +329,7 @@ export default function ThemeConstituentsQualityRiskPanel({
           </p>
           <div className={styles.tableWatermark} aria-hidden="true">
             <img
-              src={publicAssetPath("/brand/logo-full-dark-tight.png")}
+              src={brandAssetPath("/brand/logo-full-dark-tight.png")}
               alt=""
               loading="lazy"
               decoding="async"

@@ -26,3 +26,19 @@
 .label {
   white-space: nowrap;
 }
+
+/* Centered chart watermark — size via parent; keep mark/text proportional. */
+.chartVariant {
+  gap: clamp(8px, 1.2vw, 14px);
+  font-size: clamp(28px, 4.5vw, 52px);
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  opacity: 1;
+}
+
+.chartVariant .mark {
+  width: clamp(40px, 6.5vw, 72px);
+  height: clamp(40px, 6.5vw, 72px);
+  max-width: none;
+  max-height: none;
+}

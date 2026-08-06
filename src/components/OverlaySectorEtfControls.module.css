@@ -14,13 +14,21 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-secondary, #9aa8a6);
   cursor: pointer;
   white-space: nowrap;
 }
 
+:global(.st-theme[data-theme="light"]) .enableToggle {
+  color: #43405c;
+}
+
 .capHint {
   font-size: 10px;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-muted, #6e7d7b);
   white-space: nowrap;
+}
+
+:global(.st-theme[data-theme="light"]) .capHint {
+  color: #65627f;
 }

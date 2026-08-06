@@ -28,7 +28,7 @@
 .removeBtn {
   border: none;
   background: transparent;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-muted, #6e7d7b);
   cursor: pointer;
   font-size: 11px;
   padding: 2px 4px;
@@ -52,7 +52,7 @@
   border-radius: 6px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   background: transparent;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-secondary, #9aa8a6);
   font-size: 11px;
   font-weight: 600;
   cursor: pointer;
@@ -69,6 +69,17 @@
 .periodBtn:disabled {
   opacity: 0.38;
   cursor: not-allowed;
+}
+
+:global(.st-theme[data-theme="light"]) .periodBtn {
+  border-color: rgba(0, 0, 0, 0.14);
+  color: #43405c;
+}
+
+:global(.st-theme[data-theme="light"]) .periodBtnActive {
+  border-color: rgba(42, 207, 200, 0.45);
+  color: var(--accent, #2a9893);
+  background: var(--color-accent-muted, rgba(42, 207, 200, 0.14));
 }
 
 .toolbar {
@@ -100,16 +111,20 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-secondary, #9aa8a6);
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
+:global(.st-theme[data-theme="light"]) .benchmarkToggle {
+  color: #43405c;
+}
+
 .hint {
   margin: 8px 0 0;
   font-size: 12px;
-  color: var(--color-text-muted, #a6abb9);
+  color: var(--text-muted, #6e7d7b);
 }
 
 .chips {

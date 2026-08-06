@@ -2,7 +2,7 @@ import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { SiteNavAuth } from "@/components/SiteNavAuth";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { publicAssetPath } from "@/lib/siteUrl";
+import { brandAssetPath } from "@/lib/siteUrl";
 
 import styles from "./SiteNav.module.css";
 
@@ -13,7 +13,7 @@ export function SiteNav() {
         <PrefetchIntentLink href="/" className={styles.brand}>
           <img
             className={styles.brandMark}
-            src={publicAssetPath("/brand/logo-icon-custom.png")}
+            src={brandAssetPath("/brand/logo-icon-custom.png")}
             alt=""
             width={38}
             height={25}

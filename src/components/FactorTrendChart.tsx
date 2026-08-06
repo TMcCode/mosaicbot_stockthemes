@@ -2,14 +2,16 @@
 
 import { useEffect, useRef } from "react";
 import {
-  ColorType,
   LineStyle,
   createChart,
+  type IChartApi,
   type ISeriesApi,
   type MouseEventParams,
 } from "lightweight-charts";
 
-import { publicAssetPath } from "@/lib/siteUrl";
+import { BrandWatermark } from "@/components/BrandWatermark";
+import { useStockthemesTheme } from "@/components/ThemeRoot";
+import { applyChartTheme, chartThemeOptions } from "@/lib/chartTheme";
 
 import styles from "@/components/FactorsPageClient.module.css";
 
@@ -75,27 +77,28 @@ export function FactorTrendChart({
   series: FactorChartSeries[];
   ariaLabel: string;
 }) {
+  const { theme } = useStockthemesTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const wrapRef = useRef<HTMLDivElement>(null);
   const tipRef = useRef<HTMLDivElement>(null);
+  const chartRef = useRef<IChartApi | null>(null);
 
   useEffect(() => {
     const element = wrapRef.current;
     if (!element || !series.length) return;
 
+    const themeOpts = chartThemeOptions(themeRef.current);
     const chart = createChart(element, {
       autoSize: false,
       width: Math.max(element.clientWidth, 200),
       height: 400,
+      ...themeOpts,
       layout: {
-        background: { type: ColorType.Solid, color: "#0f1115" },
-        textColor: "#a6abb9",
+        ...themeOpts.layout,
         fontSize: 12,
         fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
         attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.06)" },
-        horzLines: { color: "rgba(255,255,255,0.06)" },
       },
       crosshair: {
         vertLine: { visible: false, labelVisible: false },
@@ -104,15 +107,16 @@ export function FactorTrendChart({
       handleScale: { mouseWheel: false, pinch: false, axisPressedMouseMove: false },
       handleScroll: false,
       rightPriceScale: {
-        borderColor: "rgba(255,255,255,0.08)",
+        ...themeOpts.rightPriceScale,
         scaleMargins: { top: 0.1, bottom: 0.15 },
       },
       timeScale: {
-        borderColor: "rgba(255,255,255,0.08)",
+        ...themeOpts.timeScale,
         timeVisible: true,
         secondsVisible: false,
       },
     });
+    chartRef.current = chart;
 
     const lineMeta = new Map<ISeriesApi<"Line">, { id: string; label: string }>();
     for (const item of series) {
@@ -182,21 +186,21 @@ export function FactorTrendChart({
       try {
         chart.remove();
       } catch {}
+      chartRef.current = null;
     };
   }, [series]);
+
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    applyChartTheme(chart, theme);
+  }, [theme]);
 
   return (
     <div className={styles.factorChartCanvasWrap}>
       <div ref={wrapRef} className={styles.factorChartCanvas} role="img" aria-label={ariaLabel} />
       <div className={styles.factorChartBrand} aria-hidden="true">
-        {/* Static-export brand watermark; intrinsic optimization is unnecessary inside the canvas. */}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={publicAssetPath("/brand/logo-full-dark-tight.png")}
-          alt=""
-          loading="lazy"
-          decoding="async"
-        />
+        <BrandWatermark variant="chart" />
       </div>
       <div ref={tipRef} className={styles.factorChartTooltip} />
     </div>

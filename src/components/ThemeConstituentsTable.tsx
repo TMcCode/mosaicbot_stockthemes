@@ -25,7 +25,7 @@ import {
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatWeight } from "@/lib/formatWeight";
-import { publicAssetPath } from "@/lib/siteUrl";
+import { brandAssetPath } from "@/lib/siteUrl";
 import {
   formatConstituentPct,
   priceReturnStat,
@@ -822,7 +822,7 @@ export function ThemeConstituentsTable({
           </p>
           <div className={styles.tableWatermark} aria-hidden="true">
             <img
-              src={publicAssetPath("/brand/logo-full-dark-tight.png")}
+              src={brandAssetPath("/brand/logo-full-dark-tight.png")}
               alt=""
               loading="lazy"
               decoding="async"

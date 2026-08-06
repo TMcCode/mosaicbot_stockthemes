@@ -17,3 +17,16 @@ export function publicAssetPath(path: string): string {
   const p = path.startsWith("/") ? path : `/${path}`;
   return `${prefix}${p}`;
 }
+
+/**
+ * Bump when replacing files under `public/brand/` so browsers/CDN do not keep
+ * serving a prior mark for the full `/brand/*` cache TTL (see `public/_headers`).
+ */
+const BRAND_ASSET_VERSION = "20260806b";
+
+/** `publicAssetPath` plus a stable query cache-buster for brand mark files. */
+export function brandAssetPath(path: string): string {
+  const base = publicAssetPath(path);
+  const sep = base.includes("?") ? "&" : "?";
+  return `${base}${sep}v=${BRAND_ASSET_VERSION}`;
+}

@@ -6,5 +6,7 @@
 /_next/static/*
   Cache-Control: public, max-age=31536000, immutable
 
+# Brand PNGs/SVGs are also cache-busted via brandAssetPath() (?v=…) in siteUrl.ts.
+# Bump BRAND_ASSET_VERSION whenever you replace logo files.
 /brand/*
-  Cache-Control: public, max-age=86400
+  Cache-Control: public, max-age=3600, must-revalidate

@@ -15,7 +15,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
-import { publicAssetPath } from "@/lib/siteUrl";
+import { brandAssetPath } from "@/lib/siteUrl";
 import {
   buildAcceleratingNote,
   filterGrowthColumns,
@@ -299,7 +299,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
             Default: Wgt ↓ · Click headers to sort · Shift+click secondary
           </p>
           <div className={styles.tableWatermark} aria-hidden="true">
-            <img src={publicAssetPath("/brand/logo-full-dark-tight.png")} alt="" loading="lazy" decoding="async" />
+            <img src={brandAssetPath("/brand/logo-full-dark-tight.png")} alt="" loading="lazy" decoding="async" />
           </div>
         </div>
       </div>

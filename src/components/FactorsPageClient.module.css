@@ -383,23 +383,19 @@
   background: #0f1115;
 }
 
-.factorChartBrand {
-  position: absolute;
-  left: 10px;
-  top: 10px;
-  z-index: 6;
-  pointer-events: none;
-  line-height: 0;
-  opacity: 0.98;
+:global(.st-theme[data-theme="light"]) .factorChartCanvas {
+  background: #f7f6fc;
 }
 
-.factorChartBrand img {
-  display: block;
-  width: clamp(130px, 18vw, 220px);
-  height: auto;
-  max-width: min(220px, calc(100vw - 56px));
-  object-fit: contain;
-  object-position: left center;
+.factorChartBrand {
+  position: absolute;
+  inset: 0;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  opacity: 0.14;
 }
 
 .factorChartTooltip {
@@ -416,6 +412,12 @@
   white-space: normal;
   max-width: 360px;
   line-height: 1.35;
+}
+
+:global(.st-theme[data-theme="light"]) .factorChartTooltip {
+  background: rgba(247, 246, 252, 0.96);
+  border-color: rgba(59, 77, 161, 0.16);
+  color: #5c5978;
 }
 
 .chartLine {

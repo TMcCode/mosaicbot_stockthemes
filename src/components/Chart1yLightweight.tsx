@@ -11,7 +11,6 @@ import {
   type MutableRefObject,
 } from "react";
 import {
-  ColorType,
   CrosshairMode,
   LineStyle,
   createChart,
@@ -48,7 +47,9 @@ import { fetchSpyBenchmarkPerformance } from "@/lib/fetchSpyBenchmark";
 import { OVERLAY_STANDARD_PERIODS, rebaseIndexedValuesTo100 } from "@/lib/sliceIndexedChart";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
-import { publicAssetPath } from "@/lib/siteUrl";
+import { BrandWatermark } from "@/components/BrandWatermark";
+import { useStockthemesTheme } from "@/components/ThemeRoot";
+import { applyChartTheme, chartThemeColors, chartThemeOptions } from "@/lib/chartTheme";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -278,10 +279,14 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   compositionMetaRef,
   performanceTitleRef,
 }: Chart1yCanvasProps) {
+  const { theme } = useStockthemesTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
+  const tipColors = chartThemeColors(theme);
 
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
@@ -304,40 +309,38 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
     let chart: IChartApi | null = null;
     try {
+      const themeOpts = chartThemeOptions(themeRef.current);
+      const themeChrome = chartThemeColors(themeRef.current);
       chart = createChart(el, {
         autoSize: false,
         width,
         height,
+        ...themeOpts,
         layout: {
-          background: { type: ColorType.Solid, color: "#0f1115" },
-          textColor: "#a6abb9",
+          ...themeOpts.layout,
           fontSize: 12,
           fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
           // Hide pane logo; lightweight-charts license still requires a site-visible TradingView link (see SiteFooter).
           attributionLogo: false,
         },
-        grid: {
-          vertLines: { color: "rgba(255,255,255,0.06)" },
-          horzLines: { color: "rgba(255,255,255,0.06)" },
-        },
         crosshair: {
           mode: CrosshairMode.Normal,
           // Hide the default crosshair "perforated" lines + labels.
           vertLine: {
-            color: "rgba(255,255,255,0.06)",
+            color: themeChrome.grid,
             width: 1,
             style: LineStyle.LargeDashed,
             visible: false,
             labelVisible: false,
-            labelBackgroundColor: "#0f1115",
+            labelBackgroundColor: themeChrome.crosshairLabelBg,
           },
           horzLine: {
-            color: "rgba(255,255,255,0.06)",
+            color: themeChrome.grid,
             width: 1,
             style: LineStyle.LargeDashed,
             visible: false,
             labelVisible: false,
-            labelBackgroundColor: "#0f1115",
+            labelBackgroundColor: themeChrome.crosshairLabelBg,
           },
         },
         handleScale: {
@@ -348,11 +351,11 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         // No horizontal pan: keep the fitted ~1Y range fixed in the viewport.
         handleScroll: false,
         rightPriceScale: {
-          borderColor: "rgba(255,255,255,0.08)",
+          ...themeOpts.rightPriceScale,
           scaleMargins: { top: 0.1, bottom: 0.15 },
         },
         timeScale: {
-          borderColor: "rgba(255,255,255,0.08)",
+          ...themeOpts.timeScale,
           timeVisible: true,
           secondsVisible: false,
         },
@@ -648,17 +651,18 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     }
   }, [activeView, hiddenSeries, lineApisRef]);
 
+  /** Theme flip: recolor only — do not rebuild series / data. */
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    applyChartTheme(chart, theme);
+  }, [theme]);
+
   return (
     <div style={{ position: "relative" }}>
       <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: 420 }} />
       <div className={styles.chartBrandMark} aria-hidden="true">
-        <img
-          src={publicAssetPath("/brand/logo-full-dark-tight.png")}
-          alt=""
-          loading="lazy"
-          fetchPriority="low"
-          decoding="async"
-        />
+        <BrandWatermark variant="chart" />
       </div>
       <div
         ref={tooltipRef}
@@ -668,9 +672,9 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           display: "none",
           padding: "6px 10px",
           borderRadius: 8,
-          background: "rgba(15, 17, 21, 0.92)",
-          border: "1px solid rgba(255,255,255,0.10)",
-          color: "#a6abb9",
+          background: theme === "dark" ? "rgba(15, 17, 21, 0.92)" : "rgba(247, 246, 252, 0.96)",
+          border: `1px solid ${tipColors.border}`,
+          color: tipColors.text,
           fontSize: 12,
           pointerEvents: "none",
           whiteSpace: "normal",
@@ -689,8 +693,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             alignItems: "center",
             justifyContent: "center",
             padding: 12,
-            background: "rgba(15, 17, 21, 0.8)",
-            color: "#a6abb9",
+            background: theme === "dark" ? "rgba(15, 17, 21, 0.8)" : "rgba(247, 246, 252, 0.92)",
+            color: tipColors.text,
             fontSize: 13,
             lineHeight: 1.4,
             textAlign: "center",

@@ -1,25 +1,30 @@
-import { publicAssetPath } from "@/lib/siteUrl";
+import { brandAssetPath } from "@/lib/siteUrl";
 
 import styles from "./BrandWatermark.module.css";
 
 type Props = {
   className?: string;
+  /** Large centered chart watermark (theme-colored wordmark + SVG mark). */
+  variant?: "default" | "chart";
 };
 
 /** Nav-style lockup: icon + text that follows light/dark theme colors. */
-export function BrandWatermark({ className }: Props) {
+export function BrandWatermark({ className, variant = "default" }: Props) {
+  const isChart = variant === "chart";
   return (
     <div
-      className={[styles.wrap, className].filter(Boolean).join(" ")}
+      className={[styles.wrap, isChart ? styles.chartVariant : "", className]
+        .filter(Boolean)
+        .join(" ")}
       aria-hidden="true"
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         className={styles.mark}
-        src={publicAssetPath("/brand/logo-icon-custom.png")}
+        src={brandAssetPath(isChart ? "/brand/logo-icon.svg" : "/brand/logo-icon-custom.png")}
         alt=""
-        width={16}
-        height={16}
+        width={isChart ? 64 : 16}
+        height={isChart ? 64 : 16}
         loading="lazy"
         decoding="async"
       />

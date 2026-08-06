@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef } from "react";
 import {
-  ColorType,
   CrosshairMode,
   LineStyle,
   createChart,
@@ -11,8 +10,10 @@ import {
   type MouseEventParams,
 } from "lightweight-charts";
 
+import { BrandWatermark } from "@/components/BrandWatermark";
+import { useStockthemesTheme } from "@/components/ThemeRoot";
+import { applyChartTheme, chartThemeOptions } from "@/lib/chartTheme";
 import { OVERLAY_BENCHMARK_COLOR } from "@/lib/overlayChartPalette";
-import { publicAssetPath } from "@/lib/siteUrl";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
 import styles from "./OverlayMultiChart.module.css";
@@ -100,6 +101,9 @@ type Props = {
 };
 
 export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark }: Props) {
+  const { theme } = useStockthemesTheme();
+  const themeRef = useRef(theme);
+  themeRef.current = theme;
   const shellRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -126,29 +130,26 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
     }
 
     const width = Math.max(el.clientWidth, 320);
+    const themeOpts = chartThemeOptions(themeRef.current);
     const chart = createChart(el, {
       autoSize: false,
       width,
       height: 480,
+      ...themeOpts,
       layout: {
-        background: { type: ColorType.Solid, color: "#0f1115" },
-        textColor: "#a6abb9",
+        ...themeOpts.layout,
         fontSize: 12,
         attributionLogo: false,
-      },
-      grid: {
-        vertLines: { color: "rgba(255,255,255,0.06)" },
-        horzLines: { color: "rgba(255,255,255,0.06)" },
       },
       crosshair: { mode: CrosshairMode.Normal },
       handleScale: { mouseWheel: false, pinch: false, axisPressedMouseMove: false },
       handleScroll: false,
       rightPriceScale: {
-        borderColor: "rgba(255,255,255,0.08)",
+        ...themeOpts.rightPriceScale,
         scaleMargins: { top: 0.08, bottom: 0.12 },
       },
       timeScale: {
-        borderColor: "rgba(255,255,255,0.08)",
+        ...themeOpts.timeScale,
         timeVisible: true,
         secondsVisible: false,
       },
@@ -287,6 +288,12 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
     };
   }, [visibleSeries, benchmark, showBenchmark]);
 
+  useEffect(() => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    applyChartTheme(chart, theme);
+  }, [theme]);
+
   if (!series.length && !(showBenchmark && benchmark?.dates?.length)) {
     return (
       <div className={styles.empty} aria-live="polite">
@@ -300,13 +307,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
       <div className={styles.chartBox} ref={wrapRef} aria-label="Theme compare chart" />
       <div ref={tooltipRef} className={styles.chartTooltip} />
       <div className={styles.chartBrandMark} aria-hidden="true">
-        <img
-          src={publicAssetPath("/brand/logo-full-dark-tight.png")}
-          alt=""
-          loading="lazy"
-          fetchPriority="low"
-          decoding="async"
-        />
+        <BrandWatermark variant="chart" />
       </div>
     </div>
   );

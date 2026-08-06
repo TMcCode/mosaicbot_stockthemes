@@ -5,6 +5,7 @@ import { useEffect, useId, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import localStyles from "@/app/rotation/page.module.css";
+import { BrandWatermark } from "@/components/BrandWatermark";
 import { RotationQuadrantPanel } from "@/components/RotationQuadrantPanel";
 import {
   projectRotationMap,
@@ -45,7 +46,6 @@ import {
   type RotationQuadrantId,
 } from "@/lib/rotationQuadrants";
 import { formatReturnPct } from "@/lib/treemapLayout";
-import { publicAssetPath } from "@/lib/siteUrl";
 
 import styles from "./RotationMapClient.module.css";
 
@@ -880,13 +880,7 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
         </svg>
 
         <div className={styles.chartBrandMark} aria-hidden="true">
-          <img
-            src={publicAssetPath("/brand/logo-full-dark-tight.png")}
-            alt=""
-            loading="lazy"
-            fetchPriority="low"
-            decoding="async"
-          />
+          <BrandWatermark variant="chart" />
         </div>
 
         {hover ? (
