@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 
 import styles from "@/app/page.module.css";
 import panelStyles from "@/components/ThemeConstituentsFactorDriversPanel.module.css";
+import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { TickerBadge } from "@/components/TickerBadge";
 import { useThemeFactorAttributionSidecar } from "@/hooks/useThemeFactorAttributionSidecar";
 import {
@@ -70,7 +71,11 @@ export default function ThemeConstituentsFactorDriversPanel({
       new Map(
         detail.constituents.map((row) => [
           row.ticker.trim().toUpperCase(),
-          { name: row.name?.trim(), weight: row.weight },
+          {
+            name: row.name?.trim(),
+            weight: row.weight,
+            logo_url: typeof row.logo_url === "string" ? row.logo_url : null,
+          },
         ]),
       ),
     [detail.constituents],
@@ -360,6 +365,7 @@ export default function ThemeConstituentsFactorDriversPanel({
                     <tr key={row.ticker}>
                       <td>
                         <div className={panelStyles.company}>
+                          <ConstituentLogo ticker={row.ticker} logoUrl={meta?.logo_url} />
                           <span className={panelStyles.companyName}>
                             {meta?.name || row.ticker}
                           </span>

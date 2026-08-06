@@ -15,6 +15,7 @@ import { themeInitScriptContent } from "@/lib/themeStorage";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
+import { STOCKTHEMES_PUBLIC_BASE_URL } from "@/lib/stockthemesStorageConfig";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -73,6 +74,10 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <link rel="preconnect" href={STOCKTHEMES_PUBLIC_BASE_URL} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={STOCKTHEMES_PUBLIC_BASE_URL} />
+      </head>
       <body>
         <Script
           id="stockthemes-theme-init"

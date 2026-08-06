@@ -5,6 +5,7 @@ import { type ReactNode, useMemo, useState } from "react";
 import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
+import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { TickerBadge } from "@/components/TickerBadge";
 import type { ThemeRevenueSidecarState } from "@/hooks/useThemeRevenueSidecar";
 import {
@@ -250,6 +251,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                     <tr key={row.ticker}>
                       <td>
                         <div className={styles.companyCell}>
+                          <ConstituentLogo ticker={row.ticker} />
                           <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
                           <TickerBadge ticker={row.ticker} />
                         </div>

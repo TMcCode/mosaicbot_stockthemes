@@ -575,18 +575,25 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         const displayTitle = name || id;
         const valueLine = priceStr != null ? escapeHtml(priceStr) : "—";
         const dateLine = dateLabel ? escapeHtml(dateLabel) : "";
-        const tipKey = `${dateLine}\x00${displayTitle}\x00${valueLine}`;
+        const isLight = themeRef.current === "light";
+        // Match live dark tooltip: muted date/value, bright title; light keeps readable ink.
+        const muted = isLight ? "#6b6888" : "#a6abb9";
+        const emphasis = isLight ? "#1e1c36" : "#e8eaed";
+        const tipKey = `${themeRef.current}\x00${dateLine}\x00${displayTitle}\x00${valueLine}`;
         if (tipKey !== lastCompositionTipKey) {
           lastCompositionTipKey = tipKey;
           tooltip.innerHTML = [
-            dateLine ? `<div style="color:#a6abb9">${dateLine}</div>` : "",
-            `<div><strong style="color:#e8eaed;font-weight:600">${escapeHtml(displayTitle)}</strong></div>`,
-            `<div>${valueLine}</div>`,
+            dateLine
+              ? `<div style="color:${muted};white-space:nowrap;font-variant-numeric:tabular-nums">${dateLine}</div>`
+              : "",
+            `<div style="color:${emphasis};font-weight:600;white-space:nowrap">${escapeHtml(displayTitle)}</div>`,
+            `<div style="color:${muted};white-space:nowrap;font-variant-numeric:tabular-nums">${valueLine}</div>`,
           ].join("");
         }
       }
 
       tooltip.style.display = "block";
+      tooltip.style.width = "max-content";
       const lx = Math.round(param.point.x + 10);
       const ly = Math.round(param.point.y + 10);
       tooltip.style.left = `${lx}px`;
@@ -677,7 +684,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           color: tipColors.text,
           fontSize: 12,
           pointerEvents: "none",
-          whiteSpace: "normal",
+          // Avoid absolute shrink-to-fit collapsing into a tall narrow column.
+          width: "max-content",
           maxWidth: 360,
           lineHeight: 1.35,
           overflow: "hidden",

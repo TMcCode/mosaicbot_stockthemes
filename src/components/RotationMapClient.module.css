@@ -435,6 +435,22 @@
   color: #fbbf24;
 }
 
+:global(.st-theme[data-theme="light"]) .tooltip {
+  background: rgba(247, 246, 252, 0.96);
+  border-color: rgba(59, 77, 161, 0.16);
+  box-shadow: 0 8px 24px rgba(30, 28, 54, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .tooltipTitle,
+:global(.st-theme[data-theme="light"]) .tooltipRow strong {
+  color: #1e1c36;
+}
+
+:global(.st-theme[data-theme="light"]) .tooltipMeta,
+:global(.st-theme[data-theme="light"]) .tooltipRow {
+  color: #6b6888;
+}
+
 .directionCheck {
   display: inline-flex;
   align-items: center;

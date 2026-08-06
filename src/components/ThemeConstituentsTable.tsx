@@ -8,6 +8,7 @@ import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
+import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
@@ -493,6 +494,10 @@ export function ThemeConstituentsTable({
                     <tr key={c.ticker}>
                       <td>
                         <div className={styles.companyCell}>
+                          <ConstituentLogo
+                            ticker={c.ticker}
+                            logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
+                          />
                           <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
                           <TickerBadge ticker={c.ticker} />
                         </div>

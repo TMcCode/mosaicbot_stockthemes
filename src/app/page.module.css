@@ -1052,6 +1052,26 @@ a.feedTitle:hover {
   min-width: 0;
 }
 
+.constituentLogoSlot {
+  flex: 0 0 16px;
+  width: 16px;
+  height: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+}
+
+.constituentLogo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 .companyName {
   min-width: 0;
   flex: 1 1 auto;

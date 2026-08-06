@@ -7,6 +7,7 @@ import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
+import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
 import { capturePostHog, capturePostHogException } from "@/lib/posthogClient";
@@ -178,6 +179,10 @@ export function ThemeDetailRuntimeLoader({
                   <tr key={c.ticker}>
                     <td>
                       <div className={styles.companyCell}>
+                        <ConstituentLogo
+                          ticker={c.ticker}
+                          logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
+                        />
                         <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
                         <TickerBadge ticker={c.ticker} />
                       </div>

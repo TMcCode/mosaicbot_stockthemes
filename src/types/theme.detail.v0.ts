@@ -45,6 +45,8 @@ export type ThemeThesisV0 = {
 export type ThemeDetailConstituentV0 = {
   ticker: string;
   name?: string;
+  /** Public logo on storage.stockthemes.ai when published; UI may fall back to logos/v0/{ticker}.png. */
+  logo_url?: string | null;
   weight?: number;
   market_cap_usd?: number;
   market_cap?: number;
