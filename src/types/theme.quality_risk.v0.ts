@@ -72,7 +72,11 @@ export type ThemeQualityRiskRiskV0 = {
   /** Current beta reported by the FMP company profile. */
   beta?: number | null;
   short_float_pct?: number | null;
-  /** Insider ownership as a percentage of shares outstanding (percent points). */
+  /**
+   * Theme UI "Non-float %": closely held / non-free-float share of outstanding
+   * (percent points). Prefer FMP ``100 − freeFloat``; may fall back to legacy
+   * EOD insider % until non-float is populated.
+   */
   inside_ownership_pct?: number | null;
 };
 

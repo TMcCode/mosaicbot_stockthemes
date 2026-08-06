@@ -273,7 +273,12 @@ function normalizeRisk(root: Record<string, unknown>): ThemeQualityRiskRiskV0 | 
     beta: finiteNumber(firstValue(source, ["beta", "fmp_beta"])),
     short_float_pct: finiteNumber(firstValue(source, ["short_float_pct", "short_pct_float"])),
     inside_ownership_pct: finiteNumber(
-      firstValue(source, ["inside_ownership_pct", "percent_insiders", "insider_ownership_pct"]),
+      firstValue(source, [
+        "inside_ownership_pct",
+        "non_float_pct",
+        "percent_insiders",
+        "insider_ownership_pct",
+      ]),
     ),
   };
   return Object.values(out).some((value) => value !== undefined) ? out : undefined;
@@ -505,8 +510,9 @@ export function qualityRiskColumns(
     },
     {
       id: "inside_ownership_pct",
-      label: "Inside\nOwnership %",
-      tooltip: "Shares held by corporate insiders as a percentage of shares outstanding. Higher ownership can signal alignment with shareholders; very high values may also reduce free float. Coverage depends on filing data availability.",
+      label: "Non-float\n%",
+      tooltip:
+        "Share of outstanding equity that is not free float (100 − free float). Includes closely held, restricted, strategic, and similar non-tradable supply. Higher values mean thinner public float and can amplify price moves. Sourced from FMP shares-float; not the same as Form 4 officer ownership.",
       format: "pct",
       getValue: (metrics) => metrics?.risk?.inside_ownership_pct,
     },
