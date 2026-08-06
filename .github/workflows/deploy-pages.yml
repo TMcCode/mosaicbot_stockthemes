@@ -195,23 +195,34 @@ jobs:
           name: site-out
           path: out
 
+      - name: Ensure Cloudflare Pages project exists
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          resp=$(curl -sS -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects/stockthemes")
+          ok=$(echo "$resp" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("success"))')
+          if [ "$ok" = "True" ]; then
+            echo "Project stockthemes already exists"
+            exit 0
+          fi
+          echo "Creating Pages project stockthemes..."
+          curl -sS -X POST -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            "https://api.cloudflare.com/client/v4/accounts/${CLOUDFLARE_ACCOUNT_ID}/pages/projects" \
+            -d '{"name":"stockthemes","production_branch":"main"}' \
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("success", d.get("success")); print("errors", d.get("errors")); raise SystemExit(0 if d.get("success") else 1)'
+
       - name: Deploy to Cloudflare Pages
         id: deployment
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Create project on first deploy; subsequent deploys update production.
+          wranglerVersion: "4.14.1"
           command: pages deploy out --project-name=stockthemes --commit-dirty=true
-
-      - name: Ensure custom domains
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # Idempotent enough: succeed if already attached; ignore "already exists".
-          command: pages project list
-        continue-on-error: true
 
       - name: Attach stockthemes.ai (if missing)
         env:
