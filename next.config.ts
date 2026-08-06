@@ -2,9 +2,9 @@ import type { NextConfig } from "next";
 import path from "path";
 
 /**
- * GitHub project Pages serves at https://<user>.github.io/<repo>/ — set
- * NEXT_PUBLIC_BASE_PATH=/<repo> in CI (e.g. /mosaicbot_stockthemes). Omit for apex
- * custom domain (https://stockthemes.ai/).
+ * Optional subpath hosting (legacy GitHub project Pages): set
+ * NEXT_PUBLIC_BASE_PATH=/<repo> in CI. Omit for apex (Cloudflare Pages /
+ * https://stockthemes.ai/).
  */
 let basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").trim().replace(/\/$/, "");
 if (basePath && !basePath.startsWith("/")) {
