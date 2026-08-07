@@ -1,4 +1,5 @@
 import { inferMarketCapUsd } from "@/lib/constituentMeta";
+import { canonicalizeLogoUrl } from "@/lib/constituentLogoUrl";
 import { priceReturnMetric, type ConstituentPriceReturnColumn } from "@/lib/constituentPriceReturns";
 import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 
@@ -72,12 +73,12 @@ export function buildConstituentTreemapNodes(
     for (const { key } of TREEMAP_RETURN_PERIODS) {
       returns[key] = returnForColumn(c, key);
     }
-    const logo = (c as { logo_url?: string | null }).logo_url;
+    const logo = canonicalizeLogoUrl((c as { logo_url?: string | null }).logo_url);
     nodes.push({
       ticker: c.ticker,
       name: c.name?.trim() || c.ticker,
       weight,
-      logo_url: typeof logo === "string" && logo.trim() ? logo.trim() : null,
+      logo_url: logo,
       returns,
     });
   }

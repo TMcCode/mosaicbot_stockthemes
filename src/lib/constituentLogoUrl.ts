@@ -10,6 +10,24 @@ export type LogoPresenceMap = Map<string, string>;
 
 const PRESENT_URL = `${STOCKTHEMES_CDN_ORIGIN}/logos/v0/present.v0.json`;
 
+/** Legacy GCS public URLs 403 after R2 migration; rewrite to the CDN origin. */
+const LEGACY_GCS_LOGO_HOSTS = [
+  "https://storage.googleapis.com/stockthemes-public/",
+  "http://storage.googleapis.com/stockthemes-public/",
+  "https://storage.cloud.google.com/stockthemes-public/",
+];
+
+export function canonicalizeLogoUrl(url: string | null | undefined): string | null {
+  const u = typeof url === "string" ? url.trim() : "";
+  if (!u) return null;
+  for (const host of LEGACY_GCS_LOGO_HOSTS) {
+    if (u.startsWith(host)) {
+      return `${STOCKTHEMES_CDN_ORIGIN}/${u.slice(host.length)}`;
+    }
+  }
+  return u;
+}
+
 let presencePromise: Promise<LogoPresenceMap | null> | null = null;
 let presenceCache: LogoPresenceMap | null | undefined;
 
@@ -78,7 +96,7 @@ export function resolveConstituentLogoUrl(
   ticker: string,
   presence?: LogoPresenceMap | null,
 ): string | null {
-  const fromJson = typeof logoUrl === "string" ? logoUrl.trim() : "";
+  const fromJson = canonicalizeLogoUrl(logoUrl);
   if (fromJson) return fromJson;
 
   const t = String(ticker || "")
