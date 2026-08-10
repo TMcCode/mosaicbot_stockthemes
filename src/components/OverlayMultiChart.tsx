@@ -6,13 +6,19 @@ import {
   LineStyle,
   createChart,
   type IChartApi,
+  type IPriceLine,
   type ISeriesApi,
   type MouseEventParams,
 } from "lightweight-charts";
 
 import { BrandWatermark } from "@/components/BrandWatermark";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
-import { applyChartTheme, chartThemeOptions } from "@/lib/chartTheme";
+import {
+  applyChartTheme,
+  applyIndexedBaselineTheme,
+  attachIndexedBaseline,
+  chartThemeOptions,
+} from "@/lib/chartTheme";
 import { OVERLAY_BENCHMARK_COLOR } from "@/lib/overlayChartPalette";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
@@ -107,6 +113,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
   const shellRef = useRef<HTMLDivElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const indexedBaselineRef = useRef<IPriceLine | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const seriesApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
 
@@ -158,6 +165,8 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
 
     type LineMeta = { id: string; name: string; color: string };
     const orderedLines: { api: ISeriesApi<"Line">; meta: LineMeta }[] = [];
+    let baselineHost: ISeriesApi<"Line"> | undefined;
+    indexedBaselineRef.current = null;
 
     visibleSeries.forEach((s) => {
       const pts = toPoints(s.performance.dates, s.performance.values.map(Number));
@@ -174,6 +183,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
       line.setData(pts);
       seriesApisRef.current.set(s.id, line);
       orderedLines.push({ api: line, meta: { id: s.id, name: s.name, color: s.color } });
+      if (!baselineHost) baselineHost = line;
     });
 
     if (showBenchmark && benchmark?.dates?.length && benchmark?.values?.length) {
@@ -194,7 +204,13 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
           api: bench,
           meta: { id: BENCHMARK_ID, name: BENCHMARK_NAME, color: OVERLAY_BENCHMARK_COLOR },
         });
+        // Prefer SPY — stays put when overlay legend toggles rebuild away theme lines.
+        baselineHost = bench;
       }
+    }
+
+    if (baselineHost) {
+      indexedBaselineRef.current = attachIndexedBaseline(baselineHost, themeRef.current);
     }
 
     chart.timeScale().fitContent();
@@ -284,6 +300,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
       chart.unsubscribeCrosshairMove(handleCrosshairMove);
       chart.remove();
       chartRef.current = null;
+      indexedBaselineRef.current = null;
       seriesApisRef.current.clear();
     };
   }, [visibleSeries, benchmark, showBenchmark]);
@@ -292,6 +309,8 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
     const chart = chartRef.current;
     if (!chart) return;
     applyChartTheme(chart, theme);
+    const baseline = indexedBaselineRef.current;
+    if (baseline) applyIndexedBaselineTheme(baseline, theme);
   }, [theme]);
 
   if (!series.length && !(showBenchmark && benchmark?.dates?.length)) {

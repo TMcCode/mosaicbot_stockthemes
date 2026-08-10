@@ -15,6 +15,7 @@ import {
   LineStyle,
   createChart,
   type IChartApi,
+  type IPriceLine,
   type ISeriesApi,
   type MouseEventParams,
 } from "lightweight-charts";
@@ -49,7 +50,13 @@ import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { BrandWatermark } from "@/components/BrandWatermark";
 import { useStockthemesTheme } from "@/components/ThemeRoot";
-import { applyChartTheme, chartThemeColors, chartThemeOptions } from "@/lib/chartTheme";
+import {
+  applyChartTheme,
+  applyIndexedBaselineTheme,
+  attachIndexedBaseline,
+  chartThemeColors,
+  chartThemeOptions,
+} from "@/lib/chartTheme";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -284,6 +291,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   themeRef.current = theme;
   const wrapRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const indexedBaselineRef = useRef<IPriceLine | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const tipColors = chartThemeColors(theme);
@@ -415,6 +423,9 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     const seriesIdByApi = new Map<ISeriesApi<"Line">, string>();
     /** Single series in performance mode — skip nearest-line scan on every crosshair frame. */
     let perfLineApi: ISeriesApi<"Line"> | undefined;
+    /** Prefer a always-visible series (perf / SPY) so legend toggles don’t drop the 100 line. */
+    let baselineHost: ISeriesApi<"Line"> | undefined;
+    indexedBaselineRef.current = null;
     try {
       if (activeView === "performance" && perfPoints) {
         const series = chart.addLineSeries({
@@ -430,6 +441,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         });
         series.setData(perfPoints);
         perfLineApi = series;
+        baselineHost = series;
         lineApisRef.current.set(PERF_SERIES_ID, series);
         seriesIdByApi.set(series, PERF_SERIES_ID);
         if (benchmarkPoints && benchmarkPoints.length) {
@@ -458,6 +470,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
             priceFormat: INTEGER_PRICE_FORMAT,
           });
           bench.setData(benchmarkPoints);
+          baselineHost = bench;
         }
         const hidden = new Set(hiddenSeries);
         comp.series.forEach((s, i) => {
@@ -477,7 +490,12 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           series.setData(pts);
           lineApisRef.current.set(s.ticker, series);
           seriesIdByApi.set(series, s.ticker);
+          if (!baselineHost) baselineHost = series;
         });
+      }
+
+      if (baselineHost) {
+        indexedBaselineRef.current = attachIndexedBaseline(baselineHost, themeRef.current);
       }
 
       if (activeView === "performance" && !perfHasPoints) {
@@ -645,6 +663,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         // no-op
       }
       chartRef.current = null;
+      indexedBaselineRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp/benchmark are sliced upstream; hiddenSeries applied in follow-up effect
   }, [chart1y, benchmarkPerformance, activeView, lineApisRef]);
@@ -663,6 +682,8 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     const chart = chartRef.current;
     if (!chart) return;
     applyChartTheme(chart, theme);
+    const baseline = indexedBaselineRef.current;
+    if (baseline) applyIndexedBaselineTheme(baseline, theme);
   }, [theme]);
 
   return (
