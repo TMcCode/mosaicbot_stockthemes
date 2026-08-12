@@ -290,6 +290,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   const themeRef = useRef(theme);
   themeRef.current = theme;
   const wrapRef = useRef<HTMLDivElement>(null);
+  const shellRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const indexedBaselineRef = useRef<IPriceLine | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -612,8 +613,17 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
       tooltip.style.display = "block";
       tooltip.style.width = "max-content";
-      const lx = Math.round(param.point.x + 10);
-      const ly = Math.round(param.point.y + 10);
+      const shell = shellRef.current;
+      const shellW = shell?.clientWidth ?? 0;
+      const shellH = shell?.clientHeight ?? 0;
+      const tipW = tooltip.offsetWidth;
+      const tipH = tooltip.offsetHeight;
+      let lx = Math.round(param.point.x + 10);
+      let ly = Math.round(param.point.y + 10);
+      if (shellW > 0 && lx + tipW > shellW - 8) lx = Math.round(param.point.x - tipW - 10);
+      if (shellH > 0 && ly + tipH > shellH - 8) ly = Math.round(param.point.y - tipH - 10);
+      if (shellW > 0) lx = Math.max(8, Math.min(lx, shellW - tipW - 8));
+      if (shellH > 0) ly = Math.max(8, Math.min(ly, shellH - tipH - 8));
       tooltip.style.left = `${lx}px`;
       tooltip.style.top = `${ly}px`;
     };
@@ -687,7 +697,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   }, [theme]);
 
   return (
-    <div style={{ position: "relative" }}>
+    <div ref={shellRef} style={{ position: "relative", overflow: "visible" }}>
       <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: 420 }} />
       <div className={styles.chartBrandMark} aria-hidden="true">
         <BrandWatermark variant="chart" />
@@ -709,8 +719,6 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
           width: "max-content",
           maxWidth: 360,
           lineHeight: 1.35,
-          overflow: "hidden",
-          textOverflow: "ellipsis",
         }}
       />
       {renderError ? (
