@@ -35,15 +35,15 @@ This defines earnings columns on `/themes/[slug]` constituent rows for stockthem
     - provisional: show `last_rpt_live_percent` (current vs pre-report)
     - locked: show `last_rpt_final_percent` (or `last_rpt_percent`)
   - Else: blank (`—`).
-- `Avg Abs Rpt %`
-  - Rolling 16-quarter mean of absolute earnings-day moves (`avg_abs_rpt_percent`).
-  - Expected move size for the ticker (always non-negative).
 - `IntraQtr%`
   - When reported: show `pre_earnings_percent_last_report`.
   - When not yet reported: show `since_last_rpt_percent` (run-up from prior report to now).
 - `Since Qtr Rpt%`
   - When reported: show `since_last_rpt_percent`.
   - When not yet reported: blank (`—`).
+- `Avg Abs Rpt %`
+  - Rolling 16-quarter mean of absolute earnings-day moves (`avg_abs_rpt_percent`).
+  - Expected move size for the ticker (always non-negative).
 
 ## Data Fields Required Per Constituent
 

@@ -105,12 +105,12 @@ function earningsSortValue(
       return earnings.lastQuarterEarningsMoveValue;
     case "earnings_move":
       return earnings.earningsPerfValue;
-    case "avg_abs_rpt":
-      return earnings.avgAbsRptValue;
     case "intra_quarter_move":
       return earnings.intraQtrValue;
     case "since_last_report":
       return earnings.sinceQtrRptValue;
+    case "avg_abs_rpt":
+      return earnings.avgAbsRptValue;
     default:
       return null;
   }
@@ -519,9 +519,9 @@ export function ThemeConstituentsTable({
                             {earnings.earningsPerfCell}
                             {earnings.earningsPerfIsProvisional ? "*" : ""}
                           </td>
-                          <td>{earnings.avgAbsRptCell}</td>
                           <td>{earnings.intraQtrCell}</td>
                           <td>{earnings.sinceQtrRptCell}</td>
+                          <td>{earnings.avgAbsRptCell}</td>
                         </>
                       ) : null}
                       {showReturns && hasMcap ? (
@@ -590,13 +590,13 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(avgEarningsPerf)}</strong>
                       </td>
                       <td>
-                        <strong>{formatConstituentPct(avgAvgAbsRpt)}</strong>
-                      </td>
-                      <td>
                         <strong>{formatConstituentPct(avgIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(avgSinceQtrRpt)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(avgAvgAbsRpt)}</strong>
                       </td>
                     </>
                   ) : null}
@@ -633,13 +633,13 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(medianEarningsPerf)}</strong>
                       </td>
                       <td>
-                        <strong>{formatConstituentPct(medianAvgAbsRpt)}</strong>
-                      </td>
-                      <td>
                         <strong>{formatConstituentPct(medianIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(medianSinceQtrRpt)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(medianAvgAbsRpt)}</strong>
                       </td>
                     </>
                   ) : null}
@@ -676,13 +676,13 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(stdEarningsPerf)}</strong>
                       </td>
                       <td>
-                        <strong>{formatConstituentPct(stdAvgAbsRpt)}</strong>
-                      </td>
-                      <td>
                         <strong>{formatConstituentPct(stdIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(stdSinceQtrRpt)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(stdAvgAbsRpt)}</strong>
                       </td>
                     </>
                   ) : null}
@@ -719,13 +719,13 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(minEarningsPerf)}</strong>
                       </td>
                       <td>
-                        <strong>{formatConstituentPct(minAvgAbsRpt)}</strong>
-                      </td>
-                      <td>
                         <strong>{formatConstituentPct(minIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(minSinceQtrRpt)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(minAvgAbsRpt)}</strong>
                       </td>
                     </>
                   ) : null}
@@ -762,13 +762,13 @@ export function ThemeConstituentsTable({
                         <strong>{formatConstituentPct(maxEarningsPerf)}</strong>
                       </td>
                       <td>
-                        <strong>{formatConstituentPct(maxAvgAbsRpt)}</strong>
-                      </td>
-                      <td>
                         <strong>{formatConstituentPct(maxIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(maxSinceQtrRpt)}</strong>
+                      </td>
+                      <td>
+                        <strong>{formatConstituentPct(maxAvgAbsRpt)}</strong>
                       </td>
                     </>
                   ) : null}
@@ -800,13 +800,13 @@ export function ThemeConstituentsTable({
                       <td>
                         <strong>{formatConstituentPct(posEarningsPerf)}</strong>
                       </td>
-                      <td></td>
                       <td>
                         <strong>{formatConstituentPct(posIntraQtr)}</strong>
                       </td>
                       <td>
                         <strong>{formatConstituentPct(posSinceQtrRpt)}</strong>
                       </td>
+                      <td></td>
                     </>
                   ) : null}
                   {showReturns && hasMcap ? <td></td> : null}
