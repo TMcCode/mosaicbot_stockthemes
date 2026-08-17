@@ -19,7 +19,7 @@ import { formatWeight } from "@/lib/formatWeight";
 import { brandAssetPath } from "@/lib/siteUrl";
 import {
   buildAcceleratingNote,
-  filterGrowthColumns,
+  filterRevenueColumns,
   formatRevenueCell,
   mergeRevenueConstituents,
   REVENUE_STAT_ROW_LABELS,
@@ -69,8 +69,8 @@ function compareRevenueRows(
     }
     const col = columns.find((c) => c.id === s.key);
     if (col) {
-      const metricsA = mode === "growth" ? a.revenue.growth : a.revenue.accel;
-      const metricsB = mode === "growth" ? b.revenue.growth : b.revenue.accel;
+      const metricsA = mode === "accel" ? a.revenue.accel : a.revenue.growth;
+      const metricsB = mode === "accel" ? b.revenue.accel : b.revenue.growth;
       const cmp = compareNullableNumbers(
         revenueCellValue(metricsA, col, mode),
         revenueCellValue(metricsB, col, mode),
@@ -97,7 +97,7 @@ function RevenueFooterRows({
   themeLabel: string;
   themeMetrics: ThemeRevenueMetricMapV0;
 }) {
-  const statsBlock = mode === "growth" ? data.table_stats?.growth : data.table_stats?.accel;
+  const statsBlock = mode === "accel" ? data.table_stats?.accel : data.table_stats?.growth;
   return (
     <>
       <tr className={tableStyles.themeReturnRow}>
@@ -151,7 +151,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
   }, [sidecarState, detail.constituents]);
 
   const hasWeight = detail.constituents.some((c) => c.weight != null && Number.isFinite(c.weight));
-  const columns = useMemo(() => filterGrowthColumns(mode), [mode]);
+  const columns = useMemo(() => filterRevenueColumns(mode), [mode]);
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
@@ -208,8 +208,16 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
           >
             Accel (pp)
           </button>
+          <button
+            type="button"
+            className={mode === "valuation" ? tableStyles.active : undefined}
+            aria-pressed={mode === "valuation"}
+            onClick={() => setMode("valuation")}
+          >
+            Valuation
+          </button>
         </div>
-        {acceleratingNote ? (
+        {acceleratingNote && mode !== "valuation" ? (
           <p className={tableStyles.acceleratingNote} title={acceleratingNote}>
             {acceleratingNote}
           </p>
@@ -219,6 +227,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
           data-constituents-view="revenue"
+          scrollResetKey={mode}
           tabIndex={0}
           role="region"
           aria-label="Revenue table"
@@ -239,6 +248,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                             {line}
                           </span>
                         )),
+                        col.tooltip,
                       )}
                     </th>
                   ))}
@@ -246,7 +256,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
               </thead>
               <tbody>
                 {sortedRows.map((row) => {
-                  const metrics = mode === "growth" ? row.revenue.growth : row.revenue.accel;
+                  const metrics = mode === "accel" ? row.revenue.accel : row.revenue.growth;
                   return (
                     <tr key={row.ticker}>
                       <td>
@@ -296,6 +306,9 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
           <p className={styles.tableFootnote}>
             Manual theme weights for the theme row; footer stats are equal-weight across constituents.
             {mode === "accel" ? " Accel = change in growth (percentage points)." : null}
+            {mode === "valuation"
+              ? " PSG = P/S ÷ YoY revenue growth %. NTM P/S blends remaining CY sales with NY."
+              : null}
           </p>
           <p className={tableStyles.sortHint}>
             Default: Wgt ↓ · Click headers to sort · Shift+click secondary

@@ -11,22 +11,22 @@ import { parseThemeRevenue, revenueHasContent } from "@/lib/themeRevenue";
 import type { ThemeRevenueV0 } from "@/types/theme.revenue.v0";
 
 /** Must match useThemeRevenueSidecar cache namespace. */
-const CACHE_NS = "theme-revenue";
+export const THEME_REVENUE_CACHE_NS = "theme-revenue";
 
-type PrefetchState =
+export type ThemeRevenueLoadState =
   | { status: "absent" }
   | { status: "ok"; data: ThemeRevenueV0 }
   | { status: "error" };
 
-const inflight = new Map<string, Promise<PrefetchState>>();
+const inflight = new Map<string, Promise<ThemeRevenueLoadState>>();
 
-/** Warm the revenue memory cache without mounting the Revenue panel. */
-export function prefetchThemeRevenueSidecar(
+/** Shared fetch so idle prefetch and the Revenue hook don't double-request. */
+export function loadThemeRevenueSidecar(
   slug: string,
   dataBaseUrl: string,
-): Promise<PrefetchState> {
+): Promise<ThemeRevenueLoadState> {
   const key = themeSidecarCacheKey(dataBaseUrl, slug);
-  const cached = getThemeSidecarMemory<PrefetchState>(CACHE_NS, key);
+  const cached = getThemeSidecarMemory<ThemeRevenueLoadState>(THEME_REVENUE_CACHE_NS, key);
   if (cached && isThemeSidecarTerminalStatus(cached.status)) {
     return Promise.resolve(cached);
   }
@@ -36,19 +36,19 @@ export function prefetchThemeRevenueSidecar(
 
   const promise = fetchThemeTableSidecarText("revenue", slug, dataBaseUrl)
     .then((raw) => {
-      let next: PrefetchState;
+      let next: ThemeRevenueLoadState;
       if (raw == null) {
         next = { status: "absent" };
       } else {
         const parsed = parseThemeRevenue(raw);
         next = revenueHasContent(parsed) ? { status: "ok", data: parsed } : { status: "absent" };
       }
-      setThemeSidecarMemory(CACHE_NS, key, next);
+      setThemeSidecarMemory(THEME_REVENUE_CACHE_NS, key, next);
       return next;
     })
     .catch(() => {
-      const next: PrefetchState = { status: "error" };
-      setThemeSidecarMemory(CACHE_NS, key, next);
+      const next: ThemeRevenueLoadState = { status: "error" };
+      setThemeSidecarMemory(THEME_REVENUE_CACHE_NS, key, next);
       return next;
     })
     .finally(() => {
@@ -57,4 +57,12 @@ export function prefetchThemeRevenueSidecar(
 
   inflight.set(key, promise);
   return promise;
+}
+
+/** Warm the revenue memory cache without mounting the Revenue panel. */
+export function prefetchThemeRevenueSidecar(
+  slug: string,
+  dataBaseUrl: string,
+): Promise<ThemeRevenueLoadState> {
+  return loadThemeRevenueSidecar(slug, dataBaseUrl);
 }

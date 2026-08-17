@@ -1027,6 +1027,29 @@ a.feedTitle:hover {
   gap: 14px;
 }
 
+/* Wide revenue / revisions tables: keep the company column visible while panning. */
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable,
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable td:first-child,
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--card-surface, #0c1014);
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+}
+
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable th:first-child {
+  z-index: 3;
+}
+
 .dataTable th:not(:first-child),
 .dataTable td:not(:first-child) {
   text-align: right;

@@ -1,10 +1,12 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 
 type Props = {
   className?: string;
   children: React.ReactNode;
+  /** When this value changes, reset horizontal scroll (e.g. Growth → Accel width change). */
+  scrollResetKey?: string | number;
 } & Omit<React.ComponentPropsWithoutRef<"div">, "children" | "className">;
 
 const DRAG_THRESHOLD_PX = 5;
@@ -14,12 +16,18 @@ const DRAG_MULTIPLIER = 1.35;
  * Enables drag-to-scroll for horizontally overflowing content, including desktop
  * device emulation where touch gestures are not always forwarded.
  */
-export function HorizontalScrollArea({ className, children, ...rest }: Props) {
+export function HorizontalScrollArea({ className, children, scrollResetKey, ...rest }: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const pointerIdRef = useRef<number | null>(null);
   const startXRef = useRef(0);
   const startScrollLeftRef = useRef(0);
+
+  useEffect(() => {
+    if (scrollResetKey == null) return;
+    const host = hostRef.current;
+    if (host) host.scrollLeft = 0;
+  }, [scrollResetKey]);
 
   const resetDrag = () => {
     const host = hostRef.current;

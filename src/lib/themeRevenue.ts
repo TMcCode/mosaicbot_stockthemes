@@ -8,11 +8,12 @@ import type {
 
 export const REVENUE_SIDECAR_SUFFIX = ".revenue.v0.json";
 
-export type RevenueDisplayMode = "growth" | "accel";
+export type RevenueDisplayMode = "growth" | "accel" | "valuation";
 
 export type RevenueColumnDef = {
   id: string;
   label: string;
+  tooltip?: string;
   growthKey?: keyof ThemeRevenueMetricMapV0;
   accelKey?: keyof ThemeRevenueMetricMapV0;
   revisionKey?: keyof ThemeRevenueRevisionsV0;
@@ -22,19 +23,156 @@ export type RevenueColumnDef = {
 };
 
 export const REVENUE_GROWTH_COLUMNS: RevenueColumnDef[] = [
-  { id: "lq", label: "LQ Rev\nAct", growthKey: "lq_rev_act_pct", growthOnly: true, format: "pct" },
-  { id: "cq", label: "CQ Rev\nEst", growthKey: "cq_rev_est_pct", accelKey: "cq_accel_pp", format: "pct" },
-  { id: "nq", label: "NQ Rev\nEst", growthKey: "nq_rev_est_pct", accelKey: "nq_accel_pp", format: "pct" },
-  { id: "ly", label: "LY Rev\nAct", growthKey: "ly_rev_act_pct", accelKey: "ly_cy_accel_pp", format: "pct" },
-  { id: "cy", label: "CY Rev\nEst", growthKey: "cy_rev_est_pct", accelKey: "cy_ny_accel_pp", format: "pct" },
-  { id: "ny", label: "NY Rev\nEst", growthKey: "ny_rev_est_pct", accelKey: "ny_n2y_accel_pp", format: "pct" },
-  { id: "n2y", label: "N2Y Rev\nEst", growthKey: "n2y_rev_est_pct", format: "pct", hideInAccel: true },
-  { id: "trail3y", label: "3Yr\nCAGR", growthKey: "trail_3y_cagr_pct", format: "pct", hideInAccel: true },
-  { id: "fwd3y", label: "3Y Fwd\nCAGR", growthKey: "fwd_3y_cagr_pct", format: "pct", hideInAccel: true },
-  { id: "ps_ntm", label: "P/S\nNTM", growthKey: "ps_ratio_ntm", format: "ratio", hideInAccel: true },
-  { id: "psg_ntm", label: "PSG\nNTM", growthKey: "ps_to_revgrowth", format: "ratio", hideInAccel: true },
-  { id: "psg_ny", label: "PSG\nNY", growthKey: "psg_ny", format: "ratio", hideInAccel: true },
-  { id: "psg_n2y", label: "PSG\nN2Y", growthKey: "psg_n2y", format: "ratio", hideInAccel: true },
+  {
+    id: "lq_py",
+    label: "LQ-1Y\nAct",
+    tooltip: "Same quarter last year as LQ. If LQ is 1Q26 this is 1Q25 — the comp LQ is lapping.",
+    growthKey: "lq_py_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "cq_py",
+    label: "CQ-1Y\nAct",
+    tooltip: "Same quarter last year as CQ. If CQ is 2Q26 this is 2Q25 — the comp CQ estimates are lapping.",
+    growthKey: "cq_py_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "nq_py",
+    label: "NQ-1Y\nAct",
+    tooltip: "Same quarter last year as NQ. If NQ is 3Q26 this is 3Q25 — the comp NQ estimates are lapping.",
+    growthKey: "nq_py_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "l2q",
+    label: "L2Q Rev\nAct",
+    tooltip: "Last 2 Quarters Revenue Actual — YoY growth for the reported quarter before LQ.",
+    growthKey: "l2q_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "lq",
+    label: "LQ Rev\nAct",
+    tooltip: "Last Quarter Revenue Actual — YoY growth for the most recent reported quarter.",
+    growthKey: "lq_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "cq",
+    label: "CQ Rev\nEst",
+    tooltip: "Current Quarter Revenue Estimate — YoY growth for the next unreported quarter.",
+    growthKey: "cq_rev_est_pct",
+    accelKey: "cq_accel_pp",
+    format: "pct",
+  },
+  {
+    id: "nq",
+    label: "NQ Rev\nEst",
+    tooltip: "Next Quarter Revenue Estimate — YoY growth for the quarter after CQ.",
+    growthKey: "nq_rev_est_pct",
+    accelKey: "nq_accel_pp",
+    format: "pct",
+  },
+  {
+    id: "l2y",
+    label: "L2Y Rev\nAct",
+    tooltip: "Last 2 Years Revenue Actual — YoY growth for the year before LY (two years ago).",
+    growthKey: "l2y_rev_act_pct",
+    growthOnly: true,
+    format: "pct",
+  },
+  {
+    id: "ly",
+    label: "LY Rev\nAct",
+    tooltip: "Last Year Revenue Actual — YoY growth for the last reported fiscal/calendar year.",
+    growthKey: "ly_rev_act_pct",
+    accelKey: "ly_cy_accel_pp",
+    format: "pct",
+  },
+  {
+    id: "cy",
+    label: "CY Rev\nEst",
+    tooltip: "Current Year Revenue Estimate — YoY growth for the current year.",
+    growthKey: "cy_rev_est_pct",
+    accelKey: "cy_ny_accel_pp",
+    format: "pct",
+  },
+  {
+    id: "ny",
+    label: "NY Rev\nEst",
+    tooltip: "Next Year Revenue Estimate — YoY growth for next year.",
+    growthKey: "ny_rev_est_pct",
+    accelKey: "ny_n2y_accel_pp",
+    format: "pct",
+  },
+  {
+    id: "n2y",
+    label: "N2Y Rev\nEst",
+    tooltip: "Next 2 Years Revenue Estimate — YoY growth for the year after NY.",
+    growthKey: "n2y_rev_est_pct",
+    format: "pct",
+    hideInAccel: true,
+  },
+  { id: "trail3y", label: "3Yr\nCAGR", tooltip: "Trailing 3-year revenue CAGR.", growthKey: "trail_3y_cagr_pct", format: "pct", hideInAccel: true },
+  { id: "fwd3y", label: "3Y Fwd\nCAGR", tooltip: "Forward 3-year revenue CAGR (CY through N2Y).", growthKey: "fwd_3y_cagr_pct", format: "pct", hideInAccel: true },
+];
+
+export const REVENUE_VALUATION_MULTIPLE_COLUMNS: RevenueColumnDef[] = [
+  {
+    id: "ps_ntm",
+    label: "P/S\nNTM",
+    tooltip: "Price / next-twelve-months sales (blended remaining CY + NY revenue).",
+    growthKey: "ps_ratio_ntm",
+    format: "ratio",
+  },
+  {
+    id: "psg_ntm",
+    label: "PSG\nNTM",
+    tooltip: "P/S NTM divided by CY YoY revenue growth %. Lower is cheaper growth.",
+    growthKey: "ps_to_revgrowth",
+    format: "ratio",
+  },
+  {
+    id: "ps_ny",
+    label: "P/S\nNY",
+    tooltip: "Price / next-year sales.",
+    growthKey: "ps_ratio_ny",
+    format: "ratio",
+  },
+  {
+    id: "psg_ny",
+    label: "PSG\nNY",
+    tooltip: "P/S NY divided by NY YoY revenue growth %.",
+    growthKey: "psg_ny",
+    format: "ratio",
+  },
+  {
+    id: "ps_n2y",
+    label: "P/S\nN2Y",
+    tooltip: "Price / N2Y sales.",
+    growthKey: "ps_ratio_n2y",
+    format: "ratio",
+  },
+  {
+    id: "psg_n2y",
+    label: "PSG\nN2Y",
+    tooltip: "P/S N2Y divided by N2Y YoY revenue growth %.",
+    growthKey: "psg_n2y",
+    format: "ratio",
+  },
+];
+
+const VALUATION_GROWTH_IDS = new Set(["ly", "cy", "ny", "n2y", "fwd3y"]);
+
+export const REVENUE_VALUATION_COLUMNS: RevenueColumnDef[] = [
+  ...REVENUE_GROWTH_COLUMNS.filter((col) => VALUATION_GROWTH_IDS.has(col.id)),
+  ...REVENUE_VALUATION_MULTIPLE_COLUMNS,
 ];
 
 export const REVENUE_REVISION_COLUMNS: RevenueColumnDef[] = [
@@ -210,7 +348,8 @@ export function mergeRevenueConstituents(
   return rows;
 }
 
-export function filterGrowthColumns(mode: RevenueDisplayMode): RevenueColumnDef[] {
+export function filterRevenueColumns(mode: RevenueDisplayMode): RevenueColumnDef[] {
+  if (mode === "valuation") return REVENUE_VALUATION_COLUMNS;
   return REVENUE_GROWTH_COLUMNS.filter((col) => {
     if (mode === "accel" && (col.growthOnly || col.hideInAccel)) return false;
     return true;

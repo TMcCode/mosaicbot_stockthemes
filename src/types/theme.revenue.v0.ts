@@ -1,7 +1,13 @@
 export type ThemeRevenueMetricMapV0 = {
+  n2q_rev_est_pct?: number | null;
   nq_rev_est_pct?: number | null;
   cq_rev_est_pct?: number | null;
   lq_rev_act_pct?: number | null;
+  l2q_rev_act_pct?: number | null;
+  lq_py_rev_act_pct?: number | null;
+  cq_py_rev_act_pct?: number | null;
+  nq_py_rev_act_pct?: number | null;
+  l2y_rev_act_pct?: number | null;
   ly_rev_act_pct?: number | null;
   cy_rev_est_pct?: number | null;
   ny_rev_est_pct?: number | null;
