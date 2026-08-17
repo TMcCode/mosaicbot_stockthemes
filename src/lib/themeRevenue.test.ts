@@ -8,12 +8,12 @@ import {
   REVENUE_VALUATION_COLUMNS,
 } from "./themeRevenue.ts";
 
-test("growth columns are last-year comps then current quarters then years", () => {
+test("growth columns are sequential quarters then years", () => {
   const ids = REVENUE_GROWTH_COLUMNS.map((col) => col.id);
   assert.deepEqual(ids.slice(0, 12), [
-    "lq_py",
-    "cq_py",
-    "nq_py",
+    "l5q",
+    "l4q",
+    "l3q",
     "l2q",
     "lq",
     "cq",
@@ -25,20 +25,22 @@ test("growth columns are last-year comps then current quarters then years", () =
     "n2y",
   ]);
   assert.equal(ids.includes("n2q"), false);
+  assert.equal(ids.includes("lq_py"), false);
   assert.equal(ids.includes("ps_ntm"), false);
 });
 
-test("year-ago comps L2Q and L2Y stay out of accel mode", () => {
+test("sequential lags L2Q through L5Q and L2Y stay out of accel mode", () => {
   const accelIds = filterRevenueColumns("accel").map((col) => col.id);
-  assert.equal(accelIds.includes("lq_py"), false);
-  assert.equal(accelIds.includes("cq_py"), false);
-  assert.equal(accelIds.includes("nq_py"), false);
+  assert.equal(accelIds.includes("l5q"), false);
+  assert.equal(accelIds.includes("l4q"), false);
+  assert.equal(accelIds.includes("l3q"), false);
   assert.equal(accelIds.includes("l2q"), false);
   assert.equal(accelIds.includes("l2y"), false);
   const growthIds = filterRevenueColumns("growth").map((col) => col.id);
-  assert.equal(growthIds.includes("lq_py"), true);
-  assert.equal(growthIds.includes("cq_py"), true);
-  assert.equal(growthIds.includes("nq_py"), true);
+  assert.equal(growthIds.includes("l5q"), true);
+  assert.equal(growthIds.includes("l4q"), true);
+  assert.equal(growthIds.includes("l3q"), true);
+  assert.equal(growthIds.includes("l2q"), true);
 });
 
 test("valuation columns keep yearly growth beside P/S and PSG", () => {

@@ -4,6 +4,9 @@ export type ThemeRevenueMetricMapV0 = {
   cq_rev_est_pct?: number | null;
   lq_rev_act_pct?: number | null;
   l2q_rev_act_pct?: number | null;
+  l3q_rev_act_pct?: number | null;
+  l4q_rev_act_pct?: number | null;
+  l5q_rev_act_pct?: number | null;
   lq_py_rev_act_pct?: number | null;
   cq_py_rev_act_pct?: number | null;
   nq_py_rev_act_pct?: number | null;
