@@ -19,6 +19,10 @@ export type ThemeRevenueMetricMapV0 = {
   fwd_3y_cagr_pct?: number | null;
   nq_accel_pp?: number | null;
   cq_accel_pp?: number | null;
+  lq_accel_pp?: number | null;
+  l2q_accel_pp?: number | null;
+  l3q_accel_pp?: number | null;
+  l4q_accel_pp?: number | null;
   ly_cy_accel_pp?: number | null;
   cy_ny_accel_pp?: number | null;
   ny_n2y_accel_pp?: number | null;

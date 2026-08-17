@@ -30,18 +30,16 @@ test("growth columns are sequential quarters then years", () => {
   assert.equal(ids.includes("ps_ntm"), false);
 });
 
-test("sequential lags L2Q through L5Q and L2Y stay out of accel mode", () => {
+test("accel mode shows L4Q through NQ and hides L5Q baseline", () => {
   const accelIds = filterRevenueColumns("accel").map((col) => col.id);
-  assert.equal(accelIds.includes("l5q"), false);
-  assert.equal(accelIds.includes("l4q"), false);
-  assert.equal(accelIds.includes("l3q"), false);
-  assert.equal(accelIds.includes("l2q"), false);
+  assert.deepEqual(
+    accelIds.filter((id) => ["l5q", "l4q", "l3q", "l2q", "lq", "cq", "nq"].includes(id)),
+    ["l4q", "l3q", "l2q", "lq", "cq", "nq"],
+  );
   assert.equal(accelIds.includes("l2y"), false);
   const growthIds = filterRevenueColumns("growth").map((col) => col.id);
   assert.equal(growthIds.includes("l5q"), true);
   assert.equal(growthIds.includes("l4q"), true);
-  assert.equal(growthIds.includes("l3q"), true);
-  assert.equal(growthIds.includes("l2q"), true);
 });
 
 test("valuation columns keep yearly growth beside P/S and PSG", () => {
@@ -68,7 +66,7 @@ test("baked revenue JSON without L5Q/L4Q/L3Q is treated as stale", () => {
     slug: "x",
     as_of: "2026-08-17",
     aggregation: "manual_theme_weights",
-    summary: { l5q_rev_act_pct: -1, l4q_rev_act_pct: 2, l3q_rev_act_pct: null, l2q_rev_act_pct: 1.2 },
+    summary: { l5q_rev_act_pct: -1, l4q_rev_act_pct: 2, l3q_rev_act_pct: null, l2q_rev_act_pct: 1.2, l4q_accel_pp: 3, l3q_accel_pp: -1, l2q_accel_pp: 0.5, lq_accel_pp: 1.1 },
     constituents: [{ ticker: "AAA", growth: { l5q_rev_act_pct: -1 }, accel: {} }],
   });
   assert.equal(revenueSidecarHasSequentialLags(stale), false);
