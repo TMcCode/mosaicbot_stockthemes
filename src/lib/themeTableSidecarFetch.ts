@@ -1,7 +1,7 @@
 import { publicAssetPath } from "@/lib/siteUrl";
 import { stockthemesRevalidateSeconds } from "@/lib/stockthemesCache";
 import { QUALITY_RISK_SIDECAR_SUFFIX } from "@/lib/themeQualityRisk";
-import { REVENUE_SIDECAR_SUFFIX } from "@/lib/themeRevenue";
+import { REVENUE_SIDECAR_SUFFIX, revenueSidecarHasSequentialLags } from "@/lib/themeRevenue";
 
 export type ThemeTableSidecarKind = "revenue" | "quality_risk";
 
@@ -49,6 +49,7 @@ export function themeTableSidecarBrowserFetchCache(): RequestCache {
 
 /**
  * Prefer same-origin build artifact, then fall back to public R2/CDN.
+ * Revenue sidecars skip a baked copy that predates L5Q/L4Q/L3Q (schema lag).
  * Returns null on 404 from both.
  */
 export async function fetchThemeTableSidecarText(
@@ -64,7 +65,12 @@ export async function fetchThemeTableSidecarText(
 
   try {
     const localRes = await fetch(localUrl, { credentials: "omit", cache, signal });
-    if (localRes.ok) return localRes.text();
+    if (localRes.ok) {
+      const text = await localRes.text();
+      if (kind !== "revenue" || revenueSidecarHasSequentialLags(text)) {
+        return text;
+      }
+    }
   } catch (err) {
     if (signal?.aborted) throw err;
   }

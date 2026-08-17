@@ -214,6 +214,24 @@ export function parseThemeRevenue(raw: string): ThemeRevenueV0 {
   return data;
 }
 
+/** Keys added after L2Q; baked Pages copies can lag a sidecar publish. */
+export const REVENUE_SEQUENTIAL_LAG_KEYS = [
+  "l5q_rev_act_pct",
+  "l4q_rev_act_pct",
+  "l3q_rev_act_pct",
+] as const;
+
+export function revenueSidecarHasSequentialLags(raw: string): boolean {
+  try {
+    const data = JSON.parse(raw) as ThemeRevenueV0;
+    const sample = data.summary ?? data.constituents?.[0]?.growth;
+    if (!sample || typeof sample !== "object") return false;
+    return REVENUE_SEQUENTIAL_LAG_KEYS.every((key) => key in sample);
+  } catch {
+    return false;
+  }
+}
+
 export function revenueHasContent(data: ThemeRevenueV0 | null | undefined): boolean {
   return Boolean(data?.constituents?.length);
 }
