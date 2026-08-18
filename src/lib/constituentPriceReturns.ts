@@ -13,6 +13,7 @@ export const CONSTITUENT_STANDARD_RETURN_HEAD = [
   "YTD",
 ] as const;
 export const CONSTITUENT_PERIOD_COL = "Period" as const;
+export const CONSTITUENT_LONG_HORIZON_COLS = ["2Y", "5Y"] as const;
 
 /** Default when payload has no price_returns.columns (legacy fixtures). */
 export const CONSTITUENT_PRICE_RETURN_COLUMNS = [
@@ -25,6 +26,7 @@ export type ConstituentPriceReturnColumn = string;
 const CONSTITUENT_RETURN_SKIP = new Set<string>([
   ...CONSTITUENT_STANDARD_RETURN_HEAD,
   CONSTITUENT_PERIOD_COL,
+  ...CONSTITUENT_LONG_HORIZON_COLS,
   "1W",
   "60D",
   "120D",
@@ -32,14 +34,15 @@ const CONSTITUENT_RETURN_SKIP = new Set<string>([
   "SinceLstRpt",
 ]);
 
-/** Calendar → custom SelectedDates → Period (matches group child-theme table). */
+/** Calendar → custom SelectedDates → Period → 2Y/5Y (matches group child-theme table). */
 export function normalizeConstituentPriceReturnColumnOrder(cols: string[]): string[] {
   const head = CONSTITUENT_STANDARD_RETURN_HEAD.filter((k) => cols.includes(k));
   const custom = cols.filter(
     (c) => !CONSTITUENT_RETURN_SKIP.has(c) && !(head as string[]).includes(c),
   );
   const period = cols.includes(CONSTITUENT_PERIOD_COL) ? [CONSTITUENT_PERIOD_COL] : [];
-  return [...head, ...custom, ...period];
+  const long = CONSTITUENT_LONG_HORIZON_COLS.filter((k) => cols.includes(k));
+  return [...head, ...custom, ...period, ...long];
 }
 
 export function resolveConstituentPriceReturnColumns(

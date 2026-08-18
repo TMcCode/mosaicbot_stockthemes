@@ -5,6 +5,8 @@ import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 export type CompositionMeta = {
   name?: string;
   marketCapUsd?: number;
+  /** Manual theme weight (ThemeWgt); used to order composition legend. */
+  weight?: number;
   /** Group composition legend: comma-separated tickers, optional `+N` suffix. */
   tickersPreview?: string;
 };
@@ -41,6 +43,14 @@ function marketCapSortKey(usd: number | undefined): number {
   return usd != null && Number.isFinite(usd) && usd > 0 ? usd : -1;
 }
 
+function weightSortKey(weight: number | undefined): number {
+  return weight != null && Number.isFinite(weight) && weight > 0 ? weight : -1;
+}
+
+function tickerTieBreak(a: string, b: string): number {
+  return a.localeCompare(b, undefined, { sensitivity: "base" });
+}
+
 /** Descending by inferred USD market cap; missing or non-positive at end; tie-break by ticker. */
 export function sortConstituentsByMarketCapDesc(
   constituents: ThemeDetailConstituentV0[],
@@ -49,23 +59,46 @@ export function sortConstituentsByMarketCapDesc(
     const nb = marketCapSortKey(inferMarketCapUsd(b));
     const na = marketCapSortKey(inferMarketCapUsd(a));
     if (nb !== na) return nb - na;
-    return String(a.ticker || "").localeCompare(String(b.ticker || ""), undefined, {
-      sensitivity: "base",
-    });
+    return tickerTieBreak(String(a.ticker || ""), String(b.ticker || ""));
   });
 }
 
-/** Align composition chart + legend: same ordering as constituents when meta includes marketCapUsd. */
+/** Descending by manual weight, then market cap; missing/non-positive last; ticker tie-break. */
+export function sortConstituentsByWeightDesc(
+  constituents: ThemeDetailConstituentV0[],
+): ThemeDetailConstituentV0[] {
+  return [...constituents].sort((a, b) => {
+    const wb = weightSortKey(pickNumber(b.weight));
+    const wa = weightSortKey(pickNumber(a.weight));
+    if (wb !== wa) return wb - wa;
+    const nb = marketCapSortKey(inferMarketCapUsd(b));
+    const na = marketCapSortKey(inferMarketCapUsd(a));
+    if (nb !== na) return nb - na;
+    return tickerTieBreak(String(a.ticker || ""), String(b.ticker || ""));
+  });
+}
+
+/**
+ * Theme composition legend: weight desc, then mcap desc.
+ * Group composition: keep published series order (child themes); ticker chips come from ETL.
+ */
 export function sortCompositionSeriesByMarketCapDesc(
   series: ChartCompositionSeriesV0[] | undefined,
   metaByTicker: Record<string, CompositionMeta> | undefined,
 ): ChartCompositionSeriesV0[] {
   if (!series?.length) return [];
+  const isGroupLegend = series.some((s) =>
+    Boolean(metaByTicker?.[s.ticker.toUpperCase()]?.tickersPreview),
+  );
+  if (isGroupLegend) return [...series];
   return [...series].sort((a, b) => {
+    const wa = weightSortKey(metaByTicker?.[a.ticker.toUpperCase()]?.weight);
+    const wb = weightSortKey(metaByTicker?.[b.ticker.toUpperCase()]?.weight);
+    if (wb !== wa) return wb - wa;
     const va = marketCapSortKey(metaByTicker?.[a.ticker.toUpperCase()]?.marketCapUsd);
     const vb = marketCapSortKey(metaByTicker?.[b.ticker.toUpperCase()]?.marketCapUsd);
     if (vb !== va) return vb - va;
-    return a.ticker.localeCompare(b.ticker, undefined, { sensitivity: "base" });
+    return tickerTieBreak(a.ticker, b.ticker);
   });
 }
 
@@ -136,9 +169,11 @@ export function buildCompositionMetaMap(
   for (const c of constituents) {
     const t = String(c.ticker || "").trim().toUpperCase();
     if (!t) continue;
+    const weight = pickNumber(c.weight);
     out[t] = {
       name: c.name && String(c.name).trim() ? String(c.name).trim() : undefined,
       marketCapUsd: inferMarketCapUsd(c),
+      ...(weight != null ? { weight } : {}),
     };
   }
   return out;

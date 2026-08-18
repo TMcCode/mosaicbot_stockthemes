@@ -28,6 +28,9 @@ export type ThemeRevenueMetricMapV0 = {
   ny_n2y_accel_pp?: number | null;
   ps_ratio_ntm?: number | null;
   ps_to_revgrowth?: number | null;
+  ps_ratio_ly?: number | null;
+  psg_fwd?: number | null;
+  ev_sales_ntm?: number | null;
   ps_ratio_ny?: number | null;
   psg_ny?: number | null;
   ps_ratio_n2y?: number | null;

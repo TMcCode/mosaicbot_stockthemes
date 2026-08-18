@@ -45,7 +45,7 @@ test("accel mode shows L4Q through NQ and hides L5Q baseline", () => {
 test("valuation columns keep yearly growth beside P/S and PSG", () => {
   assert.deepEqual(
     REVENUE_VALUATION_COLUMNS.map((col) => col.id),
-    ["ly", "cy", "ny", "n2y", "fwd3y", "ps_ntm", "psg_ntm", "ps_ny", "psg_ny", "ps_n2y", "psg_n2y"],
+    ["ly", "cy", "ny", "n2y", "fwd3y", "ps_ly", "ps_ntm", "evs_ntm", "psg_ntm", "psg_fwd", "ps_ny", "psg_ny", "ps_n2y", "psg_n2y"],
   );
   const valuationIds = filterRevenueColumns("valuation").map((col) => col.id);
   assert.equal(valuationIds.includes("lq"), false);
@@ -66,7 +66,7 @@ test("baked revenue JSON without L5Q/L4Q/L3Q is treated as stale", () => {
     slug: "x",
     as_of: "2026-08-17",
     aggregation: "manual_theme_weights",
-    summary: { l5q_rev_act_pct: -1, l4q_rev_act_pct: 2, l3q_rev_act_pct: null, l2q_rev_act_pct: 1.2, l4q_accel_pp: 3, l3q_accel_pp: -1, l2q_accel_pp: 0.5, lq_accel_pp: 1.1 },
+    summary: { l5q_rev_act_pct: -1, l4q_rev_act_pct: 2, l3q_rev_act_pct: null, l2q_rev_act_pct: 1.2, l4q_accel_pp: 3, l3q_accel_pp: -1, l2q_accel_pp: 0.5, lq_accel_pp: 1.1, ps_ratio_ly: 4.2, ev_sales_ntm: 5.1, psg_fwd: 0.8 },
     constituents: [{ ticker: "AAA", growth: { l5q_rev_act_pct: -1 }, accel: {} }],
   });
   assert.equal(revenueSidecarHasSequentialLags(stale), false);

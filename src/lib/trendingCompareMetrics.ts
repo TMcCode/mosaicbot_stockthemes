@@ -133,6 +133,9 @@ const COMPARE_COLUMN_TOOLTIPS: Record<string, string> = {
     "On average return since each ticker's last earnings report date.",
   SinceLstRpt:
     "On average returns for the two days after each ticker's last earnings date.",
+  Period: "Total return over the trailing 12 months.",
+  "2Y": "Total return over the trailing 2 years. Blank when the name has less than ~2 years of price history.",
+  "5Y": "Total return over the trailing 5 years. Blank when the name has less than ~5 years of price history.",
 };
 
 /** Optional native tooltip for /compare metric headers. */

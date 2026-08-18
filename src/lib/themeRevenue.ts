@@ -125,6 +125,13 @@ export const REVENUE_GROWTH_COLUMNS: RevenueColumnDef[] = [
 
 export const REVENUE_VALUATION_MULTIPLE_COLUMNS: RevenueColumnDef[] = [
   {
+    id: "ps_ly",
+    label: "P/S\nLY",
+    tooltip: "Current market cap / last-year sales. Compare to P/S NTM to see if the multiple expanded vs last year.",
+    growthKey: "ps_ratio_ly",
+    format: "ratio",
+  },
+  {
     id: "ps_ntm",
     label: "P/S\nNTM",
     tooltip: "Price / next-twelve-months sales (blended remaining CY + NY revenue).",
@@ -132,10 +139,24 @@ export const REVENUE_VALUATION_MULTIPLE_COLUMNS: RevenueColumnDef[] = [
     format: "ratio",
   },
   {
+    id: "evs_ntm",
+    label: "EV/S\nNTM",
+    tooltip: "Enterprise value (market cap + net debt) / NTM sales. Blank when net debt is missing. Better than P/S for levered names.",
+    growthKey: "ev_sales_ntm",
+    format: "ratio",
+  },
+  {
     id: "psg_ntm",
     label: "PSG\nNTM",
-    tooltip: "P/S NTM divided by CY YoY revenue growth %. Lower is cheaper growth.",
+    tooltip: "P/S NTM divided by CY YoY revenue growth %. Lower is cheaper growth. Can be a one-year burst — check PSG Fwd.",
     growthKey: "ps_to_revgrowth",
+    format: "ratio",
+  },
+  {
+    id: "psg_fwd",
+    label: "PSG\nFwd",
+    tooltip: "P/S NTM divided by 3Y forward revenue CAGR %. Duration check vs NTM PSG, which uses one-year CY growth.",
+    growthKey: "psg_fwd",
     format: "ratio",
   },
   {
@@ -214,7 +235,7 @@ export function parseThemeRevenue(raw: string): ThemeRevenueV0 {
   return data;
 }
 
-/** Keys added after L2Q; baked Pages copies can lag a sidecar publish. */
+/** Keys added after L2Q / extra valuation; baked Pages copies can lag a sidecar publish. */
 export const REVENUE_SEQUENTIAL_LAG_KEYS = [
   "l5q_rev_act_pct",
   "l4q_rev_act_pct",
@@ -225,12 +246,21 @@ export const REVENUE_SEQUENTIAL_LAG_KEYS = [
   "lq_accel_pp",
 ] as const;
 
+export const REVENUE_VALUATION_EXTRA_KEYS = [
+  "ps_ratio_ly",
+  "ev_sales_ntm",
+  "psg_fwd",
+] as const;
+
 export function revenueSidecarHasSequentialLags(raw: string): boolean {
   try {
     const data = JSON.parse(raw) as ThemeRevenueV0;
     const sample = data.summary ?? data.constituents?.[0]?.growth;
     if (!sample || typeof sample !== "object") return false;
-    return REVENUE_SEQUENTIAL_LAG_KEYS.every((key) => key in sample);
+    return (
+      REVENUE_SEQUENTIAL_LAG_KEYS.every((key) => key in sample) &&
+      REVENUE_VALUATION_EXTRA_KEYS.every((key) => key in sample)
+    );
   } catch {
     return false;
   }

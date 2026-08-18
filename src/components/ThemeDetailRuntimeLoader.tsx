@@ -6,7 +6,7 @@ import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
-import { buildCompositionMetaMap, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
+import { buildCompositionMetaMap, sortConstituentsByWeightDesc } from "@/lib/constituentMeta";
 import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
@@ -175,7 +175,7 @@ export function ThemeDetailRuntimeLoader({
                 </tr>
               </thead>
               <tbody>
-                {sortConstituentsByMarketCapDesc(detail.constituents).map((c) => (
+                {sortConstituentsByWeightDesc(detail.constituents).map((c) => (
                   <tr key={c.ticker}>
                     <td>
                       <div className={styles.companyCell}>
