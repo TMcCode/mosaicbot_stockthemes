@@ -105,6 +105,11 @@ export function mergeThemeDetailLiveFields(
     merged = { ...merged, chart_1y: chart1y };
   }
 
+  // Notes tab flag can flip on CDN before the next static Pages rebuild.
+  if (live.has_ticker_notes === true) {
+    merged = { ...merged, has_ticker_notes: true };
+  }
+
   return merged;
 }
 
@@ -261,6 +266,9 @@ export async function refreshLiveThemeDetail({
     });
     if (scheduleSource) {
       merged = mergeThemeDetailEarningsSchedule(merged, scheduleSource);
+      if (scheduleSource.has_ticker_notes === true) {
+        merged = { ...merged, has_ticker_notes: true };
+      }
     }
     entries.set(key, {
       merged,
