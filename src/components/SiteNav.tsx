@@ -20,7 +20,7 @@ export function SiteNav() {
             decoding="async"
             aria-hidden
           />
-          <span className={styles.brandLabel} style={{ position: "relative", top: 12 }}>
+          <span className={styles.brandLabel}>
             stockthemes.ai
           </span>
         </PrefetchIntentLink>

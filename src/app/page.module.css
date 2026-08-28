@@ -913,6 +913,8 @@ a.feedTitle:hover {
 }
 
 .constituentsScrollWrap {
+  position: relative;
+  z-index: 1;
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -944,38 +946,45 @@ a.feedTitle:hover {
 }
 
 .tableFooter {
+  position: relative;
+  z-index: 1;
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
   gap: 10px 14px;
   border-top: 1px solid var(--button-secondary-border);
-  padding: 6px 10px 7px;
+  padding: 5px 0 5px 10px;
+  padding-right: clamp(30px, 8vw, 34px);
 }
 
 .tableFootnote {
   margin: 0;
-  flex: 1 1 12rem;
+  flex: 1 1 auto;
   min-width: 0;
   font-size: 10px;
   line-height: 1.35;
   color: var(--text-muted);
+  zoom: 0.85;
 }
 
 .tableWatermark {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  z-index: 2;
   flex: 0 0 auto;
-  margin-left: auto;
   line-height: 0;
   opacity: 0.98;
   pointer-events: none;
+  transform: translateY(-50%);
 }
 
 .tableWatermark img {
   display: block;
-  width: auto;
+  width: 22px;
   height: 22px;
-  max-width: min(132px, 34vw);
   object-fit: contain;
-  object-position: right center;
 }
 
 .dataTable {
@@ -1025,6 +1034,38 @@ a.feedTitle:hover {
 .constituentsScrollWrap[data-constituents-view="returns"] .companyCell,
 .constituentsScrollWrap[data-constituents-view="earnings"] .companyCell {
   gap: 14px;
+}
+
+/* Notes: same company col as returns; wrap the wide membership rationale. */
+.constituentsScrollWrap[data-constituents-view="notes"] .constituentsTableSizer .dataTable {
+  width: 100%;
+  table-layout: auto;
+}
+
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable td:first-child {
+  width: var(--constituents-company-col-width);
+  min-width: var(--constituents-company-col-width);
+  max-width: var(--constituents-company-col-width);
+  box-sizing: border-box;
+}
+
+.constituentsScrollWrap[data-constituents-view="notes"] .companyCell {
+  gap: 14px;
+}
+
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:last-child {
+  text-align: center;
+}
+
+.noteCell {
+  white-space: normal !important;
+  text-align: left !important;
+  min-width: min(36rem, 68vw);
+  max-width: 48rem;
+  line-height: 1.45;
+  color: var(--text-primary, #e8eeec);
+  font-variant-numeric: normal;
 }
 
 /* Wide revenue / revisions tables: keep the company column visible while panning. */
@@ -1429,10 +1470,6 @@ a.secondary {
     gap: 6px;
   }
 
-  .tableFooter {
-    flex-wrap: wrap;
-  }
-
   .main {
     border-radius: 14px;
     padding: 24px 18px;
@@ -1638,10 +1675,6 @@ a.secondary {
 :global(.st-theme[data-theme="light"]) .tableWrap {
   background: rgba(0, 0, 0, 0.02);
   border-color: var(--button-secondary-border);
-}
-
-:global(.st-theme[data-theme="light"]) .tableWatermark {
-  opacity: 0.48;
 }
 
 :global(.st-theme[data-theme="light"]) .dataTable th {

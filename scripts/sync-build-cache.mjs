@@ -191,6 +191,17 @@ async function syncQualityRiskSidecars(manifestJson, base, objectMeta, { force =
   });
 }
 
+async function syncNotesSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+  return syncThemeSidecarFiles({
+    manifestJson,
+    base,
+    objectMeta,
+    force,
+    suffix: ".notes.v0.json",
+    label: "notes sidecars",
+  });
+}
+
 async function syncThemeSidecarFiles({
   manifestJson,
   base,
@@ -236,12 +247,13 @@ async function syncDailyThemeSidecars(manifestJson, base, objectMeta, { force = 
   await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
   await syncRevenueSidecars(manifestJson, base, objectMeta, { force });
   await syncQualityRiskSidecars(manifestJson, base, objectMeta, { force });
+  await syncNotesSidecars(manifestJson, base, objectMeta, { force });
 }
 
 /** Copy daily table sidecars into public/ so theme pages can fetch same-origin (no HTML embed). */
 function publishThemeTableSidecarsToPublic(manifestJson) {
   const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
-  const suffixes = [".revenue.v0.json", ".quality_risk.v0.json"];
+  const suffixes = [".revenue.v0.json", ".quality_risk.v0.json", ".notes.v0.json"];
   const outDir = path.join(root, "public", "data", "themes");
   fs.mkdirSync(outDir, { recursive: true });
 

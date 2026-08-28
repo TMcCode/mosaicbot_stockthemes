@@ -26,8 +26,9 @@ import {
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatWeight } from "@/lib/formatWeight";
-import { brandAssetPath } from "@/lib/siteUrl";
+import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
+  constituentTickerNote,
   formatConstituentPct,
   priceReturnStat,
   type ConstituentTableRow,
@@ -41,9 +42,12 @@ import {
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import { useThemeQualityRiskSidecar } from "@/hooks/useThemeQualityRiskSidecar";
+import { useThemeNotesSidecar } from "@/hooks/useThemeNotesSidecar";
 import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useThemeRevenueSidecar } from "@/hooks/useThemeRevenueSidecar";
+import { notesByTicker } from "@/lib/themeNotes";
 import { prefetchThemeRevenueSidecar } from "@/lib/prefetchThemeRevenueSidecar";
+import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
 const ThemeConstituentsRevenuePanel = dynamic(
   () =>
@@ -66,7 +70,7 @@ const ThemeConstituentsQualityRiskPanel = dynamic(
   { loading: () => <p className={styles.muted}>Loading quality and risk view…</p> },
 );
 
-type TableView = "returns" | "earnings" | "revenue" | "revisions" | "quality_risk";
+type TableView = "returns" | "earnings" | "revenue" | "revisions" | "quality_risk" | "notes";
 
 type Props = {
   detail: ThemeDetailV0;
@@ -141,6 +145,15 @@ function compareConstituentRows(
       if (cmp !== 0) return cmp;
       continue;
     }
+    if (s.key === "ticker_note") {
+      const cmp = compareText(
+        constituentTickerNote(a.constituent),
+        constituentTickerNote(b.constituent),
+        s.dir,
+      );
+      if (cmp !== 0) return cmp;
+      continue;
+    }
     const earningsCol = CONSTITUENT_EARNINGS_COLUMNS.find((c) => c.id === s.key);
     if (earningsCol) {
       const va = earningsSortValue(a, earningsCol.id);
@@ -178,17 +191,22 @@ export function ThemeConstituentsTable({
     revenue: false,
     revisions: false,
     quality_risk: false,
+    notes: false,
   });
   const { configured, loading: authLoading, user } = useSupabaseAuth();
   const hasProtectedAccess = configured && !authLoading && Boolean(user);
   const protectedLocked = !authLoading && !hasProtectedAccess;
   const isProtectedView = view === "revenue" || view === "revisions" || view === "quality_risk";
+  const showReturns = view === "returns";
+  const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
   const showRevisions = view === "revisions";
   const showQualityRisk = view === "quality_risk";
+  const showNotes = view === "notes";
   const keepRevenueMounted = mountedPanels.revenue || showRevenue;
   const keepRevisionsMounted = mountedPanels.revisions || showRevisions;
   const keepQualityRiskMounted = mountedPanels.quality_risk || showQualityRisk;
+  const keepNotesMounted = mountedPanels.notes || showNotes;
   const needsRevenueSidecar =
     hasProtectedAccess && (keepRevenueMounted || keepRevisionsMounted);
   const sidecarState = useThemeRevenueSidecar(slug, dataBaseUrl, needsRevenueSidecar);
@@ -196,6 +214,15 @@ export function ThemeConstituentsTable({
     slug,
     dataBaseUrl,
     hasProtectedAccess && keepQualityRiskMounted,
+  );
+  const notesState = useThemeNotesSidecar(
+    slug,
+    dataBaseUrl,
+    Boolean(model.hasTickerNotes) && keepNotesMounted,
+  );
+  const noteLookup = useMemo(
+    () => (notesState.status === "ok" ? notesByTicker(notesState.data) : new Map<string, string>()),
+    [notesState],
   );
 
   useEffect(() => {
@@ -205,6 +232,7 @@ export function ThemeConstituentsTable({
         revenue: prev.revenue || showRevenue,
         revisions: prev.revisions || showRevisions,
         quality_risk: prev.quality_risk || showQualityRisk,
+        notes: prev.notes,
       };
       if (
         next.revenue === prev.revenue &&
@@ -216,6 +244,11 @@ export function ThemeConstituentsTable({
       return next;
     });
   }, [hasProtectedAccess, showRevenue, showRevisions, showQualityRisk]);
+
+  useEffect(() => {
+    if (!showNotes) return;
+    setMountedPanels((prev) => (prev.notes ? prev : { ...prev, notes: true }));
+  }, [showNotes]);
 
   // Warm revenue sidecar after sign-in so the first Revenue click skips the cold fetch.
   useEffect(() => {
@@ -237,17 +270,20 @@ export function ThemeConstituentsTable({
       if (timeoutId != null) clearTimeout(timeoutId);
     };
   }, [hasProtectedAccess, slug, dataBaseUrl]);
+
   const signInHref = `/sign-in?next=${encodeURIComponent(slug ? `/themes/${slug}` : "/themes")}`;
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
   );
   const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
+  const primarySortKey = sorts[0]?.key;
 
   const {
     hasWeight,
     hasMcap,
     hasPriceReturns,
+    hasTickerNotes,
     priceReturnColumns: modelPriceReturnColumns,
     constituentRows,
     avgEarningsPerf,
@@ -292,11 +328,47 @@ export function ThemeConstituentsTable({
   } = model;
   const priceReturnColumns = useSessionVisibleColumns(modelPriceReturnColumns);
 
+  const rowsForSort = useMemo(() => {
+    if (noteLookup.size === 0) return constituentRows;
+    return constituentRows.map((row) => {
+      const ticker = String(row.constituent.ticker || "")
+        .trim()
+        .toUpperCase();
+      const note = noteLookup.get(ticker);
+      if (!note) return row;
+      return {
+        ...row,
+        constituent: { ...row.constituent, ticker_note: note },
+      };
+    });
+  }, [constituentRows, noteLookup]);
+
   const sortedRows = useMemo(() => {
-    const out = [...constituentRows];
+    const out = [...rowsForSort];
     out.sort((a, b) => compareConstituentRows(a, b, sorts));
     return out;
-  }, [constituentRows, sorts]);
+  }, [rowsForSort, sorts]);
+
+  const hasVisibleNotes = useMemo(
+    () => sortedRows.some((row) => constituentTickerNote(row.constituent)),
+    [sortedRows],
+  );
+
+  /** Period Returns only: heat map for the primary sorted return column (memoized per sort). */
+  const periodReturnsHeatByTicker = useMemo(() => {
+    if (!showReturns || !primarySortKey || !priceReturnColumns.includes(primarySortKey)) {
+      return null;
+    }
+    const out = new Map<string, { backgroundColor: string; color: string }>();
+    for (const row of constituentRows) {
+      const value = row.priceReturns[primarySortKey];
+      if (value == null || !Number.isFinite(value)) continue;
+      const ticker = String(row.constituent.ticker || "").trim().toUpperCase();
+      if (!ticker) continue;
+      out.set(ticker, trendingReturnHeatStyle(value));
+    }
+    return out;
+  }, [showReturns, primarySortKey, priceReturnColumns, constituentRows]);
 
   const onHeaderClick = (key: string, shiftKey: boolean) => {
     setSorts((prev) => toggleConstituentSort(prev, key, shiftKey));
@@ -314,8 +386,12 @@ export function ThemeConstituentsTable({
     </button>
   );
 
-  const showReturns = view === "returns";
-  const showEarnings = view === "earnings";
+  useEffect(() => {
+    if (view === "notes" && !hasTickerNotes) {
+      setView("returns");
+    }
+  }, [view, hasTickerNotes]);
+
   const themeCompare = detail.compare_returns;
   const showThemeReturnRow =
     (view === "returns" || view === "earnings") &&
@@ -413,6 +489,17 @@ export function ThemeConstituentsTable({
             >
               Quality &amp; Risk {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
             </button>
+            {hasTickerNotes ? (
+              <button
+                type="button"
+                className={showNotes ? tableStyles.active : undefined}
+                aria-pressed={showNotes}
+                title="Why each name is in this theme"
+                onClick={() => setView("notes")}
+              >
+                Notes
+              </button>
+            ) : null}
           </div>
         </HorizontalScrollArea>
       </div>
@@ -458,6 +545,12 @@ export function ThemeConstituentsTable({
       ) : null}
       {!showRevenue && !showRevisions && !showQualityRisk ? (
       <div className={styles.tableWrap}>
+        {showNotes && (!slug || !dataBaseUrl) ? (
+          <p className={styles.muted}>Notes are not available in this build.</p>
+        ) : null}
+        {showNotes && notesState.status === "absent" && !hasVisibleNotes ? (
+          <p className={styles.muted}>No membership notes published for this theme yet.</p>
+        ) : null}
         <HorizontalScrollArea
           className={styles.constituentsScrollWrap}
           data-constituents-view={view}
@@ -481,6 +574,15 @@ export function ThemeConstituentsTable({
                         </th>
                       ))
                     : null}
+                  {showNotes ? (
+                    <th
+                      scope="col"
+                      className={tableStyles.notesColumnHead}
+                      title="Membership rationale for this theme"
+                    >
+                      {renderSortHead("ticker_note", "Rationale", "Membership rationale for this theme")}
+                    </th>
+                  ) : null}
                   {showReturns && hasMcap ? (
                     <th scope="col">{renderSortHead("mcap", "Mkt Cap")}</th>
                   ) : null}
@@ -506,9 +608,18 @@ export function ThemeConstituentsTable({
                         <td>{c.weight != null ? formatWeight(c.weight) : "—"}</td>
                       ) : null}
                       {showReturns && hasPriceReturns
-                        ? priceReturnColumns.map((col) => (
-                            <td key={col}>{formatConstituentPct(row.priceReturns[col])}</td>
-                          ))
+                        ? priceReturnColumns.map((col) => {
+                            const ticker = String(c.ticker || "").trim().toUpperCase();
+                            const heat =
+                              periodReturnsHeatByTicker && col === primarySortKey
+                                ? periodReturnsHeatByTicker.get(ticker)
+                                : undefined;
+                            return (
+                              <td key={col} style={heat}>
+                                {formatConstituentPct(row.priceReturns[col])}
+                              </td>
+                            );
+                          })
                         : null}
                       {showEarnings ? (
                         <>
@@ -523,6 +634,19 @@ export function ThemeConstituentsTable({
                           <td>{earnings.sinceQtrRptCell}</td>
                           <td>{earnings.avgAbsRptCell}</td>
                         </>
+                      ) : null}
+                      {showNotes ? (
+                        <td className={styles.noteCell}>
+                          {(() => {
+                            const note = constituentTickerNote(c);
+                            if (note) return note;
+                            if (notesState.status === "loading" || notesState.status === "idle") {
+                              return "…";
+                            }
+                            if (notesState.status === "error") return "Unavailable";
+                            return "—";
+                          })()}
+                        </td>
                       ) : null}
                       {showReturns && hasMcap ? (
                         <td>{formatUsdMarketCap(row.marketCapUsd)}</td>
@@ -563,6 +687,8 @@ export function ThemeConstituentsTable({
                     {showReturns && hasMcap ? <td>—</td> : null}
                   </tr>
                 ) : null}
+                {!showNotes ? (
+                  <>
                 <tr>
                   <td>
                     <strong>Average</strong>
@@ -811,6 +937,8 @@ export function ThemeConstituentsTable({
                   ) : null}
                   {showReturns && hasMcap ? <td></td> : null}
                 </tr>
+                  </>
+                ) : null}
               </tbody>
             </table>
           </div>
@@ -825,14 +953,7 @@ export function ThemeConstituentsTable({
           <p className={tableStyles.sortHint}>
             Default: Wgt ↓ · Click headers to sort · Shift+click secondary
           </p>
-          <div className={styles.tableWatermark} aria-hidden="true">
-            <img
-              src={brandAssetPath("/brand/logo-full-dark-tight.png")}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
+          <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>
       ) : null}

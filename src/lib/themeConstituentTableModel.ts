@@ -292,10 +292,19 @@ export type ConstituentTableRow = {
   weight: number | null;
 };
 
+export function constituentTickerNote(c: ThemeDetailConstituentV0): string {
+  if (typeof c.ticker_note !== "string") return "";
+  const note = c.ticker_note.trim();
+  if (!note || note.toLowerCase() === "nan") return "";
+  return note;
+}
+
 export type ThemeConstituentTableModel = {
   hasWeight: boolean;
   hasMcap: boolean;
   hasPriceReturns: boolean;
+  /** True when any constituent has a non-empty ticker_note (Notes tab). */
+  hasTickerNotes: boolean;
   priceReturnColumns: string[];
   constituentRows: ConstituentTableRow[];
   avgEarningsPerf: number | null;
@@ -343,6 +352,9 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
   const hasWeight = Boolean(detail.constituents?.some((c) => c.weight != null));
   const hasMcap = Boolean(detail.constituents?.some((c) => inferMarketCapUsd(c) != null));
   const hasPriceReturns = hasConstituentPriceReturns(detail.constituents);
+  const hasTickerNotes =
+    detail.has_ticker_notes === true ||
+    Boolean(detail.constituents?.some((c) => constituentTickerNote(c)));
   const priceReturnColumns = resolveConstituentPriceReturnColumns(detail.constituents);
   const sortedConstituents = sortConstituentsByMarketCapDesc(detail.constituents);
   const earningsRowsByTicker = new Map(
@@ -368,6 +380,7 @@ export function buildThemeConstituentTableModel(detail: ThemeDetailV0): ThemeCon
     hasWeight,
     hasMcap,
     hasPriceReturns,
+    hasTickerNotes,
     priceReturnColumns,
     constituentRows,
     avgEarningsPerf:

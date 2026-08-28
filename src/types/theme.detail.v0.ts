@@ -47,6 +47,8 @@ export type ThemeDetailConstituentV0 = {
   name?: string;
   /** Public logo on storage.stockthemes.ai when published; UI may fall back to logos/v0/{ticker}.png. */
   logo_url?: string | null;
+  /** Membership rationale from sym_theme_df.ticker_note (why this name is in the theme). */
+  ticker_note?: string;
   weight?: number;
   market_cap_usd?: number;
   market_cap?: number;
@@ -96,6 +98,11 @@ export type ThemeDetailV0 = {
   /** ISO 8601 UTC when intraday ETL last wrote ticker_performance_latest.parquet. */
   ticker_performance_as_of?: string;
   seo_intro?: string;
+  /**
+   * True when themes/<slug>.notes.v0.json has membership notes.
+   * Omitted when false so the main theme JSON stays lean.
+   */
+  has_ticker_notes?: boolean;
   theme_thesis?: ThemeThesisV0;
   constituent_table_stats?: ThemeDetailConstituentTableStatsV0;
   constituents: ThemeDetailConstituentV0[];

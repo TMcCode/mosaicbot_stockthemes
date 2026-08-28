@@ -1,7 +1,8 @@
 .wrap {
   width: 100%;
   box-sizing: border-box;
-  padding: 18px 24px 0;
+  --nav-control-height: 32px;
+  padding: 6px 16px 0;
   font-family: var(--font-geist-sans);
   font-size: 14px;
 }
@@ -11,16 +12,14 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: flex-start;
-  gap: 12px 20px;
+  gap: 10px 16px;
   width: 100%;
   box-sizing: border-box;
-  padding: 0 0 14px;
+  padding: 0 0 6px;
   border-bottom: 1px solid var(--nav-border, rgba(255, 255, 255, 0.12));
 }
 
 .brand {
-  --brand-label-top: -10px;
-  --brand-mark-top: 2px;
   --brand-mark-margin-right: -4px;
   display: inline-flex;
   align-items: center;
@@ -28,7 +27,7 @@
   gap: 3px;
   flex: 0 1 auto;
   min-width: 0;
-  height: 36px;
+  height: var(--nav-control-height);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.01em;
@@ -42,8 +41,6 @@
   align-items: center;
   height: 100%;
   line-height: 1;
-  position: relative;
-  top: 0;
 }
 
 /* Flex default min-width:auto uses the image intrinsic width (~612px) — must override or the mark blows up. */
@@ -52,14 +49,12 @@
   flex-shrink: 0;
   align-self: center;
   min-width: 0;
-  width: 24px;
-  height: 24px;
-  max-width: 24px;
-  max-height: 24px;
+  width: 22px;
+  height: 22px;
+  max-width: 22px;
+  max-height: 22px;
   object-fit: contain;
   object-position: center;
-  position: relative;
-  top: var(--brand-mark-top);
   margin-right: var(--brand-mark-margin-right);
 }
 
@@ -241,8 +236,8 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 32px;
+  width: var(--nav-control-height);
+  height: var(--nav-control-height);
   margin: 0;
   padding: 0;
   border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
@@ -280,11 +275,11 @@
 
 @media (max-width: 600px) {
   .wrap {
-    padding: 12px 12px 0;
+    padding: 6px 12px 0;
   }
 
   .row {
-    padding: 0 0 12px;
+    padding: 0 0 6px;
   }
 
   .links {
@@ -295,12 +290,6 @@
     gap: 5px;
     font-size: 13px;
     letter-spacing: 0;
-    height: 36px;
-  }
-
-  .brandLabel {
-    top: 0 !important;
-    transform: none !important;
   }
 
   .brandMark {
@@ -341,7 +330,6 @@
 
 @media (min-width: 601px) {
   .brandLabel {
-    top: auto !important;
-    transform: none !important;
+    transform: none;
   }
 }

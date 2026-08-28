@@ -1,13 +1,15 @@
 import { publicAssetPath } from "@/lib/siteUrl";
 import { stockthemesRevalidateSeconds } from "@/lib/stockthemesCache";
+import { NOTES_SIDECAR_SUFFIX } from "@/lib/themeNotes";
 import { QUALITY_RISK_SIDECAR_SUFFIX } from "@/lib/themeQualityRisk";
 import { REVENUE_SIDECAR_SUFFIX, revenueSidecarHasSequentialLags } from "@/lib/themeRevenue";
 
-export type ThemeTableSidecarKind = "revenue" | "quality_risk";
+export type ThemeTableSidecarKind = "revenue" | "quality_risk" | "notes";
 
 const SUFFIX: Record<ThemeTableSidecarKind, string> = {
   revenue: REVENUE_SIDECAR_SUFFIX,
   quality_risk: QUALITY_RISK_SIDECAR_SUFFIX,
+  notes: NOTES_SIDECAR_SUFFIX,
 };
 
 /** Same-origin path under `public/data/themes/` (filled by sync-build-cache). */

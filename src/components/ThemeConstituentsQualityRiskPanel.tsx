@@ -17,7 +17,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
-import { brandAssetPath } from "@/lib/siteUrl";
+import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
   formatQualityRiskValue,
   mergeQualityRiskConstituents,
@@ -329,14 +329,7 @@ export default function ThemeConstituentsQualityRiskPanel({
           <p className={tableStyles.sortHint}>
             Default: Wgt ↓ · Click headers to sort · Shift+click secondary
           </p>
-          <div className={styles.tableWatermark} aria-hidden="true">
-            <img
-              src={brandAssetPath("/brand/logo-full-dark-tight.png")}
-              alt=""
-              loading="lazy"
-              decoding="async"
-            />
-          </div>
+          <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>
         </>
