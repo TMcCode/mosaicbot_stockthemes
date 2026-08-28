@@ -1,0 +1,66 @@
+.anchor {
+  position: relative;
+  height: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.sentinel {
+  position: absolute;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  visibility: hidden;
+}
+
+.button {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    right: max(14px, env(safe-area-inset-right, 0px));
+    bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    z-index: 45;
+    width: 40px;
+    height: 40px;
+    margin: 0;
+    padding: 0;
+    border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
+    border-radius: 999px;
+    font-size: 18px;
+    line-height: 1;
+    color: var(--nav-fg, #eaf2f0);
+    background: var(--background, #040506);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition:
+      opacity 0.15s ease,
+      visibility 0s linear 0.15s;
+  }
+
+  .button[data-visible="true"] {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition:
+      opacity 0.15s ease,
+      visibility 0s linear 0s;
+  }
+
+  .button:focus-visible {
+    outline: 2px solid var(--nav-accent, #26fcd6);
+    outline-offset: 2px;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .button {
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}

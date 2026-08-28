@@ -1,6 +1,7 @@
 import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { SiteNavAuth } from "@/components/SiteNavAuth";
+import { SiteNavDesktopOffset } from "@/components/SiteNavDesktopOffset";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { brandAssetPath } from "@/lib/siteUrl";
 
@@ -8,8 +9,9 @@ import styles from "./SiteNav.module.css";
 
 export function SiteNav() {
   return (
-    <header className={styles.wrap}>
-      <nav className={styles.row} aria-label="Primary">
+    <>
+      <header className={styles.wrap} data-site-nav>
+        <nav className={styles.row} aria-label="Primary">
         <PrefetchIntentLink href="/" className={styles.brand}>
           <img
             className={styles.brandMark}
@@ -69,5 +71,7 @@ export function SiteNav() {
         </div>
       </nav>
     </header>
+    <SiteNavDesktopOffset />
+    </>
   );
 }

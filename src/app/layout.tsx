@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
+import { BackToTop } from "@/components/BackToTop";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
 import { SignupGiveawayBanner } from "@/components/SignupGiveawayBanner";
 import { SiteFooter } from "@/components/SiteFooter";
@@ -89,6 +90,7 @@ export default async function RootLayout({
           <SupabaseAuthProvider>
             <WatchlistProvider>
               <ThemeRoot>
+                <BackToTop />
                 <SiteNav />
                 <SignupGiveawayBanner />
                 {children}
