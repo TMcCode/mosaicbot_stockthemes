@@ -19,6 +19,7 @@ import {
   etSessionIsoDay,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
 } from "@/lib/extendCompositionLiveTail";
+import { parseCompareThemesJson } from "@/lib/mergeLiveCompareData";
 import { loadFactorTimeseries } from "@/lib/loadFactorTimeseries";
 import { OVERLAY_CHART_PALETTE } from "@/lib/overlayChartPalette";
 import {
@@ -29,6 +30,12 @@ import {
   type OverlayFactorSpreadCatalogEntry,
   type OverlayFactorSpreadOption,
 } from "@/lib/overlayFactorSpreads";
+import {
+  dayReturnPctByOverlayKeyFromCompareBundles,
+  dayReturnPctForTickerFromPriceReturnsSidecar,
+  parseCompareGroupsJson,
+  primaryThemeSlugForTicker,
+} from "@/lib/overlayItemLiveTail";
 import {
   mapOverlaySectorEtfCatalog,
   overlaySectorItemKey,
@@ -55,7 +62,11 @@ import {
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
 import { stockthemesLiveChartPerformanceEnabled } from "@/lib/stockthemesClientConfig";
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import {
+  stockthemesBrowserSidecarFetchBase,
+  stockthemesPublicDataBase,
+} from "@/lib/stockthemesPublicBase";
+import { parseThemePriceReturnsSidecar } from "@/lib/liveThemeDetailStore";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { EtfBenchmarksV0 } from "@/types/etf_benchmarks.v0";
 import type { FactorSpreadsV0 } from "@/types/factor_spreads.v0";
@@ -191,6 +202,10 @@ export function OverlayPageClient({
     null,
   );
   const [liveSpyDayReturnPct, setLiveSpyDayReturnPct] = useState<number | null>(null);
+  /** Live 1D % by overlay item key (`theme:…` / `group:…` / `ticker:…`) for session-day chart tails. */
+  const [liveItemDayReturnPctByKey, setLiveItemDayReturnPctByKey] = useState<Record<string, number>>(
+    {},
+  );
 
   const activeSectorCatalog = liveSectorCatalog ?? sectorEtfCatalog;
   const activeBenchmarkPerformance = liveBenchmarkPerformance ?? benchmarkPerformance;
@@ -461,6 +476,169 @@ export function OverlayPageClient({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showFactorSpreads, selectedFactorIds.length]);
 
+  /**
+   * Live session-day tip for chosen themes / groups / tickers (parity with factor spreads).
+   * Themes/groups: compare_* 1D. Tickers: constituent 1D from a containing theme's price_returns
+   * sidecar (chart sidecars skip intraday by default on price-only publishes).
+   */
+  const overlayLiveTailKey = useMemo(
+    () =>
+      items
+        .filter((i) => !i.loading && !i.error && i.rawPerformance?.dates?.length)
+        .map((i) => i.key)
+        .sort()
+        .join("\x1e"),
+    [items],
+  );
+
+  useEffect(() => {
+    const loaded = items.filter((i) => !i.loading && !i.error && i.rawPerformance?.dates?.length);
+    const themes = loaded.filter((i) => i.kind === "theme");
+    const groups = loaded.filter((i) => i.kind === "group");
+    const tickers = loaded.filter((i) => i.kind === "ticker");
+    const stillLoading = items.some((i) => i.loading);
+    if (!themes.length && !groups.length && !tickers.length) {
+      // Don't wipe a just-fetched map while a newly added series is still loading.
+      if (!stillLoading) {
+        setLiveItemDayReturnPctByKey((prev) => (Object.keys(prev).length ? {} : prev));
+      }
+      return;
+    }
+
+    const base = stockthemesPublicDataBase();
+    const sidecarBase = stockthemesBrowserSidecarFetchBase() || base;
+    if (!base && !sidecarBase) return;
+
+    let cancelled = false;
+    let requestId = 0;
+
+    const refresh = () => {
+      const id = ++requestId;
+      void (async () => {
+        const next: Record<string, number> = {};
+        const q = priceReturnsBrowserCacheBusterQuery();
+
+        try {
+          if ((themes.length || groups.length) && base) {
+            const fetches: Promise<unknown>[] = [];
+            if (themes.length) {
+              fetches.push(
+                fetch(`${base}/compare_themes.v0.json?${q}`, {
+                  credentials: "omit",
+                  cache: stockthemesBrowserFetchCache(),
+                }).then(async (res) => (res.ok ? res.json() : null)),
+              );
+            } else {
+              fetches.push(Promise.resolve(null));
+            }
+            if (groups.length) {
+              fetches.push(
+                fetch(`${base}/compare_groups.v0.json?${q}`, {
+                  credentials: "omit",
+                  cache: stockthemesBrowserFetchCache(),
+                }).then(async (res) => (res.ok ? res.json() : null)),
+              );
+            } else {
+              fetches.push(Promise.resolve(null));
+            }
+            const [themesRaw, groupsRaw] = await Promise.all(fetches);
+            if (cancelled || id !== requestId) return;
+            const mapped = dayReturnPctByOverlayKeyFromCompareBundles(
+              parseCompareThemesJson(themesRaw),
+              parseCompareGroupsJson(groupsRaw),
+            );
+            for (const item of themes) {
+              const v = mapped[item.key];
+              if (typeof v === "number") next[item.key] = v;
+            }
+            for (const item of groups) {
+              const v = mapped[item.key];
+              if (typeof v === "number") next[item.key] = v;
+            }
+          }
+
+          if (tickers.length && sidecarBase) {
+            let engine: Awaited<ReturnType<typeof loadSiteSearchEngine>> | null = null;
+            try {
+              engine = await loadSiteSearchEngine();
+            } catch {
+              engine = null;
+            }
+            if (cancelled || id !== requestId) return;
+
+            const themeByTicker = new Map<string, string>();
+            const themesNeeded = new Set<string>();
+            for (const item of tickers) {
+              const themeSlug = primaryThemeSlugForTicker(engine?.index, item.slug);
+              if (!themeSlug) continue;
+              themeByTicker.set(item.key, themeSlug);
+              themesNeeded.add(themeSlug);
+            }
+
+            const sidecarByTheme = new Map<
+              string,
+              ReturnType<typeof parseThemePriceReturnsSidecar>
+            >();
+            await Promise.all(
+              [...themesNeeded].map(async (themeSlug) => {
+                try {
+                  const res = await fetch(
+                    `${sidecarBase}/themes/${encodeURIComponent(themeSlug)}.price_returns.v0.json?${q}`,
+                    {
+                      credentials: "omit",
+                      cache: stockthemesBrowserFetchCache(),
+                    },
+                  );
+                  if (!res.ok) return;
+                  const parsed = parseThemePriceReturnsSidecar(await res.json());
+                  sidecarByTheme.set(themeSlug, parsed);
+                } catch {
+                  /* keep prior / skip ticker on transient CDN errors */
+                }
+              }),
+            );
+            if (cancelled || id !== requestId) return;
+
+            for (const item of tickers) {
+              const themeSlug = themeByTicker.get(item.key);
+              if (!themeSlug) continue;
+              const dayReturn = dayReturnPctForTickerFromPriceReturnsSidecar(
+                sidecarByTheme.get(themeSlug),
+                item.slug,
+              );
+              if (dayReturn != null) next[item.key] = dayReturn;
+            }
+          }
+        } catch {
+          /* keep prior live map on transient CDN errors */
+          return;
+        }
+
+        if (cancelled || id !== requestId) return;
+        setLiveItemDayReturnPctByKey((prev) => {
+          const prevKeys = Object.keys(prev);
+          const nextKeys = Object.keys(next);
+          if (
+            prevKeys.length === nextKeys.length &&
+            nextKeys.every((k) => prev[k] === next[k])
+          ) {
+            return prev;
+          }
+          return next;
+        });
+      })();
+    };
+
+    refresh();
+    const id = window.setInterval(refresh, priceReturnsRevalidateSeconds() * 1000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+    // overlayLiveTailKey fingerprints loaded series; items read for kind/slug details.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [overlayLiveTailKey]);
+
   const themeSlugsNeedingPreview = useMemo(
     () =>
       items
@@ -716,6 +894,21 @@ export function OverlayPageClient({
 
   const sessionIso = etSessionIsoDay();
 
+  const resolvedItems = useMemo(() => {
+    return items.map((item) => {
+      if (item.loading || item.error || !item.rawPerformance?.dates?.length) return item;
+      const dayReturnPct = liveItemDayReturnPctByKey[item.key];
+      if (dayReturnPct == null) return item;
+      const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
+        item.rawPerformance,
+        sessionIso,
+        dayReturnPct,
+      );
+      if (!extended || extended === item.rawPerformance) return item;
+      return { ...item, rawPerformance: extended };
+    });
+  }, [items, liveItemDayReturnPctByKey, sessionIso]);
+
   const resolvedBenchmarkPerformance = useMemo(() => {
     return (
       maybeExtendIndexedPerformanceFromLiveDayReturn(
@@ -768,7 +961,7 @@ export function OverlayPageClient({
         String(resolvedBenchmarkPerformance.dates[resolvedBenchmarkPerformance.dates.length - 1]),
       );
     }
-    for (const item of items) {
+    for (const item of resolvedItems) {
       const d = item.rawPerformance?.dates;
       if (d?.length) ends.push(String(d[d.length - 1]));
     }
@@ -788,7 +981,7 @@ export function OverlayPageClient({
     normalized.sort();
     return normalized.at(-1);
   }, [
-    items,
+    resolvedItems,
     resolvedBenchmarkPerformance,
     showSectorEtfs,
     activeSectorTickers,
@@ -803,7 +996,7 @@ export function OverlayPageClient({
     if (showBenchmark && resolvedBenchmarkPerformance?.dates?.length) {
       performances.push(resolvedBenchmarkPerformance);
     }
-    for (const item of items) {
+    for (const item of resolvedItems) {
       if (!item.loading && !item.error && item.rawPerformance?.dates?.length) {
         performances.push(item.rawPerformance);
       }
@@ -822,7 +1015,7 @@ export function OverlayPageClient({
     }
     return performances;
   }, [
-    items,
+    resolvedItems,
     resolvedBenchmarkPerformance,
     showBenchmark,
     showSectorEtfs,
@@ -864,7 +1057,7 @@ export function OverlayPageClient({
     const out: OverlayChartSeries[] = [];
     let colorIndex = 0;
 
-    items.forEach((item) => {
+    resolvedItems.forEach((item) => {
       if (item.loading || item.error || !item.rawPerformance?.dates?.length) return;
       const sliced = sliceAndRebaseIndexedPerformance(
         item.rawPerformance,
@@ -937,7 +1130,7 @@ export function OverlayPageClient({
 
     return out;
   }, [
-    items,
+    resolvedItems,
     period,
     customAnchorByKey,
     referenceLastIso,
