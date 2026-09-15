@@ -52,6 +52,15 @@
   color: var(--text-muted, #6e7d7b);
 }
 
+.inlineHint a {
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.inlineHint a:hover {
+  text-decoration: underline;
+}
+
 .message {
   margin: 8px 0 0;
   font-size: 12px;

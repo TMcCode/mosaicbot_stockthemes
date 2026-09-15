@@ -1,3 +1,5 @@
+import { watchlistFullErrorMessage } from "@/lib/watchlist/limitsCopy";
+
 /** Map Supabase/Postgres errors to short UI copy. */
 export function formatWatchlistError(message: string | undefined): string {
   const m = (message ?? "").trim();
@@ -6,7 +8,7 @@ export function formatWatchlistError(message: string | undefined): string {
   }
   if (m.includes("watchlist limit reached")) {
     const kind = m.includes("ticker") ? "tickers" : "themes";
-    return `Watchlist full (20 ${kind} max). Remove one on My watchlist first.`;
+    return watchlistFullErrorMessage(kind);
   }
   if (m.includes("duplicate key") || m.includes("unique constraint")) {
     return "Already on your watchlist.";

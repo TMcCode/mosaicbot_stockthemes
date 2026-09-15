@@ -9,6 +9,10 @@ import {
   SUPPORT_EMAIL,
   THEME_IDEAS_EMAIL,
 } from "@/lib/contactEmails";
+import {
+  WATCHLIST_LIMIT_INTEREST_SUBJECT,
+  WATCHLIST_THEME_LIMIT,
+} from "@/lib/watchlist/limitsCopy";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
 import styles from "../page.module.css";
@@ -33,6 +37,12 @@ const ROWS: ContactRow[] = [
     title: "General & legal",
     body: "Privacy questions, press, partnerships, and other general mail.",
     mailSubject: "stockthemes.ai inquiry",
+  },
+  {
+    email: HELLO_EMAIL,
+    title: "Watchlist limits",
+    body: `Free accounts include ${WATCHLIST_THEME_LIMIT} themes. Paid tiers aren't available yet — email if you need a higher limit.`,
+    mailSubject: WATCHLIST_LIMIT_INTEREST_SUBJECT,
   },
   {
     email: SUPPORT_EMAIL,
@@ -73,7 +83,7 @@ export default function ContactPage() {
             <h2 id="contact-inboxes">Email</h2>
             <ul className={styles.contactList}>
               {ROWS.map((row) => (
-                <li key={row.email} className={styles.contactItem}>
+                <li key={row.title} className={styles.contactItem}>
                   <h3 className={styles.contactItemTitle}>{row.title}</h3>
                   <p className={styles.introCopy}>
                     <a href={mailtoHref(row.email, row.mailSubject)} style={{ fontWeight: 600 }}>

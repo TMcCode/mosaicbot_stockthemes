@@ -4,7 +4,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import { useWatchlist } from "@/components/WatchlistProvider";
+import { HELLO_EMAIL } from "@/lib/contactEmails";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
+import {
+  WATCHLIST_THEME_LIMIT,
+  watchlistFullHintBody,
+  watchlistFullPlaceholder,
+  watchlistLimitInterestMailto,
+} from "@/lib/watchlist/limitsCopy";
 import {
   buildThemeFuseRows,
   createThemeSearchFuse,
@@ -16,8 +23,6 @@ import type Fuse from "fuse.js";
 import type { SearchIndexThemeRowV0, SearchIndexV0 } from "@/types/search_index.v0";
 
 import styles from "./WatchlistThemeAddCombobox.module.css";
-
-const THEME_LIMIT = 20;
 
 type Props = {
   /** Inside /my add card — no extra label or footer line. */
@@ -45,7 +50,7 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
   const [addingSlug, setAddingSlug] = useState<string | null>(null);
 
   const themeCount = watchlist?.themeCount ?? 0;
-  const atLimit = themeCount >= THEME_LIMIT;
+  const atLimit = themeCount >= WATCHLIST_THEME_LIMIT;
   const savedSlugs = watchlist?.themeKeys ?? new Set<string>();
 
   useEffect(() => {
@@ -153,7 +158,7 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
         type="search"
         className={styles.input}
         aria-label="Add theme to watchlist"
-        placeholder={atLimit ? "Watchlist full (20 themes)" : "Search themes to add…"}
+        placeholder={atLimit ? watchlistFullPlaceholder() : "Search themes to add…"}
         value={query}
         disabled={atLimit || !watchlist?.ready}
         autoComplete="off"
@@ -174,7 +179,11 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
         onKeyDown={onKeyDown}
       />
       {atLimit ? (
-        <p className={styles.inlineHint}>Watchlist full (20 themes max). Remove one below to add another.</p>
+        <p className={styles.inlineHint}>
+          {watchlistFullHintBody()} Free plan is {WATCHLIST_THEME_LIMIT} themes; paid tiers aren&apos;t
+          available yet.{" "}
+          <a href={watchlistLimitInterestMailto()}>Email {HELLO_EMAIL}</a> if you need a higher limit.
+        </p>
       ) : null}
       {addMessage ? (
         <p className={styles.message} role="status">

@@ -8,6 +8,7 @@ import styles from "@/app/page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
 import { AccountSignedInView } from "@/app/account/AccountSignedInView";
+import { WatchlistLimitInterestNote } from "@/components/WatchlistLimitInterestNote";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -131,6 +132,7 @@ export function AccountPageClient() {
             Free stockthemes.ai account — theme watchlist and performance on{" "}
             <Link href="/my">My watchlist</Link>.
           </p>
+          <WatchlistLimitInterestNote includePlanLine className={styles.introCopy} />
 
           <AccountSignedInView
             user={user}

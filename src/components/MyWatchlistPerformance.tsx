@@ -8,6 +8,7 @@ import tableStyles from "@/components/CompareThemesTable.module.css";
 import localStyles from "@/components/MyWatchlistPerformance.module.css";
 
 import { WatchlistThemeAddCombobox } from "@/components/WatchlistThemeAddCombobox";
+import { WatchlistLimitInterestNote } from "@/components/WatchlistLimitInterestNote";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
 import type {
@@ -16,6 +17,10 @@ import type {
 } from "@/lib/prepareMyWatchlistCompareData";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
+import {
+  WATCHLIST_THEME_LIMIT,
+  watchlistCountLabel,
+} from "@/lib/watchlist/limitsCopy";
 import { trendingColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -114,10 +119,13 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
       <div className={localStyles.toolbar}>
         <p className={localStyles.limits}>
           {watchlist?.ready
-            ? `${watchlist.themeCount} of 20 themes saved`
-            : "Up to 20 themes"}
+            ? watchlistCountLabel(watchlist.themeCount)
+            : `Up to ${WATCHLIST_THEME_LIMIT} themes`}
         </p>
       </div>
+      {watchlist?.ready && watchlist.themeCount >= WATCHLIST_THEME_LIMIT ? (
+        <WatchlistLimitInterestNote className={localStyles.limitInterest} />
+      ) : null}
 
       <section className={localStyles.addCard} aria-label="Add theme to watchlist">
         <h2 className={localStyles.addCardTitle}>Add to watchlist</h2>

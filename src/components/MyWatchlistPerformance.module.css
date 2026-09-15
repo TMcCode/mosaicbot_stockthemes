@@ -50,6 +50,22 @@
   color: var(--text-muted, #6e7d7b);
 }
 
+.limitInterest {
+  margin: -8px 0 16px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.limitInterest a {
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.limitInterest a:hover {
+  text-decoration: underline;
+}
+
 .addCard {
   margin-bottom: 18px;
   padding: 14px 16px;

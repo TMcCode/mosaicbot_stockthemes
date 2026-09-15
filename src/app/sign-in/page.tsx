@@ -8,6 +8,7 @@ import styles from "@/app/page.module.css";
 import signInStyles from "@/app/sign-in/sign-in.module.css";
 import { PageSurface } from "@/components/PageSurface";
 import { SignInOAuthButtons } from "@/components/SignInOAuthButtons";
+import { WatchlistLimitInterestNote } from "@/components/WatchlistLimitInterestNote";
 
 import {
   authCallbackAbsoluteUrl,
@@ -18,6 +19,7 @@ import {
 import { getEnabledAuthOAuthProviders } from "@/lib/authOAuthProviders";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
+import { WATCHLIST_THEME_LIMIT } from "@/lib/watchlist/limitsCopy";
 
 export default function SignInPage() {
   const { configured, loading, user } = useSupabaseAuth();
@@ -113,15 +115,16 @@ export default function SignInPage() {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>Sign in · Create account</p>
-          <h1>Add email to curate stockthemes.ai — up to 20 themes</h1>
+          <h1>Add email to curate stockthemes.ai — up to {WATCHLIST_THEME_LIMIT} themes</h1>
           <p className={styles.introCopy}>
             <strong>New here?</strong> Use Google, GitHub, or a one-time email link — we&apos;ll{" "}
             <strong>create your free account</strong> on first sign-in (no password).
           </p>
           <p className={styles.introCopy}>
-            <strong>Already use stockthemes?</strong> Same options sign you back in. Personal watchlists
-            and performance tables ship next.
+            <strong>Already use stockthemes?</strong> Same options sign you back in. Save up to{" "}
+            {WATCHLIST_THEME_LIMIT} themes and track them on <Link href="/my">My watchlist</Link>.
           </p>
+          <WatchlistLimitInterestNote includePlanLine className={styles.introCopy} />
 
           {oauthProviders.length > 0 ? (
             <>
