@@ -8,6 +8,10 @@ export type CompareThemesRowV0 = {
   created_at?: string | null;
   updated_at?: string | null;
   manual_weights_updated_at?: string | null;
+  /** ``supporting`` when this is a cross-group mirror (hide from /compare by default). */
+  rank_visibility?: "full" | "supporting" | string | null;
+  /** Display name of the canonical theme when rank_visibility is supporting. */
+  canonical_theme?: string | null;
   compare_returns?: ThemeCompareReturnsV0 | null;
   rank_10d?: ThemeRank10dV0 | null;
   /** Mean constituent USD market cap (theme ETL). */

@@ -23,6 +23,7 @@ import { filterCompareRows } from "@/lib/filterCompareRows";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { isShortThemeName } from "@/lib/shortThemeChart";
+import { isSupportingThemeRankVisibility } from "@/lib/supportingTheme";
 import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -37,6 +38,8 @@ type Row = {
   spySector?: string | null;
   tickersPreview?: string | null;
   themeCount?: number | null;
+  rank_visibility?: string | null;
+  canonical_theme?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
@@ -111,6 +114,7 @@ export function ComparePageClient({
   const [showBenchmarks, setShowBenchmarks] = useState(true);
   const [showFactorSpreads, setShowFactorSpreads] = useState(false);
   const [excludeShortThemes, setExcludeShortThemes] = useState(false);
+  const [excludeSupportingThemes, setExcludeSupportingThemes] = useState(true);
   const availablePeriods = useMemo(
     () => availableCompareSummaryPeriods(visibleColumns),
     [visibleColumns],
@@ -154,7 +158,7 @@ export function ComparePageClient({
   );
 
   const filteredThemes = useMemo(() => {
-    const base = filterCompareRows(rowsWithLiveCompare, {
+    let base = filterCompareRows(rowsWithLiveCompare, {
       groupOptions: visibleGroupOptions,
       yearOptions,
       sectorOptions,
@@ -162,8 +166,13 @@ export function ComparePageClient({
       selectedYears,
       selectedSectors,
     });
-    if (!excludeShortThemes) return base;
-    return base.filter((row) => !isShortThemeName(row.name));
+    if (excludeShortThemes) {
+      base = base.filter((row) => !isShortThemeName(row.name));
+    }
+    if (excludeSupportingThemes) {
+      base = base.filter((row) => !isSupportingThemeRankVisibility(row.rank_visibility));
+    }
+    return base;
   }, [
     rowsWithLiveCompare,
     visibleGroupOptions,
@@ -173,6 +182,7 @@ export function ComparePageClient({
     selectedYears,
     selectedSectors,
     excludeShortThemes,
+    excludeSupportingThemes,
   ]);
   const filteredGroups = useMemo(
     () =>
@@ -317,14 +327,24 @@ export function ComparePageClient({
                     </label>
                   ) : null}
                   {viewMode === "themes" ? (
-                    <label className={styles.benchmarkToggle}>
-                      <input
-                        type="checkbox"
-                        checked={excludeShortThemes}
-                        onChange={(e) => setExcludeShortThemes(e.target.checked)}
-                      />
-                      Exclude Short Themes
-                    </label>
+                    <>
+                      <label className={styles.benchmarkToggle}>
+                        <input
+                          type="checkbox"
+                          checked={excludeShortThemes}
+                          onChange={(e) => setExcludeShortThemes(e.target.checked)}
+                        />
+                        Exclude Short Themes
+                      </label>
+                      <label className={styles.benchmarkToggle}>
+                        <input
+                          type="checkbox"
+                          checked={excludeSupportingThemes}
+                          onChange={(e) => setExcludeSupportingThemes(e.target.checked)}
+                        />
+                        Exclude Supporting Themes
+                      </label>
+                    </>
                   ) : null}
                 </div>
               ) : null

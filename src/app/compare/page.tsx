@@ -67,6 +67,8 @@ export default async function ComparePage() {
       groupName:
         String(r.group_name || "").trim() || groupMeta?.name || "",
       spySector: groupMeta?.spySector ?? normalizeCompareSpySector(null),
+      rank_visibility: r.rank_visibility ?? null,
+      canonical_theme: r.canonical_theme ?? null,
     };
   });
   const fallbackColumns = resolveTrendingColumnOrder(

@@ -92,6 +92,8 @@ export type ComparePageRow = {
   groupName?: string | null;
   spySector?: string | null;
   tickersPreview?: string | null;
+  rank_visibility?: string | null;
+  canonical_theme?: string | null;
   compareReturns?: ThemeCompareReturnsV0 | null;
 };
 
@@ -110,6 +112,8 @@ export function mergeComparePageRows(
       tickersPreview:
         formatTickersPreviewFromParts(live.tickers_preview, live.tickers_preview_more) ??
         row.tickersPreview,
+      rank_visibility: live.rank_visibility ?? row.rank_visibility,
+      canonical_theme: live.canonical_theme ?? row.canonical_theme,
     };
   });
 }

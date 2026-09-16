@@ -99,5 +99,8 @@ export type ManifestThemeSummaryV0 = {
   updated_at?: string;
   /** ISO 8601 UTC when manual ThemeWgt edits last published (Theme_Metadata.manual_weights_updated_at) */
   manual_weights_updated_at?: string;
+  /** ``supporting`` for cross-group mirrors (excluded from /compare default + /factors). */
+  rank_visibility?: "full" | "supporting" | string;
+  canonical_theme?: string;
   rank_10d?: ThemeRank10dV0;
 };
