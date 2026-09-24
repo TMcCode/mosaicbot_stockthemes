@@ -1,14 +1,14 @@
 {
   "schema_version": 0,
   "as_of": "2026-09-24",
-  "fetched_at": "2026-09-24T12:32:57Z",
+  "fetched_at": "2026-09-24T22:24:03Z",
   "hits_window_days": 14,
   "history_days": 14,
   "home_limit": 6,
   "all_limit": 15,
   "today": {
     "as_of": "2026-09-24",
-    "fetched_at": "2026-09-24T12:32:57Z",
+    "fetched_at": "2026-09-24T22:24:03Z",
     "home": [
       {
         "slug": "edge-ai-long-26-ai-wearables",
@@ -36,15 +36,32 @@
           }
         ],
         "tickers_preview": [
-          "2382.HK",
-          "ALMU",
-          "EL.PA",
-          "GOOG",
-          "META",
-          "QCOM",
-          "SYNA"
+          {
+            "ticker": "2382.HK",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/2382.HK.png"
+          },
+          {
+            "ticker": "ALMU",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ALMU.png"
+          },
+          {
+            "ticker": "EL.PA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EL.PA.png"
+          },
+          {
+            "ticker": "GOOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOG.png"
+          },
+          {
+            "ticker": "META",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/META.png"
+          },
+          {
+            "ticker": "QCOM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/QCOM.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 1,
         "group_slug": "edge-ai-long"
       },
       {
@@ -84,18 +101,32 @@
           }
         ],
         "tickers_preview": [
-          "600150.SHG",
-          "600760.SHG",
-          "600893.SHG",
-          "000768.SHE",
-          "002179.SHE",
-          "002625.SHE",
-          "600967.SHG",
-          "000547.SHE",
-          "002151.SHE",
-          "600038.SHG"
+          {
+            "ticker": "600150.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600150.SHG.png"
+          },
+          {
+            "ticker": "600760.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600760.SHG.png"
+          },
+          {
+            "ticker": "600893.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600893.SHG.png"
+          },
+          {
+            "ticker": "000768.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/000768.SHE.png"
+          },
+          {
+            "ticker": "002179.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/002179.SHE.png"
+          },
+          {
+            "ticker": "002625.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/002625.SHE.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 4,
         "group_slug": "global-defense"
       },
       {
@@ -132,20 +163,32 @@
           }
         ],
         "tickers_preview": [
-          "DELL",
-          "APLD",
-          "CRWV",
-          "HUT",
-          "IREN",
-          "NBIS",
-          "NVDA",
-          "SHAZ",
-          "WULF",
-          "WYFI",
-          "CBRS",
-          "RUM"
+          {
+            "ticker": "DELL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/DELL.png"
+          },
+          {
+            "ticker": "APLD",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/APLD.png"
+          },
+          {
+            "ticker": "CRWV",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CRWV.png"
+          },
+          {
+            "ticker": "HUT",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/HUT.png"
+          },
+          {
+            "ticker": "IREN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/IREN.png"
+          },
+          {
+            "ticker": "NBIS",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/NBIS.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 6,
         "group_slug": "ai"
       },
       {
@@ -187,20 +230,32 @@
           }
         ],
         "tickers_preview": [
-          "SIRI",
-          "GOOGL",
-          "META",
-          "GAME",
-          "SNAP",
-          "AAPL",
-          "SPOT",
-          "AMZN",
-          "ELF",
-          "ABBV",
-          "PINS",
-          "352820.KO"
+          {
+            "ticker": "SIRI",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SIRI.png"
+          },
+          {
+            "ticker": "GOOGL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOGL.png"
+          },
+          {
+            "ticker": "META",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/META.png"
+          },
+          {
+            "ticker": "GAME",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GAME.png"
+          },
+          {
+            "ticker": "SNAP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SNAP.png"
+          },
+          {
+            "ticker": "AAPL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/AAPL.png"
+          }
         ],
-        "tickers_preview_more": 14,
+        "tickers_preview_more": 20,
         "group_slug": "archetypes"
       },
       {
@@ -242,16 +297,32 @@
           }
         ],
         "tickers_preview": [
-          "BILL",
-          "NICE",
-          "PATH",
-          "EGHT",
-          "FIVN",
-          "GTM",
-          "RNG",
-          "ZM"
+          {
+            "ticker": "BILL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/BILL.png"
+          },
+          {
+            "ticker": "NICE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/NICE.png"
+          },
+          {
+            "ticker": "PATH",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/PATH.png"
+          },
+          {
+            "ticker": "EGHT",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EGHT.png"
+          },
+          {
+            "ticker": "FIVN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/FIVN.png"
+          },
+          {
+            "ticker": "GTM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GTM.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 2,
         "group_slug": "ai-short"
       },
       {
@@ -293,18 +364,32 @@
           }
         ],
         "tickers_preview": [
-          "SHOP",
-          "VENMO",
-          "HOOD",
-          "PYUSD",
-          "COIN",
-          "PYPL",
-          "CRCL",
-          "GOOG",
-          "JPM",
-          "V"
+          {
+            "ticker": "SHOP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SHOP.png"
+          },
+          {
+            "ticker": "HOOD",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/HOOD.png"
+          },
+          {
+            "ticker": "COIN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/COIN.png"
+          },
+          {
+            "ticker": "PYPL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/PYPL.png"
+          },
+          {
+            "ticker": "CRCL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CRCL.png"
+          },
+          {
+            "ticker": "GOOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOG.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 2,
         "group_slug": "agentic-utilities"
       }
     ],
@@ -343,20 +428,32 @@
           }
         ],
         "tickers_preview": [
-          "DELL",
-          "APLD",
-          "CRWV",
-          "HUT",
-          "IREN",
-          "NBIS",
-          "NVDA",
-          "SHAZ",
-          "WULF",
-          "WYFI",
-          "CBRS",
-          "RUM"
+          {
+            "ticker": "DELL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/DELL.png"
+          },
+          {
+            "ticker": "APLD",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/APLD.png"
+          },
+          {
+            "ticker": "CRWV",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CRWV.png"
+          },
+          {
+            "ticker": "HUT",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/HUT.png"
+          },
+          {
+            "ticker": "IREN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/IREN.png"
+          },
+          {
+            "ticker": "NBIS",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/NBIS.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 6,
         "group_slug": "ai"
       },
       {
@@ -396,18 +493,32 @@
           }
         ],
         "tickers_preview": [
-          "600150.SHG",
-          "600760.SHG",
-          "600893.SHG",
-          "000768.SHE",
-          "002179.SHE",
-          "002625.SHE",
-          "600967.SHG",
-          "000547.SHE",
-          "002151.SHE",
-          "600038.SHG"
+          {
+            "ticker": "600150.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600150.SHG.png"
+          },
+          {
+            "ticker": "600760.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600760.SHG.png"
+          },
+          {
+            "ticker": "600893.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600893.SHG.png"
+          },
+          {
+            "ticker": "000768.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/000768.SHE.png"
+          },
+          {
+            "ticker": "002179.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/002179.SHE.png"
+          },
+          {
+            "ticker": "002625.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/002625.SHE.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 4,
         "group_slug": "global-defense"
       },
       {
@@ -436,15 +547,32 @@
           }
         ],
         "tickers_preview": [
-          "2382.HK",
-          "ALMU",
-          "EL.PA",
-          "GOOG",
-          "META",
-          "QCOM",
-          "SYNA"
+          {
+            "ticker": "2382.HK",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/2382.HK.png"
+          },
+          {
+            "ticker": "ALMU",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ALMU.png"
+          },
+          {
+            "ticker": "EL.PA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EL.PA.png"
+          },
+          {
+            "ticker": "GOOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOG.png"
+          },
+          {
+            "ticker": "META",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/META.png"
+          },
+          {
+            "ticker": "QCOM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/QCOM.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 1,
         "group_slug": "edge-ai-long"
       },
       {
@@ -486,20 +614,32 @@
           }
         ],
         "tickers_preview": [
-          "SIRI",
-          "GOOGL",
-          "META",
-          "GAME",
-          "SNAP",
-          "AAPL",
-          "SPOT",
-          "AMZN",
-          "ELF",
-          "ABBV",
-          "PINS",
-          "352820.KO"
+          {
+            "ticker": "SIRI",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SIRI.png"
+          },
+          {
+            "ticker": "GOOGL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOGL.png"
+          },
+          {
+            "ticker": "META",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/META.png"
+          },
+          {
+            "ticker": "GAME",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GAME.png"
+          },
+          {
+            "ticker": "SNAP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SNAP.png"
+          },
+          {
+            "ticker": "AAPL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/AAPL.png"
+          }
         ],
-        "tickers_preview_more": 14,
+        "tickers_preview_more": 20,
         "group_slug": "archetypes"
       },
       {
@@ -541,16 +681,32 @@
           }
         ],
         "tickers_preview": [
-          "BILL",
-          "NICE",
-          "PATH",
-          "EGHT",
-          "FIVN",
-          "GTM",
-          "RNG",
-          "ZM"
+          {
+            "ticker": "BILL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/BILL.png"
+          },
+          {
+            "ticker": "NICE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/NICE.png"
+          },
+          {
+            "ticker": "PATH",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/PATH.png"
+          },
+          {
+            "ticker": "EGHT",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EGHT.png"
+          },
+          {
+            "ticker": "FIVN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/FIVN.png"
+          },
+          {
+            "ticker": "GTM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GTM.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 2,
         "group_slug": "ai-short"
       },
       {
@@ -592,18 +748,32 @@
           }
         ],
         "tickers_preview": [
-          "SHOP",
-          "VENMO",
-          "HOOD",
-          "PYUSD",
-          "COIN",
-          "PYPL",
-          "CRCL",
-          "GOOG",
-          "JPM",
-          "V"
+          {
+            "ticker": "SHOP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SHOP.png"
+          },
+          {
+            "ticker": "HOOD",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/HOOD.png"
+          },
+          {
+            "ticker": "COIN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/COIN.png"
+          },
+          {
+            "ticker": "PYPL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/PYPL.png"
+          },
+          {
+            "ticker": "CRCL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CRCL.png"
+          },
+          {
+            "ticker": "GOOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOG.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 2,
         "group_slug": "agentic-utilities"
       },
       {
@@ -645,20 +815,32 @@
           }
         ],
         "tickers_preview": [
-          "SHOP",
-          "AMZN",
-          "EBAY",
-          "ETSY",
-          "MELI",
-          "BABA",
-          "PDD",
-          "CPNG",
-          "JD",
-          "SE",
-          "ALE.WAR",
-          "4755.T"
+          {
+            "ticker": "SHOP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SHOP.png"
+          },
+          {
+            "ticker": "AMZN",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/AMZN.png"
+          },
+          {
+            "ticker": "EBAY",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EBAY.png"
+          },
+          {
+            "ticker": "ETSY",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ETSY.png"
+          },
+          {
+            "ticker": "MELI",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/MELI.png"
+          },
+          {
+            "ticker": "BABA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/BABA.png"
+          }
         ],
-        "tickers_preview_more": 5,
+        "tickers_preview_more": 11,
         "group_slug": "retail-shopping"
       },
       {
@@ -700,20 +882,32 @@
           }
         ],
         "tickers_preview": [
-          "CVX",
-          "LNG",
-          "XOM",
-          "COP",
-          "EOG",
-          "EPD",
-          "VG",
-          "VLO",
-          "FANG",
-          "MPC",
-          "KMI",
-          "PSX"
+          {
+            "ticker": "CVX",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CVX.png"
+          },
+          {
+            "ticker": "LNG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/LNG.png"
+          },
+          {
+            "ticker": "XOM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/XOM.png"
+          },
+          {
+            "ticker": "COP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/COP.png"
+          },
+          {
+            "ticker": "EOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EOG.png"
+          },
+          {
+            "ticker": "EPD",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EPD.png"
+          }
         ],
-        "tickers_preview_more": 5,
+        "tickers_preview_more": 11,
         "group_slug": "energy-sovereignty"
       },
       {
@@ -755,20 +949,32 @@
           }
         ],
         "tickers_preview": [
-          "COWOS",
-          "002916.SHE",
-          "007660.KO",
-          "009150.KO",
-          "2313.TW",
-          "2316.TW",
-          "2367.TW",
-          "2368.TW",
-          "2383.TW",
-          "300476.SHE",
-          "301377.SHE",
-          "3037.TW"
+          {
+            "ticker": "002916.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/002916.SHE.png"
+          },
+          {
+            "ticker": "007660.KO",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/007660.KO.png"
+          },
+          {
+            "ticker": "009150.KO",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/009150.KO.png"
+          },
+          {
+            "ticker": "2313.TW",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/2313.TW.png"
+          },
+          {
+            "ticker": "2316.TW",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/2316.TW.png"
+          },
+          {
+            "ticker": "2367.TW",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/2367.TW.png"
+          }
         ],
-        "tickers_preview_more": 11,
+        "tickers_preview_more": 17,
         "group_slug": "ai-bottleneck"
       },
       {
@@ -810,16 +1016,32 @@
           }
         ],
         "tickers_preview": [
-          "XOM",
-          "CVX",
-          "COP",
-          "EOG",
-          "OXY",
-          "FANG",
-          "DVN",
-          "CTRA"
+          {
+            "ticker": "XOM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/XOM.png"
+          },
+          {
+            "ticker": "CVX",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CVX.png"
+          },
+          {
+            "ticker": "COP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/COP.png"
+          },
+          {
+            "ticker": "EOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/EOG.png"
+          },
+          {
+            "ticker": "OXY",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/OXY.png"
+          },
+          {
+            "ticker": "FANG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/FANG.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 2,
         "group_slug": "energy-bottleneck"
       },
       {
@@ -861,15 +1083,32 @@
           }
         ],
         "tickers_preview": [
-          "ORCL",
-          "SAP",
-          "ESTC",
-          "GOOG",
-          "MDB",
-          "SNOW",
-          "TDC"
+          {
+            "ticker": "ORCL",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ORCL.png"
+          },
+          {
+            "ticker": "SAP",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SAP.png"
+          },
+          {
+            "ticker": "ESTC",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ESTC.png"
+          },
+          {
+            "ticker": "GOOG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/GOOG.png"
+          },
+          {
+            "ticker": "MDB",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/MDB.png"
+          },
+          {
+            "ticker": "SNOW",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SNOW.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 1,
         "group_slug": "software"
       },
       {
@@ -911,18 +1150,31 @@
           }
         ],
         "tickers_preview": [
-          "PSKY",
-          "0303.HK",
-          "300459.SHE",
-          "BAMI.TO",
-          "DIS",
-          "RBLX",
-          "SCHL",
-          "TOON",
-          "TOY.TO",
-          "WILD.TO"
+          {
+            "ticker": "PSKY",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/PSKY.png"
+          },
+          {
+            "ticker": "0303.HK",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/0303.HK.png"
+          },
+          {
+            "ticker": "300459.SHE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/300459.SHE.png"
+          },
+          {
+            "ticker": "BAMI.TO"
+          },
+          {
+            "ticker": "DIS",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/DIS.png"
+          },
+          {
+            "ticker": "RBLX",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/RBLX.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 4,
         "group_slug": "child-care"
       },
       {
@@ -964,20 +1216,32 @@
           }
         ],
         "tickers_preview": [
-          "CBOE",
-          "CME",
-          "MSCI",
-          "DB1.XETRA",
-          "ENX.PA",
-          "FDS",
-          "ICE",
-          "LSEG.LSE",
-          "MORN",
-          "NDAQ",
-          "SPGI",
-          "TRI"
+          {
+            "ticker": "CBOE",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CBOE.png"
+          },
+          {
+            "ticker": "CME",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/CME.png"
+          },
+          {
+            "ticker": "MSCI",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/MSCI.png"
+          },
+          {
+            "ticker": "DB1.XETRA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/DB1.XETRA.png"
+          },
+          {
+            "ticker": "ENX.PA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/ENX.PA.png"
+          },
+          {
+            "ticker": "FDS",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/FDS.png"
+          }
         ],
-        "tickers_preview_more": null,
+        "tickers_preview_more": 6,
         "group_slug": "alt-market-data"
       },
       {
@@ -1019,20 +1283,32 @@
           }
         ],
         "tickers_preview": [
-          "047810.KO",
-          "600760.SHG",
-          "AIR.PA",
-          "AM.PA",
-          "BA",
-          "BBD-B.TO",
-          "BETA",
-          "EH",
-          "EMBJ",
-          "HAL.NS",
-          "SPCE",
-          "SRFM"
+          {
+            "ticker": "047810.KO",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/047810.KO.png"
+          },
+          {
+            "ticker": "600760.SHG",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/600760.SHG.png"
+          },
+          {
+            "ticker": "AIR.PA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/AIR.PA.png"
+          },
+          {
+            "ticker": "AM.PA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/AM.PA.png"
+          },
+          {
+            "ticker": "BA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/BA.png"
+          },
+          {
+            "ticker": "BBD-B.TO",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/BBD-B.TO.png"
+          }
         ],
-        "tickers_preview_more": 1,
+        "tickers_preview_more": 7,
         "group_slug": "airplanes"
       },
       {
@@ -1074,11 +1350,26 @@
           }
         ],
         "tickers_preview": [
-          "6098.T",
-          "IBM",
-          "INTU",
-          "MDB",
-          "SAP.XETRA"
+          {
+            "ticker": "6098.T",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/6098.T.png"
+          },
+          {
+            "ticker": "IBM",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/IBM.png"
+          },
+          {
+            "ticker": "INTU",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/INTU.png"
+          },
+          {
+            "ticker": "MDB",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/MDB.png"
+          },
+          {
+            "ticker": "SAP.XETRA",
+            "logo_url": "https://storage.stockthemes.ai/logos/v0/SAP.XETRA.png"
+          }
         ],
         "tickers_preview_more": null,
         "group_slug": "bs-jobs"
