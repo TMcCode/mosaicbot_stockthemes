@@ -19,9 +19,15 @@ import {
   feedSectorOptionsFromEvents,
   slimFeedThemeMetaForSlots,
 } from "@/lib/buildFeedThemeMeta";
+import {
+  buildTickersByThemeSlug,
+  feedSlotsNeedingTickerFallback,
+} from "@/lib/buildTickersByThemeSlug";
+import { TICKERS_PREVIEW_DISPLAY_MAX } from "@/lib/constituentMeta";
 import { buildThesisBySlugFromBundles } from "@/lib/buildThesisBySlug";
 import { filterFeedEventsWithThesisText } from "@/lib/hydrateFeedThesis";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
+import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
 import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
@@ -64,6 +70,18 @@ export default async function FeedPage() {
     manifest,
   );
   const themeMetaBySlug = slimFeedThemeMetaForSlots(themeMetaAll, events);
+  const needTickerFallback = feedSlotsNeedingTickerFallback(events);
+  const searchIndexRes =
+    needTickerFallback.size > 0
+      ? await getSearchIndexCached().catch(() => null)
+      : null;
+  const tickersByThemeSlug = searchIndexRes
+    ? buildTickersByThemeSlug(
+        searchIndexRes.index,
+        TICKERS_PREVIEW_DISPLAY_MAX,
+        needTickerFallback,
+      )
+    : undefined;
   const sectorOptions = feedSectorOptionsFromEvents(events, themeMetaBySlug);
   const asOfIso =
     homeFeedRes?.bundle?.as_of?.trim() || manifest.as_of?.trim() || "";
@@ -91,6 +109,7 @@ export default async function FeedPage() {
               events={events}
               themeMetaBySlug={themeMetaBySlug}
               thesisBySlug={thesisBySlug}
+              tickersByThemeSlug={tickersByThemeSlug}
               sectorOptions={sectorOptions}
               listClassName={feedStyles.feedList}
               initialCount={FEED_INITIAL_VISIBLE}

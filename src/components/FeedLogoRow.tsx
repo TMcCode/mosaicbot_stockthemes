@@ -1,6 +1,7 @@
 "use client";
 
 import { ConstituentLogo } from "@/components/ConstituentLogo";
+import { TICKERS_PREVIEW_DISPLAY_MAX } from "@/lib/constituentMeta";
 
 import styles from "./FeedEventCard.module.css";
 
@@ -11,7 +12,11 @@ type Props = {
 };
 
 /** Compact logo strip for home feed cards — same 6-logo cap as Narrative Radar. */
-export function FeedLogoRow({ tickers, moreCount = 0, maxVisible = 6 }: Props) {
+export function FeedLogoRow({
+  tickers,
+  moreCount = 0,
+  maxVisible = TICKERS_PREVIEW_DISPLAY_MAX,
+}: Props) {
   const clean = tickers
     .map((t) => String(t || "").trim().toUpperCase())
     .filter(Boolean);

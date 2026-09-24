@@ -382,9 +382,9 @@
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  max-width: 36px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  max-width: none;
+  overflow: visible;
+  text-overflow: clip;
   white-space: nowrap;
   text-align: center;
 }

@@ -23,6 +23,7 @@ type Props = {
   events: FeedFlipperSlot[];
   themeMetaBySlug?: Record<string, FeedThemeMeta>;
   thesisBySlug?: Record<string, string>;
+  tickersByThemeSlug?: Record<string, { tickers: string[]; more: number }>;
   sectorOptions?: string[];
   listClassName: string;
   /** Cards in the first paint. */
@@ -48,6 +49,7 @@ export function FeedProgressiveList({
   events,
   themeMetaBySlug,
   thesisBySlug,
+  tickersByThemeSlug,
   sectorOptions = [],
   listClassName,
   initialCount = 8,
@@ -177,6 +179,7 @@ export function FeedProgressiveList({
                 siblings={slot.siblings}
                 themeMetaBySlug={themeMetaBySlug}
                 thesisBySlug={thesisBySlug}
+                tickersByThemeSlug={tickersByThemeSlug}
               />
             );
             if (idx < eager) {

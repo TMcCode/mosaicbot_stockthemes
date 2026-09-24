@@ -1,6 +1,7 @@
 import type { SearchIndexV0 } from "@/types/search_index.v0";
+import { TICKERS_PREVIEW_DISPLAY_MAX } from "@/lib/constituentMeta";
 
-const DEFAULT_MAX = 4;
+const DEFAULT_MAX = TICKERS_PREVIEW_DISPLAY_MAX;
 
 export type ThemeTickersPreview = {
   tickers: string[];
@@ -48,15 +49,17 @@ export function buildTickersByThemeSlug(
   return out;
 }
 
-/** Theme slugs that need a logo fallback (no holdings/membership preview on the event). */
+/** Theme slugs that need logo fill (missing preview, or fewer than radar's 6). */
 export function feedSlotsNeedingTickerFallback(
   slots: Iterable<{
     lead: {
+      kind?: string | null;
       theme_slug?: string | null;
       holdings_preview?: unknown;
       membership_preview?: unknown;
     };
     siblings?: Array<{
+      kind?: string | null;
       theme_slug?: string | null;
       holdings_preview?: unknown;
       membership_preview?: unknown;
@@ -67,10 +70,10 @@ export function feedSlotsNeedingTickerFallback(
   for (const slot of slots) {
     const members = slot.siblings?.length ? slot.siblings : [slot.lead];
     for (const e of members) {
-      const hasHoldings = Array.isArray(e.holdings_preview) && e.holdings_preview.length > 0;
-      const hasMembership =
-        Array.isArray(e.membership_preview) && e.membership_preview.length > 0;
-      if (hasHoldings || hasMembership) continue;
+      const holdings = Array.isArray(e.holdings_preview) ? e.holdings_preview : [];
+      const membership = Array.isArray(e.membership_preview) ? e.membership_preview : [];
+      const previewLen = Math.max(holdings.length, membership.length);
+      if (previewLen >= TICKERS_PREVIEW_DISPLAY_MAX) continue;
       const slug = String(e.theme_slug || "").trim();
       if (slug) need.add(slug);
     }

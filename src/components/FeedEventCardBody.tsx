@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 
 import { FeedHoldingChips } from "@/components/FeedHoldingChips";
 import { FeedLogoRow } from "@/components/FeedLogoRow";
+import { TICKERS_PREVIEW_DISPLAY_MAX } from "@/lib/constituentMeta";
 import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
 import {
   groupEyebrowFromThemeName,
@@ -269,17 +270,33 @@ export function FeedEventCardBody({
       ? String(evt.thesis_preview || (slug && thesisBySlug?.[slug]) || "").trim()
       : "";
 
+  const isThesisUpdate = evt.kind === "text_table_update";
+
   const chipTickers = (membership.length ? membership : holdings)
     .map((h) => String(h.ticker || "").trim().toUpperCase())
     .filter(Boolean);
   const fallback = slug && tickersByThemeSlug?.[slug] ? tickersByThemeSlug[slug] : null;
   const fallbackTickers = fallback?.tickers ?? [];
-  const logoTickers = chipTickers.length ? chipTickers : fallbackTickers;
-  const logoMore = chipTickers.length
+  // Thesis cards historically baked only 4 holdings; fill to radar's 6 from search index.
+  const logoTickers: string[] = [];
+  const seenLogo = new Set<string>();
+  for (const t of [...chipTickers, ...fallbackTickers]) {
+    if (!t || seenLogo.has(t)) continue;
+    seenLogo.add(t);
+    logoTickers.push(t);
+    if (logoTickers.length >= TICKERS_PREVIEW_DISPLAY_MAX) break;
+  }
+  const bakedMore = chipTickers.length
     ? membership.length
       ? Math.max(0, Number(evt.membership_more_count) || 0)
       : holdingsMore
-    : Math.max(0, fallback?.more ?? (tickerCount ?? 0) - logoTickers.length);
+    : Math.max(0, fallback?.more ?? 0);
+  const totalKnown = Math.max(
+    tickerCount ?? 0,
+    chipTickers.length + bakedMore,
+    fallbackTickers.length + Math.max(0, fallback?.more ?? 0),
+  );
+  const logoMore = Math.max(0, totalKnown - logoTickers.length);
 
   const cardClass = `${styles.card} ${feedKindClass(evt.kind)} ${compact ? styles.compact : ""} ${
     linkTheme ? styles.cardInteractive : ""
@@ -339,6 +356,14 @@ export function FeedEventCardBody({
         <div className={styles.logoDateRow}>
           <FeedLogoRow tickers={logoTickers} moreCount={logoMore} />
           <span className={`${styles.when} ${styles.cardRaise}`}>{dateLabel || "Recent"}</span>
+        </div>
+      ) : isThesisUpdate ? (
+        /* Thesis updated: same logo+symbol strip as home, not weight chips. */
+        <div className={styles.feedBody}>
+          <div className={styles.cardRaise}>
+            <FeedLogoRow tickers={logoTickers} moreCount={logoMore} />
+          </div>
+          <span className={styles.when}>{dateLabel || "Recent"}</span>
         </div>
       ) : (
         <div className={styles.feedBody}>

@@ -61,7 +61,7 @@ function fmtPct(v: number | null | undefined): string {
   return `${sign}${n.toFixed(1)}%`;
 }
 
-function fmtRevPp(v: number | null | undefined, label = "Rev"): string | null {
+function fmtRevPp(v: number | null | undefined, label = "CQ rev"): string | null {
   if (v == null || Number.isNaN(Number(v))) return null;
   const n = Number(v);
   const sign = n > 0 ? "+" : "";
@@ -70,10 +70,6 @@ function fmtRevPp(v: number | null | undefined, label = "Rev"): string | null {
 
 const REV_DELTA_TITLE =
   "CQ lock-quarter: change in estimated YoY revenue growth since first post-report print (theme-weighted)";
-const REV_CY_TITLE =
-  "CY (vendor 0y unfinished year): change in estimated YoY revenue growth (theme-weighted)";
-const REV_NY_TITLE =
-  "NY (vendor +1y): change in estimated YoY revenue growth (theme-weighted)";
 
 /** Calendar date from ISO ``created_at`` → ``Added 9/14/26`` (UTC date parts). */
 function fmtAddedLabel(createdAt: string | null | undefined): string | null {
@@ -330,14 +326,8 @@ function RadarCardBody({
       {card.thesis ? <p className={styles.whyNow}>{card.thesis}</p> : null}
       <div className={styles.metrics}>
         <span>1M {fmtPct(card.return_1m)}</span>
-        {fmtRevPp(card.rev_cy_delta_pp, "CY") ? (
-          <span title={REV_CY_TITLE}>{fmtRevPp(card.rev_cy_delta_pp, "CY")}</span>
-        ) : null}
-        {fmtRevPp(card.rev_ny_delta_pp, "NY") ? (
-          <span title={REV_NY_TITLE}>{fmtRevPp(card.rev_ny_delta_pp, "NY")}</span>
-        ) : null}
-        {fmtRevPp(card.rev_delta_pp, "CQ") ? (
-          <span title={REV_DELTA_TITLE}>{fmtRevPp(card.rev_delta_pp, "CQ")}</span>
+        {fmtRevPp(card.rev_delta_pp) ? (
+          <span title={REV_DELTA_TITLE}>{fmtRevPp(card.rev_delta_pp)}</span>
         ) : null}
         {secondary ? <span>{secondary}</span> : null}
       </div>
