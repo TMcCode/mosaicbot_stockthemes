@@ -469,8 +469,8 @@ export function ThemeConstituentsTable({
               aria-pressed={showRevisions}
               title={
                 protectedLocked
-                  ? "Sign in to view lock-quarter revenue estimate revisions"
-                  : "Lock-quarter revenue estimate revisions"
+              ? "Sign in to view CQ / CY / NY revenue estimate revisions"
+              : "CQ / CY / NY revenue estimate revisions"
               }
               onClick={() => setView("revisions")}
             >

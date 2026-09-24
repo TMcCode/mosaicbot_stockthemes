@@ -228,8 +228,10 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
       </HorizontalScrollArea>
       <div className={styles.tableFooter}>
         <p className={styles.tableFootnote}>
-          Lock-quarter revenue estimate revisions vs prior-year actual. Theme row uses manual weights; footer stats
-          are equal-weight.
+          Lock-quarter (CQ) plus unfinished-year (CY) and next-year (NY) consensus
+          revenue growth revisions vs prior-year actual. Vendor period labels (0q / 0y /
+          +1y). Theme row uses manual weights; footer stats are equal-weight across names
+          with data.
         </p>
         <p className={tableStyles.sortHint}>
           Default: Wgt ↓ · Click headers to sort · Shift+click secondary

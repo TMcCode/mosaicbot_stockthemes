@@ -44,6 +44,18 @@ export type ThemeRevenueRevisionsV0 = {
   growth_est_low_pct?: number | null;
   growth_est_high_pct?: number | null;
   revenue_est_analysts?: number | null;
+  nq_growth_est_latest_pct?: number | null;
+  nq_growth_est_first_pct?: number | null;
+  nq_growth_delta_bps?: number | null;
+  cy_growth_est_latest_pct?: number | null;
+  cy_growth_est_first_pct?: number | null;
+  cy_growth_delta_bps?: number | null;
+  ny_growth_est_latest_pct?: number | null;
+  ny_growth_est_first_pct?: number | null;
+  ny_growth_delta_bps?: number | null;
+  n2y_growth_est_latest_pct?: number | null;
+  n2y_growth_est_first_pct?: number | null;
+  n2y_growth_delta_bps?: number | null;
 };
 
 export type ThemeRevenueConstituentV0 = {
