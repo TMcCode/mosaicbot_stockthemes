@@ -35,14 +35,15 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
           </Link>
         </div>
       </div>
+      <p className={styles.scrollHint}>Swipe for more metrics</p>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Theme</th>
-              <th>1M</th>
+              <th className={styles.stickyCol}>Theme</th>
+              <th className={styles.hideOnNarrow}>1M</th>
               <th>120D</th>
-              <th>YTD</th>
+              <th className={styles.hideOnNarrow}>YTD</th>
               <th>Revisions</th>
               <th>Breadth</th>
             </tr>
@@ -57,14 +58,14 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
             ) : (
               shown.map((r) => (
                 <tr key={r.slug || r.name}>
-                  <td>
+                  <td className={styles.stickyCol}>
                     <Link href={r.slug ? `/themes/${r.slug}` : "/themes"} className={styles.themeLink}>
                       {r.name}
                     </Link>
                   </td>
-                  <td className={styles.num}>{fmtPct(r.return_1m)}</td>
+                  <td className={`${styles.num} ${styles.hideOnNarrow}`}>{fmtPct(r.return_1m)}</td>
                   <td className={styles.num}>{fmtPct(r.return_120d)}</td>
-                  <td className={styles.num}>{fmtPct(r.return_ytd)}</td>
+                  <td className={`${styles.num} ${styles.hideOnNarrow}`}>{fmtPct(r.return_ytd)}</td>
                   <td>{r.revisions_label || "—"}</td>
                   <td>{r.breadth_label || (r.breadth_pct != null ? `${Math.round(r.breadth_pct)}%` : "—")}</td>
                 </tr>

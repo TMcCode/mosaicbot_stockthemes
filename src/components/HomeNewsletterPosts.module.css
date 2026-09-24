@@ -224,4 +224,9 @@
   .links {
     justify-content: flex-start;
   }
+
+  /* Home strip only (desk uses .sectionFlush): show 3 posts on phones. */
+  .section:not(.sectionFlush) .cardItem:nth-child(n + 4) {
+    display: none;
+  }
 }

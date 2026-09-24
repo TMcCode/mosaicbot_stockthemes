@@ -188,6 +188,11 @@
   .themeChips {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+
+  /* Keep What’s changing shorter on phones (7 still baked for desktop). */
+  .feedList > *:nth-child(n + 5) {
+    display: none;
+  }
 }
 
 .returnUp {

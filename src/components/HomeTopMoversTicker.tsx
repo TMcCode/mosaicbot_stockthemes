@@ -16,7 +16,8 @@ import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import styles from "./HomeTopMoversTicker.module.css";
 
 /** Wall-clock seconds for one full marquee loop (higher = slower). */
-const LOOP_SECONDS = 340;
+const LOOP_SECONDS_DESKTOP = 340;
+const LOOP_SECONDS_MOBILE = 460;
 const DRAG_THRESHOLD_PX = 5;
 const CLICK_SUPPRESS_MS = 400;
 
@@ -85,6 +86,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
   const viewportRef = useRef<HTMLDivElement>(null);
   const suppressClickUntil = useRef(0);
   const dragRef = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
+  const loopSecondsRef = useRef(LOOP_SECONDS_DESKTOP);
 
   const [hoverPaused, setHoverPaused] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
@@ -96,6 +98,16 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
     const apply = () => setReducedMotion(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const apply = () => {
+      loopSecondsRef.current = mq.matches ? LOOP_SECONDS_MOBILE : LOOP_SECONDS_DESKTOP;
+    };
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
@@ -114,7 +126,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
         const half = el.scrollWidth / 2;
         if (half > 0) {
           const dt = Math.min(now - last, 48);
-          el.scrollLeft += (half / (LOOP_SECONDS * 1000)) * dt;
+          el.scrollLeft += (half / (loopSecondsRef.current * 1000)) * dt;
           normalizeLoopScroll(el);
         }
       }

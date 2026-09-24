@@ -75,6 +75,15 @@
 .tableWrap {
   width: 100%;
   overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.scrollHint {
+  display: none;
+  margin: 0 0 6px;
+  font-size: 10px;
+  line-height: 1.35;
+  color: var(--text-muted);
 }
 
 .table {
@@ -116,4 +125,52 @@
 .empty {
   color: var(--text-muted);
   padding: 16px 8px !important;
+}
+
+.stickyCol {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--card-surface, #0c0e12);
+  box-shadow: 4px 0 8px -4px rgba(0, 0, 0, 0.35);
+}
+
+:global(.st-theme[data-theme="light"]) .stickyCol {
+  background: var(--card-surface, #ffffff);
+  box-shadow: 4px 0 8px -4px rgba(30, 28, 54, 0.12);
+}
+
+.table thead .stickyCol {
+  z-index: 2;
+}
+
+@media (max-width: 700px) {
+  .scrollHint {
+    display: block;
+  }
+
+  .hideOnNarrow {
+    display: none;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .table th,
+  .table td {
+    padding: 7px 6px;
+  }
+
+  .stickyCol {
+    max-width: min(42vw, 160px);
+  }
+
+  .themeLink {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+    line-height: 1.25;
+  }
 }

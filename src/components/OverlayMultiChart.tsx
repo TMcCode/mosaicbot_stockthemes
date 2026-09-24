@@ -104,9 +104,17 @@ type Props = {
   benchmark?: ChartPerformanceV0;
   hiddenIds: Set<string>;
   showBenchmark: boolean;
+  /** Chart pixel height (default 480). */
+  height?: number;
 };
 
-export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark }: Props) {
+export function OverlayMultiChart({
+  series,
+  benchmark,
+  hiddenIds,
+  showBenchmark,
+  height = 480,
+}: Props) {
   const { theme } = useStockthemesTheme();
   const themeRef = useRef(theme);
   themeRef.current = theme;
@@ -141,7 +149,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
     const chart = createChart(el, {
       autoSize: false,
       width,
-      height: 480,
+      height: Math.max(180, Math.floor(height)),
       ...themeOpts,
       layout: {
         ...themeOpts.layout,
@@ -303,7 +311,7 @@ export function OverlayMultiChart({ series, benchmark, hiddenIds, showBenchmark 
       indexedBaselineRef.current = null;
       seriesApisRef.current.clear();
     };
-  }, [visibleSeries, benchmark, showBenchmark]);
+  }, [visibleSeries, benchmark, showBenchmark, height]);
 
   useEffect(() => {
     const chart = chartRef.current;

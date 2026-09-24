@@ -76,10 +76,20 @@ export function ThemesInMotionMacroChart({
   const [mode, setMode] = useState<MacroChartMode>("sectors");
   const [period, setPeriod] = useState<OverlayChartPeriod>("1Y");
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
+  const [chartHeight, setChartHeight] = useState(480);
   const [factorCatalog, setFactorCatalog] = useState<
     Record<string, OverlayFactorSpreadCatalogEntry>
   >({});
   const [factorLoading, setFactorLoading] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mq = window.matchMedia("(max-width: 700px)");
+    const apply = () => setChartHeight(mq.matches ? 280 : 480);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, []);
 
   const customPeriods = useMemo(
     () => chartCustomPeriodsFromManifest(selectedDates),
@@ -347,6 +357,7 @@ export function ThemesInMotionMacroChart({
             benchmark={benchmarkSliced}
             hiddenIds={hiddenIds}
             showBenchmark={mode === "sectors" && Boolean(benchmarkSliced)}
+            height={chartHeight}
           />
         ) : (
           <p className={styles.hint}>{emptyMessage}</p>
