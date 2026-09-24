@@ -125,14 +125,15 @@
   justify-content: flex-start;
 }
 
-/* Flush logos to the same left edge as title / eyebrow (match Narrative Radar). */
+/* Row stays flush-left via .logoRow justify-content; keep each chip
+   logo+ticker centered on each other (flex-start left-shifted icons). */
 .compact .logoHit {
-  align-items: flex-start;
+  align-items: center;
   min-width: 0;
 }
 
 .compact .logoTicker {
-  text-align: left;
+  text-align: center;
   max-width: 40px;
 }
 
