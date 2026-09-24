@@ -63,6 +63,26 @@ for (const [key, limit] of Object.entries(budgets)) {
 console.log(`verify-build-budgets: largest theme ${largestTheme.name}`);
 console.log(`verify-build-budgets: largest group ${largestGroup.name}`);
 
+// Cloudflare custom domains 404 paths with literal `~` (see sanitize-chunk-tildes.mjs).
+function walkFiles(dir, acc = []) {
+  for (const name of fs.readdirSync(dir)) {
+    const p = path.join(dir, name);
+    if (fs.statSync(p).isDirectory()) walkFiles(p, acc);
+    else acc.push(p);
+  }
+  return acc;
+}
+const tildeNames = walkFiles(out).filter((f) => path.basename(f).includes("~"));
+if (tildeNames.length) {
+  console.error(
+    `verify-build-budgets: ${tildeNames.length} asset(s) still contain ~ (CF custom domain 404):\n${tildeNames
+      .slice(0, 10)
+      .map((f) => path.relative(out, f))
+      .join("\n")}`,
+  );
+  process.exit(1);
+}
+
 if (failures.length && enforce) {
   console.error(`verify-build-budgets: failed\n${failures.join("\n")}`);
   process.exit(1);
