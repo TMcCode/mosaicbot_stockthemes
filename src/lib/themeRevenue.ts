@@ -123,6 +123,38 @@ export const REVENUE_GROWTH_COLUMNS: RevenueColumnDef[] = [
   { id: "fwd3y", label: "3Y Fwd\nCAGR", tooltip: "Forward 3-year revenue CAGR (CY through N2Y).", growthKey: "fwd_3y_cagr_pct", format: "pct", hideInAccel: true },
 ];
 
+/** Top header band for Growth % / Accel (Quarters · Years · CAGR). */
+export const REVENUE_GROWTH_GROUPS: { id: string; label: string; title: string; columnIds: string[] }[] = [
+  {
+    id: "quarters",
+    label: "Quarters",
+    title: "Quarterly YoY revenue growth (actuals and estimates)",
+    columnIds: ["l5q", "l4q", "l3q", "l2q", "lq", "cq", "nq"],
+  },
+  {
+    id: "years",
+    label: "Years",
+    title: "Annual YoY revenue growth (actuals and estimates)",
+    columnIds: ["l2y", "ly", "cy", "ny", "n2y"],
+  },
+  {
+    id: "cagr",
+    label: "CAGR",
+    title: "Trailing and forward multi-year revenue CAGR",
+    columnIds: ["trail3y", "fwd3y"],
+  },
+];
+
+export function revenueGrowthGroupsForColumns(
+  columns: RevenueColumnDef[],
+): { id: string; label: string; title: string; columnIds: string[]; colSpan: number }[] {
+  const visible = new Set(columns.map((c) => c.id));
+  return REVENUE_GROWTH_GROUPS.map((g) => {
+    const columnIds = g.columnIds.filter((id) => visible.has(id));
+    return { ...g, columnIds, colSpan: columnIds.length };
+  }).filter((g) => g.colSpan > 0);
+}
+
 export const REVENUE_VALUATION_MULTIPLE_COLUMNS: RevenueColumnDef[] = [
   {
     id: "ps_ly",

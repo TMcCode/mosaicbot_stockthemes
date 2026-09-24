@@ -25,6 +25,7 @@ import {
   REVENUE_STAT_ROW_LABELS,
   revenueCellClass,
   revenueCellValue,
+  revenueGrowthGroupsForColumns,
   revenueStatValue,
   type RevenueColumnDef,
   type RevenueDisplayMode,
@@ -152,6 +153,11 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
 
   const hasWeight = detail.constituents.some((c) => c.weight != null && Number.isFinite(c.weight));
   const columns = useMemo(() => filterRevenueColumns(mode), [mode]);
+  const headerGroups = useMemo(
+    () => (mode === "valuation" ? [] : revenueGrowthGroupsForColumns(columns)),
+    [mode, columns],
+  );
+  const useGroupedHeader = headerGroups.length > 0;
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
@@ -235,24 +241,66 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
           <div className={styles.constituentsTableSizer}>
             <table className={styles.dataTable}>
               <thead>
-                <tr>
-                  <th scope="col">{renderSortHead("company", "Company")}</th>
-                  {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
-                  {columns.map((col) => (
-                    <th key={col.id} scope="col">
-                      {renderSortHead(
-                        col.id,
-                        col.label.split("\n").map((line, i) => (
-                          <span key={line}>
-                            {i > 0 ? <br /> : null}
-                            {line}
-                          </span>
-                        )),
-                        col.tooltip,
-                      )}
-                    </th>
-                  ))}
-                </tr>
+                {useGroupedHeader ? (
+                  <>
+                    <tr>
+                      <th scope="col" rowSpan={2}>
+                        {renderSortHead("company", "Company")}
+                      </th>
+                      {hasWeight ? (
+                        <th scope="col" rowSpan={2}>
+                          {renderSortHead("weight", "Wgt")}
+                        </th>
+                      ) : null}
+                      {headerGroups.map((group) => (
+                        <th
+                          key={group.id}
+                          scope="colgroup"
+                          colSpan={group.colSpan}
+                          className={tableStyles.revisionGroupHead}
+                          title={group.title}
+                        >
+                          {group.label}
+                        </th>
+                      ))}
+                    </tr>
+                    <tr>
+                      {columns.map((col) => (
+                        <th key={col.id} scope="col">
+                          {renderSortHead(
+                            col.id,
+                            col.label.split("\n").map((line, i) => (
+                              <span key={line}>
+                                {i > 0 ? <br /> : null}
+                                {line}
+                              </span>
+                            )),
+                            col.tooltip,
+                          )}
+                        </th>
+                      ))}
+                    </tr>
+                  </>
+                ) : (
+                  <tr>
+                    <th scope="col">{renderSortHead("company", "Company")}</th>
+                    {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
+                    {columns.map((col) => (
+                      <th key={col.id} scope="col">
+                        {renderSortHead(
+                          col.id,
+                          col.label.split("\n").map((line, i) => (
+                            <span key={line}>
+                              {i > 0 ? <br /> : null}
+                              {line}
+                            </span>
+                          )),
+                          col.tooltip,
+                        )}
+                      </th>
+                    ))}
+                  </tr>
+                )}
               </thead>
               <tbody>
                 {sortedRows.map((row) => {
