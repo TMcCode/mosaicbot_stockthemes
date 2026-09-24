@@ -1,4 +1,4 @@
-/** Baked Narrative Radar "In the News" (`radar_news.json`). */
+/** Baked Narrative Radar "In the News" (`radar_news.v0.json` on stockthemes-public). */
 
 import type { HomeRadarTickerPreviewV0 } from "@/types/home_radar.v0";
 

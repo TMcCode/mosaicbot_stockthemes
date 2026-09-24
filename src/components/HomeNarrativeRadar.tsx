@@ -22,6 +22,7 @@ import {
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
+import { fetchRadarNewsBrowser } from "@/lib/fetchRadarNewsBrowser";
 import { trendingReturnCardGradientStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeNarrativeRadar.module.css";
@@ -662,10 +663,10 @@ export function HomeNarrativeRadar({
     previewLimit,
   ]);
 
-  // Client fallback when server prop is missing (stale RSC / HMR) — public fixture is static.
+  // SSR snapshot for first paint; client always refreshes from public CDN (8× weekday bake).
   const [newsLocal, setNewsLocal] = useState<RadarNewsV0 | null>(null);
-  const [newsFetchDone, setNewsFetchDone] = useState(Boolean(news));
-  const newsEffective = news ?? newsLocal;
+  const [newsFetchDone, setNewsFetchDone] = useState(false);
+  const newsEffective = newsLocal ?? news;
   const newsDays = newsDayOptions(newsEffective);
   const defaultNewsAsOf = newsDays[0]?.as_of || "";
   const [newsAsOf, setNewsAsOf] = useState(() => {
@@ -694,29 +695,20 @@ export function HomeNarrativeRadar({
   }, []);
 
   useEffect(() => {
-    if (news) {
-      setNewsLocal(null);
-      setNewsFetchDone(true);
-      return;
-    }
     let cancelled = false;
     setNewsFetchDone(false);
-    (async () => {
-      try {
-        const res = await fetch("/fixtures/radar_news.v0.json", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as RadarNewsV0;
-        if (!cancelled && data?.today) setNewsLocal(data);
-      } catch {
-        /* ignore — empty state stays */
-      } finally {
+    void fetchRadarNewsBrowser()
+      .then((data) => {
+        if (cancelled || !data?.today) return;
+        setNewsLocal(data);
+      })
+      .finally(() => {
         if (!cancelled) setNewsFetchDone(true);
-      }
-    })();
+      });
     return () => {
       cancelled = true;
     };
-  }, [news]);
+  }, []);
 
   // Keep selection valid when news bundle loads / refreshes.
   useEffect(() => {

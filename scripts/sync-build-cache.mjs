@@ -58,6 +58,7 @@ const OPTIONAL_BUNDLE_FILES = [
 ];
 const COMMENTARY_FIXTURE = path.join(root, "public", "fixtures", "home_commentary.v0.json");
 const NEWSLETTER_FIXTURE = path.join(root, "public", "fixtures", "newsletter_posts.v0.json");
+const RADAR_NEWS_FIXTURE = path.join(root, "public", "fixtures", "radar_news.v0.json");
 const THEME_SLUG_REDIRECTS_FIXTURE = path.join(
   root,
   "public",
@@ -69,7 +70,11 @@ const THEME_SLUG_REDIRECTS_FIXTURE = path.join(
  * Slim ETL updates these without bumping manifest.as_of. Always ETag-refresh in CI,
  * including the "as_of unchanged" fast path, so /compare factor rows stay live.
  */
-const INTRADAY_BUNDLE_FILES = ["etf_benchmarks.v0.json", "factor_spreads.v0.json"];
+const INTRADAY_BUNDLE_FILES = [
+  "etf_benchmarks.v0.json",
+  "factor_spreads.v0.json",
+  "radar_news.v0.json",
+];
 
 function manifestUrl() {
   const explicit = process.env.NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL;
@@ -160,6 +165,21 @@ function seedNewsletterPostsFromFixture() {
   fs.copyFileSync(NEWSLETTER_FIXTURE, dest);
   console.log(
     "sync-build-cache: newsletter_posts.v0.json not on bucket yet — using bake fixture",
+  );
+}
+
+function seedRadarNewsFromFixture() {
+  const rel = "radar_news.v0.json";
+  if (cacheFileOk(rel)) return;
+  if (!fs.existsSync(RADAR_NEWS_FIXTURE)) {
+    console.warn("sync-build-cache: no radar_news.v0.json on bucket and no fixture to seed");
+    return;
+  }
+  const dest = cachePath(rel);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(RADAR_NEWS_FIXTURE, dest);
+  console.log(
+    "sync-build-cache: radar_news.v0.json not on bucket yet — using fixture until next news bake",
   );
 }
 
@@ -360,6 +380,7 @@ async function syncIntradayBundles(base, objectMeta, { force = false } = {}) {
       const msg = e instanceof Error ? e.message : String(e);
       if (msg.includes("404")) {
         console.warn(`sync-build-cache: intraday ${rel} missing on bucket`);
+        if (rel === "radar_news.v0.json") seedRadarNewsFromFixture();
         continue;
       }
       console.warn(`sync-build-cache: intraday ${rel} failed:`, msg);
