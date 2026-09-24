@@ -190,8 +190,12 @@
   text-align: center !important;
   font-size: 11px;
   letter-spacing: 0.06em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
   color: var(--accent, #26fcd6);
+  width: auto !important;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .notesColumnHead {

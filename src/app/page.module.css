@@ -181,6 +181,50 @@
   gap: 20px;
 }
 
+.heroBrand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+.heroBrandMark {
+  display: block;
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  max-width: 56px;
+  max-height: 56px;
+  object-fit: contain;
+  object-position: center;
+}
+
+.heroBrandText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.heroBrandLabel {
+  font-size: 22px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.heroBrandMeta {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 /* Group/theme detail: ad under left summary instead of under the treemap rail. */
 .heroMainAd {
   margin-top: 4px;
@@ -196,7 +240,7 @@
   align-items: start;
 }
 
-/* Hero right rail: vertical stats (replaces former title-row ad width) */
+/* Hero right rail: stacked stats (matches live) */
 .statGridHero {
   display: flex;
   flex-direction: column;
@@ -222,8 +266,15 @@
   line-height: 1.3;
 }
 
-.statGridHero .statMarketCap span {
+.statGridHero .statAsOf span {
   white-space: normal;
+}
+
+.statGridHero .statAsOf strong {
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 .adSlot {
@@ -1073,6 +1124,26 @@ a.feedTitle:hover {
 .constituentsScrollWrap[data-constituents-view="revisions"] .dataTable {
   border-collapse: separate;
   border-spacing: 0;
+  width: max-content;
+  max-width: none;
+}
+
+/* Don't stretch metric columns to fill the viewport (was blowing up L5Q / Est Latest). */
+.constituentsScrollWrap[data-constituents-view="revenue"] .constituentsTableSizer,
+.constituentsScrollWrap[data-constituents-view="revisions"] .constituentsTableSizer {
+  min-width: max-content;
+  width: max-content;
+}
+
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable th:not(:first-child),
+.constituentsScrollWrap[data-constituents-view="revenue"] .dataTable td:not(:first-child),
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable th:not(:first-child),
+.constituentsScrollWrap[data-constituents-view="revisions"] .dataTable td:not(:first-child) {
+  width: 1%;
+  min-width: 0;
+  padding-left: 8px;
+  padding-right: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .constituentsScrollWrap[data-constituents-view="revenue"] .dataTable th:first-child,
@@ -1213,6 +1284,15 @@ a.feedTitle:hover {
   gap: 22px;
 }
 
+/* Radar page: tighter stack under the hero (no second section title). */
+.introRadar {
+  gap: 10px;
+}
+
+.introRadar .introPunchline {
+  margin-bottom: 0;
+}
+
 .intro h1:not(.heroTitle) {
   max-width: 780px;
   font-size: 52px;
@@ -1350,7 +1430,7 @@ a.feedTitle:hover {
 }
 
 .intro .introPunchline {
-  margin: 0;
+  margin: 10px 0 0;
   font-size: clamp(22px, 2.6vw, 30px);
   line-height: 1.2;
   font-weight: 500;
@@ -1479,6 +1559,10 @@ a.secondary {
     gap: 14px;
   }
 
+  .heroBrand {
+    display: none;
+  }
+
   .eyebrow {
     font-size: 10px;
     letter-spacing: 0.05em;
@@ -1544,30 +1628,6 @@ a.secondary {
   .statGridHero {
     width: 100%;
     justify-self: stretch;
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
-  }
-
-  .statGridHero .statGroups {
-    order: 1;
-  }
-
-  .statGridHero .statThemes {
-    order: 2;
-  }
-
-  .statGridHero .statTickers {
-    order: 3;
-  }
-
-  .statGridHero .statMarketCap {
-    order: 4;
-  }
-
-  .statGridHero .statMarketCap span {
-    white-space: nowrap;
-    font-size: 10px;
   }
 }
 
@@ -1697,3 +1757,78 @@ a.secondary {
   box-shadow: 6px 0 14px -8px rgba(0, 0, 0, 0.1);
 }
 
+
+.proofLine {
+  margin: 10px 0 0;
+  font-size: 13px;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.heroMain {
+  width: 100%;
+}
+
+
+.heroSearch {
+  width: 100%;
+  margin-top: 0;
+  max-width: none;
+  position: relative;
+  z-index: 3;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(38, 252, 214, 0.35);
+  background:
+    linear-gradient(180deg, rgba(38, 252, 214, 0.1), rgba(38, 252, 214, 0.03)),
+    rgba(0, 0, 0, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.04) inset,
+    0 10px 28px rgba(0, 0, 0, 0.28);
+}
+
+:global(.st-theme[data-theme="light"]) .heroSearch {
+  border-color: rgba(42, 152, 147, 0.4);
+  background:
+    linear-gradient(180deg, rgba(42, 207, 200, 0.12), rgba(255, 255, 255, 0.92)),
+    #ffffff;
+  box-shadow:
+    0 0 0 1px rgba(59, 77, 161, 0.06) inset,
+    0 8px 22px rgba(30, 28, 54, 0.08);
+}
+
+.heroSearchLabel {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.heroFullBleed {
+  grid-column: 1 / -1;
+  width: 100%;
+  max-width: none !important;
+}
+
+.heroGrid > .heroSearch.heroFullBleed {
+  margin-top: 14px;
+}
+
+/* Force SiteSearch wrap/input to fill the hero block (nav search caps at 360px). */
+.heroSearch > div {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  flex: none !important;
+  display: block !important;
+}
+
+.heroSearch input[type="search"] {
+  width: 100% !important;
+  height: 58px !important;
+  font-size: 20px !important;
+}
