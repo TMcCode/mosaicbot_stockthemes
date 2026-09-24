@@ -240,7 +240,9 @@ function RadarCardBody({
 }) {
   const previewItems = normalizeRadarTickersPreview(
     card.tickers_preview,
-    PREVIEW_LOGOS_VISIBLE_MAX,
+    // Keep full bake list so RadarLogoRow can compute +N from array overflow;
+    // display still caps at PREVIEW_LOGOS_VISIBLE_MAX.
+    64,
   );
   const moreHidden = Number.isFinite(card.tickers_preview_more)
     ? Math.max(0, Number(card.tickers_preview_more))
@@ -449,7 +451,9 @@ function NewsRadarCard({
   const headline = card.headlines?.[0];
   const previewItems = normalizeRadarTickersPreview(
     card.tickers_preview,
-    PREVIEW_LOGOS_VISIBLE_MAX,
+    // Keep full bake list so RadarLogoRow can compute +N from array overflow;
+    // display still caps at PREVIEW_LOGOS_VISIBLE_MAX.
+    64,
   );
   const moreHidden = Number.isFinite(card.tickers_preview_more)
     ? Math.max(0, Number(card.tickers_preview_more))
