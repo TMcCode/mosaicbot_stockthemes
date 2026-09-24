@@ -6,26 +6,34 @@
   margin-bottom: 8px;
 }
 
+/* Beat page `.intro p` (18px) — this panel sits inside home/radar intro. */
 .lead {
   margin: 0;
-  font-size: 13px;
+  font-size: 11px !important;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-primary);
+  line-height: 1.35 !important;
+  max-width: none;
+  text-wrap: pretty;
 }
 
 .meta {
   margin: 4px 0 0;
-  font-size: 12px;
+  font-size: 11px !important;
   color: var(--text-muted);
+  line-height: 1.35 !important;
+  max-width: none;
 }
 
 .help {
   margin: 0 0 10px;
-  font-size: 12px;
+  font-size: 11px !important;
   color: var(--text-secondary);
-  line-height: 1.4;
+  line-height: 1.4 !important;
+  max-width: none;
+  text-wrap: pretty;
 }
 
 .add {
@@ -110,7 +118,7 @@
 
 .primaryLink {
   color: var(--accent);
-  font-size: 12px;
+  font-size: 11px !important;
   font-weight: 500;
   text-decoration: none;
 }
@@ -121,12 +129,16 @@
 
 .muted {
   margin: 0;
-  font-size: 12px;
+  font-size: 11px !important;
   color: var(--text-secondary);
+  line-height: 1.4 !important;
+  max-width: none;
 }
 
 .error {
   margin: 0 0 8px;
-  font-size: 12px;
+  font-size: 11px !important;
   color: #b42318;
+  line-height: 1.4 !important;
+  max-width: none;
 }

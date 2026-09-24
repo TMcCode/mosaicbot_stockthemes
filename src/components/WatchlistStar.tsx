@@ -6,6 +6,10 @@ import { useCallback, useState } from "react";
 import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { useWatchlist } from "@/components/WatchlistProvider";
 
+import {
+  WATCHLIST_THEME_LIMIT,
+  watchlistFullErrorMessage,
+} from "@/lib/watchlist/limitsCopy";
 import type { WatchlistItemType } from "@/lib/watchlist/types";
 
 import styles from "./WatchlistStar.module.css";
@@ -47,6 +51,14 @@ export function WatchlistStar({
   const onToggle = useCallback(async () => {
     if (!watchlist || busy) return;
     setMessage(null);
+    if (
+      !saved &&
+      itemType === "theme" &&
+      watchlist.themeCount >= WATCHLIST_THEME_LIMIT
+    ) {
+      setMessage(watchlistFullErrorMessage("themes"));
+      return;
+    }
     setBusy(true);
     try {
       const result = await watchlist.toggle(itemType, itemKey);
@@ -56,7 +68,7 @@ export function WatchlistStar({
     } finally {
       setBusy(false);
     }
-  }, [watchlist, busy, itemType, itemKey]);
+  }, [watchlist, busy, itemType, itemKey, saved]);
 
   if (!configured) {
     return null;
@@ -123,7 +135,7 @@ export function WatchlistStar({
           <span>{saved ? "Saved to Watchlist" : "Save to Watchlist"}</span>
         ) : null}
       </button>
-      {message && !inline ? (
+      {message && !inline && !compact ? (
         <p className={`${styles.hint} ${styles.hintError}`} role="status">
           {message}
         </p>

@@ -61,8 +61,8 @@ export function AccountSignedInView({
           ) : null}
 
           <div className={accountStyles.actions}>
-            <Link href="/my" className={accountStyles.btn}>
-              My watchlist
+            <Link href="/radar?tab=watchlist" className={accountStyles.btn}>
+              Watchlist
             </Link>
             <button
               type="button"

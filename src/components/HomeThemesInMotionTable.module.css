@@ -112,10 +112,18 @@
   white-space: nowrap;
 }
 
+.themeCell {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+
 .themeLink {
   color: var(--text-primary);
   text-decoration: none;
   font-weight: 550;
+  min-width: 0;
 }
 
 .themeLink:hover {

@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 
+import { WatchlistStar } from "@/components/WatchlistStar";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import type { ThemesInMotionRowV0 } from "@/types/themes_in_motion.v0";
 
@@ -59,15 +62,32 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
               shown.map((r) => (
                 <tr key={r.slug || r.name}>
                   <td className={styles.stickyCol}>
-                    <Link href={r.slug ? `/themes/${r.slug}` : "/themes"} className={styles.themeLink}>
-                      {r.name}
-                    </Link>
+                    <div className={styles.themeCell}>
+                      {r.slug ? (
+                        <WatchlistStar
+                          compact
+                          itemType="theme"
+                          itemKey={r.slug}
+                          label={r.name}
+                          signInNext={`/themes/${r.slug}`}
+                        />
+                      ) : null}
+                      <Link
+                        href={r.slug ? `/themes/${r.slug}` : "/themes"}
+                        className={styles.themeLink}
+                      >
+                        {r.name}
+                      </Link>
+                    </div>
                   </td>
                   <td className={`${styles.num} ${styles.hideOnNarrow}`}>{fmtPct(r.return_1m)}</td>
                   <td className={styles.num}>{fmtPct(r.return_120d)}</td>
                   <td className={`${styles.num} ${styles.hideOnNarrow}`}>{fmtPct(r.return_ytd)}</td>
                   <td>{r.revisions_label || "—"}</td>
-                  <td>{r.breadth_label || (r.breadth_pct != null ? `${Math.round(r.breadth_pct)}%` : "—")}</td>
+                  <td>
+                    {r.breadth_label ||
+                      (r.breadth_pct != null ? `${Math.round(r.breadth_pct)}%` : "—")}
+                  </td>
                 </tr>
               ))
             )}

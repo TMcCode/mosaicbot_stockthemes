@@ -1,7 +1,7 @@
-import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { SiteNavAuth } from "@/components/SiteNavAuth";
 import { SiteNavDesktopOffset } from "@/components/SiteNavDesktopOffset";
+import { SiteNavSearch } from "@/components/SiteNavSearch";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { brandAssetPath } from "@/lib/siteUrl";
 
@@ -26,7 +26,7 @@ export function SiteNav() {
             stockthemes.ai
           </span>
         </PrefetchIntentLink>
-        <LazySiteSearch />
+        <SiteNavSearch />
         <div className={styles.links}>
           <div className={styles.browseMenu}>
             <button type="button" className={styles.menuTrigger} aria-haspopup="menu" aria-expanded={false}>

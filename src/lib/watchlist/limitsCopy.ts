@@ -3,6 +3,9 @@ import { HELLO_EMAIL, mailtoHref } from "@/lib/contactEmails";
 /** Matches Supabase trigger in supabase/migrations/001_watchlist.sql */
 export const WATCHLIST_THEME_LIMIT = 20;
 
+/** Matches profiles.home_radar_theme_slugs cap + home Narrative Radar preview. */
+export const HOME_RADAR_HOME_CARD_LIMIT = 6;
+
 export const WATCHLIST_LIMIT_INTEREST_SUBJECT =
   "Watchlist limit — interested in more than 20 themes";
 
@@ -20,6 +23,10 @@ export function watchlistCountLabel(themeCount: number): string {
   return `${themeCount} of ${WATCHLIST_THEME_LIMIT} themes saved`;
 }
 
+export function homeRadarPinCountLabel(pinCount: number): string {
+  return `${pinCount} of ${HOME_RADAR_HOME_CARD_LIMIT} home cards`;
+}
+
 export function watchlistFullPlaceholder(): string {
   return `Watchlist full (${WATCHLIST_THEME_LIMIT} themes)`;
 }
@@ -30,5 +37,9 @@ export function watchlistFullHintBody(): string {
 }
 
 export function watchlistFullErrorMessage(kind: "themes" | "tickers" = "themes"): string {
-  return `Watchlist full (${WATCHLIST_THEME_LIMIT} ${kind} max). Remove one on My watchlist first. ${WATCHLIST_LIMIT_INTEREST_PLAIN}`;
+  return `Watchlist full (${WATCHLIST_THEME_LIMIT} ${kind} max). Remove one from your watchlist first. ${WATCHLIST_LIMIT_INTEREST_PLAIN}`;
+}
+
+export function homeRadarPinsFullMessage(): string {
+  return `Home cards full (${HOME_RADAR_HOME_CARD_LIMIT} max). Uncheck one to add another.`;
 }

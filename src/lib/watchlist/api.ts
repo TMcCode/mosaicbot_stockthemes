@@ -1,4 +1,5 @@
 import type { WatchlistItemRow, WatchlistItemType } from "@/lib/watchlist/types";
+import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
 
 async function getWatchlistSupabase() {
   const { getBrowserSupabase } = await import("@/lib/supabase/browserClient");
@@ -65,4 +66,48 @@ export async function deleteWatchlistItem(
 export function normalizeWatchlistKey(itemType: WatchlistItemType, itemKey: string): string {
   const trimmed = itemKey.trim();
   return itemType === "ticker" ? trimmed.toUpperCase() : trimmed.toLowerCase();
+}
+
+export function normalizeHomeRadarSlugs(slugs: string[]): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const raw of slugs) {
+    const key = normalizeWatchlistKey("theme", raw);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(key);
+    if (out.length >= HOME_RADAR_HOME_CARD_LIMIT) break;
+  }
+  return out;
+}
+
+export async function fetchHomeRadarThemeSlugs(userId: string): Promise<string[]> {
+  const supabase = await getWatchlistSupabase();
+  if (!supabase) return [];
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("home_radar_theme_slugs")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) {
+    // Column missing until migration 006 is applied — treat as no pins.
+    return [];
+  }
+  const raw = (data as { home_radar_theme_slugs?: string[] | null } | null)?.home_radar_theme_slugs;
+  return normalizeHomeRadarSlugs(Array.isArray(raw) ? raw : []);
+}
+
+export async function updateHomeRadarThemeSlugs(userId: string, slugs: string[]): Promise<void> {
+  const supabase = await getWatchlistSupabase();
+  if (!supabase) {
+    throw new Error("Supabase is not configured.");
+  }
+  const next = normalizeHomeRadarSlugs(slugs);
+  const { error } = await supabase
+    .from("profiles")
+    .update({ home_radar_theme_slugs: next })
+    .eq("user_id", userId);
+  if (error) {
+    throw error;
+  }
 }

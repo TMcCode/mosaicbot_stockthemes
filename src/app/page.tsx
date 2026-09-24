@@ -188,8 +188,8 @@ export default async function Home() {
                 Discover the themes shaping public markets.
               </h1>
               <p className={styles.introPunchline}>
-                Explore market narratives, track performance, and see the companies driving each
-                story.
+                Explore market narratives, track performance and news, and follow thesis updates as
+                companies drive each story.
               </p>
             </div>
             {stats ? (

@@ -129,8 +129,8 @@ export function AccountPageClient() {
           <p className={styles.eyebrow}>Account</p>
           <h1>Your account</h1>
           <p className={styles.introCopy}>
-            Free stockthemes.ai account — theme watchlist and performance on{" "}
-            <Link href="/my">My watchlist</Link>.
+            Free stockthemes.ai account — theme watchlist and home cards on{" "}
+            <Link href="/radar?tab=watchlist">Watchlist</Link>.
           </p>
           <WatchlistLimitInterestNote includePlanLine className={styles.introCopy} />
 

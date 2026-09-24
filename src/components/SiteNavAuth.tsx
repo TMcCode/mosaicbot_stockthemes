@@ -15,7 +15,7 @@ export function SiteNavAuth() {
   if (user) {
     return (
       <span className={styles.authNav}>
-        <PrefetchIntentLink href="/my">Watchlist</PrefetchIntentLink>
+        <PrefetchIntentLink href="/radar?tab=watchlist">Watchlist</PrefetchIntentLink>
         <span className={styles.sep} aria-hidden="true">
           ·
         </span>

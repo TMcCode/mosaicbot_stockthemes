@@ -61,7 +61,7 @@ export function MyWatchlistPageClient({ compareData }: Props) {
             <h1>Sign in required</h1>
             <p className={styles.introCopy}>Sign in to save themes and track performance here.</p>
             <p className={styles.introCopy}>
-              <Link href="/sign-in?next=%2Fmy">Sign in</Link>
+              <Link href="/sign-in?next=%2Fradar%3Ftab%3Dwatchlist">Sign in</Link>
               {" · "}
               <Link href="/themes">Browse themes</Link>
             </p>
@@ -78,7 +78,11 @@ export function MyWatchlistPageClient({ compareData }: Props) {
       <main className={styles.main}>
         <div className={styles.intro}>
           <p className={styles.eyebrow}>My watchlist</p>
-          <h1>Your watchlist</h1>
+          <h1>Performance</h1>
+          <p className={styles.introCopy}>
+            Add or remove themes and pick home cards on{" "}
+            <Link href="/radar?tab=watchlist">Narrative Radar → Watchlist</Link>.
+          </p>
           <MyWatchlistPerformance email={email} compareData={compareData} />
         </div>
       </main>

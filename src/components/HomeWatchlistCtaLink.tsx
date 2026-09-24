@@ -9,11 +9,11 @@ export function HomeWatchlistCtaLink() {
 
   if (!configured) {
     return (
-      <Link href="/my">Create Your Own Themes Watchlist</Link>
+      <Link href="/radar?tab=watchlist">Create Your Own Themes Watchlist</Link>
     );
   }
 
-  const href = user ? "/my" : "/sign-in?next=%2Fmy";
+  const href = user ? "/radar?tab=watchlist" : "/sign-in?next=%2Fradar%3Ftab%3Dwatchlist";
 
   return (
     <Link href={href} aria-busy={loading || undefined}>

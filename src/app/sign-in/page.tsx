@@ -122,7 +122,8 @@ export default function SignInPage() {
           </p>
           <p className={styles.introCopy}>
             <strong>Already use stockthemes?</strong> Same options sign you back in. Save up to{" "}
-            {WATCHLIST_THEME_LIMIT} themes and track them on <Link href="/my">My watchlist</Link>.
+            {WATCHLIST_THEME_LIMIT} themes and manage them on{" "}
+            <Link href="/radar?tab=watchlist">Watchlist</Link>.
           </p>
           <WatchlistLimitInterestNote includePlanLine className={styles.introCopy} />
 

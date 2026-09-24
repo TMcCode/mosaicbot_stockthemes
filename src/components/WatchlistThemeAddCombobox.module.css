@@ -24,12 +24,12 @@
 .input {
   width: 100%;
   box-sizing: border-box;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   background: rgba(255, 255, 255, 0.03);
   color: var(--text-primary, #eaf2f0);
-  font-size: 14px;
+  font-size: 13px;
   font-family: inherit;
 }
 
