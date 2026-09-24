@@ -32,6 +32,8 @@ type WatchlistContextValue = {
   themeKeys: ReadonlySet<string>;
   /** Watchlist theme slugs in saved order. */
   themeOrder: readonly string[];
+  /** theme slug → watchlist_items.created_at ISO (when saved). */
+  themeAddedAt: ReadonlyMap<string, string>;
   tickerKeys: ReadonlySet<string>;
   themeCount: number;
   tickerCount: number;
@@ -51,10 +53,16 @@ export function useWatchlist(): WatchlistContextValue | null {
 }
 
 function rowsToSets(
-  rows: { item_type: WatchlistItemType; item_key: string }[],
-): { themeKeys: Set<string>; themeOrder: string[]; tickerKeys: Set<string> } {
+  rows: { item_type: WatchlistItemType; item_key: string; created_at?: string }[],
+): {
+  themeKeys: Set<string>;
+  themeOrder: string[];
+  themeAddedAt: Map<string, string>;
+  tickerKeys: Set<string>;
+} {
   const themeKeys = new Set<string>();
   const themeOrder: string[] = [];
+  const themeAddedAt = new Map<string, string>();
   const tickerKeys = new Set<string>();
   for (const row of rows) {
     const key = normalizeWatchlistKey(row.item_type, row.item_key);
@@ -62,12 +70,13 @@ function rowsToSets(
       if (!themeKeys.has(key)) {
         themeKeys.add(key);
         themeOrder.push(key);
+        if (row.created_at) themeAddedAt.set(key, row.created_at);
       }
     } else {
       tickerKeys.add(key);
     }
   }
-  return { themeKeys, themeOrder, tickerKeys };
+  return { themeKeys, themeOrder, themeAddedAt, tickerKeys };
 }
 
 export function WatchlistProvider({ children }: { children: ReactNode }) {
@@ -75,6 +84,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
   const [themeKeys, setThemeKeys] = useState<Set<string>>(() => new Set());
   const [themeOrder, setThemeOrder] = useState<string[]>([]);
+  const [themeAddedAt, setThemeAddedAt] = useState<Map<string, string>>(() => new Map());
   const [tickerKeys, setTickerKeys] = useState<Set<string>>(() => new Set());
   const [homeRadarSlugs, setHomeRadarSlugs] = useState<string[]>([]);
 
@@ -82,6 +92,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
     if (!configured || !user) {
       setThemeKeys(new Set());
       setThemeOrder([]);
+      setThemeAddedAt(new Map());
       setTickerKeys(new Set());
       setHomeRadarSlugs([]);
       setReady(true);
@@ -95,12 +106,14 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       const sets = rowsToSets(rows);
       setThemeKeys(sets.themeKeys);
       setThemeOrder(sets.themeOrder);
+      setThemeAddedAt(sets.themeAddedAt);
       setTickerKeys(sets.tickerKeys);
       // Drop pins that are no longer on the watchlist.
       setHomeRadarSlugs(normalizeHomeRadarSlugs(pins.filter((s) => sets.themeKeys.has(s))));
     } catch {
       setThemeKeys(new Set());
       setThemeOrder([]);
+      setThemeAddedAt(new Map());
       setTickerKeys(new Set());
       setHomeRadarSlugs([]);
     } finally {
@@ -196,6 +209,11 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
             return next;
           });
           setThemeOrder((prev) => prev.filter((s) => s !== key));
+          setThemeAddedAt((prev) => {
+            const next = new Map(prev);
+            next.delete(key);
+            return next;
+          });
           setHomeRadarSlugs((prev) => prev.filter((s) => s !== key));
         } else {
           setTickerKeys((prev) => {
@@ -227,6 +245,12 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       if (itemType === "theme") {
         setThemeKeys((prev) => new Set(prev).add(key));
         setThemeOrder((prev) => (prev.includes(key) ? prev : [...prev, key]));
+        setThemeAddedAt((prev) => {
+          if (prev.has(key)) return prev;
+          const next = new Map(prev);
+          next.set(key, new Date().toISOString());
+          return next;
+        });
       } else {
         setTickerKeys((prev) => new Set(prev).add(key));
       }
@@ -261,6 +285,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       ready,
       themeKeys,
       themeOrder,
+      themeAddedAt,
       tickerKeys,
       themeCount: themeKeys.size,
       tickerCount: tickerKeys.size,
@@ -275,6 +300,7 @@ export function WatchlistProvider({ children }: { children: ReactNode }) {
       ready,
       themeKeys,
       themeOrder,
+      themeAddedAt,
       tickerKeys,
       homeRadarSlugs,
       isSaved,

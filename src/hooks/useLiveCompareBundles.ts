@@ -49,6 +49,19 @@ let intervalId: number | null = null;
 let skipNextImmediateRefresh = false;
 const listeners = new Set<() => void>();
 
+/** Full SSR bundle, or as_of-only so home can skip shipping ~942KB compare JSON. */
+export type ServerCompareSeed = CompareThemesV0 | { as_of: string } | null | undefined;
+
+function isFullCompareBundle(seed: ServerCompareSeed): seed is CompareThemesV0 {
+  return Boolean(seed && typeof seed === "object" && Array.isArray((seed as CompareThemesV0).rows));
+}
+
+function seedAsOf(seed: ServerCompareSeed): string | null {
+  if (!seed || typeof seed !== "object") return null;
+  const raw = String((seed as { as_of?: string }).as_of || "").trim();
+  return raw || null;
+}
+
 function emit(next: LiveCompareSnapshot) {
   snapshot = next;
   listeners.forEach((listener) => listener());
@@ -87,9 +100,9 @@ function refreshLiveBundles(): Promise<void> {
   return refreshPromise;
 }
 
-function serverCompareIsFresh(server: CompareThemesV0 | null | undefined): boolean {
-  if (!server?.as_of) return false;
-  const ts = Date.parse(String(server.as_of));
+function serverAsOfIsFresh(asOf: string | null | undefined): boolean {
+  if (!asOf) return false;
+  const ts = Date.parse(String(asOf));
   if (!Number.isFinite(ts)) return false;
   return Date.now() - ts < priceReturnsRevalidateSeconds() * 1000;
 }
@@ -127,7 +140,7 @@ function getServerSnapshot() {
 }
 
 export function useLiveCompareBundles(
-  serverCompare: CompareThemesV0 | null | undefined,
+  serverCompare: ServerCompareSeed,
   serverTopMovers: HomeTopMoversV0 | null | undefined,
 ): {
   compareBundle: CompareThemesV0 | null | undefined;
@@ -141,31 +154,26 @@ export function useLiveCompareBundles(
 } {
   const enabled = stockthemesLiveCompareReturnsEnabled();
   // Seed module snapshot from SSR so home can skip the immediate CDN refetch.
-  if (
-    typeof window !== "undefined" &&
-    serverCompare &&
-    !snapshot.liveCompare &&
-    serverCompareIsFresh(serverCompare)
-  ) {
-    snapshot = {
-      liveCompare: serverCompare,
-      liveSpyPerf: null,
-      compareLoading: false,
-      compareFailed: false,
-    };
+  if (typeof window !== "undefined" && serverCompare && serverAsOfIsFresh(seedAsOf(serverCompare))) {
+    if (isFullCompareBundle(serverCompare) && !snapshot.liveCompare) {
+      snapshot = {
+        liveCompare: serverCompare,
+        liveSpyPerf: null,
+        compareLoading: false,
+        compareFailed: false,
+      };
+    }
     skipNextImmediateRefresh = true;
   }
 
   const live = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
+  const fullServer = isFullCompareBundle(serverCompare) ? serverCompare : null;
   const compareBundle = useMemo(
-    () => live.liveCompare ?? serverCompare,
-    [live.liveCompare, serverCompare],
+    () => live.liveCompare ?? fullServer,
+    [live.liveCompare, fullServer],
   );
-  const topMoversBundle = useMemo(
-    () => serverTopMovers,
-    [serverTopMovers],
-  );
+  const topMoversBundle = useMemo(() => serverTopMovers, [serverTopMovers]);
 
   return {
     compareBundle,

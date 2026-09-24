@@ -1,13 +1,18 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
-import { HomeNarrativeRadar } from "@/components/HomeNarrativeRadar";
+import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
 import { PageSurface } from "@/components/PageSurface";
+import { buildThesisBySlugFromBundles } from "@/lib/buildThesisBySlug";
+import { buildWatchlistRadarEnrichBySlug } from "@/lib/buildWatchlistRadarEnrich";
+import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
 import { getRadarNewsCached } from "@/lib/getRadarNewsCached";
-import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
-import { buildTickerCompanyNameMap } from "@/lib/loadSearchIndex";
-import { slimCompanyNamesForRadar } from "@/lib/slimRadarPayload";
+import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
+import {
+  companyNamesFromRadarBundles,
+  slimCompanyNamesForRadar,
+} from "@/lib/slimRadarPayload";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
 
@@ -20,16 +25,14 @@ export const metadata: Metadata = buildPageMetadata({
 // Static export: do not read `searchParams` here (forces dynamic). Tab/as_of hydrate
 // from the URL in HomeNarrativeRadar on the client.
 export default async function RadarPage() {
-  const [radarRes, newsRes, searchIndexRes] = await Promise.all([
+  const [radarRes, newsRes, compareRes, motionsRes] = await Promise.all([
     getHomeRadarCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
-    getSearchIndexCached().catch(() => null),
+    getCompareThemesCached().catch(() => null),
+    getThemesInMotionCached().catch(() => null),
   ]);
   const bundle = radarRes?.bundle ?? null;
   const newsBundle = newsRes?.bundle ?? null;
-  const companyNamesFull = searchIndexRes
-    ? buildTickerCompanyNameMap(searchIndexRes.index)
-    : undefined;
 
   // Expand home lists to `all` for this page when present
   const expanded = bundle
@@ -68,10 +71,16 @@ export default async function RadarPage() {
         }
       : newsBundle;
 
+  // Prefer names baked on radar/news logos — avoid shipping ~1.4MB search_index.
   const companyNames = slimCompanyNamesForRadar(
-    companyNamesFull,
+    companyNamesFromRadarBundles(expanded, expandedNews),
     expanded,
     expandedNews,
+  );
+
+  const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(
+    compareRes?.bundle ?? null,
+    buildThesisBySlugFromBundles(bundle, motionsRes?.bundle ?? null),
   );
 
   return (
@@ -85,10 +94,11 @@ export default async function RadarPage() {
           <p className={styles.introPunchline}>
             Your daily look at the narratives driving the market.
           </p>
-          <HomeNarrativeRadar
+          <LazyHomeNarrativeRadar
             radar={expanded}
             news={expandedNews}
             companyNames={companyNames}
+            watchlistEnrichBySlug={watchlistEnrichBySlug}
             previewLimit={0}
           />
         </div>

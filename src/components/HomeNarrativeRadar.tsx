@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { RadarWatchlistPanel } from "@/components/RadarWatchlistPanel";
+import { WatchlistStar } from "@/components/WatchlistStar";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import type { HomeRadarCardV0, HomeRadarV0 } from "@/types/home_radar.v0";
 import type { RadarNewsCardV0, RadarNewsDayV0, RadarNewsV0 } from "@/types/radar_news.v0";
@@ -14,6 +15,10 @@ import {
   type RadarTickerPreview,
 } from "@/lib/normalizeRadarTickers";
 import { loadSearchIndexClient } from "@/lib/searchThemeHits";
+import {
+  applyWatchlistRadarEnrich,
+  type WatchlistRadarEnrichV0,
+} from "@/lib/buildWatchlistRadarEnrich";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
@@ -172,11 +177,13 @@ function cardsForTab(
   return pool;
 }
 
-/** Home Watchlist cards: pinned slugs first; fill from radar bake when available. */
+/** Home Watchlist cards: pinned slugs; radar bake + slim enrich (compare/thesis/added). */
 function cardsForWatchlist(
   radar: HomeRadarV0 | null,
   orderedSlugs: readonly string[],
   namesBySlug: Record<string, string>,
+  enrichBySlug: Record<string, WatchlistRadarEnrichV0> | undefined,
+  addedAtBySlug: ReadonlyMap<string, string> | undefined,
   previewLimit: number,
 ): HomeRadarCardV0[] {
   if (orderedSlugs.length === 0) return [];
@@ -196,16 +203,24 @@ function cardsForWatchlist(
   }
   const ordered: HomeRadarCardV0[] = [];
   for (const key of orderedSlugs) {
+    const enrich = enrichBySlug?.[key];
+    const addedAt = addedAtBySlug?.get(key);
     const existing = bySlug.get(key);
     if (existing) {
-      ordered.push(existing);
+      ordered.push(applyWatchlistRadarEnrich(existing, enrich, addedAt));
       continue;
     }
-    ordered.push({
-      slug: key,
-      name: namesBySlug[key] || key,
-      signal_label: "Watchlist",
-    });
+    ordered.push(
+      applyWatchlistRadarEnrich(
+        {
+          slug: key,
+          name: namesBySlug[key] || enrich?.name || key,
+          group_name: enrich?.group_name ?? null,
+        },
+        enrich,
+        addedAt,
+      ),
+    );
   }
   if (previewLimit > 0) return ordered.slice(0, previewLimit);
   return ordered;
@@ -271,6 +286,22 @@ function yearChipLabel(card: { year_suffix?: number | null; name?: string }): st
   }
   const m = /'(\d{2})\b/.exec(String(card.name || ""));
   return m ? `'${m[1]}` : null;
+}
+
+function RadarCardStar({ slug, name }: { slug?: string | null; name: string }) {
+  const key = String(slug || "").trim();
+  if (!key) return null;
+  return (
+    <span className={styles.cardStar}>
+      <WatchlistStar
+        compact
+        itemType="theme"
+        itemKey={key}
+        label={name}
+        signInNext={`/themes/${key}`}
+      />
+    </span>
+  );
 }
 
 function RadarCardBody({
@@ -345,11 +376,18 @@ function RadarCardStatic({
     ) : null;
 
   return (
-    <Link href={href} className={styles.card} style={heat}>
-      <div className={styles.cardTitle}>{title || card.name}</div>
+    <div className={styles.card} style={heat}>
+      <div className={styles.cardTitleRow}>
+        <Link href={href} className={styles.cardTitleLink}>
+          <div className={styles.cardTitle}>{title || card.name}</div>
+        </Link>
+        <RadarCardStar slug={card.slug} name={card.name} />
+      </div>
       {meta}
-      <RadarCardBody card={card} companyNames={companyNames} omitTitle />
-    </Link>
+      <Link href={href} className={styles.cardBodyLink}>
+        <RadarCardBody card={card} companyNames={companyNames} omitTitle />
+      </Link>
+    </div>
   );
 }
 
@@ -416,6 +454,7 @@ function RadarCardFlipper({
             ›
           </button>
         </div>
+        <RadarCardStar slug={current.slug} name={current.name} />
       </div>
       {meta}
       <Link href={href} className={styles.cardBodyLink}>
@@ -514,10 +553,13 @@ function NewsRadarCard({
   const blurb = String(headline?.title || "").trim();
 
   return (
-    <div className={styles.card} style={heat}>
-      <Link href={href} className={styles.cardTitleLink}>
-        <div className={styles.cardTitle}>{title || card.name}</div>
-      </Link>
+    <div className={`${styles.card} ${styles.cardNews}`} style={heat}>
+      <div className={styles.cardTitleRow}>
+        <Link href={href} className={styles.cardTitleLink}>
+          <div className={styles.cardTitle}>{title || card.name}</div>
+        </Link>
+        <RadarCardStar slug={card.slug} name={card.name} />
+      </div>
       {group || yearChip ? (
         <div className={styles.cardMeta}>
           {group ? <span className={styles.cardGroup}>{group}</span> : null}
@@ -552,6 +594,7 @@ function NewsRadarCard({
           companyNames={companyNames}
         />
       ) : null}
+      <span className={styles.newsApiCredit}>via NewsAPI.ai</span>
     </div>
   );
 }
@@ -562,6 +605,11 @@ type Props = {
   news?: RadarNewsV0 | null;
   /** ticker → company name for hover tooltips (from search index; optional). */
   companyNames?: Record<string, string>;
+  /**
+   * Slim 1M / thesis / logos for watchlist cards — built server-side from compare +
+   * radar/motions thesis (no extra client fetches).
+   */
+  watchlistEnrichBySlug?: Record<string, WatchlistRadarEnrichV0>;
   /**
    * Max cards on New/Accelerating/Fading/News/Watchlist. Home uses 6 (2×3). Pass 0 on `/radar` for the full list.
    */
@@ -576,6 +624,7 @@ export function HomeNarrativeRadar({
   radar,
   news = null,
   companyNames,
+  watchlistEnrichBySlug,
   previewLimit = HOME_RADAR_PREVIEW_LIMIT,
   initialTab = "news",
   initialNewsAsOf,
@@ -609,10 +658,19 @@ export function HomeNarrativeRadar({
       radar,
       pins,
       themeNamesBySlug,
+      watchlistEnrichBySlug,
+      watchlist?.themeAddedAt,
       // Home preview always caps at 6 home cards; /radar shows all pins (≤6).
       previewLimit > 0 ? HOME_RADAR_HOME_CARD_LIMIT : 0,
     );
-  }, [radar, watchlist?.homeRadarSlugs, themeNamesBySlug, previewLimit]);
+  }, [
+    radar,
+    watchlist?.homeRadarSlugs,
+    watchlist?.themeAddedAt,
+    themeNamesBySlug,
+    watchlistEnrichBySlug,
+    previewLimit,
+  ]);
 
   // Client fallback when server prop is missing (stale RSC / HMR) — public fixture is static.
   const [newsLocal, setNewsLocal] = useState<RadarNewsV0 | null>(null);

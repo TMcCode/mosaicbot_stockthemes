@@ -13,14 +13,11 @@ import {
   watchlistLimitInterestMailto,
 } from "@/lib/watchlist/limitsCopy";
 import {
-  buildThemeFuseRows,
-  createThemeSearchFuse,
-  loadSearchIndexClient,
-  searchThemeHits,
-  type ThemeFuseRow,
-} from "@/lib/searchThemeHits";
-import type Fuse from "fuse.js";
-import type { SearchIndexThemeRowV0, SearchIndexV0 } from "@/types/search_index.v0";
+  collectSiteSearchThemeHits,
+  loadSiteSearchEngine,
+  type SiteSearchEngine,
+} from "@/lib/siteSearchHits";
+import type { SearchIndexThemeRowV0 } from "@/types/search_index.v0";
 
 import styles from "./WatchlistThemeAddCombobox.module.css";
 
@@ -29,21 +26,17 @@ type Props = {
   embedded?: boolean;
 };
 
-type SearchEngine = {
-  index: SearchIndexV0;
-  fuse: Fuse<ThemeFuseRow>;
-};
-
 export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const loadInflight = useRef(false);
   const watchlist = useWatchlist();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [engine, setEngine] = useState<SearchEngine | null>(null);
+  const [engine, setEngine] = useState<SiteSearchEngine | null>(null);
   const [loadBusy, setLoadBusy] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [addMessage, setAddMessage] = useState<string | null>(null);
@@ -62,30 +55,25 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
   }, [query]);
 
   const ensureEngine = useCallback(() => {
-    if (engine || loadBusy) return;
+    if (engine || loadInflight.current) return;
+    loadInflight.current = true;
     setLoadBusy(true);
     setLoadError(null);
-    void loadSearchIndexClient()
-      .then(async (index) => {
-        if (!index) {
-          setLoadError("Theme search is unavailable.");
-          return;
-        }
-        const rows = buildThemeFuseRows(index);
-        const fuse = await createThemeSearchFuse(rows);
-        setEngine({ index, fuse });
-      })
+    void loadSiteSearchEngine()
+      .then(setEngine)
       .catch(() => {
         setLoadError("Could not load theme search.");
+        setEngine(null);
       })
       .finally(() => {
+        loadInflight.current = false;
         setLoadBusy(false);
       });
-  }, [engine, loadBusy]);
+  }, [engine]);
 
   const candidates = useMemo(() => {
     if (!engine || !debounced.trim()) return [];
-    return searchThemeHits(engine.index, engine.fuse, debounced, 12).filter(
+    return collectSiteSearchThemeHits(engine.index, engine.fuse, debounced, 12).filter(
       (t) => !savedSlugs.has(normalizeWatchlistKey("theme", t.slug)),
     );
   }, [engine, debounced, savedSlugs]);
@@ -158,7 +146,9 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
         type="search"
         className={styles.input}
         aria-label="Add theme to watchlist"
-        placeholder={atLimit ? watchlistFullPlaceholder() : "Search themes to add…"}
+        placeholder={
+          atLimit ? watchlistFullPlaceholder() : "Search theme, ticker, or company…"
+        }
         value={query}
         disabled={atLimit || !watchlist?.ready}
         autoComplete="off"

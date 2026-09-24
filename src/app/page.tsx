@@ -28,7 +28,7 @@ import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { brandAssetPath } from "@/lib/siteUrl";
 import { HomeExploreChanging, pickExploreGroups } from "@/components/HomeExploreChanging";
-import { HomeNarrativeRadar } from "@/components/HomeNarrativeRadar";
+import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
 import { HomeNewsletterPostsLive } from "@/components/HomeNewsletterPostsLive";
 import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
 import { ThemesInMotionMacroChart } from "@/components/ThemesInMotionMacroChart";
@@ -60,6 +60,7 @@ import {
   slimNewsForHome,
   slimRadarForHome,
 } from "@/lib/slimRadarPayload";
+import { buildWatchlistRadarEnrichBySlug } from "@/lib/buildWatchlistRadarEnrich";
 import { mapOverlayFactorSpreadOptions } from "@/lib/overlayFactorSpreads";
 import { mapOverlaySectorEtfCatalog } from "@/lib/overlaySectorEtfs";
 
@@ -164,6 +165,10 @@ export default async function Home() {
       : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
 
   const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
+  const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(
+    compareRes?.bundle ?? null,
+    homeThesisBySlug,
+  );
 
   return (
     <PageSurface>
@@ -188,8 +193,8 @@ export default async function Home() {
                 Discover the themes shaping public markets.
               </h1>
               <p className={styles.introPunchline}>
-                Explore market narratives, track performance and news, and follow thesis updates as
-                companies drive each story.
+                Follow narratives at the theme level — performance, news, and thesis updates — then
+                drill into the companies behind each story.
               </p>
             </div>
             {stats ? (
@@ -246,10 +251,11 @@ export default async function Home() {
             previewDays={commentaryRes?.commentary.preview_days ?? 7}
           />
 
-          <HomeNarrativeRadar
+          <LazyHomeNarrativeRadar
             radar={homeRadar}
             news={homeNews}
             companyNames={radarCompanyNamesFilled}
+            watchlistEnrichBySlug={watchlistEnrichBySlug}
           />
 
           <HomeTopMoversTickerLive
@@ -259,7 +265,9 @@ export default async function Home() {
               manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
             }
             tickerPerformanceAsOf={manifest.ticker_performance_as_of}
-            serverCompare={compareRes?.bundle ?? null}
+            serverCompare={
+              compareRes?.bundle?.as_of ? { as_of: compareRes.bundle.as_of } : null
+            }
             serverTopMovers={topMoversRes?.bundle ?? null}
           />
 

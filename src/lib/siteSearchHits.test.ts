@@ -6,6 +6,7 @@ import type Fuse from "fuse.js";
 import {
   isTickerishQuery,
   collectSiteSearchHits,
+  collectSiteSearchThemeHits,
   type SiteSearchFuseRow,
 } from "./siteSearchRank.ts";
 // @ts-expect-error Node's type-stripping test runner requires the source extension.
@@ -76,4 +77,24 @@ test("alias keyword still finds a theme without fuzzy", () => {
   const hits = collectSiteSearchHits(sampleIndex, stubFuse(), "footwear");
   assert.ok(hits.some((h) => h.key === "theme:shoes-26-sandals"));
   assert.ok(!hits.some((h) => h.key === "ticker:NVDA"));
+});
+
+test("theme-only collector returns themes for ticker symbol", () => {
+  const themes = collectSiteSearchThemeHits(sampleIndex, stubFuse(), "NVDA");
+  assert.deepEqual(
+    themes.map((t) => t.slug),
+    ["ai-26-gpus"],
+  );
+});
+
+test("theme-only collector expands company name to member themes", () => {
+  const themes = collectSiteSearchThemeHits(sampleIndex, stubFuse(), "nvidia");
+  assert.ok(themes.some((t) => t.slug === "ai-26-gpus"));
+  assert.ok(!themes.some((t) => t.slug === "shoes-26-sandals"));
+});
+
+test("theme-only collector expands group match to themes in that group", () => {
+  const themes = collectSiteSearchThemeHits(sampleIndex, stubFuse(), "Shoes");
+  assert.ok(themes.some((t) => t.slug === "shoes-26-sandals"));
+  assert.ok(!themes.some((t) => t.slug === "ai-26-gpus"));
 });

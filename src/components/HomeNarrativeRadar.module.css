@@ -148,6 +148,28 @@
   box-shadow: 0 0 0 1px rgba(38, 252, 214, 0.35);
 }
 
+.cardNews {
+  position: relative;
+  /* Room for corner credit without colliding with logo row. */
+  padding-bottom: 18px;
+}
+
+.newsApiCredit {
+  position: absolute;
+  right: 8px;
+  bottom: 4px;
+  margin: 0;
+  max-width: none;
+  font-size: 9px;
+  font-style: italic;
+  font-weight: 400;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  color: var(--text-muted, #8a8798);
+  pointer-events: none;
+  user-select: none;
+}
+
 .cardTitle {
   font-size: 15px;
   font-weight: 600;
@@ -212,6 +234,11 @@
 .cardTitleRow .cardTitleLink {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.cardStar {
+  flex: 0 0 auto;
+  margin-top: 1px;
 }
 
 .cardBodyLink {

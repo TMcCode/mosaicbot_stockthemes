@@ -3,11 +3,13 @@
 import { useMemo } from "react";
 
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
-import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
+import {
+  useLiveCompareBundles,
+  type ServerCompareSeed,
+} from "@/hooks/useLiveCompareBundles";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { pickTopMoversWithLiveBundle } from "@/lib/mergeLiveCompareData";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
-import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 
 type Props = {
@@ -15,8 +17,11 @@ type Props = {
   period?: TopMoverTickerPeriod;
   asOfLabel?: string;
   tickerPerformanceAsOf?: string;
-  /** SSR compare — when fresh, skips immediate ~1MB client refetch. */
-  serverCompare?: CompareThemesV0 | null;
+  /**
+   * Prefer `{ as_of }` on home (avoids shipping ~942KB compare JSON).
+   * Full bundle still accepted where SSR needs seeded returns (e.g. /compare later).
+   */
+  serverCompare?: ServerCompareSeed;
   serverTopMovers?: HomeTopMoversV0 | null;
 };
 

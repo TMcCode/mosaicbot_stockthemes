@@ -180,3 +180,50 @@ export function collectSiteSearchHits(
 
   return out;
 }
+
+/**
+ * Same ranking as {@link collectSiteSearchHits}, but results are themes only:
+ * theme hits pass through; ticker hits expand to member themes; group hits
+ * expand to themes in that group.
+ */
+export function collectSiteSearchThemeHits(
+  index: SearchIndexV0,
+  fuse: Fuse<SiteSearchFuseRow>,
+  query: string,
+  limit = 12,
+): SearchIndexThemeRowV0[] {
+  const hits = collectSiteSearchHits(index, fuse, query);
+  if (!hits.length || limit <= 0) return [];
+
+  const themesBySlug = new Map(index.themes.map((t) => [t.slug, t]));
+  const seen = new Set<string>();
+  const out: SearchIndexThemeRowV0[] = [];
+
+  const pushTheme = (theme: SearchIndexThemeRowV0 | undefined): boolean => {
+    if (!theme || out.length >= limit) return out.length >= limit;
+    if (seen.has(theme.slug)) return false;
+    seen.add(theme.slug);
+    out.push(theme);
+    return out.length >= limit;
+  };
+
+  for (const hit of hits) {
+    if (out.length >= limit) break;
+    if (hit.kind === "theme") {
+      pushTheme(hit.ref);
+      continue;
+    }
+    if (hit.kind === "ticker") {
+      for (const slug of hit.ref.theme_slugs ?? []) {
+        if (pushTheme(themesBySlug.get(slug))) break;
+      }
+      continue;
+    }
+    for (const theme of index.themes) {
+      if (theme.group_slug !== hit.ref.slug) continue;
+      if (pushTheme(theme)) break;
+    }
+  }
+
+  return out;
+}

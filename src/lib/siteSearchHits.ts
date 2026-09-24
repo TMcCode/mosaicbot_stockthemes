@@ -22,6 +22,7 @@ export type { SiteSearchEngine, SiteSearchFuseRow, SiteSearchHit };
 export {
   buildSiteSearchFuseRows,
   collectSiteSearchHits,
+  collectSiteSearchThemeHits,
   isTickerishQuery,
   SITE_SEARCH_FUSE_THRESHOLD,
   SITE_SEARCH_MAX_FUZZY_SCORE,
