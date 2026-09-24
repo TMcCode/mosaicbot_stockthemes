@@ -199,30 +199,12 @@
   object-position: center;
 }
 
-.heroBrandText {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  min-width: 0;
-}
-
 .heroBrandLabel {
   font-size: 22px;
   font-weight: 650;
   letter-spacing: -0.02em;
   line-height: 1.1;
   color: var(--text-primary);
-}
-
-.heroBrandMeta {
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 /* Group/theme detail: ad under left summary instead of under the treemap rail. */

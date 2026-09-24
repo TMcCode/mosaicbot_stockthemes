@@ -1,0 +1,9 @@
+.intro {
+  max-width: 920px;
+}
+
+.empty {
+  margin: 24px 0 0;
+  font-size: 14px;
+  color: var(--text-muted);
+}

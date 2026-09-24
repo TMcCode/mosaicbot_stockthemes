@@ -2,6 +2,8 @@ import Link from "next/link";
 
 import {
   HOME_SITE_BULLETS,
+  HOME_SITE_CONTACT_HREF,
+  HOME_SITE_CONTACT_LABEL,
   HOME_SITE_DISCLAIMER,
   HOME_SITE_HEADING,
   HOME_SITE_SUMMARY,
@@ -18,7 +20,12 @@ export function HomePublisherIntro() {
           <h2 id="home-site-about" className={styles.heading}>
             {HOME_SITE_HEADING}
           </h2>
-          <p className={styles.summary}>{HOME_SITE_SUMMARY}</p>
+          <p className={styles.summary}>
+            {HOME_SITE_SUMMARY}{" "}
+            <a href={HOME_SITE_CONTACT_HREF} className={styles.contactLink}>
+              {HOME_SITE_CONTACT_LABEL}
+            </a>
+          </p>
         </div>
         <ul className={styles.bullets}>
           {HOME_SITE_BULLETS.map((item) => (
@@ -32,8 +39,6 @@ export function HomePublisherIntro() {
           <Link href="/about/methodology#limitations">Limitations</Link>
           <span aria-hidden="true"> · </span>
           <Link href="/about/methodology">Methodology</Link>
-          <span aria-hidden="true"> · </span>
-          <Link href="/about">About</Link>
         </p>
       </div>
     </section>

@@ -5,11 +5,7 @@ import { PageSurface } from "@/components/PageSurface";
 import styles from "../page.module.css";
 import { ABOUT_VISION_DISCLAIMER, ABOUT_VISION_PARAGRAPHS } from "@/lib/aboutVisionCopy";
 import { HELLO_EMAIL, mailtoHref, SUPPORT_EMAIL } from "@/lib/contactEmails";
-import {
-  ABOUT_FOUNDER_FEEDBACK,
-  ABOUT_FOUNDER_NEWSLETTER_AFTER_LINK,
-  DEFAULT_HOME_INTRO,
-} from "@/lib/aboutFounderCopy";
+import { ABOUT_FOUNDER_FEEDBACK, DEFAULT_HOME_INTRO } from "@/lib/aboutFounderCopy";
 import { SITE_PRODUCT_SUMMARY } from "@/lib/homeSiteCopy";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -68,11 +64,6 @@ export default async function AboutPage() {
             <h2 id="about-founder-note">Why I built stockthemes.ai</h2>
             {introParagraphs.map((p, i) => renderIntroParagraph(p, i))}
             <p className={styles.introCopy}>{ABOUT_FOUNDER_FEEDBACK}</p>
-            <p className={styles.introCopy}>
-              Join the Field of Themes newsletter{" "}
-              <Link href="/#newsletter-signup">at the bottom of the page</Link>
-              {ABOUT_FOUNDER_NEWSLETTER_AFTER_LINK}
-            </p>
           </div>
           <section
             className={`${styles.aboutProse} ${styles.aboutBasketCard}`}
@@ -123,9 +114,7 @@ export default async function AboutPage() {
             ))}
             <p className={styles.introCopy}>
               Subscriber support on the MosaicBot roadmap funds these data layers. If you want to
-              weigh in on what ships next, use the{" "}
-              <Link href="/contact">contact page</Link> or the{" "}
-              <Link href="/#newsletter-signup">Field of Themes newsletter</Link>.
+              weigh in on what ships next, use the <Link href="/contact">contact page</Link>.
             </p>
             <p className={`${styles.introCopy} ${styles.aboutVisionDisclaimer}`}>
               {ABOUT_VISION_DISCLAIMER}

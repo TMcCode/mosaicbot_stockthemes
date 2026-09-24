@@ -10,6 +10,8 @@ export type NewsletterPostV0 = {
   url: string;
   published_at?: string | null;
   subtitle?: string | null;
+  /** Hero / social thumbnail when the source provides one. */
+  image_url?: string | null;
 };
 
 export type NewsletterPostsV0 = {

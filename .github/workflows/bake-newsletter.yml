@@ -1,0 +1,44 @@
+# Bake Field of Themes (Beehiiv) + Alt Data Observer (Substack RSS)
+# → newsletter_posts.v0.json on stockthemes-public (R2).
+#
+# Home/desk can hydrate from that JSON without a full Pages rebuild.
+# Secrets: R2_*, BEEHIIV_API_KEY, BEEHIIV_PUBLICATION_ID (Beehiiv optional — Substack still bakes).
+
+name: Bake newsletter posts
+
+on:
+  schedule:
+    # Every 6h UTC (~every 6h ET). Substack/Beehiiv posts land within one cycle after RSS/API.
+    - cron: "15 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: bake-newsletter
+  cancel-in-progress: true
+
+jobs:
+  bake:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Bake + upload newsletter_posts.v0.json
+        run: npm run bake:newsletter
+        env:
+          STOCKTHEMES_PUBLIC_BUCKET: stockthemes-public
+          R2_ENDPOINT_URL: ${{ secrets.R2_ENDPOINT_URL }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          BEEHIIV_API_KEY: ${{ secrets.BEEHIIV_API_KEY }}
+          BEEHIIV_PUBLICATION_ID: ${{ secrets.BEEHIIV_PUBLICATION_ID }}

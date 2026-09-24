@@ -295,8 +295,6 @@ export function ThemesInMotionMacroChart({
     );
   }, [mode, benchmarkPerformance, period, periodAnchor, referenceLastIso]);
 
-  const title = mode === "sectors" ? "Sector SPDRs" : "Factor spreads";
-
   const emptyMessage =
     mode === "factors"
       ? factorLoading
@@ -309,16 +307,16 @@ export function ThemesInMotionMacroChart({
       <div className={styles.titlePeriodRow}>
         <div className={styles.titleToggle}>
           <h2 id="motion-macro-chart-heading" className={styles.title}>
-            {title}
+            Market backdrop
           </h2>
-          <div className={styles.toggle} role="group" aria-label="Macro chart mode">
+          <div className={styles.toggle} role="group" aria-label="Backdrop series">
             <button
               type="button"
               className={`${styles.toggleBtn} ${mode === "sectors" ? styles.toggleBtnActive : ""}`}
               aria-pressed={mode === "sectors"}
               onClick={() => setModeAndReset("sectors")}
             >
-              Sector SPDRs
+              Sectors
             </button>
             <button
               type="button"
@@ -326,7 +324,7 @@ export function ThemesInMotionMacroChart({
               aria-pressed={mode === "factors"}
               onClick={() => setModeAndReset("factors")}
             >
-              Factor spreads
+              Factors
             </button>
           </div>
         </div>

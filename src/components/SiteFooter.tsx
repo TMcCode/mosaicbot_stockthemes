@@ -1,4 +1,3 @@
-import { NewsletterSignup } from "@/components/NewsletterSignup";
 import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 
@@ -15,9 +14,6 @@ export function SiteFooter({ dataAsOf }: Props) {
 
   return (
     <footer className={styles.wrap}>
-      <div id="newsletter-signup">
-        <NewsletterSignup variant="footer" />
-      </div>
       <div className={styles.meta}>
         <div className={styles.metaBar}>
           <div className={styles.metaLead}>

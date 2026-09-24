@@ -8,6 +8,7 @@
  *   STOCKTHEMES_PUBLIC_BUCKET + R2_* to upload newsletter_posts.v0.json
  *
  * Usage: node scripts/bake_newsletter_posts.mjs
+ * CI: `.github/workflows/bake-newsletter.yml` (every 6h) + deploy-pages pre-build step.
  */
 import fs from "fs";
 import path from "path";
@@ -114,6 +115,23 @@ function previewFromRssItem(block) {
   return null;
 }
 
+function imageFromRssItem(block) {
+  const enc = block.match(/<enclosure[^>]*url=["']([^"']+)["'][^>]*>/i);
+  if (enc?.[1] && /\.(jpe?g|png|webp|gif)(\?|$)/i.test(enc[1])) {
+    return decodeXml(enc[1]);
+  }
+  if (enc?.[1] && /substackcdn\.com|substack-post-media/i.test(enc[1])) {
+    return decodeXml(enc[1]);
+  }
+  const media = block.match(/<media:content[^>]*url=["']([^"']+)["'][^>]*>/i);
+  if (media?.[1]) return decodeXml(media[1]);
+  const encodedM = block.match(/<content:encoded>([\s\S]*?)<\/content:encoded>/i);
+  const html = encodedM ? decodeXml(encodedM[1]) : "";
+  const img = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  if (img?.[1] && /^https?:\/\//i.test(img[1])) return img[1];
+  return null;
+}
+
 async function fetchBeehiivPosts() {
   const key = String(process.env.BEEHIIV_API_KEY || "").trim();
   const pub = String(process.env.BEEHIIV_PUBLICATION_ID || "").trim();
@@ -155,6 +173,7 @@ async function fetchBeehiivPosts() {
         url: href,
         published_at: published,
         subtitle: String(p.subtitle || p.preview_text || "").trim() || null,
+        image_url: String(p.thumbnail_url || "").trim() || null,
       });
     }
     const totalPages = Number(data?.total_pages || data?.page?.total_pages || 1);
@@ -191,6 +210,7 @@ async function fetchSubstackFeed(feedUrl) {
       url: href,
       published_at: isoFromRssDate(decodeXml(dateM?.[1] || "")),
       subtitle: previewFromRssItem(block),
+      image_url: imageFromRssItem(block),
     });
   }
   return items;

@@ -26,11 +26,10 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
-import { stockthemesDevBuildHintsEnabled } from "@/lib/stockthemesBuildHints";
 import { brandAssetPath } from "@/lib/siteUrl";
 import { HomeExploreChanging, pickExploreGroups } from "@/components/HomeExploreChanging";
 import { HomeNarrativeRadar } from "@/components/HomeNarrativeRadar";
-import { HomeNewsletterPosts } from "@/components/HomeNewsletterPosts";
+import { HomeNewsletterPostsLive } from "@/components/HomeNewsletterPostsLive";
 import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
 import { ThemesInMotionMacroChart } from "@/components/ThemesInMotionMacroChart";
 import { JsonLd } from "@/components/JsonLd";
@@ -65,7 +64,7 @@ import { mapOverlayFactorSpreadOptions } from "@/lib/overlayFactorSpreads";
 import { mapOverlaySectorEtfCatalog } from "@/lib/overlaySectorEtfs";
 
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
-const HOME_FEED_RENDER_LIMIT = 6;
+const HOME_FEED_RENDER_LIMIT = 7;
 const HOME_FEED_MAX_DAYS = 10;
 
 export const metadata: Metadata = buildPageMetadata({
@@ -77,7 +76,7 @@ export const metadata: Metadata = buildPageMetadata({
 
 export default async function Home() {
   const [
-    { manifest, source },
+    { manifest },
     homeFeedRes,
     compareRes,
     commentaryRes,
@@ -166,9 +165,6 @@ export default async function Home() {
 
   const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
 
-  const heroDevMeta =
-    source === "live" ? "manifest v0 · live" : "manifest v0 · local fixture";
-
   return (
     <PageSurface>
       <JsonLd id="home-json-ld" data={homeJsonLd} />
@@ -186,12 +182,7 @@ export default async function Home() {
                   decoding="async"
                   aria-hidden
                 />
-                <div className={styles.heroBrandText}>
-                  <span className={styles.heroBrandLabel}>stockthemes.ai</span>
-                  {stockthemesDevBuildHintsEnabled() ? (
-                    <span className={styles.heroBrandMeta}>{heroDevMeta}</span>
-                  ) : null}
-                </div>
+                <span className={styles.heroBrandLabel}>stockthemes.ai</span>
               </div>
               <h1 className={styles.heroTitle}>
                 Discover the themes shaping public markets.
@@ -255,8 +246,6 @@ export default async function Home() {
             previewDays={commentaryRes?.commentary.preview_days ?? 7}
           />
 
-          <HomeNewsletterPosts posts={newsletterRes?.bundle?.posts ?? []} />
-
           <HomeNarrativeRadar
             radar={homeRadar}
             news={homeNews}
@@ -298,6 +287,8 @@ export default async function Home() {
                   }
                 />
               </DeferRender>
+
+              <HomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
 
               <AdPlacement
                 placement="homeDiscoveryMid"
