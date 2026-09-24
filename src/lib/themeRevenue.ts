@@ -197,6 +197,7 @@ export const REVENUE_VALUATION_COLUMNS: RevenueColumnDef[] = [
 ];
 
 export const REVENUE_REVISION_COLUMNS: RevenueColumnDef[] = [
+  { id: "rev_analysts", label: "#\nAnalysts", revisionKey: "revenue_est_analysts", format: "count" },
   { id: "rev_latest", label: "CQ Est Latest\n(%)", revisionKey: "growth_est_latest_pct", format: "pct" },
   { id: "rev_first", label: "CQ Est First\n(%)", revisionKey: "growth_est_first_pct", format: "pct" },
   { id: "rev_delta", label: "CQ Rev Δ\n(bps)", revisionKey: "growth_delta_bps", format: "bps" },
@@ -208,7 +209,6 @@ export const REVENUE_REVISION_COLUMNS: RevenueColumnDef[] = [
   { id: "ny_rev_latest", label: "NY Est Latest\n(%)", revisionKey: "ny_growth_est_latest_pct", format: "pct" },
   { id: "ny_rev_first", label: "NY Est First\n(%)", revisionKey: "ny_growth_est_first_pct", format: "pct" },
   { id: "ny_rev_delta", label: "NY Rev Δ\n(bps)", revisionKey: "ny_growth_delta_bps", format: "bps" },
-  { id: "rev_analysts", label: "#\nAnalysts", revisionKey: "revenue_est_analysts", format: "count" },
 ];
 
 export type RevenueStatRowKey =
