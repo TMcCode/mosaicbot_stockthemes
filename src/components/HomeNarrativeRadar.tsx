@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ConstituentLogo } from "@/components/ConstituentLogo";
+import { RadarWatchlistPanel } from "@/components/RadarWatchlistPanel";
+import { useWatchlist } from "@/components/WatchlistProvider";
 import type { HomeRadarCardV0, HomeRadarV0 } from "@/types/home_radar.v0";
 import type { RadarNewsCardV0, RadarNewsDayV0, RadarNewsV0 } from "@/types/radar_news.v0";
 import { collapseNewTabGroupFlippers } from "@/lib/collapseNewTabGroupFlippers";
@@ -11,6 +13,9 @@ import {
   normalizeRadarTickersPreview,
   type RadarTickerPreview,
 } from "@/lib/normalizeRadarTickers";
+import { loadSearchIndexClient } from "@/lib/searchThemeHits";
+import { normalizeWatchlistKey } from "@/lib/watchlist/api";
+import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
 import { trendingReturnCardGradientStyle } from "@/lib/trendingPerfHeat";
 
@@ -165,6 +170,45 @@ function cardsForTab(
   }
   if (previewLimit > 0) return pool.slice(0, previewLimit);
   return pool;
+}
+
+/** Home Watchlist cards: pinned slugs first; fill from radar bake when available. */
+function cardsForWatchlist(
+  radar: HomeRadarV0 | null,
+  orderedSlugs: readonly string[],
+  namesBySlug: Record<string, string>,
+  previewLimit: number,
+): HomeRadarCardV0[] {
+  if (orderedSlugs.length === 0) return [];
+  const bySlug = new Map<string, HomeRadarCardV0>();
+  if (radar) {
+    for (const tab of ["accelerating", "fading", "new"] as const) {
+      for (const card of cardsForTab(radar, tab, 0)) {
+        const members =
+          card.siblings && card.siblings.length >= 3 ? card.siblings : [card];
+        for (const member of members) {
+          const slug = normalizeWatchlistKey("theme", member.slug || "");
+          if (!slug || bySlug.has(slug)) continue;
+          bySlug.set(slug, { ...member, siblings: undefined });
+        }
+      }
+    }
+  }
+  const ordered: HomeRadarCardV0[] = [];
+  for (const key of orderedSlugs) {
+    const existing = bySlug.get(key);
+    if (existing) {
+      ordered.push(existing);
+      continue;
+    }
+    ordered.push({
+      slug: key,
+      name: namesBySlug[key] || key,
+      signal_label: "Watchlist",
+    });
+  }
+  if (previewLimit > 0) return ordered.slice(0, previewLimit);
+  return ordered;
 }
 
 function newsDayOptions(news: RadarNewsV0 | null): { as_of: string; label: string }[] {
@@ -518,11 +562,8 @@ type Props = {
   news?: RadarNewsV0 | null;
   /** ticker → company name for hover tooltips (from search index; optional). */
   companyNames?: Record<string, string>;
-  /** When false, Watchlist tab shows sign-in CTA instead of empty cards. */
-  watchlistSignedIn?: boolean;
-  watchlistCards?: HomeRadarCardV0[];
   /**
-   * Max cards on New/Accelerating/Fading/News. Home uses 6 (2×3). Pass 0 on `/radar` for the full list.
+   * Max cards on New/Accelerating/Fading/News/Watchlist. Home uses 6 (2×3). Pass 0 on `/radar` for the full list.
    */
   previewLimit?: number;
   /** Initial tab (e.g. from `/radar?tab=news`). */
@@ -535,13 +576,44 @@ export function HomeNarrativeRadar({
   radar,
   news = null,
   companyNames,
-  watchlistSignedIn = false,
-  watchlistCards = [],
   previewLimit = HOME_RADAR_PREVIEW_LIMIT,
   initialTab = "news",
   initialNewsAsOf,
 }: Props) {
+  const watchlist = useWatchlist();
   const [tab, setTab] = useState<TabKey>(initialTab);
+  const [themeNamesBySlug, setThemeNamesBySlug] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (tab !== "watchlist") return;
+    let cancelled = false;
+    void loadSearchIndexClient()
+      .then((index) => {
+        if (!index || cancelled) return;
+        const map: Record<string, string> = {};
+        for (const t of index.themes || []) {
+          const slug = normalizeWatchlistKey("theme", t.slug || "");
+          if (slug) map[slug] = t.name || slug;
+        }
+        setThemeNamesBySlug(map);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [tab]);
+
+  const derivedWatchlistCards = useMemo(() => {
+    const pins = watchlist?.homeRadarSlugs ?? [];
+    return cardsForWatchlist(
+      radar,
+      pins,
+      themeNamesBySlug,
+      // Home preview always caps at 6 home cards; /radar shows all pins (≤6).
+      previewLimit > 0 ? HOME_RADAR_HOME_CARD_LIMIT : 0,
+    );
+  }, [radar, watchlist?.homeRadarSlugs, themeNamesBySlug, previewLimit]);
+
   // Client fallback when server prop is missing (stale RSC / HMR) — public fixture is static.
   const [newsLocal, setNewsLocal] = useState<RadarNewsV0 | null>(null);
   const [newsFetchDone, setNewsFetchDone] = useState(Boolean(news));
@@ -560,10 +632,14 @@ export function HomeNarrativeRadar({
     if (window.location.pathname !== "/radar") return;
     const sp = new URLSearchParams(window.location.search);
     const rawTab = String(sp.get("tab") || "").toLowerCase();
-    if (rawTab === "new" || rawTab === "accelerating" || rawTab === "fading" || rawTab === "news") {
+    if (
+      rawTab === "new" ||
+      rawTab === "accelerating" ||
+      rawTab === "fading" ||
+      rawTab === "news" ||
+      rawTab === "watchlist"
+    ) {
       setTab(rawTab);
-    } else if (rawTab === "watchlist") {
-      setTab("news");
     }
     const asOf = String(sp.get("as_of") || "").trim().slice(0, 10);
     if (asOf) setNewsAsOf(asOf);
@@ -606,7 +682,7 @@ export function HomeNarrativeRadar({
 
   const radarCards: HomeRadarCardV0[] =
     tab === "watchlist"
-      ? watchlistCards
+      ? derivedWatchlistCards
       : tab === "news"
         ? []
         : cardsForTab(radar, tab, previewLimit);
@@ -625,7 +701,7 @@ export function HomeNarrativeRadar({
   const viewAllHref =
     tab === "news" && newsAsOf
       ? `/radar?tab=news&as_of=${encodeURIComponent(newsAsOf)}`
-      : `/radar?tab=${tab === "watchlist" ? "news" : tab}`;
+      : `/radar?tab=${tab}`;
 
   return (
     <section
@@ -684,25 +760,34 @@ export function HomeNarrativeRadar({
           )}
         </div>
       ) : null}
-      {tab === "watchlist" && !watchlistSignedIn ? (
-        <div className={styles.watchlistCta}>
-          <p>Sign in to track narratives on your watchlist.</p>
-          <Link href="/sign-in?next=/" className={styles.signInLink}>
-            Sign in free
-          </Link>
-          <p className={styles.watchlistHint}>Or browse Editor&apos;s picks in Themes in Motion below.</p>
-        </div>
-      ) : tab === "watchlist" && watchlistSignedIn && radarCards.length === 0 ? (
-        <div className={styles.watchlistCta}>
-          <p>Your watchlist is empty. Add themes from any theme page.</p>
-          <Link href="/my" className={styles.signInLink}>
-            Open My watchlist
-          </Link>
+      {tab === "watchlist" ? (
+        <div className={styles.watchlistPane}>
+          {radarCards.length > 0 ? (
+            <RadarProgressiveGrid enabled={previewLimit <= 0}>
+              {radarCards.map((c) => (
+                <RadarCard
+                  key={`${c.slug}-${c.name}`}
+                  card={c}
+                  companyNames={companyNames}
+                />
+              ))}
+            </RadarProgressiveGrid>
+          ) : previewLimit > 0 ? (
+            <div className={styles.empty}>
+              {watchlist?.ready && watchlist.themeCount > 0
+                ? "No home cards selected yet — "
+                : "No watchlist themes yet — "}
+              <Link href="/radar?tab=watchlist" className={styles.signInLink}>
+                manage on Narrative Radar
+              </Link>
+            </div>
+          ) : null}
+          {previewLimit <= 0 ? <RadarWatchlistPanel /> : null}
         </div>
       ) : tab === "news" && !newsFetchDone ? (
-        <p className={styles.empty}>Loading news…</p>
+        <div className={styles.empty}>Loading news…</div>
       ) : tab === "news" && newsList.length === 0 ? (
-        <p className={styles.empty}>No themes in the news yet — check back after the next publish.</p>
+        <div className={styles.empty}>No themes in the news yet — check back after the next publish.</div>
       ) : tab === "news" ? (
         <RadarProgressiveGrid enabled={previewLimit <= 0}>
           {newsList.map((c) => (
@@ -714,7 +799,7 @@ export function HomeNarrativeRadar({
           ))}
         </RadarProgressiveGrid>
       ) : radarCards.length === 0 ? (
-        <p className={styles.empty}>No themes in this tab yet — check back after the next publish.</p>
+        <div className={styles.empty}>No themes in this tab yet — check back after the next publish.</div>
       ) : (
         <RadarProgressiveGrid enabled={previewLimit <= 0}>
           {radarCards.map((c) => (

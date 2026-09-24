@@ -436,15 +436,29 @@
   box-shadow: 0 0 0 1px rgba(42, 152, 147, 0.28), 0 4px 14px rgba(30, 28, 54, 0.08);
 }
 
+/* `.intro p` in page.module.css is 18px — empty states must not use <p> inside intro,
+   or must win with !important (module :global(.intro) never matches hashed .intro_xxx). */
 .empty,
 .watchlistCta {
-  font-size: 14px;
+  margin: 0;
+  max-width: none;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
   color: var(--text-secondary);
-  padding: 12px 0;
+  padding: 8px 0;
+  text-wrap: pretty;
+}
+
+.empty a,
+.signInLink {
+  font-size: inherit !important;
 }
 
 .watchlistCta p {
   margin: 0 0 8px;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  max-width: none;
 }
 
 .signInLink {
@@ -461,4 +475,10 @@
   margin-top: 10px !important;
   font-size: 12px;
   color: var(--text-muted);
+}
+
+.watchlistPane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
