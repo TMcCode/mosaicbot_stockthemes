@@ -186,6 +186,14 @@
   color: var(--accent, #26fcd6);
 }
 
+.revisionGroupHead {
+  text-align: center !important;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  color: var(--accent, #26fcd6);
+}
+
 .notesColumnHead {
   text-align: center !important;
 }

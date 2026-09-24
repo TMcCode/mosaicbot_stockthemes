@@ -21,6 +21,7 @@ import {
   formatRevenueCell,
   mergeRevenueConstituents,
   REVENUE_REVISION_COLUMNS,
+  REVENUE_REVISION_GROUPS,
   REVENUE_STAT_ROW_LABELS,
   revenueCellClass,
   revenueCellValue,
@@ -122,6 +123,8 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
   const data = sidecarState.data;
   const statsBlock = data.table_stats?.revisions;
   const summary = data.summary_revisions ?? ({} as ThemeRevenueRevisionsV0);
+  const analystsCol = columns.find((c) => c.id === "rev_analysts");
+  const metricColumns = columns.filter((c) => c.id !== "rev_analysts");
 
   return (
     <div className={styles.tableWrap}>
@@ -136,9 +139,41 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
           <table className={styles.dataTable}>
             <thead>
               <tr>
-                <th scope="col">{renderSortHead("company", "Company")}</th>
-                {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
-                {columns.map((col) => (
+                <th scope="col" rowSpan={2}>
+                  {renderSortHead("company", "Company")}
+                </th>
+                {hasWeight ? (
+                  <th scope="col" rowSpan={2}>
+                    {renderSortHead("weight", "Wgt")}
+                  </th>
+                ) : null}
+                {analystsCol ? (
+                  <th scope="col" rowSpan={2}>
+                    {renderSortHead(
+                      analystsCol.id,
+                      analystsCol.label.split("\n").map((line, i) => (
+                        <span key={line}>
+                          {i > 0 ? <br /> : null}
+                          {line}
+                        </span>
+                      )),
+                    )}
+                  </th>
+                ) : null}
+                {REVENUE_REVISION_GROUPS.map((group) => (
+                  <th
+                    key={group.id}
+                    scope="colgroup"
+                    colSpan={group.columnIds.length}
+                    className={tableStyles.revisionGroupHead}
+                    title={group.title}
+                  >
+                    {group.label}
+                  </th>
+                ))}
+              </tr>
+              <tr>
+                {metricColumns.map((col) => (
                   <th key={col.id} scope="col">
                     {renderSortHead(
                       col.id,
