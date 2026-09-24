@@ -331,7 +331,8 @@
   margin-top: 2px;
   min-height: 28px;
   width: 100%;
-  overflow: hidden;
+  /* Allow +N past the logo chips; clipping here was hiding overflow counts. */
+  overflow: visible;
   position: relative;
 }
 
