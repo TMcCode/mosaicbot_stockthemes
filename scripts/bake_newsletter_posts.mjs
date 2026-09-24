@@ -267,11 +267,25 @@ async function main() {
     DEFAULT_SUBSTACK_FEED;
 
   console.log("Baking newsletter_posts.v0.json …");
+  // Soft-fail sources: Substack occasionally 403s GitHub Actions IPs; deploy must not hard-fail.
   const [beehiiv, substack] = await Promise.all([
-    fetchBeehiivPosts(),
-    fetchSubstackFeed(substackFeed),
+    fetchBeehiivPosts().catch((err) => {
+      console.warn(`  Beehiiv skipped: ${err?.message || err}`);
+      return [];
+    }),
+    fetchSubstackFeed(substackFeed).catch((err) => {
+      console.warn(`  Substack skipped: ${err?.message || err}`);
+      return [];
+    }),
   ]);
   console.log(`  Beehiiv: ${beehiiv.length}  Substack: ${substack.length}`);
+  if (beehiiv.length === 0 && substack.length === 0) {
+    console.warn("  No fresh posts; keeping existing fixture if present and exiting 0");
+    if (fs.existsSync(FIXTURE)) {
+      console.log(`  Left ${path.relative(root, FIXTURE)} unchanged`);
+      return;
+    }
+  }
   const posts = sortPosts([...beehiiv, ...substack]).slice(0, 40);
   const payload = {
     schema_version: 0,
