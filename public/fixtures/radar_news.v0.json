@@ -1,0 +1,2053 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-09-24",
+  "fetched_at": "2026-09-24T12:32:57Z",
+  "hits_window_days": 14,
+  "history_days": 14,
+  "home_limit": 6,
+  "all_limit": 15,
+  "today": {
+    "as_of": "2026-09-24",
+    "fetched_at": "2026-09-24T12:32:57Z",
+    "home": [
+      {
+        "slug": "edge-ai-long-26-ai-wearables",
+        "name": "Edge AI Long '26: AI Wearables",
+        "group_name": "Edge AI Long",
+        "year_suffix": 26,
+        "return_1m": 7.99,
+        "hits_14d": 1,
+        "latest_at": "2026-09-23T23:43:56+00:00",
+        "score": 160.92,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 1.0,
+        "headlines": [
+          {
+            "title": "Meta will sell you camera-free AI glasses if you're worried about 'pervert glasses' backlash",
+            "url": "https://www.businessinsider.com/meta-ray-ban-audio-ai-glasses-without-camera-2026-9",
+            "published_at": "2026-09-23T23:43:56",
+            "source_name": "Business Insider",
+            "snippet": "Great news for folks who enjoy the convenience of being able to listen to music or podcasts on their Meta Ray-Ban smart glasses, but don't want to get frog-marched out of the gym locker room:\n\nMeta is launching a new\u2026",
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 1.060837080717292,
+            "top_story_match": 1.0
+          }
+        ],
+        "tickers_preview": [
+          "2382.HK",
+          "ALMU",
+          "EL.PA",
+          "GOOG",
+          "META",
+          "QCOM",
+          "SYNA"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "edge-ai-long"
+      },
+      {
+        "slug": "global-defense-26-china-warfare-defense",
+        "name": "Global Defense '26: China Warfare & Defense",
+        "group_name": "Global Defense",
+        "year_suffix": 26,
+        "return_1m": 6.84,
+        "hits_14d": 2,
+        "latest_at": "2026-09-23T21:29:22+00:00",
+        "score": 166.253,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 1.0,
+        "headlines": [
+          {
+            "title": "Live Updates: Trump to Greet Xi for State Visit Amid Tensions",
+            "url": "https://www.nytimes.com/live/2026/09/23/us/trump-xi/heres-the-latest",
+            "published_at": "2026-09-23T21:05:15",
+            "source_name": "The New York Times",
+            "snippet": "President Trump will take the rare step of meeting President Xi Jinping of China at Joint Base Andrews to kick off a visit between two superpower rivals confronting a shaky trade truce and mounting concerns over artif\u2026",
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 1.490066488984678,
+            "top_story_match": 1.0
+          },
+          {
+            "title": "Major TV Networks Won't Film Xi's Arrival",
+            "url": "https://www.nytimes.com/2026/09/23/business/media/tv-networks-xi-arrival.html",
+            "published_at": "2026-09-23T21:29:22",
+            "source_name": "The New York Times",
+            "snippet": null,
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 0.9758020444544495,
+            "top_story_match": 1.0
+          }
+        ],
+        "tickers_preview": [
+          "600150.SHG",
+          "600760.SHG",
+          "600893.SHG",
+          "000768.SHE",
+          "002179.SHE",
+          "002625.SHE",
+          "600967.SHG",
+          "000547.SHE",
+          "002151.SHE",
+          "600038.SHG"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "global-defense"
+      },
+      {
+        "slug": "ai-26-neoclouds",
+        "name": "AI '26: Neoclouds",
+        "group_name": "AI",
+        "year_suffix": 26,
+        "return_1m": 9.8,
+        "hits_14d": 2,
+        "latest_at": "2026-09-23T22:23:09+00:00",
+        "score": 166.52,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 0.98,
+        "headlines": [
+          {
+            "title": "OpenAI, Anthropic bosses push UN for global terms on AI",
+            "url": "https://www.bbc.com/news/articles/ck87v27vdn1po",
+            "published_at": "2026-09-23T22:23:09",
+            "source_name": "BBC",
+            "snippet": null,
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 0.5376589107878349,
+            "top_story_match": 0.98
+          },
+          {
+            "title": "Dell stock jumps on RBC initiation, now up nearly 350% in 2026",
+            "url": "https://www.cnbc.com/2026/09/11/dell-stock-rbc-initiation.html",
+            "published_at": "2026-09-11T17:37:11",
+            "source_name": "CNBC",
+            "snippet": "* Dell Technologies stock rose 10% during trading on Friday after RBC Capital Markets initiated coverage of the computer maker.\n\n* Friday's rise comes as Dell shares have more than quadrupled so far in 2026, as the lo\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "DELL",
+          "APLD",
+          "CRWV",
+          "HUT",
+          "IREN",
+          "NBIS",
+          "NVDA",
+          "SHAZ",
+          "WULF",
+          "WYFI",
+          "CBRS",
+          "RUM"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "ai"
+      },
+      {
+        "slug": "archetypes-26-u-s-influencer",
+        "name": "Archetypes '26: U.S. Influencer",
+        "group_name": "Archetypes",
+        "year_suffix": 26,
+        "return_1m": 1.23,
+        "hits_14d": 34,
+        "latest_at": "2026-09-23T21:32:53+00:00",
+        "score": 204.27,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Apple's ChatGPT tools 'dramatically underperformed', OpenAI claims",
+            "url": "https://www.ft.com/content/256c4b36-a6c8-49ee-aa15-81cb089b2ced",
+            "published_at": "2026-09-23T21:32:53",
+            "source_name": "Financial Times News",
+            "snippet": "Apple's partnership with ChatGPT to add AI features to iPhones \"dramatically underperformed\" after it launched in 2024, according to court documents that shed light on how their relationship unravelled.\n\nOpenAI, in le\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "How to Claim Your Cut of Apple's $250 Million Siri Settlement",
+            "url": "https://www.wired.com/story/how-to-claim-your-cut-of-apple-250-million-siri-settlement/",
+            "published_at": "2026-09-22T18:19:13",
+            "source_name": "Wired",
+            "snippet": "In May, Apple agreed to pay out $250 million as part of a class action lawsuit over claims the company overhyped its Apple Intelligence tools, specifically the long-delayed Siri AI overhaul.\n\nAlthough the revamped Sir\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "A Social Commerce Playbook for the AI Era",
+            "url": "https://www.adweek.com/commerce/a-social-commerce-playbook-for-the-ai-era/",
+            "published_at": "2026-09-23T13:54:49",
+            "source_name": "Adweek",
+            "snippet": "This post was created in partnership with TikTok\n\nSocial media still has the power to reach consumers, but how it's used along the purchase journey is changing, and brands must adapt.\n\nDuring Brandweek 2026, TikTok co\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "SIRI",
+          "GOOGL",
+          "META",
+          "GAME",
+          "SNAP",
+          "AAPL",
+          "SPOT",
+          "AMZN",
+          "ELF",
+          "ABBV",
+          "PINS",
+          "352820.KO"
+        ],
+        "tickers_preview_more": 14,
+        "group_slug": "archetypes"
+      },
+      {
+        "slug": "ai-short-26-mizuho-least-ai-resilient-software",
+        "name": "AI Short '26: Mizuho Least AI-Resilient Software",
+        "group_name": "AI Short",
+        "year_suffix": 26,
+        "return_1m": -3.47,
+        "hits_14d": 27,
+        "latest_at": "2026-09-23T21:15:21+00:00",
+        "score": 204.183,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "At U.N., tech leaders urge global effort to limit AI's risk to humanity",
+            "url": "https://www.washingtonpost.com/technology/2026/09/23/chatgpt-anthropic-execs-make-plea-global-ai-limits-united-nations/",
+            "published_at": "2026-09-23T21:15:21",
+            "source_name": "Washington Post",
+            "snippet": "UNITED NATIONS -- Leaders of several major artificial intelligence companies told United Nations members on Wednesday that robust international efforts to regulate the technology are required amid escalating concern t\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Opinion | The Politics of AI Regulation",
+            "url": "https://www.wsj.com/opinion/the-politics-of-ai-regulation-2acf3c16",
+            "published_at": "2026-09-23T18:29:00",
+            "source_name": "The Wall Street Journal",
+            "snippet": "The Politics of AI Regulation\n\nLook at what the companies do, not what they say.\n\nRegarding Peggy Noonan's \"The Sandbox at the End of the World\" (Declarations, Sept. 19): Has Ms. Noonan given up on markets -- and the\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Burnham Seeks 'Sweet Spot' in AI Regulation",
+            "url": "https://www.bloomberg.com/news/newsletters/2026-09-23/burnham-tries-to-keep-trump-europe-happy-on-ai-regulation",
+            "published_at": "2026-09-23T16:05:08",
+            "source_name": "Bloomberg Business",
+            "snippet": "Donald Trump's relatively good behaviour in his first meeting with Andy Burnham shouldn't have come as a surprise. Trump likes winners - remember he was warm about Keir Starmer in the aftermath of his election landsli\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "BILL",
+          "NICE",
+          "PATH",
+          "EGHT",
+          "FIVN",
+          "GTM",
+          "RNG",
+          "ZM"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "ai-short"
+      },
+      {
+        "slug": "agentic-utilities-26-agentic-payments",
+        "name": "Agentic Utilities '26: Agentic Payments",
+        "group_name": "Agentic Utilities",
+        "year_suffix": 26,
+        "return_1m": 0.52,
+        "hits_14d": 28,
+        "latest_at": "2026-09-23T20:05:15+00:00",
+        "score": 203.836,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Is Muse Really the Answer to Meta's AI Woes? | PYMNTS.com",
+            "url": "https://www.pymnts.com/news/artificial-intelligence/2026/is-muse-really-the-answer-to-metas-ai-woes/",
+            "published_at": "2026-09-23T20:05:15",
+            "source_name": "PYMNTS.com",
+            "snippet": "For a company that spent two years being asked what its AI budget was buying, that looks like the consumer AI breakthrough it has been waiting for. Whether the product underneath can hold that position is a separate q\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Chatbots are still falling short in mental health conversations with kids",
+            "url": "https://www.washingtonpost.com/technology/2026/09/23/chatbots-still-make-risky-errors-talks-with-teens-about-mental-health/",
+            "published_at": "2026-09-23T16:00:00",
+            "source_name": "Washington Post",
+            "snippet": "SAN FRANCISCO -- As more young people turn to chatbots for emotional support, artificial intelligence companies have promised to make their products suggest that users in distress seek real-life help. A new study foun\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "YouTube will let you build your own algorithm with AI",
+            "url": "https://techcrunch.com/2026/09/23/youtube-will-let-you-build-your-own-algorithm-with-ai/",
+            "published_at": "2026-09-23T14:30:00",
+            "source_name": "TechCrunch",
+            "snippet": "YouTube says it's going to let you build your own algorithm -- well, kind of. The company on Wednesday announced a new feature called custom feeds that allows you to describe, in your own words, the kinds of videos yo\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "SHOP",
+          "VENMO",
+          "HOOD",
+          "PYUSD",
+          "COIN",
+          "PYPL",
+          "CRCL",
+          "GOOG",
+          "JPM",
+          "V"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "agentic-utilities"
+      }
+    ],
+    "all": [
+      {
+        "slug": "ai-26-neoclouds",
+        "name": "AI '26: Neoclouds",
+        "group_name": "AI",
+        "year_suffix": 26,
+        "return_1m": 9.8,
+        "hits_14d": 2,
+        "latest_at": "2026-09-23T22:23:09+00:00",
+        "score": 166.52,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 0.98,
+        "headlines": [
+          {
+            "title": "OpenAI, Anthropic bosses push UN for global terms on AI",
+            "url": "https://www.bbc.com/news/articles/ck87v27vdn1po",
+            "published_at": "2026-09-23T22:23:09",
+            "source_name": "BBC",
+            "snippet": null,
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 0.5376589107878349,
+            "top_story_match": 0.98
+          },
+          {
+            "title": "Dell stock jumps on RBC initiation, now up nearly 350% in 2026",
+            "url": "https://www.cnbc.com/2026/09/11/dell-stock-rbc-initiation.html",
+            "published_at": "2026-09-11T17:37:11",
+            "source_name": "CNBC",
+            "snippet": "* Dell Technologies stock rose 10% during trading on Friday after RBC Capital Markets initiated coverage of the computer maker.\n\n* Friday's rise comes as Dell shares have more than quadrupled so far in 2026, as the lo\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "DELL",
+          "APLD",
+          "CRWV",
+          "HUT",
+          "IREN",
+          "NBIS",
+          "NVDA",
+          "SHAZ",
+          "WULF",
+          "WYFI",
+          "CBRS",
+          "RUM"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "ai"
+      },
+      {
+        "slug": "global-defense-26-china-warfare-defense",
+        "name": "Global Defense '26: China Warfare & Defense",
+        "group_name": "Global Defense",
+        "year_suffix": 26,
+        "return_1m": 6.84,
+        "hits_14d": 2,
+        "latest_at": "2026-09-23T21:29:22+00:00",
+        "score": 166.253,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 1.0,
+        "headlines": [
+          {
+            "title": "Live Updates: Trump to Greet Xi for State Visit Amid Tensions",
+            "url": "https://www.nytimes.com/live/2026/09/23/us/trump-xi/heres-the-latest",
+            "published_at": "2026-09-23T21:05:15",
+            "source_name": "The New York Times",
+            "snippet": "President Trump will take the rare step of meeting President Xi Jinping of China at Joint Base Andrews to kick off a visit between two superpower rivals confronting a shaky trade truce and mounting concerns over artif\u2026",
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 1.490066488984678,
+            "top_story_match": 1.0
+          },
+          {
+            "title": "Major TV Networks Won't Film Xi's Arrival",
+            "url": "https://www.nytimes.com/2026/09/23/business/media/tv-networks-xi-arrival.html",
+            "published_at": "2026-09-23T21:29:22",
+            "source_name": "The New York Times",
+            "snippet": null,
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 0.9758020444544495,
+            "top_story_match": 1.0
+          }
+        ],
+        "tickers_preview": [
+          "600150.SHG",
+          "600760.SHG",
+          "600893.SHG",
+          "000768.SHE",
+          "002179.SHE",
+          "002625.SHE",
+          "600967.SHG",
+          "000547.SHE",
+          "002151.SHE",
+          "600038.SHG"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "global-defense"
+      },
+      {
+        "slug": "edge-ai-long-26-ai-wearables",
+        "name": "Edge AI Long '26: AI Wearables",
+        "group_name": "Edge AI Long",
+        "year_suffix": 26,
+        "return_1m": 7.99,
+        "hits_14d": 1,
+        "latest_at": "2026-09-23T23:43:56+00:00",
+        "score": 160.92,
+        "trending_boost": false,
+        "top_story": true,
+        "top_story_match": 1.0,
+        "headlines": [
+          {
+            "title": "Meta will sell you camera-free AI glasses if you're worried about 'pervert glasses' backlash",
+            "url": "https://www.businessinsider.com/meta-ray-ban-audio-ai-glasses-without-camera-2026-9",
+            "published_at": "2026-09-23T23:43:56",
+            "source_name": "Business Insider",
+            "snippet": "Great news for folks who enjoy the convenience of being able to listen to music or podcasts on their Meta Ray-Ban smart glasses, but don't want to get frog-marched out of the gym locker room:\n\nMeta is launching a new\u2026",
+            "pub_list_hit": true,
+            "from_top_story": true,
+            "breaking_score": 1.060837080717292,
+            "top_story_match": 1.0
+          }
+        ],
+        "tickers_preview": [
+          "2382.HK",
+          "ALMU",
+          "EL.PA",
+          "GOOG",
+          "META",
+          "QCOM",
+          "SYNA"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "edge-ai-long"
+      },
+      {
+        "slug": "archetypes-26-u-s-influencer",
+        "name": "Archetypes '26: U.S. Influencer",
+        "group_name": "Archetypes",
+        "year_suffix": 26,
+        "return_1m": 1.23,
+        "hits_14d": 34,
+        "latest_at": "2026-09-23T21:32:53+00:00",
+        "score": 204.27,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Apple's ChatGPT tools 'dramatically underperformed', OpenAI claims",
+            "url": "https://www.ft.com/content/256c4b36-a6c8-49ee-aa15-81cb089b2ced",
+            "published_at": "2026-09-23T21:32:53",
+            "source_name": "Financial Times News",
+            "snippet": "Apple's partnership with ChatGPT to add AI features to iPhones \"dramatically underperformed\" after it launched in 2024, according to court documents that shed light on how their relationship unravelled.\n\nOpenAI, in le\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "How to Claim Your Cut of Apple's $250 Million Siri Settlement",
+            "url": "https://www.wired.com/story/how-to-claim-your-cut-of-apple-250-million-siri-settlement/",
+            "published_at": "2026-09-22T18:19:13",
+            "source_name": "Wired",
+            "snippet": "In May, Apple agreed to pay out $250 million as part of a class action lawsuit over claims the company overhyped its Apple Intelligence tools, specifically the long-delayed Siri AI overhaul.\n\nAlthough the revamped Sir\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "A Social Commerce Playbook for the AI Era",
+            "url": "https://www.adweek.com/commerce/a-social-commerce-playbook-for-the-ai-era/",
+            "published_at": "2026-09-23T13:54:49",
+            "source_name": "Adweek",
+            "snippet": "This post was created in partnership with TikTok\n\nSocial media still has the power to reach consumers, but how it's used along the purchase journey is changing, and brands must adapt.\n\nDuring Brandweek 2026, TikTok co\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "SIRI",
+          "GOOGL",
+          "META",
+          "GAME",
+          "SNAP",
+          "AAPL",
+          "SPOT",
+          "AMZN",
+          "ELF",
+          "ABBV",
+          "PINS",
+          "352820.KO"
+        ],
+        "tickers_preview_more": 14,
+        "group_slug": "archetypes"
+      },
+      {
+        "slug": "ai-short-26-mizuho-least-ai-resilient-software",
+        "name": "AI Short '26: Mizuho Least AI-Resilient Software",
+        "group_name": "AI Short",
+        "year_suffix": 26,
+        "return_1m": -3.47,
+        "hits_14d": 27,
+        "latest_at": "2026-09-23T21:15:21+00:00",
+        "score": 204.183,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "At U.N., tech leaders urge global effort to limit AI's risk to humanity",
+            "url": "https://www.washingtonpost.com/technology/2026/09/23/chatgpt-anthropic-execs-make-plea-global-ai-limits-united-nations/",
+            "published_at": "2026-09-23T21:15:21",
+            "source_name": "Washington Post",
+            "snippet": "UNITED NATIONS -- Leaders of several major artificial intelligence companies told United Nations members on Wednesday that robust international efforts to regulate the technology are required amid escalating concern t\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Opinion | The Politics of AI Regulation",
+            "url": "https://www.wsj.com/opinion/the-politics-of-ai-regulation-2acf3c16",
+            "published_at": "2026-09-23T18:29:00",
+            "source_name": "The Wall Street Journal",
+            "snippet": "The Politics of AI Regulation\n\nLook at what the companies do, not what they say.\n\nRegarding Peggy Noonan's \"The Sandbox at the End of the World\" (Declarations, Sept. 19): Has Ms. Noonan given up on markets -- and the\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Burnham Seeks 'Sweet Spot' in AI Regulation",
+            "url": "https://www.bloomberg.com/news/newsletters/2026-09-23/burnham-tries-to-keep-trump-europe-happy-on-ai-regulation",
+            "published_at": "2026-09-23T16:05:08",
+            "source_name": "Bloomberg Business",
+            "snippet": "Donald Trump's relatively good behaviour in his first meeting with Andy Burnham shouldn't have come as a surprise. Trump likes winners - remember he was warm about Keir Starmer in the aftermath of his election landsli\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "BILL",
+          "NICE",
+          "PATH",
+          "EGHT",
+          "FIVN",
+          "GTM",
+          "RNG",
+          "ZM"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "ai-short"
+      },
+      {
+        "slug": "agentic-utilities-26-agentic-payments",
+        "name": "Agentic Utilities '26: Agentic Payments",
+        "group_name": "Agentic Utilities",
+        "year_suffix": 26,
+        "return_1m": 0.52,
+        "hits_14d": 28,
+        "latest_at": "2026-09-23T20:05:15+00:00",
+        "score": 203.836,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Is Muse Really the Answer to Meta's AI Woes? | PYMNTS.com",
+            "url": "https://www.pymnts.com/news/artificial-intelligence/2026/is-muse-really-the-answer-to-metas-ai-woes/",
+            "published_at": "2026-09-23T20:05:15",
+            "source_name": "PYMNTS.com",
+            "snippet": "For a company that spent two years being asked what its AI budget was buying, that looks like the consumer AI breakthrough it has been waiting for. Whether the product underneath can hold that position is a separate q\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Chatbots are still falling short in mental health conversations with kids",
+            "url": "https://www.washingtonpost.com/technology/2026/09/23/chatbots-still-make-risky-errors-talks-with-teens-about-mental-health/",
+            "published_at": "2026-09-23T16:00:00",
+            "source_name": "Washington Post",
+            "snippet": "SAN FRANCISCO -- As more young people turn to chatbots for emotional support, artificial intelligence companies have promised to make their products suggest that users in distress seek real-life help. A new study foun\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "YouTube will let you build your own algorithm with AI",
+            "url": "https://techcrunch.com/2026/09/23/youtube-will-let-you-build-your-own-algorithm-with-ai/",
+            "published_at": "2026-09-23T14:30:00",
+            "source_name": "TechCrunch",
+            "snippet": "YouTube says it's going to let you build your own algorithm -- well, kind of. The company on Wednesday announced a new feature called custom feeds that allows you to describe, in your own words, the kinds of videos yo\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "SHOP",
+          "VENMO",
+          "HOOD",
+          "PYUSD",
+          "COIN",
+          "PYPL",
+          "CRCL",
+          "GOOG",
+          "JPM",
+          "V"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "agentic-utilities"
+      },
+      {
+        "slug": "retail-shopping-26-online-marketplaces-everything-stores",
+        "name": "Retail Shopping '26: Online Marketplaces & Everything Stores",
+        "group_name": "Retail Shopping",
+        "year_suffix": 26,
+        "return_1m": -6.46,
+        "hits_14d": 30,
+        "latest_at": "2026-09-23T20:05:15+00:00",
+        "score": 203.836,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "One hyperscaler's rally is just getting started, Wolfe Research says",
+            "url": "https://www.cnbc.com/2026/09/23/one-hyperscalers-rally-is-just-getting-started-wolfe-research-says.html",
+            "published_at": "2026-09-23T13:52:14",
+            "source_name": "CNBC",
+            "snippet": "Amazon is likely to gain ground as it expands thanks to several artificial intelligence-linked initiatives, including its cloud service Bedrock, according to Wolfe Research. The research firm has an outperform rating\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "How 'One Piece' became sports' biggest crossover sensation: MoneyCall",
+            "url": "https://www.nytimes.com/athletic/7623452/2026/09/23/one-piece-oda-luffy-dodgers-nike-moneycall/",
+            "published_at": "2026-09-23T18:21:57",
+            "source_name": "The New York Times",
+            "snippet": "Welcome back to MoneyCall, The Athletic's weekly sports business cheat sheet.\n\nName-dropped today: Eiichiro Oda, Monkey D. Luffy, Kylian Mbappe, Stephen Jones, Doc Rivers, Naoko Asano, Howard Schultz, Jessica Pegula,\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "How to watch Wings vs. Storm: TV channel and streaming options for September 23",
+            "url": "https://www.nytimes.com/athletic/7623822/2026/09/23/wings-vs-storm-stream-how-to-watch-sept-23/",
+            "published_at": "2026-09-23T19:32:17",
+            "source_name": "The New York Times",
+            "snippet": "Paige Bueckers leads the Dallas Wings (26-17) against the Seattle Storm (8-35) after putting up 30 points in an 87-86 loss to the Mercury. The game is on Wednesday, September 23, 2026, tipping at 10 p.m. ET on USA, KF\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "SHOP",
+          "AMZN",
+          "EBAY",
+          "ETSY",
+          "MELI",
+          "BABA",
+          "PDD",
+          "CPNG",
+          "JD",
+          "SE",
+          "ALE.WAR",
+          "4755.T"
+        ],
+        "tickers_preview_more": 5,
+        "group_slug": "retail-shopping"
+      },
+      {
+        "slug": "energy-sovereignty-26-u-s-energy-dominance",
+        "name": "Energy Sovereignty '26: U.S. Energy Dominance",
+        "group_name": "Energy Sovereignty",
+        "year_suffix": 26,
+        "return_1m": -1.01,
+        "hits_14d": 31,
+        "latest_at": "2026-09-23T19:20:03+00:00",
+        "score": 203.611,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "How a ban of diesel exports could lead to higher prices -- even in the U.S.",
+            "url": "https://www.washingtonpost.com/business/2026/09/23/how-ban-diesel-exports-could-lead-higher-prices-even-us/",
+            "published_at": "2026-09-23T19:20:03",
+            "source_name": "Washington Post",
+            "snippet": "Lawmakers are pushing for a ban on diesel exports, seeking relief for truckers and farmers who are paying record high prices for the crucial fuel. But economists and oil experts say the plan could backfire -- and lead\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "US diesel futures fall after report of export ban plan, which the White House denies",
+            "url": "https://www.reuters.com/business/energy/us-diesel-futures-fall-after-report-export-ban-plan-which-white-house-denies-2026-09-23/",
+            "published_at": "2026-09-23T18:43:43",
+            "source_name": "Reuters",
+            "snippet": "HOUSTON, Sept 23 (Reuters) - US ultra-low-sulfur diesel futures fell 4% on Wednesday after Politico reported that the White House is preparing a plan to ban diesel exports for 90 days, which the Trump Administration d\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Oil industry warns a diesel export ban will raise fuel prices as Trump weighs restrictions",
+            "url": "https://www.cnbc.com/2026/09/23/trump-diesel-export-ban-gas-prices.html",
+            "published_at": "2026-09-23T19:16:24",
+            "source_name": "CNBC",
+            "snippet": "* This week, President Donald Trump indicated support for a diesel export ban.\n\n* Shares of U.S. refiners fell after Politico reported that the Trump administration is preparing a plan to ban diesel exports for 90 day\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "CVX",
+          "LNG",
+          "XOM",
+          "COP",
+          "EOG",
+          "EPD",
+          "VG",
+          "VLO",
+          "FANG",
+          "MPC",
+          "KMI",
+          "PSX"
+        ],
+        "tickers_preview_more": 5,
+        "group_slug": "energy-sovereignty"
+      },
+      {
+        "slug": "ai-bottleneck-26-downstream-ai-materials",
+        "name": "AI Bottleneck '26: Downstream AI Materials",
+        "group_name": "AI Bottleneck",
+        "year_suffix": 26,
+        "return_1m": 11.79,
+        "hits_14d": 24,
+        "latest_at": "2026-09-23T12:32:43+00:00",
+        "score": 201.591,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "China's storage makers bet on advanced packaging to climb value chain",
+            "url": "https://www.scmp.com/tech/tech-trends/article/3368535/chinas-storage-makers-aim-climb-value-chain-advanced-packaging-bets",
+            "published_at": "2026-09-23T11:29:23",
+            "source_name": "South China Morning Post",
+            "snippet": "Biwin Storage Technology invests US$672 million in latest example of a storage firm looking to upgrade its business model\n\nChinese storage makers, long known for packaging chips into modules, have been moving up the v\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "COMMENTARY: What's the latest with semiconductor export controls?",
+            "url": "https://www.reuters.com/legal/legalindustry/whats-latest-with-semiconductor-export-controls--pracin-2026-09-23/",
+            "published_at": "2026-09-23T12:32:43",
+            "source_name": "Reuters",
+            "snippet": "CommentaryAttorney Analysis from Westlaw Today, a part of Thomson Reuters.\n\nSeptember 23, 2026 - As much of the world goes all-in on building out artificial intelligence (\"AI\") infrastructure, companies continue to na\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "BofA warns of uneven risks in China's expanding AI stock universe",
+            "url": "https://www.scmp.com/business/china-business/article/3368401/chinas-ai-self-reliance-presents-opportunities-valuations-geopolitics-are-risks-bofa",
+            "published_at": "2026-09-23T00:00:21",
+            "source_name": "South China Morning Post",
+            "snippet": "The nation's tech firms are catching up with overseas rivals while a wave of high-profile listings has broadened investment opportunities\n\nChina's push for tech self-reliance is opening new investment opportunities in\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "COWOS",
+          "002916.SHE",
+          "007660.KO",
+          "009150.KO",
+          "2313.TW",
+          "2316.TW",
+          "2367.TW",
+          "2368.TW",
+          "2383.TW",
+          "300476.SHE",
+          "301377.SHE",
+          "3037.TW"
+        ],
+        "tickers_preview_more": 11,
+        "group_slug": "ai-bottleneck"
+      },
+      {
+        "slug": "energy-bottleneck-26-us-integrated-energy-majors",
+        "name": "Energy Bottleneck '26: US Integrated Energy Majors",
+        "group_name": "Energy Bottleneck",
+        "year_suffix": 26,
+        "return_1m": -2.57,
+        "hits_14d": 26,
+        "latest_at": "2026-09-23T11:00:00+00:00",
+        "score": 201.131,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "A Startup Wants to Power Data Centers With 'Supercritical' Carbon Dioxide",
+            "url": "https://www.wired.com/story/startup-power-data-centers-supercritical-co2/",
+            "published_at": "2026-09-23T11:00:00",
+            "source_name": "Wired",
+            "snippet": "A new company has a plan to make the dirty gas turbines powering data centers more efficient: liquid carbon dioxide.\n\nAmerican Supercritical came out of stealth Wednesday, announcing $8 million in funding. It wants to\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "EXCLUSIVE: Russia cuts natural gas output, export forecasts",
+            "url": "https://www.reuters.com/business/energy/russia-cuts-natural-gas-output-export-forecasts-2026-09-23/",
+            "published_at": "2026-09-23T10:49:45",
+            "source_name": "Reuters",
+            "snippet": "MOSCOW, Sept 23 (Reuters) - Russia's economy ministry expects the country to produce and export less natural gas this year than previously forecast, according to a draft government document seen by Reuters, as Europe\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "US LNG exports on track to top 120 million tonnes in 2026, Energy Secretary says",
+            "url": "https://www.ogj.com/general-interest/economics-markets/news/55407251/us-lng-exports-on-track-to-top-120-million-tonnes-in-2026-energy-secretary-says",
+            "published_at": "2026-09-23T00:00:00",
+            "source_name": "Oil & Gas Journal Online",
+            "snippet": "US LNG exports continue to expand rapidly, further solidifying its position as the world's largest LNG supplier.\n\nUS LNG exports are on track to exceed 120 million tonnes in 2026, setting another record as new Gulf Co\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "XOM",
+          "CVX",
+          "COP",
+          "EOG",
+          "OXY",
+          "FANG",
+          "DVN",
+          "CTRA"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "energy-bottleneck"
+      },
+      {
+        "slug": "software-24-database-management",
+        "name": "Software '24: Database Management",
+        "group_name": "Software",
+        "year_suffix": 24,
+        "return_1m": 3.94,
+        "hits_14d": 32,
+        "latest_at": "2026-09-22T15:11:15+00:00",
+        "score": 195.234,
+        "trending_boost": true,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Revealed: Some of the Oracle cloud roles hit hardest in layoffs",
+            "url": "https://www.businessinsider.com/oracle-cloud-layoffs-america-roles-hit-hardest-leaked-doc-2026-9",
+            "published_at": "2026-09-22T15:11:15",
+            "source_name": "Business Insider",
+            "snippet": "A leaked document has provided the clearest picture yet of how Oracle's latest layoffs have reorganized its vitally important cloud business.\n\nOracle began a new round of layoffs last week as the tech giant continues\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Accenture musters 1K forward deployed engineers to staff Gemini Enterprise business group",
+            "url": "https://www.ciodive.com/news/accenture-google-cloud-gemini-enterprise-forward-deployed-engineers/829988/",
+            "published_at": "2026-09-10T00:00:00",
+            "source_name": "CIO Dive",
+            "snippet": "The consulting firm is expanding an existing Google Cloud practice with agentic AI adoption in mind.\n\n* Accenture rolled out a Gemini Enterprise business group with the goal of adding 1,000 forward deployed engineers\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Top Wall Street analysts find these 3 stocks attractive as long-term investments",
+            "url": "https://www.cnbc.com/2026/09/20/top-wall-street-analysts-find-these-3-stocks-attractive-as-long-term-investments.html",
+            "published_at": "2026-09-20T12:01:35",
+            "source_name": "CNBC",
+            "snippet": "Follow your favorite stocksCREATE FREE ACCOUNT\n\nSignage outside the Meta store in Burlingame, California, July 27, 2026.\n\nDavid Paul Morris | Bloomberg | Getty Images\n\nInvestors have been grappling with stock market v\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "ORCL",
+          "SAP",
+          "ESTC",
+          "GOOG",
+          "MDB",
+          "SNOW",
+          "TDC"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "software"
+      },
+      {
+        "slug": "child-care-24-child-content",
+        "name": "Child Care '24: Child Content",
+        "group_name": "Child Care",
+        "year_suffix": 24,
+        "return_1m": -0.24,
+        "hits_14d": 34,
+        "latest_at": "2026-09-23T21:07:47+00:00",
+        "score": 179.146,
+        "trending_boost": false,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "All the Top Shows, Movies and Networks in the Merged Paramount-Warner Bros: 'Yellowstone,' 'Harry Potter,' 'Mission: Impossible' and DC Under One Roof",
+            "url": "https://variety.com/2026/tv/news/paramount-warner-bros-merger-shows-movies-networks-1236872287/",
+            "published_at": "2026-09-22T21:08:54",
+            "source_name": "Variety",
+            "snippet": "In line with mega-mergers that have come before, the impending marriage of Paramount Skydance and Warner Bros. Discovery will lead to a media company packed with assets. What differentiates this deal -- which is now i\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Pluto TV Revamps Brand with New Ad Blitz, Nostalgic Slate, Tech Upgrades",
+            "url": "https://www.bloomberg.com/news/articles/2026-09-23/pluto-tv-revamps-brand-with-new-ad-blitz-nostalgic-slate-tech-upgrades",
+            "published_at": "2026-09-23T10:00:09",
+            "source_name": "Bloomberg Business",
+            "snippet": "The best things on TV are free. So proclaims a big new ad campaign from Paramount Skydance Corp., as the media giant aims to rejuvenate one of its crucial, if often-unheralded, assets -- the gratis streaming service P\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Citigroup Sets Up Paramount Loan Calls as Banks Prepare to Sell Debt",
+            "url": "https://www.bloomberg.com/news/articles/2026-09-23/citigroup-sets-up-paramount-loan-calls-as-m-a-debt-sale-eyed",
+            "published_at": "2026-09-23T21:07:47",
+            "source_name": "Bloomberg Business",
+            "snippet": "Citigroup Inc. will kick off meetings with loan investors on Thursday for Paramount Skydance Corp. as banks prepare to sell debt to fund its takeover of Warner Bros. Discovery Inc.\n\nThe meetingsBloomberg Terminal will\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "PSKY",
+          "0303.HK",
+          "300459.SHE",
+          "BAMI.TO",
+          "DIS",
+          "RBLX",
+          "SCHL",
+          "TOON",
+          "TOY.TO",
+          "WILD.TO"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "child-care"
+      },
+      {
+        "slug": "alt-market-data-24-market-data",
+        "name": "Alt & Market Data '24: Market Data",
+        "group_name": "Alt & Market Data",
+        "year_suffix": 24,
+        "return_1m": -5.86,
+        "hits_14d": 24,
+        "latest_at": "2026-09-23T20:58:32+00:00",
+        "score": 179.1,
+        "trending_boost": false,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Novartis defeats drug-purchaser lawsuit over delay of Entresto generics",
+            "url": "https://www.reuters.com/legal/government/novartis-defeats-drug-purchaser-lawsuit-over-delay-entresto-generics-2026-09-23/",
+            "published_at": "2026-09-23T19:04:11",
+            "source_name": "Reuters",
+            "snippet": "Sept 23 (Reuters) - A federal judge in Manhattan ruled for Novartis (NOVN.S), opens new tab on Wednesday against allegations that it misused one of its patents to maintain its exclusivity on its blockbuster heart-fail\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "S&P Global Data Shows Fastest US Business Growth Since Post-COVID Reopening | PYMNTS.com",
+            "url": "https://www.pymnts.com/economy/2026/sp-global-data-shows-fastest-us-business-growth-since-post-covid-reopening/",
+            "published_at": "2026-09-23T20:58:32",
+            "source_name": "PYMNTS.com",
+            "snippet": "The flash S&P Global US PMI Composite Output Index rose from 56.0 in August to 58.4 in September, marking the fourth consecutive month of accelerating growth as well as the fastest expansion since July 2021, according\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "US senators introduce bill to remove D.C. judge residency requirements for two federal courts",
+            "url": "https://www.reuters.com/legal/government/us-senators-introduce-bill-remove-dc-judge-residency-requirements-two-federal-2026-09-23/",
+            "published_at": "2026-09-23T15:09:11",
+            "source_name": "Reuters",
+            "snippet": "Sept 23 (Reuters) - Two US senators have introduced a bill to remove a requirement that judges on the Washington, D.C.-based US Court of Federal Claims and US Court of Appeals for the Federal Circuit live in the D.C.\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "CBOE",
+          "CME",
+          "MSCI",
+          "DB1.XETRA",
+          "ENX.PA",
+          "FDS",
+          "ICE",
+          "LSEG.LSE",
+          "MORN",
+          "NDAQ",
+          "SPGI",
+          "TRI"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "alt-market-data"
+      },
+      {
+        "slug": "airplanes-26-aircraft-manufacturers",
+        "name": "Airplanes '26: Aircraft Manufacturers",
+        "group_name": "Airplanes",
+        "year_suffix": 26,
+        "return_1m": 0.47,
+        "hits_14d": 33,
+        "latest_at": "2026-09-23T18:35:25+00:00",
+        "score": 178.39,
+        "trending_boost": false,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "Axios House: Sustainable travel goals are a \"team\" sport, transportation leaders say",
+            "url": "https://www.axios.com/2026/09/23/axios-house-sustainable-travel-goals-are-a-team-sport-transportation-leaders-say",
+            "published_at": "2026-09-23T18:35:25",
+            "source_name": "Axios",
+            "snippet": "NEW YORK -- Companies will need coordinated action from the government, suppliers and customers to meet sustainability goals, Delta Air Lines and Uber leaders said at Axios House at Climate Week and the UN General Ass\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Trump faces Xi as strains with allies complicate U.S. pressure on China",
+            "url": "https://www.cnbc.com/2026/09/23/trump-xi-china-summit-allies.html",
+            "published_at": "2026-09-23T15:07:11",
+            "source_name": "CNBC",
+            "snippet": "* Trump enters Thursday's summit with Xi facing a China that has become harder to isolate as U.S. allies seek greater room to maneuver between Washington and Beijing.\n\n* The U.S. retains major advantages through its n\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Sida loo ilaaliyo Makka Al Mukarrama iyo magaalooyinka kale ee barakaysan - BBC News Somali",
+            "url": "https://www.bbc.com/somali/articles/cm209ydw1ze4o",
+            "published_at": "2026-09-23T09:12:08",
+            "source_name": "BBC",
+            "snippet": "Isbaheysiga ay Qaramada Midoobay aqoonsan tahay ee taageera dowladda Yemen ayaa sheegay in ciidamada difaaca cirka ee Sacuudiga ay soo rideen diyaarad aan duuliye lahayn (drone) oo ay soo direen Xuutiyiinta, ka hor in\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "047810.KO",
+          "600760.SHG",
+          "AIR.PA",
+          "AM.PA",
+          "BA",
+          "BBD-B.TO",
+          "BETA",
+          "EH",
+          "EMBJ",
+          "HAL.NS",
+          "SPCE",
+          "SRFM"
+        ],
+        "tickers_preview_more": 1,
+        "group_slug": "airplanes"
+      },
+      {
+        "slug": "bs-jobs-26-bloated-operations-in-tech",
+        "name": "BS Jobs '26: Bloated Operations in Tech",
+        "group_name": "BS Jobs",
+        "year_suffix": 26,
+        "return_1m": -2.28,
+        "hits_14d": 32,
+        "latest_at": "2026-09-23T17:57:44+00:00",
+        "score": 178.203,
+        "trending_boost": false,
+        "top_story": false,
+        "top_story_match": 0.0,
+        "headlines": [
+          {
+            "title": "SaaSpocalypse: Catchy Title, Flawed Premise",
+            "url": "https://www.idc.com/resource-center/blog/saaspocalypse-catchy-title-flawed-premise/",
+            "published_at": "2026-09-23T17:57:44",
+            "source_name": "IDC",
+            "snippet": "The worldwide enterprise application market is approaching $700 billion, and blended growth has held near 13% through the first half of 2026, the third consecutive year of double-digit expansion. Yet, none of that has\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Crocs Puts One AI Agent in Charge of Sales and Service | PYMNTS.com",
+            "url": "https://www.pymnts.com/news/artificial-intelligence/2026/crocs-puts-one-ai-agent-in-charge-of-sales-and-service/",
+            "published_at": "2026-09-22T22:58:21",
+            "source_name": "PYMNTS.com",
+            "snippet": "Before Rivet, the footwear company's service team was handling 178,000 inquiries a month across voice, chat and email, Salesforce said in a customer case study. More than half were \"Where is my order?\" requests. The r\u2026",
+            "pub_list_hit": true
+          },
+          {
+            "title": "Marc Benioff says Salesforce's investment in Anthropic was a plan B that could pay off in 'tens of billions'",
+            "url": "https://www.businessinsider.com/salesforce-ai-investment-anthropic-could-be-worth-tens-of-billions-2026-9",
+            "published_at": "2026-09-22T22:49:49",
+            "source_name": "Business Insider",
+            "snippet": "Not being able to invest in OpenAI may have worked out perfectly for Salesforce.\n\nOn an episode of the Sources Podcast published Tuesday, Marc Benioff told host Alex Heath that he originally wanted Salesforce to inves\u2026",
+            "pub_list_hit": true
+          }
+        ],
+        "tickers_preview": [
+          "6098.T",
+          "IBM",
+          "INTU",
+          "MDB",
+          "SAP.XETRA"
+        ],
+        "tickers_preview_more": null,
+        "group_slug": "bs-jobs"
+      }
+    ]
+  },
+  "history": [
+    {
+      "as_of": "2026-09-23",
+      "fetched_at": "2026-09-24T00:26:32Z",
+      "home": [
+        {
+          "slug": "edge-ai-long-26-ai-wearables",
+          "name": "Edge AI Long '26: AI Wearables",
+          "group_name": "Edge AI Long",
+          "year_suffix": 26,
+          "return_1m": 7.99,
+          "hits_14d": 1,
+          "latest_at": "2026-09-23T23:43:56+00:00",
+          "score": 161.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 1.0,
+          "headlines": [
+            {
+              "title": "Meta will sell you camera-free AI glasses if you're worried about 'pervert glasses' backlash",
+              "url": "https://www.businessinsider.com/meta-ray-ban-audio-ai-glasses-without-camera-2026-9",
+              "published_at": "2026-09-23T23:43:56",
+              "source_name": "Business Insider",
+              "snippet": "Great news for folks who enjoy the convenience of being able to listen to music or podcasts on their Meta Ray-Ban smart glasses, but don't want to get frog-marched out of the gym locker room:\n\nMeta is launching a new\u2026",
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 1.060837080717292,
+              "top_story_match": 1.0
+            }
+          ],
+          "tickers_preview": [
+            "2382.HK",
+            "ALMU",
+            "EL.PA",
+            "GOOG"
+          ],
+          "tickers_preview_more": 3,
+          "group_slug": "edge-ai-long"
+        },
+        {
+          "slug": "global-defense-26-china-warfare-defense",
+          "name": "Global Defense '26: China Warfare & Defense",
+          "group_name": "Global Defense",
+          "year_suffix": 26,
+          "return_1m": 6.84,
+          "hits_14d": 2,
+          "latest_at": "2026-09-23T21:29:22+00:00",
+          "score": 167.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 1.0,
+          "headlines": [
+            {
+              "title": "Live Updates: Trump to Greet Xi for State Visit Amid Tensions",
+              "url": "https://www.nytimes.com/live/2026/09/23/us/trump-xi/heres-the-latest",
+              "published_at": "2026-09-23T21:05:15",
+              "source_name": "The New York Times",
+              "snippet": "President Trump will take the rare step of meeting President Xi Jinping of China at Joint Base Andrews to kick off a visit between two superpower rivals confronting a shaky trade truce and mounting concerns over artif\u2026",
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 1.490066488984678,
+              "top_story_match": 1.0
+            },
+            {
+              "title": "Major TV Networks Won't Film Xi's Arrival",
+              "url": "https://www.nytimes.com/2026/09/23/business/media/tv-networks-xi-arrival.html",
+              "published_at": "2026-09-23T21:29:22",
+              "source_name": "The New York Times",
+              "snippet": null,
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 0.9758020444544495,
+              "top_story_match": 1.0
+            }
+          ],
+          "tickers_preview": [
+            "600150.SHG",
+            "600760.SHG",
+            "600893.SHG",
+            "000768.SHE"
+          ],
+          "tickers_preview_more": 6,
+          "group_slug": "global-defense"
+        },
+        {
+          "slug": "ai-26-neoclouds",
+          "name": "AI '26: Neoclouds",
+          "group_name": "AI",
+          "year_suffix": 26,
+          "return_1m": 9.8,
+          "hits_14d": 2,
+          "latest_at": "2026-09-23T22:23:09+00:00",
+          "score": 167.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 0.98,
+          "headlines": [
+            {
+              "title": "OpenAI, Anthropic bosses push UN for global terms on AI",
+              "url": "https://www.bbc.com/news/articles/ck87v27vdn1po",
+              "published_at": "2026-09-23T22:23:09",
+              "source_name": "BBC",
+              "snippet": null,
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 0.5376589107878349,
+              "top_story_match": 0.98
+            },
+            {
+              "title": "Dell stock jumps on RBC initiation, now up nearly 350% in 2026",
+              "url": "https://www.cnbc.com/2026/09/11/dell-stock-rbc-initiation.html",
+              "published_at": "2026-09-11T17:37:11",
+              "source_name": "CNBC",
+              "snippet": "* Dell Technologies stock rose 10% during trading on Friday after RBC Capital Markets initiated coverage of the computer maker.\n\n* Friday's rise comes as Dell shares have more than quadrupled so far in 2026, as the lo\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "DELL",
+            "APLD",
+            "CRWV",
+            "HUT"
+          ],
+          "tickers_preview_more": 8,
+          "group_slug": "ai"
+        },
+        {
+          "slug": "agentic-utilities-26-agentic-payments",
+          "name": "Agentic Utilities '26: Agentic Payments",
+          "group_name": "Agentic Utilities",
+          "year_suffix": 26,
+          "return_1m": 0.52,
+          "hits_14d": 33,
+          "latest_at": "2026-09-23T20:05:15+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Crocs Puts One AI Agent in Charge of Sales and Service | PYMNTS.com",
+              "url": "https://www.pymnts.com/news/artificial-intelligence/2026/crocs-puts-one-ai-agent-in-charge-of-sales-and-service/",
+              "published_at": "2026-09-22T22:58:21",
+              "source_name": "PYMNTS.com",
+              "snippet": "Before Rivet, the footwear company's service team was handling 178,000 inquiries a month across voice, chat and email, Salesforce said in a customer case study. More than half were \"Where is my order?\" requests. The r\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Is Muse Really the Answer to Meta's AI Woes? | PYMNTS.com",
+              "url": "https://www.pymnts.com/news/artificial-intelligence/2026/is-muse-really-the-answer-to-metas-ai-woes/",
+              "published_at": "2026-09-23T20:05:15",
+              "source_name": "PYMNTS.com",
+              "snippet": "For a company that spent two years being asked what its AI budget was buying, that looks like the consumer AI breakthrough it has been waiting for. Whether the product underneath can hold that position is a separate q\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Meta's Muse AI agent is reshuffling winners and losers across markets, from chipmakers to brokers",
+              "url": "https://www.businessinsider.com/meta-muse-ai-agent-reshuffles-stock-market-winners-losers-brokers-2026-9",
+              "published_at": "2026-09-23T09:50:01",
+              "source_name": "Business Insider",
+              "snippet": "When are we going to stop counting out Mark Zuckerberg?\n\nAs concerns over AI mounted over the summer, Meta was one of the companies hit hardest. Investors were particularly skeptical about the firm's massive capex-spe\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "SHOP",
+            "PYUSD",
+            "VENMO",
+            "HOOD"
+          ],
+          "tickers_preview_more": 2,
+          "group_slug": "agentic-utilities"
+        },
+        {
+          "slug": "ai-bottleneck-26-downstream-ai-materials",
+          "name": "AI Bottleneck '26: Downstream AI Materials",
+          "group_name": "AI Bottleneck",
+          "year_suffix": 26,
+          "return_1m": 11.79,
+          "hits_14d": 25,
+          "latest_at": "2026-09-23T12:32:43+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "China's storage makers bet on advanced packaging to climb value chain",
+              "url": "https://www.scmp.com/tech/tech-trends/article/3368535/chinas-storage-makers-aim-climb-value-chain-advanced-packaging-bets",
+              "published_at": "2026-09-23T11:29:23",
+              "source_name": "South China Morning Post",
+              "snippet": "Biwin Storage Technology invests US$672 million in latest example of a storage firm looking to upgrade its business model\n\nChinese storage makers, long known for packaging chips into modules, have been moving up the v\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "COMMENTARY: What's the latest with semiconductor export controls?",
+              "url": "https://www.reuters.com/legal/legalindustry/whats-latest-with-semiconductor-export-controls--pracin-2026-09-23/",
+              "published_at": "2026-09-23T12:32:43",
+              "source_name": "Reuters",
+              "snippet": "CommentaryAttorney Analysis from Westlaw Today, a part of Thomson Reuters.\n\nSeptember 23, 2026 - As much of the world goes all-in on building out artificial intelligence (\"AI\") infrastructure, companies continue to na\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "BofA warns of uneven risks in China's expanding AI stock universe",
+              "url": "https://www.scmp.com/business/china-business/article/3368401/chinas-ai-self-reliance-presents-opportunities-valuations-geopolitics-are-risks-bofa",
+              "published_at": "2026-09-23T00:00:21",
+              "source_name": "South China Morning Post",
+              "snippet": "The nation's tech firms are catching up with overseas rivals while a wave of high-profile listings has broadened investment opportunities\n\nChina's push for tech self-reliance is opening new investment opportunities in\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "COWOS",
+            "002916.SHE",
+            "007660.KO",
+            "009150.KO"
+          ],
+          "tickers_preview_more": 19,
+          "group_slug": "ai-bottleneck"
+        },
+        {
+          "slug": "ai-short-26-mizuho-least-ai-resilient-software",
+          "name": "AI Short '26: Mizuho Least AI-Resilient Software",
+          "group_name": "AI Short",
+          "year_suffix": 26,
+          "return_1m": -3.47,
+          "hits_14d": 28,
+          "latest_at": "2026-09-23T21:15:21+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "At U.N., tech leaders urge global effort to limit AI's risk to humanity",
+              "url": "https://www.washingtonpost.com/technology/2026/09/23/chatgpt-anthropic-execs-make-plea-global-ai-limits-united-nations/",
+              "published_at": "2026-09-23T21:15:21",
+              "source_name": "Washington Post",
+              "snippet": "UNITED NATIONS -- Leaders of several major artificial intelligence companies told United Nations members on Wednesday that robust international efforts to regulate the technology are required amid escalating concern t\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Opinion | The Politics of AI Regulation",
+              "url": "https://www.wsj.com/opinion/the-politics-of-ai-regulation-2acf3c16",
+              "published_at": "2026-09-23T18:29:00",
+              "source_name": "The Wall Street Journal",
+              "snippet": "The Politics of AI Regulation\n\nLook at what the companies do, not what they say.\n\nRegarding Peggy Noonan's \"The Sandbox at the End of the World\" (Declarations, Sept. 19): Has Ms. Noonan given up on markets -- and the\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Burnham Seeks 'Sweet Spot' in AI Regulation",
+              "url": "https://www.bloomberg.com/news/newsletters/2026-09-23/burnham-tries-to-keep-trump-europe-happy-on-ai-regulation",
+              "published_at": "2026-09-23T16:05:08",
+              "source_name": "Bloomberg Business",
+              "snippet": "Donald Trump's relatively good behaviour in his first meeting with Andy Burnham shouldn't have come as a surprise. Trump likes winners - remember he was warm about Keir Starmer in the aftermath of his election landsli\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "BILL",
+            "NICE",
+            "PATH",
+            "EGHT"
+          ],
+          "tickers_preview_more": 4,
+          "group_slug": "ai-short"
+        }
+      ],
+      "all": [
+        {
+          "slug": "ai-26-neoclouds",
+          "name": "AI '26: Neoclouds",
+          "group_name": "AI",
+          "year_suffix": 26,
+          "return_1m": 9.8,
+          "hits_14d": 2,
+          "latest_at": "2026-09-23T22:23:09+00:00",
+          "score": 167.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 0.98,
+          "headlines": [
+            {
+              "title": "OpenAI, Anthropic bosses push UN for global terms on AI",
+              "url": "https://www.bbc.com/news/articles/ck87v27vdn1po",
+              "published_at": "2026-09-23T22:23:09",
+              "source_name": "BBC",
+              "snippet": null,
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 0.5376589107878349,
+              "top_story_match": 0.98
+            },
+            {
+              "title": "Dell stock jumps on RBC initiation, now up nearly 350% in 2026",
+              "url": "https://www.cnbc.com/2026/09/11/dell-stock-rbc-initiation.html",
+              "published_at": "2026-09-11T17:37:11",
+              "source_name": "CNBC",
+              "snippet": "* Dell Technologies stock rose 10% during trading on Friday after RBC Capital Markets initiated coverage of the computer maker.\n\n* Friday's rise comes as Dell shares have more than quadrupled so far in 2026, as the lo\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "DELL",
+            "APLD",
+            "CRWV",
+            "HUT"
+          ],
+          "tickers_preview_more": 8,
+          "group_slug": "ai"
+        },
+        {
+          "slug": "global-defense-26-china-warfare-defense",
+          "name": "Global Defense '26: China Warfare & Defense",
+          "group_name": "Global Defense",
+          "year_suffix": 26,
+          "return_1m": 6.84,
+          "hits_14d": 2,
+          "latest_at": "2026-09-23T21:29:22+00:00",
+          "score": 167.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 1.0,
+          "headlines": [
+            {
+              "title": "Live Updates: Trump to Greet Xi for State Visit Amid Tensions",
+              "url": "https://www.nytimes.com/live/2026/09/23/us/trump-xi/heres-the-latest",
+              "published_at": "2026-09-23T21:05:15",
+              "source_name": "The New York Times",
+              "snippet": "President Trump will take the rare step of meeting President Xi Jinping of China at Joint Base Andrews to kick off a visit between two superpower rivals confronting a shaky trade truce and mounting concerns over artif\u2026",
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 1.490066488984678,
+              "top_story_match": 1.0
+            },
+            {
+              "title": "Major TV Networks Won't Film Xi's Arrival",
+              "url": "https://www.nytimes.com/2026/09/23/business/media/tv-networks-xi-arrival.html",
+              "published_at": "2026-09-23T21:29:22",
+              "source_name": "The New York Times",
+              "snippet": null,
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 0.9758020444544495,
+              "top_story_match": 1.0
+            }
+          ],
+          "tickers_preview": [
+            "600150.SHG",
+            "600760.SHG",
+            "600893.SHG",
+            "000768.SHE"
+          ],
+          "tickers_preview_more": 6,
+          "group_slug": "global-defense"
+        },
+        {
+          "slug": "edge-ai-long-26-ai-wearables",
+          "name": "Edge AI Long '26: AI Wearables",
+          "group_name": "Edge AI Long",
+          "year_suffix": 26,
+          "return_1m": 7.99,
+          "hits_14d": 1,
+          "latest_at": "2026-09-23T23:43:56+00:00",
+          "score": 161.0,
+          "trending_boost": false,
+          "top_story": true,
+          "top_story_match": 1.0,
+          "headlines": [
+            {
+              "title": "Meta will sell you camera-free AI glasses if you're worried about 'pervert glasses' backlash",
+              "url": "https://www.businessinsider.com/meta-ray-ban-audio-ai-glasses-without-camera-2026-9",
+              "published_at": "2026-09-23T23:43:56",
+              "source_name": "Business Insider",
+              "snippet": "Great news for folks who enjoy the convenience of being able to listen to music or podcasts on their Meta Ray-Ban smart glasses, but don't want to get frog-marched out of the gym locker room:\n\nMeta is launching a new\u2026",
+              "pub_list_hit": true,
+              "from_top_story": true,
+              "breaking_score": 1.060837080717292,
+              "top_story_match": 1.0
+            }
+          ],
+          "tickers_preview": [
+            "2382.HK",
+            "ALMU",
+            "EL.PA",
+            "GOOG"
+          ],
+          "tickers_preview_more": 3,
+          "group_slug": "edge-ai-long"
+        },
+        {
+          "slug": "agentic-utilities-26-agentic-payments",
+          "name": "Agentic Utilities '26: Agentic Payments",
+          "group_name": "Agentic Utilities",
+          "year_suffix": 26,
+          "return_1m": 0.52,
+          "hits_14d": 33,
+          "latest_at": "2026-09-23T20:05:15+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Crocs Puts One AI Agent in Charge of Sales and Service | PYMNTS.com",
+              "url": "https://www.pymnts.com/news/artificial-intelligence/2026/crocs-puts-one-ai-agent-in-charge-of-sales-and-service/",
+              "published_at": "2026-09-22T22:58:21",
+              "source_name": "PYMNTS.com",
+              "snippet": "Before Rivet, the footwear company's service team was handling 178,000 inquiries a month across voice, chat and email, Salesforce said in a customer case study. More than half were \"Where is my order?\" requests. The r\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Is Muse Really the Answer to Meta's AI Woes? | PYMNTS.com",
+              "url": "https://www.pymnts.com/news/artificial-intelligence/2026/is-muse-really-the-answer-to-metas-ai-woes/",
+              "published_at": "2026-09-23T20:05:15",
+              "source_name": "PYMNTS.com",
+              "snippet": "For a company that spent two years being asked what its AI budget was buying, that looks like the consumer AI breakthrough it has been waiting for. Whether the product underneath can hold that position is a separate q\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Meta's Muse AI agent is reshuffling winners and losers across markets, from chipmakers to brokers",
+              "url": "https://www.businessinsider.com/meta-muse-ai-agent-reshuffles-stock-market-winners-losers-brokers-2026-9",
+              "published_at": "2026-09-23T09:50:01",
+              "source_name": "Business Insider",
+              "snippet": "When are we going to stop counting out Mark Zuckerberg?\n\nAs concerns over AI mounted over the summer, Meta was one of the companies hit hardest. Investors were particularly skeptical about the firm's massive capex-spe\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "SHOP",
+            "PYUSD",
+            "VENMO",
+            "HOOD"
+          ],
+          "tickers_preview_more": 2,
+          "group_slug": "agentic-utilities"
+        },
+        {
+          "slug": "ai-bottleneck-26-downstream-ai-materials",
+          "name": "AI Bottleneck '26: Downstream AI Materials",
+          "group_name": "AI Bottleneck",
+          "year_suffix": 26,
+          "return_1m": 11.79,
+          "hits_14d": 25,
+          "latest_at": "2026-09-23T12:32:43+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "China's storage makers bet on advanced packaging to climb value chain",
+              "url": "https://www.scmp.com/tech/tech-trends/article/3368535/chinas-storage-makers-aim-climb-value-chain-advanced-packaging-bets",
+              "published_at": "2026-09-23T11:29:23",
+              "source_name": "South China Morning Post",
+              "snippet": "Biwin Storage Technology invests US$672 million in latest example of a storage firm looking to upgrade its business model\n\nChinese storage makers, long known for packaging chips into modules, have been moving up the v\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "COMMENTARY: What's the latest with semiconductor export controls?",
+              "url": "https://www.reuters.com/legal/legalindustry/whats-latest-with-semiconductor-export-controls--pracin-2026-09-23/",
+              "published_at": "2026-09-23T12:32:43",
+              "source_name": "Reuters",
+              "snippet": "CommentaryAttorney Analysis from Westlaw Today, a part of Thomson Reuters.\n\nSeptember 23, 2026 - As much of the world goes all-in on building out artificial intelligence (\"AI\") infrastructure, companies continue to na\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "BofA warns of uneven risks in China's expanding AI stock universe",
+              "url": "https://www.scmp.com/business/china-business/article/3368401/chinas-ai-self-reliance-presents-opportunities-valuations-geopolitics-are-risks-bofa",
+              "published_at": "2026-09-23T00:00:21",
+              "source_name": "South China Morning Post",
+              "snippet": "The nation's tech firms are catching up with overseas rivals while a wave of high-profile listings has broadened investment opportunities\n\nChina's push for tech self-reliance is opening new investment opportunities in\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "COWOS",
+            "002916.SHE",
+            "007660.KO",
+            "009150.KO"
+          ],
+          "tickers_preview_more": 19,
+          "group_slug": "ai-bottleneck"
+        },
+        {
+          "slug": "ai-short-26-mizuho-least-ai-resilient-software",
+          "name": "AI Short '26: Mizuho Least AI-Resilient Software",
+          "group_name": "AI Short",
+          "year_suffix": 26,
+          "return_1m": -3.47,
+          "hits_14d": 28,
+          "latest_at": "2026-09-23T21:15:21+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "At U.N., tech leaders urge global effort to limit AI's risk to humanity",
+              "url": "https://www.washingtonpost.com/technology/2026/09/23/chatgpt-anthropic-execs-make-plea-global-ai-limits-united-nations/",
+              "published_at": "2026-09-23T21:15:21",
+              "source_name": "Washington Post",
+              "snippet": "UNITED NATIONS -- Leaders of several major artificial intelligence companies told United Nations members on Wednesday that robust international efforts to regulate the technology are required amid escalating concern t\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Opinion | The Politics of AI Regulation",
+              "url": "https://www.wsj.com/opinion/the-politics-of-ai-regulation-2acf3c16",
+              "published_at": "2026-09-23T18:29:00",
+              "source_name": "The Wall Street Journal",
+              "snippet": "The Politics of AI Regulation\n\nLook at what the companies do, not what they say.\n\nRegarding Peggy Noonan's \"The Sandbox at the End of the World\" (Declarations, Sept. 19): Has Ms. Noonan given up on markets -- and the\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Burnham Seeks 'Sweet Spot' in AI Regulation",
+              "url": "https://www.bloomberg.com/news/newsletters/2026-09-23/burnham-tries-to-keep-trump-europe-happy-on-ai-regulation",
+              "published_at": "2026-09-23T16:05:08",
+              "source_name": "Bloomberg Business",
+              "snippet": "Donald Trump's relatively good behaviour in his first meeting with Andy Burnham shouldn't have come as a surprise. Trump likes winners - remember he was warm about Keir Starmer in the aftermath of his election landsli\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "BILL",
+            "NICE",
+            "PATH",
+            "EGHT"
+          ],
+          "tickers_preview_more": 4,
+          "group_slug": "ai-short"
+        },
+        {
+          "slug": "archetypes-26-u-s-influencer",
+          "name": "Archetypes '26: U.S. Influencer",
+          "group_name": "Archetypes",
+          "year_suffix": 26,
+          "return_1m": 1.23,
+          "hits_14d": 35,
+          "latest_at": "2026-09-23T21:32:53+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Apple's ChatGPT tools 'dramatically underperformed', OpenAI claims",
+              "url": "https://www.ft.com/content/256c4b36-a6c8-49ee-aa15-81cb089b2ced",
+              "published_at": "2026-09-23T21:32:53",
+              "source_name": "Financial Times News",
+              "snippet": "Apple's partnership with ChatGPT to add AI features to iPhones \"dramatically underperformed\" after it launched in 2024, according to court documents that shed light on how their relationship unravelled.\n\nOpenAI, in le\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "How to Claim Your Cut of Apple's $250 Million Siri Settlement",
+              "url": "https://www.wired.com/story/how-to-claim-your-cut-of-apple-250-million-siri-settlement/",
+              "published_at": "2026-09-22T18:19:13",
+              "source_name": "Wired",
+              "snippet": "In May, Apple agreed to pay out $250 million as part of a class action lawsuit over claims the company overhyped its Apple Intelligence tools, specifically the long-delayed Siri AI overhaul.\n\nAlthough the revamped Sir\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "TikTok's US arm joins Lantern, a cross-platform child safety initiative",
+              "url": "https://techcrunch.com/2026/09/22/tiktoks-us-arm-joins-lantern-a-cross-platform-child-safety-initiative/",
+              "published_at": "2026-09-22T14:00:00",
+              "source_name": "TechCrunch",
+              "snippet": "Eight months after it was spun out of TikTok, the social media platform's U.S. unit, known as TikTok USDS Joint Venture, is joining Lantern, a cross-platform child safety program by a group of tech companies.\n\nLantern\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "SIRI",
+            "GOOGL",
+            "META",
+            "GAME"
+          ],
+          "tickers_preview_more": 3,
+          "group_slug": "archetypes"
+        },
+        {
+          "slug": "energy-bottleneck-26-us-integrated-energy-majors",
+          "name": "Energy Bottleneck '26: US Integrated Energy Majors",
+          "group_name": "Energy Bottleneck",
+          "year_suffix": 26,
+          "return_1m": -2.57,
+          "hits_14d": 29,
+          "latest_at": "2026-09-23T11:00:00+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "A Startup Wants to Power Data Centers With 'Supercritical' Carbon Dioxide",
+              "url": "https://www.wired.com/story/startup-power-data-centers-supercritical-co2/",
+              "published_at": "2026-09-23T11:00:00",
+              "source_name": "Wired",
+              "snippet": "A new company has a plan to make the dirty gas turbines powering data centers more efficient: liquid carbon dioxide.\n\nAmerican Supercritical came out of stealth Wednesday, announcing $8 million in funding. It wants to\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "EXCLUSIVE: Russia cuts natural gas output, export forecasts",
+              "url": "https://www.reuters.com/business/energy/russia-cuts-natural-gas-output-export-forecasts-2026-09-23/",
+              "published_at": "2026-09-23T10:49:45",
+              "source_name": "Reuters",
+              "snippet": "MOSCOW, Sept 23 (Reuters) - Russia's economy ministry expects the country to produce and export less natural gas this year than previously forecast, according to a draft government document seen by Reuters, as Europe\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "US LNG exports on track to top 120 million tonnes in 2026, Energy Secretary says",
+              "url": "https://www.ogj.com/general-interest/economics-markets/news/55407251/us-lng-exports-on-track-to-top-120-million-tonnes-in-2026-energy-secretary-says",
+              "published_at": "2026-09-23T00:00:00",
+              "source_name": "Oil & Gas Journal Online",
+              "snippet": "US LNG exports continue to expand rapidly, further solidifying its position as the world's largest LNG supplier.\n\nUS LNG exports are on track to exceed 120 million tonnes in 2026, setting another record as new Gulf Co\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "XOM",
+            "CVX",
+            "COP",
+            "EOG"
+          ],
+          "tickers_preview_more": 4,
+          "group_slug": "energy-bottleneck"
+        },
+        {
+          "slug": "energy-sovereignty-26-u-s-energy-dominance",
+          "name": "Energy Sovereignty '26: U.S. Energy Dominance",
+          "group_name": "Energy Sovereignty",
+          "year_suffix": 26,
+          "return_1m": -1.01,
+          "hits_14d": 31,
+          "latest_at": "2026-09-23T19:20:03+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "How a ban of diesel exports could lead to higher prices -- even in the U.S.",
+              "url": "https://www.washingtonpost.com/business/2026/09/23/how-ban-diesel-exports-could-lead-higher-prices-even-us/",
+              "published_at": "2026-09-23T19:20:03",
+              "source_name": "Washington Post",
+              "snippet": "Lawmakers are pushing for a ban on diesel exports, seeking relief for truckers and farmers who are paying record high prices for the crucial fuel. But economists and oil experts say the plan could backfire -- and lead\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "US diesel futures fall after report of export ban plan, which the White House denies",
+              "url": "https://www.reuters.com/business/energy/us-diesel-futures-fall-after-report-export-ban-plan-which-white-house-denies-2026-09-23/",
+              "published_at": "2026-09-23T18:43:43",
+              "source_name": "Reuters",
+              "snippet": "HOUSTON, Sept 23 (Reuters) - US ultra-low-sulfur diesel futures fell 4% on Wednesday after Politico reported that the White House is preparing a plan to ban diesel exports for 90 days, which the Trump Administration d\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Trump's diesel ban would hurt America and help China",
+              "url": "https://www.ft.com/content/3e480031-4ee7-4ded-9893-75c060aeef1a",
+              "published_at": "2026-09-23T15:37:23",
+              "source_name": "Financial Times News",
+              "snippet": "It isn't hard to see why US President Donald Trump would say he supports a ban on diesel exports. Looking after hardworking Americans, while sticking it to fuel importers in Europe, makes good political hay ahead of t\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "CVX",
+            "LNG",
+            "XOM",
+            "COP"
+          ],
+          "tickers_preview_more": 13,
+          "group_slug": "energy-sovereignty"
+        },
+        {
+          "slug": "retail-shopping-26-online-marketplaces-everything-stores",
+          "name": "Retail Shopping '26: Online Marketplaces & Everything Stores",
+          "group_name": "Retail Shopping",
+          "year_suffix": 26,
+          "return_1m": -6.46,
+          "hits_14d": 31,
+          "latest_at": "2026-09-23T20:05:15+00:00",
+          "score": 205.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "One hyperscaler's rally is just getting started, Wolfe Research says",
+              "url": "https://www.cnbc.com/2026/09/23/one-hyperscalers-rally-is-just-getting-started-wolfe-research-says.html",
+              "published_at": "2026-09-23T13:52:14",
+              "source_name": "CNBC",
+              "snippet": "Amazon is likely to gain ground as it expands thanks to several artificial intelligence-linked initiatives, including its cloud service Bedrock, according to Wolfe Research. The research firm has an outperform rating\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Lili Reinhart, of 'The Love Hypothesis,' Is Still Figuring It Out",
+              "url": "https://www.nytimes.com/2026/09/23/movies/lili-reinhart-interview-the-love-hypothesis.html",
+              "published_at": "2026-09-23T15:00:05",
+              "source_name": "The New York Times",
+              "snippet": "\"This is so exciting,\" the actor Lili Reinhart said. \"I'll actually smell like something for once.\"\n\nReinhart, who broke out on the teen soap \"Riverdale,\" was sitting at the counter of the Fragrance Shop, an East Vill\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Meta Tests Human Callers for Muse After Merchants Hang Up on AI | PYMNTS.com",
+              "url": "https://www.pymnts.com/news/artificial-intelligence/2026/meta-tests-human-callers-for-muse-after-merchants-hang-up-on-ai/",
+              "published_at": "2026-09-22T23:12:11",
+              "source_name": "PYMNTS.com",
+              "snippet": "Meta began this test after some users of Muse reported that companies that were called by Muse often hung up when they realized the caller was AI, according to the report.\n\nThe internal company posts showed that Meta\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "SHOP",
+            "AMZN",
+            "EBAY",
+            "ETSY"
+          ],
+          "tickers_preview_more": null,
+          "group_slug": "retail-shopping"
+        },
+        {
+          "slug": "software-24-database-management",
+          "name": "Software '24: Database Management",
+          "group_name": "Software",
+          "year_suffix": 24,
+          "return_1m": 3.94,
+          "hits_14d": 33,
+          "latest_at": "2026-09-22T15:11:15+00:00",
+          "score": 202.377,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Revealed: Some of the Oracle cloud roles hit hardest in layoffs",
+              "url": "https://www.businessinsider.com/oracle-cloud-layoffs-america-roles-hit-hardest-leaked-doc-2026-9",
+              "published_at": "2026-09-22T15:11:15",
+              "source_name": "Business Insider",
+              "snippet": "A leaked document has provided the clearest picture yet of how Oracle's latest layoffs have reorganized its vitally important cloud business.\n\nOracle began a new round of layoffs last week as the tech giant continues\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Top Wall Street analysts find these 3 stocks attractive as long-term investments",
+              "url": "https://www.cnbc.com/2026/09/20/top-wall-street-analysts-find-these-3-stocks-attractive-as-long-term-investments.html",
+              "published_at": "2026-09-20T12:01:35",
+              "source_name": "CNBC",
+              "snippet": "Follow your favorite stocksCREATE FREE ACCOUNT\n\nSignage outside the Meta store in Burlingame, California, July 27, 2026.\n\nDavid Paul Morris | Bloomberg | Getty Images\n\nInvestors have been grappling with stock market v\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Accenture musters 1K forward deployed engineers to staff Gemini Enterprise business group",
+              "url": "https://www.ciodive.com/news/accenture-google-cloud-gemini-enterprise-forward-deployed-engineers/829988/",
+              "published_at": "2026-09-10T00:00:00",
+              "source_name": "CIO Dive",
+              "snippet": "The consulting firm is expanding an existing Google Cloud practice with agentic AI adoption in mind.\n\n* Accenture rolled out a Gemini Enterprise business group with the goal of adding 1,000 forward deployed engineers\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "ORCL",
+            "SAP",
+            "ESTC",
+            "GOOG"
+          ],
+          "tickers_preview_more": 3,
+          "group_slug": "software"
+        },
+        {
+          "slug": "world-cup-26-world-cup-sponsors",
+          "name": "World Cup '26: World Cup Sponsors",
+          "group_name": "World Cup",
+          "year_suffix": 26,
+          "return_1m": -5.32,
+          "hits_14d": 11,
+          "latest_at": "2026-09-23T18:50:52+00:00",
+          "score": 191.0,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Here Are the Evening News Ratings for the 2025-2026 TV Season",
+              "url": "https://www.adweek.com/tvnewser/here-are-the-evening-news-ratings-for-the-2025-2026-tv-season/",
+              "published_at": "2026-09-23T18:50:52",
+              "source_name": "Adweek",
+              "snippet": "ABC World News Tonight with David Muir finished the 2025-2026 TV broadcast season as America's most-watched newscast in total viewers and the Adults 25-54 demo.\n\nThe close of the broadcast season also marked a key mil\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "We tried the same McDonald's meal in the US and the UK. They were the same price, but one was a better value.",
+              "url": "https://www.businessinsider.com/same-mcdonalds-meal-us-vs-uk-review-prices-photos-2026-9",
+              "published_at": "2026-09-23T15:08:09",
+              "source_name": "Business Insider",
+              "snippet": "McDonald's may be a globally recognized brand, but ordering the same meal on opposite sides of the Atlantic can feel like a completely different experience.\n\nWe tried similar McDonald's meals in New York City and Lond\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "I tried chicken tenders from 14 fast-food chains. The crispiest, juiciest tenders won me over.",
+              "url": "https://www.businessinsider.com/fast-food-chicken-tenders-ranked",
+              "published_at": "2026-09-22T12:48:02",
+              "source_name": "Business Insider",
+              "snippet": "It seems like every chain wants a piece of the dunkable-chicken craze.\n\nMcDonald's launched its McCrispy Strips in May 2025, marking the first time chicken strips had been on its menu since the COVID-19 pandemic.\n\nThe\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "FOX",
+            "0992.HK",
+            "2319.HK",
+            "ADS.XETRA"
+          ],
+          "tickers_preview_more": 8,
+          "group_slug": "world-cup"
+        },
+        {
+          "slug": "recreation-26-experience-economy",
+          "name": "Recreation '26: Experience Economy",
+          "group_name": "Recreation",
+          "year_suffix": 26,
+          "return_1m": -7.22,
+          "hits_14d": 12,
+          "latest_at": "2026-09-21T15:08:18+00:00",
+          "score": 187.22,
+          "trending_boost": true,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Josephine Vaccarello Named President of MSG Entertainment",
+              "url": "https://www.billboard.com/pro/josephine-vaccarello-president-of-msg-entertainment/",
+              "published_at": "2026-09-21T15:08:18",
+              "source_name": "Billboard",
+              "snippet": "Madison Square Garden Entertainment Corp. (MSG Entertainment) has promoted Josephine Vaccarello to president.\n\nVaccarello will oversee strategy and operations across several areas of MSG Entertainment, which operates\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Inside Stephen Antonakos's Neon-Lit SoHo Apartment",
+              "url": "https://www.nytimes.com/2026/09/21/t-magazine/stephen-antonakos-neon-sculpture-nyc-home.html",
+              "published_at": "2026-09-21T09:01:45",
+              "source_name": "The New York Times",
+              "snippet": "ONE EVENING IN the late 1950s in New York City, the artist Stephen Antonakos left his West 29th Street studio and began to walk downtown toward his apartment. As the story goes, at some point during this walk he had a\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Safety first as mixed martial arts grapples for recognition at Asian Games",
+              "url": "https://www.reuters.com/sports/safety-first-mixed-martial-arts-grapples-recognition-asian-games-2026-09-21/",
+              "published_at": "2026-09-21T06:27:11",
+              "source_name": "Reuters",
+              "snippet": "NAGOYA, Japan, Sept 21 (Reuters) - With no cage, no elbows and no appetite for blood on the mat, the Asian Games' mixed martial arts competition is not quite the visceral experience of a UFC fight night.\n\nThe athletes\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "IMAX",
+            "TKO",
+            "FWONK",
+            "LYV"
+          ],
+          "tickers_preview_more": 14,
+          "group_slug": "recreation"
+        },
+        {
+          "slug": "ai-power-26-power-ecosystem-enablers",
+          "name": "AI Power '26: Power Ecosystem & Enablers",
+          "group_name": "AI Power",
+          "year_suffix": 26,
+          "return_1m": 5.89,
+          "hits_14d": 15,
+          "latest_at": "2026-09-23T15:17:30+00:00",
+          "score": 180.0,
+          "trending_boost": false,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Italy clears path for nuclear power revival",
+              "url": "https://www.ft.com/content/c5215e50-446c-45e5-a2ec-36e3e30d0310",
+              "published_at": "2026-09-23T15:17:30",
+              "source_name": "Financial Times News",
+              "snippet": "Prime Minister Giorgia Meloni's drive to revive Italy's long-defunct nuclear power sector took a significant step forward on Wednesday, as parliament gave final approval to a law that will pave the way for a new gener\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "The Robot in the Supply Chain",
+              "url": "https://www.digitimes.com/news/a20260922PR202/beijing-supply-technology.html?chid=9",
+              "published_at": "2026-09-23T00:00:00",
+              "source_name": "DIGITIMES",
+              "snippet": "Fusion Worldwide: The Robot in the Supply Chain. Credit: Fusion Worldwide\n\nBeijing's second annual World Humanoid Robot Games offered a vivid preview of where this technology race is headed. Over five days, more than\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "A $50 Billion IPO Is Good News for America's Nuclear Rebirth",
+              "url": "https://www.bloomberg.com/opinion/articles/2026-09-22/with-westinghouse-us-s-nuclear-champion-follows-an-old-playbook",
+              "published_at": "2026-09-22T09:30:04",
+              "source_name": "Bloomberg Business",
+              "snippet": "For all the buzz of small modular reactors and artificial intelligence hyperscalers, the rebirth of the US nuclear power industry looks increasingly old-school. Westinghouse Electric Co. is reportedly set to soon file\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "AIXA.XETRA",
+            "6971.T",
+            "LFUS",
+            "ACLS"
+          ],
+          "tickers_preview_more": 8,
+          "group_slug": "ai-power"
+        },
+        {
+          "slug": "airplanes-26-aircraft-components-systems",
+          "name": "Airplanes '26: Aircraft Components & Systems",
+          "group_name": "Airplanes",
+          "year_suffix": 26,
+          "return_1m": -5.62,
+          "hits_14d": 23,
+          "latest_at": "2026-09-23T17:45:50+00:00",
+          "score": 180.0,
+          "trending_boost": false,
+          "top_story": false,
+          "top_story_match": 0.0,
+          "headlines": [
+            {
+              "title": "Electric aircraft startup Beta Technologies considers growth in North Carolina",
+              "url": "https://www.axios.com/local/raleigh/2026/09/23/beta-technologies-considers-large-expansion-in-north-carolina",
+              "published_at": "2026-09-23T17:45:50",
+              "source_name": "Axios",
+              "snippet": "That gives North Carolina an edge, Clark said, but the company is still early in the process of site visits and determining the scale of a potential project. Other states could still come into play.\n\nDriving the news:\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "GASCA Prepares For Nacelle MRO Growth | Aviation Week",
+              "url": "https://aviationweek.com/mro/aircraft-propulsion/gasca-prepares-nacelle-mro-growth",
+              "published_at": "2026-09-23T09:11:04",
+              "source_name": "Aviation Week",
+              "snippet": "SINGAPORE -- Collins Aerospace's Singapore-based nacelle repair business expects its MRO activity to grow by approximately 30% over the next five years as more aircraft in the Asia-Pacific region reach major nacelle m\u2026",
+              "pub_list_hit": true
+            },
+            {
+              "title": "Europe's Clean Aviation Bolsters Next-Generation Regional Research | Aviation Week",
+              "url": "https://aviationweek.com/air-transport/aircraft-propulsion/europes-clean-aviation-bolsters-next-generation-regional-research",
+              "published_at": "2026-09-22T19:30:14",
+              "source_name": "Aviation Week",
+              "snippet": "WASHINGTON -- ATR's plans for a next-generation regional airliner may still be in flux, but the European Union (EU) is putting in place the final pieces of a multi-year effort to develop technologies for the aircraft\u2026",
+              "pub_list_hit": true
+            }
+          ],
+          "tickers_preview": [
+            "GE",
+            "HWM",
+            "RTX",
+            "SAF.PA"
+          ],
+          "tickers_preview_more": null,
+          "group_slug": "airplanes"
+        }
+      ]
+    }
+  ],
+  "meta": {
+    "themes_scored": 61,
+    "themes_after_group_diversity": 15,
+    "trending_boosted": 8,
+    "top_stories_mapped": 3,
+    "top_stories_fetched": 12,
+    "rules_version": "radar_news.v0.rules.13"
+  }
+}

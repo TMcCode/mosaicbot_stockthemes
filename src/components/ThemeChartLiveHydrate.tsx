@@ -24,8 +24,10 @@ import { useLiveThemeDetailPrices } from "@/hooks/useLiveThemeDetailPrices";
 import { groupCompositionNeedsLiveRefresh } from "@/lib/chart1yRenderable";
 import { priceReturnMetric } from "@/lib/constituentPriceReturns";
 import {
+  etSessionIsoDay,
   extendCompositionIndexedWithLiveDayReturns,
   liveDayReturnsStructuralKey,
+  maybeExtendIndexedPerformanceFromLiveDayReturn,
 } from "@/lib/extendCompositionLiveTail";
 import {
   stockthemesLiveChartPerformanceEnabled,
@@ -175,6 +177,15 @@ export function ThemeChartLiveHydrate({
   }, [liveDetail?.constituents, chartJsonFolder]);
   const liveDayReturnsKey = liveDayReturnsStructuralKey(liveDayReturnPctByTicker);
 
+  /** Theme-level live 1D from price_returns sidecar (compare_returns) — chart sidecars can lag. */
+  const liveThemeDayReturnPct = useMemo(() => {
+    if (!stockthemesLivePriceReturnsEnabled() || chartJsonFolder !== "themes") {
+      return null;
+    }
+    const raw = liveDetail?.compare_returns?.metrics?.["1D"];
+    return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+  }, [liveDetail?.compare_returns?.metrics, chartJsonFolder]);
+
   const chart1y = useMemo(() => {
     const sc = serverChartRef.current;
     const fd = fetchedRef.current;
@@ -195,17 +206,29 @@ export function ThemeChartLiveHydrate({
         base = { ...base, performance: sanitizedLive } satisfies ThemeChart1yV0;
       }
     }
+    // Prefer ET "today" so we refresh a flat same-day CDN tail from live 1D (overlay parity).
     const sessionIso =
-      base?.performance?.dates?.at(-1) ??
-      livePerformance?.dates?.at(-1) ??
+      etSessionIsoDay() ||
+      base?.performance?.dates?.at(-1) ||
+      livePerformance?.dates?.at(-1) ||
       sc?.performance?.dates?.at(-1);
+    if (base?.performance && liveThemeDayReturnPct != null && sessionIso) {
+      const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
+        base.performance,
+        sessionIso,
+        liveThemeDayReturnPct,
+      );
+      if (extended && extended !== base.performance) {
+        base = { ...base, performance: extended } satisfies ThemeChart1yV0;
+      }
+    }
     return extendCompositionIndexedWithLiveDayReturns(
       base,
       liveDayReturnPctByTicker,
       sessionIso,
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
-  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey]);
+  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey, liveThemeDayReturnPct]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(

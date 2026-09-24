@@ -10,9 +10,15 @@
 const ALLOWED_ORIGINS = new Set([
   "https://stockthemes.ai",
   "https://www.stockthemes.ai",
+  "https://stockcontext.info",
+  "https://www.stockcontext.info",
   "https://tmccode.github.io",
   "http://localhost:3000",
   "http://127.0.0.1:3000",
+  "http://localhost:3001",
+  "http://127.0.0.1:3001",
+  "http://localhost:3002",
+  "http://127.0.0.1:3002",
 ]);
 
 function corsHeaders(request) {

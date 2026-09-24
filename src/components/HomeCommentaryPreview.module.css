@@ -117,6 +117,60 @@
   margin: 0;
 }
 
+.photoGrid {
+  display: grid;
+  width: 100%;
+  height: 7.5rem;
+  gap: 2px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--button-secondary-border);
+  flex: 0 0 auto;
+}
+
+.photoGrid.count1 {
+  grid-template-columns: 1fr;
+}
+
+.photoGrid.count2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.photoGrid.count3,
+.photoGrid.count4 {
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+}
+
+.photoCell {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+  background: #0a0a0a;
+}
+
+.photoCell img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.linkRow {
+  margin: 0;
+}
+
+.extLink {
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  word-break: break-word;
+}
+
+.extLink:hover {
+  text-decoration: underline;
+}
+
 .imageLink {
   font-size: 12px;
   color: var(--accent);

@@ -31,3 +31,30 @@ export function trendingReturnHeatStyle(value: number): { backgroundColor: strin
   const b = Math.round(255 * (1 - ratio));
   return { backgroundColor: `rgb(${r}, ${g}, ${b})`, color: "#1a1a1a" };
 }
+
+function parseRgb(color: string): { r: number; g: number; b: number } | null {
+  const m = /^rgb\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)$/i.exec(color.trim());
+  if (!m) return null;
+  return { r: Number(m[1]), g: Number(m[2]), b: Number(m[3]) };
+}
+
+/**
+ * Soft full-card wash from the same heat ramp (no extra network / layout work).
+ * Used by Narrative Radar home cards from already-baked ``return_1m``.
+ */
+export function trendingReturnCardGradientStyle(
+  value: number,
+): { backgroundImage: string } | undefined {
+  if (!Number.isFinite(value)) return undefined;
+  const { backgroundColor } = trendingReturnHeatStyle(value);
+  const rgb = parseRgb(backgroundColor);
+  if (!rgb) return undefined;
+  const { r, g, b } = rgb;
+  // Keep text readable on dark/light cards: tint only, don't flood.
+  const strong = Math.min(0.34, 0.12 + Math.min(1, Math.abs(value) / 25) * 0.22);
+  const mid = strong * 0.45;
+  return {
+    backgroundImage: `linear-gradient(155deg, rgba(${r},${g},${b},${strong.toFixed(3)}) 0%, rgba(${r},${g},${b},${mid.toFixed(3)}) 42%, transparent 78%)`,
+    // Border stays in CSS so `.card:hover` can highlight clickability.
+  };
+}

@@ -1,18 +1,15 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
 import { BackToTop } from "@/components/BackToTop";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
-import { SignupGiveawayBanner } from "@/components/SignupGiveawayBanner";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteNav } from "@/components/SiteNav";
 import { SupabaseAuthProvider } from "@/components/SupabaseAuthProvider";
 import { WatchlistProvider } from "@/components/WatchlistProvider";
 import { ThemeRoot } from "@/components/ThemeRoot";
-import { themeInitScriptContent } from "@/lib/themeStorage";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
@@ -67,12 +64,15 @@ export default async function RootLayout({
     !staticPagesBuild &&
     Boolean(process.env.BEEHIIV_API_KEY?.trim() && process.env.BEEHIIV_PUBLICATION_ID?.trim());
 
+  // Share cached manifest with page RSCs — do not probe optional
+  // manifest_meta.v0.json here (unpublished → multi-second R2+CDN 404s per request).
   const { manifest } = await getManifestCached();
 
   return (
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
+      data-theme="light"
       suppressHydrationWarning
     >
       <head>
@@ -80,11 +80,6 @@ export default async function RootLayout({
         <link rel="dns-prefetch" href={STOCKTHEMES_PUBLIC_BASE_URL} />
       </head>
       <body>
-        <Script
-          id="stockthemes-theme-init"
-          strategy="beforeInteractive"
-          dangerouslySetInnerHTML={{ __html: themeInitScriptContent() }}
-        />
         {/* <AdSenseGlobalScript /> */}
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>
@@ -92,7 +87,6 @@ export default async function RootLayout({
               <ThemeRoot>
                 <BackToTop />
                 <SiteNav />
-                <SignupGiveawayBanner />
                 {children}
                 <SiteFooter dataAsOf={manifest.as_of} />
               </ThemeRoot>

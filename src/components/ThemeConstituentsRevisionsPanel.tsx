@@ -25,6 +25,7 @@ import {
   REVENUE_STAT_ROW_LABELS,
   revenueCellClass,
   revenueCellValue,
+  revenueGroupStartColumnIds,
   revenueStatValue,
   type RevenueStatRowKey,
 } from "@/lib/themeRevenue";
@@ -125,6 +126,15 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
   const summary = data.summary_revisions ?? ({} as ThemeRevenueRevisionsV0);
   const analystsCol = columns.find((c) => c.id === "rev_analysts");
   const metricColumns = columns.filter((c) => c.id !== "rev_analysts");
+  const groupStartIds = revenueGroupStartColumnIds(REVENUE_REVISION_GROUPS);
+
+  const metricCellClass = (colId: string, tone?: string) => {
+    const parts = [tableStyles.metricCol];
+    if (groupStartIds.has(colId)) parts.push(tableStyles.metricGroupStart);
+    if (tone === "pos") parts.push(tableStyles.revenuePos);
+    if (tone === "neg") parts.push(tableStyles.revenueNeg);
+    return parts.join(" ");
+  };
 
   return (
     <div className={styles.tableWrap}>
@@ -137,18 +147,29 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
       >
         <div className={styles.constituentsTableSizer}>
           <table className={styles.dataTable}>
+            <colgroup>
+              <col className={tableStyles.companyCol} />
+              {hasWeight ? <col className={tableStyles.metaCol} /> : null}
+              {analystsCol ? <col className={tableStyles.analystsCol} /> : null}
+              {metricColumns.map((col) => (
+                <col key={col.id} className={tableStyles.metricCol} />
+              ))}
+            </colgroup>
             <thead>
               <tr>
-                <th scope="col" rowSpan={2}>
+                <th
+                  scope="col"
+                  className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}
+                >
                   {renderSortHead("company", "Company")}
                 </th>
                 {hasWeight ? (
-                  <th scope="col" rowSpan={2}>
+                  <th scope="col" className={tableStyles.metaCol}>
                     {renderSortHead("weight", "Wgt")}
                   </th>
                 ) : null}
                 {analystsCol ? (
-                  <th scope="col" rowSpan={2}>
+                  <th scope="col" className={tableStyles.analystsCol}>
                     {renderSortHead(
                       analystsCol.id,
                       analystsCol.label.split("\n").map((line, i) => (
@@ -160,21 +181,8 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                     )}
                   </th>
                 ) : null}
-                {REVENUE_REVISION_GROUPS.map((group) => (
-                  <th
-                    key={group.id}
-                    scope="colgroup"
-                    colSpan={group.columnIds.length}
-                    className={tableStyles.revisionGroupHead}
-                    title={group.title}
-                  >
-                    {group.label}
-                  </th>
-                ))}
-              </tr>
-              <tr>
                 {metricColumns.map((col) => (
-                  <th key={col.id} scope="col">
+                  <th key={col.id} scope="col" className={metricCellClass(col.id)}>
                     {renderSortHead(
                       col.id,
                       col.label.split("\n").map((line, i) => (
@@ -191,7 +199,7 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
             <tbody>
               {sortedRows.map((row) => (
                 <tr key={row.ticker}>
-                  <td>
+                  <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                     <div className={styles.companyCell}>
                       <ConstituentLogo ticker={row.ticker} />
                       <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
@@ -199,20 +207,21 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                     </div>
                   </td>
                   {hasWeight ? (
-                    <td>{row.weight != null ? formatWeight(row.weight) : "—"}</td>
+                    <td className={tableStyles.metaCol}>
+                      {row.weight != null ? formatWeight(row.weight) : "—"}
+                    </td>
                   ) : null}
                   {columns.map((col) => {
                     const value = revenueCellValue(undefined, col, "growth", row.revenue.revisions);
                     const cls = revenueCellClass(value, col);
+                    const isMetric = col.id !== "rev_analysts";
                     return (
                       <td
                         key={col.id}
                         className={
-                          cls === "pos"
-                            ? tableStyles.revenuePos
-                            : cls === "neg"
-                              ? tableStyles.revenueNeg
-                              : undefined
+                          isMetric
+                            ? metricCellClass(col.id, cls)
+                            : tableStyles.analystsCol
                         }
                       >
                         {formatRevenueCell(value, col, "growth")}
@@ -222,16 +231,20 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                 </tr>
               ))}
               <tr className={tableStyles.themeReturnRow}>
-                <td>
+                <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                   <strong className={tableStyles.themeReturnLabel} title="Manual theme-weight revision aggregate">
                     Theme revisions
                   </strong>
                 </td>
-                {hasWeight ? <td>—</td> : null}
+                {hasWeight ? <td className={tableStyles.metaCol}>—</td> : null}
                 {columns.map((col) => {
                   const value = col.revisionKey ? summary[col.revisionKey] : null;
+                  const isMetric = col.id !== "rev_analysts";
                   return (
-                    <td key={col.id}>
+                    <td
+                      key={col.id}
+                      className={isMetric ? metricCellClass(col.id) : tableStyles.analystsCol}
+                    >
                       <strong>{formatRevenueCell(value, col, "growth")}</strong>
                     </td>
                   );
@@ -239,14 +252,18 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
               </tr>
               {STAT_ROWS.map((rowKey) => (
                 <tr key={rowKey}>
-                  <td>
+                  <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                     <strong>{REVENUE_STAT_ROW_LABELS[rowKey]}</strong>
                   </td>
-                  {hasWeight ? <td>—</td> : null}
+                  {hasWeight ? <td className={tableStyles.metaCol}>—</td> : null}
                   {columns.map((col) => {
                     const value = revenueStatValue(statsBlock, rowKey, col, "growth");
+                    const isMetric = col.id !== "rev_analysts";
                     return (
-                      <td key={col.id}>
+                      <td
+                        key={col.id}
+                        className={isMetric ? metricCellClass(col.id) : tableStyles.analystsCol}
+                      >
                         <strong>
                           {rowKey === "positive_tickers_pct" && value != null
                             ? `${Math.round(value)}%`

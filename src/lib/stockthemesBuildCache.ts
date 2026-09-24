@@ -171,6 +171,11 @@ export async function invalidateDevDiskCache(relPath: string): Promise<void> {
 export type FetchPublicJsonOptions = {
   /** Skip `.cache/stockthemes-public/` read (still writes on successful CDN/GCS fetch). */
   bypassDevCache?: boolean;
+  /**
+   * Only return a disk/build-cache hit — never hit R2/CDN.
+   * For optional sidecars that may not exist yet (avoids slow 404 storms in next dev).
+   */
+  diskOnly?: boolean;
 };
 
 /**
@@ -206,6 +211,10 @@ export async function fetchPublicJsonText(
     if (devCached !== null) {
       return devCached;
     }
+  }
+
+  if (options?.diskOnly) {
+    throw new Error(`diskOnly miss: ${cacheRelPath}`);
   }
 
   if (devViaGcsEnabled()) {

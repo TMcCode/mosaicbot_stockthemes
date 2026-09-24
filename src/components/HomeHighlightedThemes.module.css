@@ -84,6 +84,18 @@
 
 .footerLink {
   margin-top: 8px;
+  font-size: 13px;
+}
+
+.footerLink a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+.footerLink a:hover {
+  color: var(--text-primary);
 }
 
 :global(.st-theme[data-theme="light"]) .chartWrap {

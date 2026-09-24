@@ -50,6 +50,8 @@ export type ThemeRevenueRevisionsV0 = {
   cy_growth_est_latest_pct?: number | null;
   cy_growth_est_first_pct?: number | null;
   cy_growth_delta_bps?: number | null;
+  cy_growth_est_low_pct?: number | null;
+  cy_growth_est_high_pct?: number | null;
   ny_growth_est_latest_pct?: number | null;
   ny_growth_est_first_pct?: number | null;
   ny_growth_delta_bps?: number | null;

@@ -21,19 +21,45 @@ export type ManifestHomeFeedThesisThemeV0 = {
   slug: string;
 };
 
+/** Baked constituent chip for new-theme / membership feed cards. */
+export type ManifestHomeFeedHoldingV0 = {
+  ticker: string;
+  weight?: number;
+  logo_url?: string;
+  ticker_note?: string;
+  /** Present on membership change rows. */
+  action?: "added" | "removed" | string;
+};
+
 export type ManifestHomeFeedEventV0 = {
-  kind: "theme_new" | "theme_updated" | "theme_weights_updated" | "text_table_update" | "theme_change";
+  kind:
+    | "theme_new"
+    | "theme_updated"
+    | "theme_weights_updated"
+    | "text_table_update"
+    | "theme_change"
+    | "theme_deleted";
   event_at: string;
   title: string;
   summary?: string;
+  /** Theme new_note / update_note, or delete reason. */
   note?: string;
   changes_preview?: string[];
   changes_more_count?: number;
   theme_name?: string;
+  /** Empty for theme_deleted (no public page). */
   theme_slug?: string;
   /** Populated for text_table_update rows; up to 6 themes with slugs for linking. */
   thesis_themes?: ManifestHomeFeedThesisThemeV0[];
   thesis_themes_more_count?: number;
+  /** New theme: top holdings by weight (ETL-baked). */
+  holdings_preview?: ManifestHomeFeedHoldingV0[];
+  holdings_more_count?: number;
+  /** Membership change: added/removed tickers with optional ticker_note. */
+  membership_preview?: ManifestHomeFeedHoldingV0[];
+  membership_more_count?: number;
+  /** Short thesis excerpt for thesis feed cards (ETL-baked). */
+  thesis_preview?: string;
 };
 
 export type ManifestV0 = {

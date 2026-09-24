@@ -38,11 +38,13 @@ export function useStockthemesTheme(): ThemeContextValue {
 }
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  // Match SSR default; sync from layout init script + storage before paint (avoids hydration mismatch).
+  // Match SSR default (`data-theme="light"` on <html>); sync from storage before paint.
   const [theme, setTheme] = useState<StockthemesTheme>("light");
 
   useLayoutEffect(() => {
-    setTheme(resolveThemePreference());
+    const next = resolveThemePreference();
+    applyThemeToDocument(next);
+    setTheme(next);
   }, []);
 
   useEffect(() => {

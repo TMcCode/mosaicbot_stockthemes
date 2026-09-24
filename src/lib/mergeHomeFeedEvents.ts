@@ -10,10 +10,18 @@ function lifecycleFeedKey(evt: ManifestHomeFeedEventV0): string {
   return `${evt.kind}:${normThemeName(evt.theme_name)}`;
 }
 
-function parseTs(iso: string | undefined): number | null {
-  if (!iso) return null;
-  const ts = Date.parse(iso);
-  return Number.isFinite(ts) ? ts : null;
+/**
+ * Membership chips need ``membership_preview`` and/or parseable
+ * ``"AAPL added"`` / ``"XYZ removed"`` phrases. Metadata-only updates
+ * (and catalog ``updated_at`` fallbacks) have neither — UI would show an
+ * empty "Membership Updated" card.
+ */
+export function themeUpdatedHasMembershipChips(e: ManifestHomeFeedEventV0): boolean {
+  if (Array.isArray(e.membership_preview) && e.membership_preview.length > 0) {
+    return true;
+  }
+  const phrases = Array.isArray(e.changes_preview) ? e.changes_preview : [];
+  return phrases.some((x) => /\b(added|removed)\b/i.test(String(x || "")));
 }
 
 /** Exclude noisy LLM batch Group Overview lines from the public feed (matches ETL filter). */
@@ -23,10 +31,55 @@ function isGroupOverviewTextTableNoise(e: ManifestHomeFeedEventV0): boolean {
   return blob.includes("group overview");
 }
 
+/** Thesis feed rows: BullBearDetails, or legacy consolidated theme ``text tables updated``. */
+function isThesisTextTableEvent(e: ManifestHomeFeedEventV0): boolean {
+  if (e.kind !== "text_table_update") return false;
+  const title = String(e.title || "").trim();
+  const summary = String(e.summary || "").trim();
+  const blob = `${title} ${summary}`.toLowerCase().replace(/_/g, " ");
+  if (blob.includes("thesis updated")) return true;
+  if (blob.replace(/\s+/g, "").includes("bullbeardetails") || blob.includes("bull bear details")) {
+    return true;
+  }
+  // After ETL consolidate, table name is stripped → ``Theme — text tables updated``.
+  // Theme display names almost always include a year marker ('24) and/or a colon subtheme.
+  if (/—\s*text tables updated$/i.test(title)) {
+    const theme = String(e.theme_name || title.split("—")[0] || "").trim();
+    if (/['’']\d{2}\b/.test(theme) || theme.includes(":")) return true;
+  }
+  return false;
+}
+
+/** Thesis cards show current prose — keep one row per theme (newest event_at). */
+function keepLatestThesisPerTheme(events: ManifestHomeFeedEventV0[]): ManifestHomeFeedEventV0[] {
+  const sorted = [...events].sort((a, b) =>
+    String(b.event_at).localeCompare(String(a.event_at)),
+  );
+  const out: ManifestHomeFeedEventV0[] = [];
+  const seen = new Set<string>();
+  for (const e of sorted) {
+    if (e.kind !== "text_table_update") {
+      out.push(e);
+      continue;
+    }
+    const slug = String(e.theme_slug || "").trim().toLowerCase();
+    const name = normThemeName(e.theme_name).toLowerCase();
+    const key = slug || name;
+    if (!key) {
+      out.push(e);
+      continue;
+    }
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(e);
+  }
+  return out;
+}
+
 /**
- * Lifecycle (theme_new / theme_updated) from manifest lists, enriched by ETL. Non-lifecycle
- * rows from ETL are text-table updates and theme_weights_updated (no renames / theme_change;
- * Group Overview out).
+ * Lifecycle (theme_new / theme_updated) from manifest lists, enriched by ETL.
+ * Non-lifecycle rows from ETL are thesis text-table updates (Group Overview out;
+ * hollow theme_weights_updated excluded).
  */
 export type MergeHomeFeedEventsOptions = {
   /** Ticker → theme display names (from search index); used to group thesis rows by theme. */
@@ -91,6 +144,10 @@ export function mergeHomeFeedEvents(
       note: en.note ?? b.note,
       changes_preview: en.changes_preview ?? b.changes_preview,
       changes_more_count: en.changes_more_count ?? b.changes_more_count,
+      holdings_preview: en.holdings_preview ?? b.holdings_preview,
+      holdings_more_count: en.holdings_more_count ?? b.holdings_more_count,
+      membership_preview: en.membership_preview ?? b.membership_preview,
+      membership_more_count: en.membership_more_count ?? b.membership_more_count,
     };
   });
 
@@ -101,69 +158,40 @@ export function mergeHomeFeedEvents(
     if (!baseKeys.has(lifecycleFeedKey(e))) orphanLifecycle.push(e);
   }
 
+  const deleted = etl.filter((e) => e.kind === "theme_deleted");
+
   const nonLifecycleRaw = etl.filter((e) => {
-    if (e.kind === "theme_weights_updated") return true;
-    return e.kind === "text_table_update" && !isGroupOverviewTextTableNoise(e);
+    // Weight-only rows have no add/remove chips — hide from public feed.
+    if (e.kind === "theme_weights_updated") return false;
+    return (
+      e.kind === "text_table_update" &&
+      !isGroupOverviewTextTableNoise(e) &&
+      isThesisTextTableEvent(e)
+    );
   });
   const themeSlugByName = new Map<string, string>();
   for (const [name, t] of themeByName) {
     const slug = String(t.slug || "").trim();
     if (name && slug) themeSlugByName.set(name, slug);
   }
-  const nonLifecycle = enrichThesisFeedThemes(
-    consolidateTextTableFeedEvents(nonLifecycleRaw, themeSlugByName, options?.tickerToThemeNames),
-    themeSlugByName,
-    options?.tickerToThemeNames,
+  const nonLifecycle = keepLatestThesisPerTheme(
+    enrichThesisFeedThemes(
+      consolidateTextTableFeedEvents(nonLifecycleRaw, themeSlugByName, options?.tickerToThemeNames),
+      themeSlugByName,
+      options?.tickerToThemeNames,
+    ),
   );
 
-  const combined = [...mergedLifecycle, ...orphanLifecycle, ...nonLifecycle];
+  const combined = [...mergedLifecycle, ...orphanLifecycle, ...deleted, ...nonLifecycle];
 
-  // Fallback feed synthesis: if ETL home_feed_events lags, derive recent events from manifest theme timestamps.
-  const dedupe = new Set(combined.map(lifecycleFeedKey));
-  const now = Date.now();
-  const recentWindowMs = 45 * 24 * 60 * 60 * 1000;
-  for (const t of manifest.themes ?? []) {
-    const themeName = String(t.name || "").trim();
-    if (!themeName) continue;
-    const themeSlug = String(t.slug || "").trim() || (themeByName.get(themeName)?.slug ?? "");
+  // Do not synthesize hollow ``theme_weights_updated`` from catalog timestamps —
+  // those cards have no changed-weight chips and clutter the feed.
 
-    const contentTs = parseTs(t.updated_at);
-    if (contentTs && now - contentTs >= 0 && now - contentTs <= recentWindowMs) {
-      const evt: ManifestHomeFeedEventV0 = {
-        kind: "theme_updated",
-        event_at: String(t.updated_at),
-        title: `${themeName} - theme updated`,
-        summary: "",
-        theme_name: themeName,
-        theme_slug: themeSlug,
-      };
-      const k = lifecycleFeedKey(evt);
-      if (!dedupe.has(k)) {
-        combined.push(evt);
-        dedupe.add(k);
-      }
-    }
-
-    const weightsTs = parseTs(t.manual_weights_updated_at);
-    if (weightsTs && now - weightsTs >= 0 && now - weightsTs <= recentWindowMs) {
-      const evt: ManifestHomeFeedEventV0 = {
-        kind: "theme_weights_updated",
-        event_at: String(t.manual_weights_updated_at),
-        title: `${themeName} - theme weights updated`,
-        summary: "",
-        theme_name: themeName,
-        theme_slug: themeSlug,
-      };
-      const k = lifecycleFeedKey(evt);
-      if (!dedupe.has(k)) {
-        combined.push(evt);
-        dedupe.add(k);
-      }
-    }
-  }
-
-  combined.sort((a, b) => String(b.event_at).localeCompare(String(a.event_at)));
-  return combined;
+  const filtered = combined.filter(
+    (e) => e.kind !== "theme_updated" || themeUpdatedHasMembershipChips(e),
+  );
+  filtered.sort((a, b) => String(b.event_at).localeCompare(String(a.event_at)));
+  return filtered;
 }
 
 export function isWithinFeedWindow(iso: string | undefined, maxDays: number): boolean {
@@ -175,15 +203,16 @@ export function isWithinFeedWindow(iso: string | undefined, maxDays: number): bo
 }
 
 /**
- * Homepage: pure date-desc order within the rolling time window.
+ * Homepage candidates: date-desc within ``maxDays``, capped at ``maxItems``
+ * (before flipper collapse + home render slice). Pure recency so thesis and
+ * membership both surface when fresh — do not bury thesis under lifecycle.
  */
 export function prioritizeLifecycleHomeFeed(
   events: ManifestHomeFeedEventV0[],
   maxItems: number,
   maxDays: number,
 ): ManifestHomeFeedEventV0[] {
-  const inWin = (e: ManifestHomeFeedEventV0) => isWithinFeedWindow(e.event_at, maxDays);
-  const inWindow = events.filter(inWin);
+  const inWindow = events.filter((e) => isWithinFeedWindow(e.event_at, maxDays));
   const sortDesc = (a: ManifestHomeFeedEventV0, b: ManifestHomeFeedEventV0) =>
     String(b.event_at).localeCompare(String(a.event_at));
   inWindow.sort(sortDesc);

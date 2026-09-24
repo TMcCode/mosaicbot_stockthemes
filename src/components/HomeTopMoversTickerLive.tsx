@@ -7,12 +7,17 @@ import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { pickTopMoversWithLiveBundle } from "@/lib/mergeLiveCompareData";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import type { CompareThemesV0 } from "@/types/compare_themes.v0";
+import type { HomeTopMoversV0 } from "@/types/home_top_movers.v0";
 
 type Props = {
   items: TopMoverTickerItem[];
   period?: TopMoverTickerPeriod;
   asOfLabel?: string;
   tickerPerformanceAsOf?: string;
+  /** SSR compare — when fresh, skips immediate ~1MB client refetch. */
+  serverCompare?: CompareThemesV0 | null;
+  serverTopMovers?: HomeTopMoversV0 | null;
 };
 
 export function HomeTopMoversTickerLive({
@@ -20,9 +25,13 @@ export function HomeTopMoversTickerLive({
   period,
   asOfLabel,
   tickerPerformanceAsOf,
+  serverCompare = null,
+  serverTopMovers = null,
 }: Props) {
-  const { topMoversBundle, compareBundle, liveTickerPerformanceAsOf } =
-    useLiveCompareBundles(null, null);
+  const { topMoversBundle, compareBundle, liveTickerPerformanceAsOf } = useLiveCompareBundles(
+    serverCompare,
+    serverTopMovers,
+  );
   const liveItems = useMemo(() => {
     if (!period) return items;
     const fromBundle = pickTopMoversWithLiveBundle(

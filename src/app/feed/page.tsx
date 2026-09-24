@@ -1,22 +1,35 @@
 import Link from "next/link";
 import type { Metadata } from "next";
 
+import { FeedProgressiveList } from "@/components/FeedProgressiveList";
+import { PageSurface } from "@/components/PageSurface";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import {
-  FEED_PAGE_INTRO_LEAD,
+  FEED_PAGE_INTRO_SECONDARY,
+  FEED_PAGE_PUNCHLINE,
   FEED_PAGE_TITLE,
   feedPageMetadataDescription,
 } from "@/lib/feedPageCopy";
 import { getManifestCached } from "@/lib/getManifestCached";
-import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
-import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
-import { buildTickerToThemeNamesMap } from "@/lib/loadSearchIndex";
+import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
 import { mergeHomeFeedEvents, prioritizeLifecycleFeedFull } from "@/lib/mergeHomeFeedEvents";
+import { collapseFeedGroupFlippers } from "@/lib/collapseFeedGroupFlippers";
+import {
+  buildFeedThemeMetaBySlug,
+  feedSectorOptionsFromEvents,
+  slimFeedThemeMetaForSlots,
+} from "@/lib/buildFeedThemeMeta";
+import { buildThesisBySlugFromBundles } from "@/lib/buildThesisBySlug";
+import { filterFeedEventsWithThesisText } from "@/lib/hydrateFeedThesis";
+import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
+import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
-import type { ManifestHomeFeedEventV0 } from "@/types/manifest.v0";
 
-import styles from "./page.module.css";
-import { PageSurface } from "@/components/PageSurface";
+import styles from "../page.module.css";
+import feedStyles from "./page.module.css";
+
+/** First paint — rest mount via DeferRender + scroll sentinel. */
+const FEED_INITIAL_VISIBLE = 8;
 
 export const metadata: Metadata = buildPageMetadata({
   title: FEED_PAGE_TITLE,
@@ -24,167 +37,77 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/feed",
 });
 
-function fmtFeedDate(iso?: string): string {
-  if (!iso) return "";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString(undefined, { month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" });
-}
-
-function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
-  const title = String(evt.title || "").trim();
-  if (evt.kind === "theme_new" && title.toLowerCase().endsWith(" - new theme")) {
-    return title.slice(0, -(" - new theme".length));
-  }
-  if (evt.kind === "theme_updated" && title.toLowerCase().endsWith(" - theme updated")) {
-    return title.slice(0, -(" - theme updated".length));
-  }
-  if (evt.kind === "theme_weights_updated" && title.toLowerCase().endsWith(" - theme weights updated")) {
-    return title.slice(0, -(" - theme weights updated".length));
-  }
-  return title;
-}
-
-function feedChangesText(evt: ManifestHomeFeedEventV0): string {
-  const raw = Array.isArray(evt.changes_preview)
-    ? evt.changes_preview.map((x) => String(x || "").trim()).filter(Boolean)
-    : [];
-  const more = Number.isFinite(evt.changes_more_count) ? Number(evt.changes_more_count) : 0;
-  if (!raw.length && more <= 0) return "";
-
-  const added: string[] = [];
-  const removed: string[] = [];
-  const other: string[] = [];
-  for (const item of raw) {
-    const m = item.match(/^(.+?)\s+(added|removed)$/i);
-    if (!m) {
-      other.push(item);
-      continue;
-    }
-    const ticker = String(m[1] || "").trim();
-    const action = String(m[2] || "").toLowerCase();
-    if (!ticker) continue;
-    if (action === "added") added.push(ticker);
-    else if (action === "removed") removed.push(ticker);
-    else other.push(item);
-  }
-
-  const parts: string[] = [];
-  if (removed.length) parts.push(`${removed.join(", ")} removed`);
-  if (added.length) parts.push(`${added.join(", ")} added`);
-  if (other.length) parts.push(other.join(", "));
-
-  if (more > 0) {
-    if (added.length && !removed.length) {
-      parts.push(`+${more} more added`);
-    } else if (removed.length && !added.length) {
-      parts.push(`+${more} more removed`);
-    } else {
-      parts.push(`+${more} more changes`);
-    }
-  }
-  return parts.join("; ");
-}
-
 export default async function FeedPage() {
-  const [{ manifest }, searchIndexRes] = await Promise.all([
+  const [{ manifest }, homeFeedRes, radarRes, motionsRes] = await Promise.all([
     getManifestCached(),
-    getSearchIndexCached().catch(() => null),
+    getHomeFeedCached().catch(() => null),
+    getHomeRadarCached().catch(() => null),
+    getThemesInMotionCached().catch(() => null),
   ]);
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
-  const etl = Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : [];
-  const tickerToThemeNames = searchIndexRes
-    ? buildTickerToThemeNamesMap(searchIndexRes.index)
-    : undefined;
-  const events = prioritizeLifecycleFeedFull(
-    mergeHomeFeedEvents(manifest, themeByName, etl, { tickerToThemeNames }),
+  const themeMetaAll = buildFeedThemeMetaBySlug(manifest);
+  // Prefer compact home_feed.v0.json (~80–200KB) over manifest-embedded events.
+  const etl =
+    homeFeedRes?.bundle?.events ??
+    (Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : []);
+  const thesisBySlug = buildThesisBySlugFromBundles(
+    radarRes?.bundle ?? null,
+    motionsRes?.bundle ?? null,
   );
-  const asOfIso = manifest.as_of?.trim() || "";
+  // No per-theme detail hydrate here — that was the ~2s click lag. Chips/weights
+  // come from ETL-baked ``membership_preview`` / ``holdings_preview`` (and
+  // ``changes_preview`` parse as fallback). Thesis blurbs from radar/motions.
+  const merged = mergeHomeFeedEvents(manifest, themeByName, etl);
+  const withThesis = filterFeedEventsWithThesisText(merged, thesisBySlug);
+  const events = collapseFeedGroupFlippers(
+    prioritizeLifecycleFeedFull(withThesis),
+    manifest,
+  );
+  const themeMetaBySlug = slimFeedThemeMetaForSlots(themeMetaAll, events);
+  const sectorOptions = feedSectorOptionsFromEvents(events, themeMetaBySlug);
+  const asOfIso =
+    homeFeedRes?.bundle?.as_of?.trim() || manifest.as_of?.trim() || "";
   const publishedLabel = asOfIso ? formatSiteDataPublished(asOfIso) : null;
 
   return (
     <PageSurface>
       <main className={styles.main}>
-        <p className={styles.backLink}>
-          <Link href="/">Back to home</Link>
-        </p>
-        <h1>{FEED_PAGE_TITLE}</h1>
-        <div className={styles.intro}>
-          {FEED_PAGE_INTRO_LEAD.map((paragraph) => (
-            <p key={paragraph.slice(0, 48)} className={styles.introCopy}>
-              {paragraph}
-            </p>
-          ))}
-          <p className={styles.introCopy}>
-            For editorial market notes (not basket changelog entries), see{" "}
-            <Link href="/commentary">market commentary</Link>.
+        <div className={`${styles.intro} ${feedStyles.intro}`}>
+          <p className={styles.eyebrow}>
+            <Link href="/">← Home</Link>
+            {" · "}
+            <Link href="/commentary">Market commentary</Link>
           </p>
+          <h1 className={styles.heroTitle}>{FEED_PAGE_TITLE}</h1>
+          <div className={feedStyles.lede}>
+            <p className={styles.introPunchline}>{FEED_PAGE_PUNCHLINE}</p>
+            <p className={feedStyles.introSecondary}>{FEED_PAGE_INTRO_SECONDARY}</p>
+          </div>
+
+          {events.length === 0 ? (
+            <p className={feedStyles.empty}>No feed events available.</p>
+          ) : (
+            <FeedProgressiveList
+              events={events}
+              themeMetaBySlug={themeMetaBySlug}
+              thesisBySlug={thesisBySlug}
+              sectorOptions={sectorOptions}
+              listClassName={feedStyles.feedList}
+              initialCount={FEED_INITIAL_VISIBLE}
+              batchSize={FEED_INITIAL_VISIBLE}
+              eagerCount={3}
+            />
+          )}
           {publishedLabel ? (
-            <p className={styles.introMeta}>
-              Manifest last published{" "}
+            <p className={feedStyles.feedFootnote}>
+              Published{" "}
               <time dateTime={asOfIso} title="US Eastern (manifest as_of)">
                 {publishedLabel}
               </time>
-              . New feed rows appear after the next data publish.
+              . New rows after the next data publish.
             </p>
           ) : null}
         </div>
-        {events.length === 0 ? (
-          <p className={styles.empty}>No feed events available.</p>
-        ) : (
-          <div className={styles.feedList}>
-            {events.map((evt, idx) => {
-              const slug = String(evt.theme_slug || "").trim();
-              const linkThemeSlug = evt.kind === "text_table_update" ? "" : slug;
-              const displayTitle = cleanFeedTitle(evt);
-              const showThesisThemes =
-                evt.kind === "text_table_update" &&
-                (Boolean(evt.thesis_themes?.length) ||
-                  String(evt.summary || "").trim().startsWith("Themes:"));
-              const changesText = feedChangesText(evt);
-              const noteText = String(evt.note || "").trim();
-              const isThemeLifecycle =
-                evt.kind === "theme_new" ||
-                evt.kind === "theme_updated" ||
-                evt.kind === "theme_weights_updated";
-              const kindLabel =
-                evt.kind === "theme_new"
-                  ? "Theme created"
-                  : evt.kind === "theme_updated"
-                    ? "Theme updated"
-                    : evt.kind === "theme_weights_updated"
-                      ? "Weights updated"
-                      : evt.kind === "text_table_update"
-                        ? "Thesis update"
-                        : "Theme change";
-              return (
-                <article key={`${evt.kind}-${evt.event_at}-${idx}`} className={styles.feedItem}>
-                  <div className={styles.feedDate}>{fmtFeedDate(evt.event_at)}</div>
-                  <div className={styles.feedBody}>
-                    <div className={styles.feedTitleRow}>
-                      {linkThemeSlug ? (
-                        <Link href={`/themes/${linkThemeSlug}`} className={styles.feedTitle}>
-                          {displayTitle}
-                        </Link>
-                      ) : (
-                        <span className={styles.feedTitle}>{displayTitle}</span>
-                      )}
-                      <span className={styles.feedKindInline}>{kindLabel}</span>
-                    </div>
-                    <div className={styles.feedMeta}>
-                      {changesText ? <span className={styles.feedSummary}>{changesText}</span> : null}
-                      {!changesText && showThesisThemes ? <FeedThesisThemesSummary evt={evt} /> : null}
-                      {!changesText && !showThesisThemes && evt.summary && !isThemeLifecycle ? (
-                        <span className={styles.feedSummary}>{evt.summary}</span>
-                      ) : null}
-                    </div>
-                    {noteText ? <div className={styles.feedNote}>{noteText}</div> : null}
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        )}
       </main>
     </PageSurface>
   );

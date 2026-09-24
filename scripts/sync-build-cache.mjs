@@ -51,8 +51,13 @@ const BUNDLE_FILES = [
 ];
 
 /** Not required for CI — published from admin; seed fixture until first publish. */
-const OPTIONAL_BUNDLE_FILES = ["home_commentary.v0.json", "theme_slug_redirects.v0.json"];
+const OPTIONAL_BUNDLE_FILES = [
+  "home_commentary.v0.json",
+  "theme_slug_redirects.v0.json",
+  "newsletter_posts.v0.json",
+];
 const COMMENTARY_FIXTURE = path.join(root, "public", "fixtures", "home_commentary.v0.json");
+const NEWSLETTER_FIXTURE = path.join(root, "public", "fixtures", "newsletter_posts.v0.json");
 const THEME_SLUG_REDIRECTS_FIXTURE = path.join(
   root,
   "public",
@@ -140,6 +145,21 @@ function seedHomeCommentaryFromFixture() {
   fs.copyFileSync(COMMENTARY_FIXTURE, dest);
   console.log(
     "sync-build-cache: home_commentary.v0.json not on bucket yet — using empty fixture (publish from admin when ready)",
+  );
+}
+
+function seedNewsletterPostsFromFixture() {
+  const rel = "newsletter_posts.v0.json";
+  if (cacheFileOk(rel)) return;
+  if (!fs.existsSync(NEWSLETTER_FIXTURE)) {
+    console.warn("sync-build-cache: no newsletter_posts.v0.json on bucket and no fixture to seed");
+    return;
+  }
+  const dest = cachePath(rel);
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  fs.copyFileSync(NEWSLETTER_FIXTURE, dest);
+  console.log(
+    "sync-build-cache: newsletter_posts.v0.json not on bucket yet — using bake fixture",
   );
 }
 
@@ -294,7 +314,9 @@ async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
   for (const rel of OPTIONAL_BUNDLE_FILES) {
     // Admin-published; always refresh in CI so Pages does not bake a stale cached copy.
     const alwaysRefresh =
-      (rel === "home_commentary.v0.json" || rel === "theme_slug_redirects.v0.json") &&
+      (rel === "home_commentary.v0.json" ||
+        rel === "theme_slug_redirects.v0.json" ||
+        rel === "newsletter_posts.v0.json") &&
       process.env.CI === "true";
     if (!force && !alwaysRefresh && cacheFileOk(rel)) continue;
     try {
@@ -304,11 +326,13 @@ async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
       if (msg.includes("404")) {
         if (rel === "home_commentary.v0.json") seedHomeCommentaryFromFixture();
         if (rel === "theme_slug_redirects.v0.json") seedThemeSlugRedirectsFromFixture();
+        if (rel === "newsletter_posts.v0.json") seedNewsletterPostsFromFixture();
         continue;
       }
       console.warn(`sync-build-cache: optional ${rel} failed:`, msg);
       if (rel === "home_commentary.v0.json") seedHomeCommentaryFromFixture();
       if (rel === "theme_slug_redirects.v0.json") seedThemeSlugRedirectsFromFixture();
+      if (rel === "newsletter_posts.v0.json") seedNewsletterPostsFromFixture();
     }
   }
 }

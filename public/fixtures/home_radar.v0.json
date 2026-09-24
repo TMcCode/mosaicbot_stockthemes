@@ -1,0 +1,79 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-09-22T23:36:00Z",
+  "build_id": "fixture-discovery",
+  "week_start": "2026-09-20",
+  "week_end": "2026-09-26",
+  "tabs": {
+    "new": {
+      "home": [
+        {
+          "slug": "agentic-payments",
+          "name": "Agentic Utilities '26: Agentic Payments",
+          "group_name": "Agentic Utilities",
+          "thesis": "AI agents are starting to initiate and settle payments across commerce rails.",
+          "return_1m": 1.8,
+          "rev_delta_pp": 0.8,
+          "signal_label": "New this week",
+          "tickers_preview": ["V", "SHOP", "PYPL"],
+          "year_suffix": 26
+        },
+        {
+          "slug": "power-enclosures",
+          "name": "AI Power '26: Power Enclosures",
+          "group_name": "AI Power",
+          "thesis": "Higher rack densities are pulling forward demand for power enclosure and busway solutions.",
+          "return_1m": 12.0,
+          "signal_label": "New this week",
+          "tickers_preview": ["VRT", "ETN"],
+          "year_suffix": 26
+        }
+      ],
+      "all": []
+    },
+    "accelerating": {
+      "home": [
+        {
+          "slug": "nand-flash",
+          "name": "Memory '26: NAND / Flash",
+          "group_name": "Memory",
+          "thesis": "NAND pricing and AI infrastructure demand are driving a renewed memory-cycle narrative.",
+          "return_1m": 1.9,
+          "return_ytd": 299.0,
+          "rev_delta_pp": 2.1,
+          "signal_label": "Breadth ↑",
+          "tickers_preview": ["MU", "SNDK"],
+          "score": 1.42
+        },
+        {
+          "slug": "gas-turbines",
+          "name": "AI Power: Gas Turbines",
+          "group_name": "AI Power",
+          "thesis": "Data-center load growth is tightening the gas-turbine bottleneck.",
+          "return_1m": 8.4,
+          "rev_delta_pp": 1.2,
+          "signal_label": "1M +8.4%",
+          "tickers_preview": ["GEV", "BWXT"],
+          "score": 1.21
+        }
+      ],
+      "all": []
+    },
+    "fading": {
+      "home": [
+        {
+          "slug": "us-cannabis",
+          "name": "U.S. Cannabis",
+          "group_name": "Cannabis",
+          "thesis": "Policy optimism faded as financing conditions stayed tight.",
+          "return_1m": -6.2,
+          "rev_delta_pp": -1.4,
+          "signal_label": "1M -6.2%",
+          "tickers_preview": ["CURLF", "GTBIF"],
+          "score": 0.95
+        }
+      ],
+      "all": []
+    }
+  }
+}

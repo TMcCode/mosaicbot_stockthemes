@@ -45,6 +45,8 @@ const EMPTY_SNAPSHOT: LiveCompareSnapshot = {
 let snapshot = EMPTY_SNAPSHOT;
 let refreshPromise: Promise<void> | null = null;
 let intervalId: number | null = null;
+/** When SSR compare is fresh, skip the immediate ~1MB refetch on first subscribe. */
+let skipNextImmediateRefresh = false;
 const listeners = new Set<() => void>();
 
 function emit(next: LiveCompareSnapshot) {
@@ -85,10 +87,21 @@ function refreshLiveBundles(): Promise<void> {
   return refreshPromise;
 }
 
+function serverCompareIsFresh(server: CompareThemesV0 | null | undefined): boolean {
+  if (!server?.as_of) return false;
+  const ts = Date.parse(String(server.as_of));
+  if (!Number.isFinite(ts)) return false;
+  return Date.now() - ts < priceReturnsRevalidateSeconds() * 1000;
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   if (listeners.size === 1 && stockthemesPublicDataBase()) {
-    void refreshLiveBundles();
+    if (skipNextImmediateRefresh) {
+      skipNextImmediateRefresh = false;
+    } else {
+      void refreshLiveBundles();
+    }
     if (stockthemesLiveCompareReturnsEnabled()) {
       intervalId = window.setInterval(
         () => void refreshLiveBundles(),
@@ -127,6 +140,22 @@ export function useLiveCompareBundles(
   compareFailed: boolean;
 } {
   const enabled = stockthemesLiveCompareReturnsEnabled();
+  // Seed module snapshot from SSR so home can skip the immediate CDN refetch.
+  if (
+    typeof window !== "undefined" &&
+    serverCompare &&
+    !snapshot.liveCompare &&
+    serverCompareIsFresh(serverCompare)
+  ) {
+    snapshot = {
+      liveCompare: serverCompare,
+      liveSpyPerf: null,
+      compareLoading: false,
+      compareFailed: false,
+    };
+    skipNextImmediateRefresh = true;
+  }
+
   const live = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const compareBundle = useMemo(

@@ -4,6 +4,11 @@ import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
+  isTickerishQuery,
+  SITE_SEARCH_FUSE_THRESHOLD,
+  SITE_SEARCH_MAX_FUZZY_SCORE,
+} from "@/lib/siteSearchRank";
+import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
@@ -61,10 +66,18 @@ export async function createThemeSearchFuse(
   const { default: FuseCtor } = await import("fuse.js");
   return new FuseCtor(rows, {
     keys: ["text"],
-    threshold: 0.35,
+    threshold: SITE_SEARCH_FUSE_THRESHOLD,
     ignoreLocation: true,
     minMatchCharLength: 2,
+    includeScore: true,
   });
+}
+
+function themeDirectMatch(theme: SearchIndexThemeRowV0, qLower: string): boolean {
+  if (theme.name.toLowerCase().includes(qLower) || theme.slug.toLowerCase().includes(qLower)) {
+    return true;
+  }
+  return (theme.aliases ?? []).some((a) => a.toLowerCase().includes(qLower));
 }
 
 export function searchThemeHits(
@@ -78,27 +91,45 @@ export function searchThemeHits(
   const qLower = q.toLowerCase();
   const seen = new Set<string>();
   const out: SearchIndexThemeRowV0[] = [];
+  const tickerish = isTickerishQuery(q);
+  const upper = q.replace(/[^a-zA-Z]/g, "").toUpperCase();
 
-  for (const t of index.themes) {
-    if (out.length >= limit) break;
-    const slug = t.slug.toLowerCase();
-    const name = t.name.toLowerCase();
-    if (name.includes(qLower) || slug.includes(qLower)) {
-      if (!seen.has(slug)) {
-        seen.add(slug);
-        out.push(t);
+  // Ticker-shaped: themes that actually contain that ticker (membership), then direct name/alias hits.
+  if (tickerish && upper.length >= 1) {
+    const themesBySlug = new Map(index.themes.map((t) => [t.slug, t]));
+    const tickers = index.tickers.filter((t) => t.ticker.startsWith(upper));
+    for (const t of tickers) {
+      for (const slug of t.theme_slugs ?? []) {
+        if (out.length >= limit) return out;
+        const theme = themesBySlug.get(slug);
+        if (!theme) continue;
+        const key = theme.slug.toLowerCase();
+        if (seen.has(key)) continue;
+        seen.add(key);
+        out.push(theme);
       }
     }
   }
 
-  if (q.length >= 2) {
+  for (const t of index.themes) {
+    if (out.length >= limit) break;
+    if (!themeDirectMatch(t, qLower)) continue;
+    const slug = t.slug.toLowerCase();
+    if (seen.has(slug)) continue;
+    seen.add(slug);
+    out.push(t);
+  }
+
+  // Fuzzy only for non-tickerish queries (typos); keep aliases findable via direct match above.
+  if (!tickerish && q.length >= 2) {
     for (const r of fuse.search(q, { limit: limit * 2 })) {
       if (out.length >= limit) break;
+      const score = typeof r.score === "number" ? r.score : 1;
+      if (score > SITE_SEARCH_MAX_FUZZY_SCORE) continue;
       const slug = r.item.ref.slug.toLowerCase();
-      if (!seen.has(slug)) {
-        seen.add(slug);
-        out.push(r.item.ref);
-      }
+      if (seen.has(slug)) continue;
+      seen.add(slug);
+      out.push(r.item.ref);
     }
   }
 

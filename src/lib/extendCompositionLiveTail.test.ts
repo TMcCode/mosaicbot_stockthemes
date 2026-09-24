@@ -91,3 +91,17 @@ test("appends today when 1D differs from the last completed move", () => {
   assert.deepEqual(next?.dates, ["2026-07-28", "2026-07-29", "2026-07-30"]);
   assert.equal(next?.values?.[2], Math.round(102 * 0.985 * 10_000) / 10_000);
 });
+
+test("refreshes flat same-day CDN tail from live 1D (stale chart sidecar)", () => {
+  // Slim chart wrote today as a copy of Friday close; price_returns 1D is live.
+  const perf = {
+    dates: ["2026-09-11", "2026-09-12", "2026-09-13", "2026-09-14"],
+    values: [257.5654, 257.5654, 257.5654, 257.5654],
+  };
+  const next = maybeExtendIndexedPerformanceFromLiveDayReturn(perf, "2026-09-14", -3.1414);
+  assert.deepEqual(next?.dates, perf.dates);
+  assert.equal(
+    next?.values?.[3],
+    Math.round(257.5654 * (1 - 0.031414) * 10_000) / 10_000,
+  );
+});

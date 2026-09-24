@@ -53,7 +53,12 @@ export function consolidateTextTableFeedEvents(
       passthrough.push(evt);
       continue;
     }
-    const key = `${parsed.kind}:${parsed.id}:${day}`;
+    // Theme thesis rows: keep one latest per theme (daily BullBear rewrites are dupes
+    // once the card shows the current thesis text). Ticker batches still bucket by day.
+    const key =
+      parsed.kind === "theme"
+        ? `${parsed.kind}:${parsed.id.toLowerCase()}`
+        : `${parsed.kind}:${parsed.id}:${day}`;
     const list = buckets.get(key) ?? [];
     list.push(evt);
     buckets.set(key, list);
@@ -90,7 +95,20 @@ export function consolidateTextTableFeedEvents(
         : parsed.kind === "theme"
           ? buildThesisThemes(themeNames, themeSlugByName)
           : { themes: [], moreCount: 0 };
-    const title = `${parsed.id} — text tables updated`;
+    const title =
+      parsed.kind === "theme"
+        ? `${parsed.id} — thesis updated`
+        : `${parsed.id} — text tables updated`;
+
+    // Prefer newest non-empty thesis blurb from the bucket (ETL bakes thesis_preview).
+    let thesisPreview = "";
+    for (const g of group) {
+      const p = String(g.thesis_preview || "").trim();
+      if (p) {
+        thesisPreview = p;
+        break;
+      }
+    }
 
     consolidated.push({
       kind: "text_table_update",
@@ -98,9 +116,14 @@ export function consolidateTextTableFeedEvents(
       title,
       summary: "",
       theme_name: primaryTheme || undefined,
-      theme_slug: primaryTheme ? themeSlugByName.get(primaryTheme) || latest.theme_slug : latest.theme_slug,
+      theme_slug: primaryTheme
+        ? themeSlugByName.get(primaryTheme) || latest.theme_slug
+        : latest.theme_slug,
       thesis_themes: thesisThemes.length ? thesisThemes : undefined,
       thesis_themes_more_count: thesisThemesMore > 0 ? thesisThemesMore : undefined,
+      thesis_preview: thesisPreview || undefined,
+      holdings_preview: latest.holdings_preview,
+      holdings_more_count: latest.holdings_more_count,
     });
   }
 

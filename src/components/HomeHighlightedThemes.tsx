@@ -95,7 +95,7 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
         />
       </div>
       <p className={styles.footerLink}>
-        <Link href={`/themes/${active.slug}`}>Open {active.name}</Link>
+        <Link href={`/themes/${active.slug}`}>{active.name}</Link>
       </p>
     </section>
   );

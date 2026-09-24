@@ -11,6 +11,7 @@ import { GroupHeroMeta } from "@/components/GroupHeroMeta";
 import { GroupHeroSummary } from "@/components/GroupHeroSummary";
 import { GroupThemesTableLive } from "@/components/GroupThemesTableLive";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
+import { JsonLd } from "@/components/JsonLd";
 import styles from "../../page.module.css";
 
 import { pickDefaultTreemapPeriod } from "@/lib/buildConstituentTreemapNodes";
@@ -169,7 +170,7 @@ export default async function GroupDetailPage({ params }: Props) {
 
   return (
     <div className={`st-surface ${styles.page}`}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd id={`group-json-ld-${slug}`} data={jsonLd} />
       <main className={styles.main}>
         <div className={styles.intro}>
           <div

@@ -17,6 +17,7 @@ import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
+import { JsonLd } from "@/components/JsonLd";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import {
   themeChartPerformanceSeed,
@@ -193,7 +194,7 @@ export default async function ThemeDetailPage({ params }: Props) {
 
   return (
     <div className={`st-surface ${styles.page}`}>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <JsonLd id={`theme-json-ld-${slug}`} data={jsonLd} />
       <main className={styles.main}>
         <div className={styles.intro}>
           <div className={`${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`}>

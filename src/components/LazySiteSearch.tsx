@@ -5,12 +5,20 @@ import { useEffect, useRef, useState } from "react";
 
 import styles from "./SiteSearch.module.css";
 
+type LazySiteSearchProps = {
+  placeholder?: string;
+  variant?: "nav" | "hero";
+};
+
 const SiteSearchDynamic = dynamic(
   () => import("@/components/SiteSearch").then((m) => m.SiteSearch),
   { ssr: false },
 );
 
-export function LazySiteSearch() {
+export function LazySiteSearch({
+  placeholder = "Search ticker, company, or theme…",
+  variant = "nav",
+}: LazySiteSearchProps = {}) {
   const isProd = process.env.NODE_ENV === "production";
   const [active, setActive] = useState(false);
   const idleHandleRef = useRef<number | null>(null);
@@ -35,17 +43,22 @@ export function LazySiteSearch() {
   }, [active, isProd]);
 
   if (!isProd) {
-    return <SiteSearchDynamic />;
+    return <SiteSearchDynamic placeholder={placeholder} variant={variant} />;
   }
 
-  if (active) return <SiteSearchDynamic />;
+  if (active) {
+    return <SiteSearchDynamic placeholder={placeholder} variant={variant} />;
+  }
+
+  const wrapClass = variant === "hero" ? `${styles.wrap} ${styles.wrapHero}` : styles.wrap;
+  const inputClass = variant === "hero" ? `${styles.input} ${styles.inputHero}` : styles.input;
 
   return (
-    <div className={styles.wrap}>
+    <div className={wrapClass}>
       <input
-        className={styles.input}
+        className={inputClass}
         type="search"
-        placeholder="Search ticker, theme, or group"
+        placeholder={placeholder}
         readOnly
         onFocus={() => setActive(true)}
         onPointerDown={() => setActive(true)}

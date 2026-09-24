@@ -1,0 +1,119 @@
+.section {
+  width: 100%;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+
+/* Beat `.intro p` (18px / max-width 760) — Motions sits inside home/page intro. */
+:global(.intro) .asOf,
+.asOf {
+  margin: 4px 0 0;
+  padding: 0 8px 0 0;
+  max-width: none;
+  width: 100%;
+  box-sizing: border-box;
+  font-size: 9px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.25;
+  letter-spacing: 0.01em;
+  color: #a8a5b5;
+  text-align: right;
+  text-wrap: unset;
+}
+
+:global(.st-theme[data-theme="dark"]) .asOf,
+:global(.st-theme[data-theme="dark"] .intro) .asOf {
+  color: #6e7682;
+}
+
+:global(.st-theme[data-theme="light"]) .section {
+  border-top-color: rgba(59, 77, 161, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .table th {
+  border-bottom-color: rgba(59, 77, 161, 0.14);
+}
+
+:global(.st-theme[data-theme="light"]) .table td {
+  border-bottom-color: rgba(59, 77, 161, 0.08);
+}
+
+.links {
+  display: flex;
+  gap: 14px;
+}
+
+.link {
+  font-size: 13px;
+  color: var(--accent);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.tableWrap {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.table th {
+  text-align: left;
+  font-weight: 550;
+  color: var(--text-muted);
+  padding: 6px 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  white-space: nowrap;
+}
+
+.table td {
+  padding: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  color: var(--text-secondary);
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.themeLink {
+  color: var(--text-primary);
+  text-decoration: none;
+  font-weight: 550;
+}
+
+.themeLink:hover {
+  color: var(--accent);
+}
+
+.empty {
+  color: var(--text-muted);
+  padding: 16px 8px !important;
+}

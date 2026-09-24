@@ -88,8 +88,10 @@ export function loadLogoPresenceMap(): Promise<LogoPresenceMap | null> {
 }
 
 /**
- * Prefer theme JSON ``logo_url``; else presence-index URL; else optional png guess
- * when the presence index is unavailable.
+ * Prefer theme JSON ``logo_url``; else presence-index URL; else png guess.
+ * Never return null solely because the index omitted a ticker — Chrome would
+ * blank the slot after the index loads, while a direct png still works for
+ * many names (and 404s are handled by ``onError``).
  */
 export function resolveConstituentLogoUrl(
   logoUrl: string | null | undefined,
@@ -105,13 +107,11 @@ export function resolveConstituentLogoUrl(
     .replace(/\//g, "_");
   if (!t) return null;
 
+  const guess = `${STOCKTHEMES_CDN_ORIGIN}/logos/v0/${encodeURIComponent(t)}.png`;
+
   if (presence && presence.size > 0) {
-    return presence.get(t) ?? null;
+    return presence.get(t) ?? guess;
   }
-  // Index not loaded / missing: keep temporary png guess so logos still show.
-  if (presence === null) {
-    return `${STOCKTHEMES_CDN_ORIGIN}/logos/v0/${encodeURIComponent(t)}.png`;
-  }
-  // presence === undefined → still loading; caller should wait.
-  return null;
+  // Index failed (null) or still loading (undefined): use png guess.
+  return guess;
 }

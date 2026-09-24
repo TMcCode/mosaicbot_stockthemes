@@ -2,11 +2,13 @@
 
 export const FEED_PAGE_TITLE = "Theme activity feed";
 
-export const FEED_PAGE_INTRO_LEAD = [
-  "This page lists changes to stockthemes.ai theme baskets: new themes, constituent adds and removes, weight updates, and thesis or research-note refreshes.",
-  "Events are generated when our data pipeline publishes an updated manifest—typically after the daily ETL run, with additional updates when intraday jobs refresh holdings or performance.",
-  "The homepage shows a short recent slice; here you can browse the full history.",
-] as const;
+/** Hero punchline under the title — keep short. */
+export const FEED_PAGE_PUNCHLINE =
+  "New themes, membership moves, weight edits, and thesis refreshes.";
+
+/** One secondary line under the punchline. */
+export const FEED_PAGE_INTRO_SECONDARY =
+  "Tracks the last ~10 days of basket changes.";
 
 export function feedPageMetadataDescription(): string {
   return (

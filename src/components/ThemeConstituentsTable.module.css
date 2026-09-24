@@ -186,16 +186,62 @@
   color: var(--accent, #26fcd6);
 }
 
-.revisionGroupHead {
-  text-align: center !important;
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  border-left: 1px solid rgba(255, 255, 255, 0.12) !important;
-  color: var(--accent, #26fcd6);
-  width: auto !important;
-  padding-left: 10px;
-  padding-right: 10px;
+/* Fixed metric widths — stops L5Q / Est Latest from absorbing leftover table space. */
+.metricCol {
+  width: 4rem !important;
+  min-width: 4rem !important;
+  max-width: 4rem !important;
+  box-sizing: border-box;
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.metaCol {
+  width: 3rem;
+  min-width: 3rem;
+  max-width: 3.5rem;
+  box-sizing: border-box;
+}
+
+/* # Analysts — left-align so "#" doesn't collide with CQ Latest. */
+.analystsCol {
+  width: 3.5rem;
+  min-width: 3.5rem;
+  max-width: 4rem;
+  box-sizing: border-box;
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 4px !important;
+}
+
+/* Same width as Period Returns / Earnings — do not shrink for revenue/revisions. */
+.companyCol {
+  width: 280px !important;
+  min-width: 280px !important;
+  max-width: 280px !important;
+  box-sizing: border-box;
+}
+
+/* Sticky company header/body — class on th/td only, never on <col>. */
+.companySticky {
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--card-surface, #ffffff);
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.25);
+}
+
+:global(.st-theme[data-theme="dark"]) .companySticky {
+  background: var(--card-surface, #0c1014);
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+}
+
+/* Subtle dividers between Quarters|Years|CAGR and CQ|CY|NY column blocks. */
+.metricGroupStart {
+  border-left: 1px solid rgba(38, 252, 214, 0.35) !important;
+  padding-left: 7px !important;
 }
 
 .notesColumnHead {

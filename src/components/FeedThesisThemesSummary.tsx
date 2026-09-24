@@ -7,6 +7,8 @@ import styles from "@/app/page.module.css";
 type Props = {
   evt: ManifestHomeFeedEventV0;
   className?: string;
+  /** When set, hide a single theme line that just repeats this title. */
+  hideIfMatchesTitle?: string;
 };
 
 function renderThemeLinks(
@@ -41,8 +43,28 @@ function renderThemeLinks(
   );
 }
 
+function namesMatchForHide(
+  themeName: string,
+  hideIfMatchesTitle?: string,
+): boolean {
+  const name = String(themeName || "").trim().toLowerCase();
+  const match = String(hideIfMatchesTitle || "").trim().toLowerCase();
+  if (!name || !match) return false;
+  if (name === match) return true;
+  // Card title may be the subtheme only ("Tires & Wheels") while thesis
+  // themes still use the full name ("Auto Components '25: Tires & Wheels").
+  if (name.endsWith(`: ${match}`) || name.endsWith(match)) return true;
+  return false;
+}
+
+function summaryRepeatsTitle(summary: string, hideIfMatchesTitle?: string): boolean {
+  const m = /^themes:\s*(.+)$/i.exec(summary.trim());
+  if (!m) return false;
+  return namesMatchForHide(String(m[1] || ""), hideIfMatchesTitle);
+}
+
 /** Gray thesis-theme line with links when slugs are available. */
-export function FeedThesisThemesSummary({ evt, className }: Props) {
+export function FeedThesisThemesSummary({ evt, className, hideIfMatchesTitle }: Props) {
   const summaryClass = className ?? styles.feedSummary;
   const themes = evt.thesis_themes?.filter((t) => String(t.name || "").trim()) ?? [];
   const moreCount = Number.isFinite(evt.thesis_themes_more_count)
@@ -50,11 +72,20 @@ export function FeedThesisThemesSummary({ evt, className }: Props) {
     : 0;
 
   if (themes.length) {
+    if (
+      hideIfMatchesTitle &&
+      themes.length === 1 &&
+      moreCount === 0 &&
+      namesMatchForHide(String(themes[0]?.name || ""), hideIfMatchesTitle)
+    ) {
+      return null;
+    }
     return renderThemeLinks(themes, moreCount, summaryClass);
   }
 
   const summary = String(evt.summary || "").trim();
   if (summary) {
+    if (summaryRepeatsTitle(summary, hideIfMatchesTitle)) return null;
     return <span className={summaryClass}>{summary}</span>;
   }
 

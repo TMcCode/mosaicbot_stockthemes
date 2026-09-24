@@ -16,7 +16,17 @@ import {
 
 import styles from "./SiteSearch.module.css";
 
-export function SiteSearch() {
+type SiteSearchProps = {
+  /** Defaults to nav placeholder. */
+  placeholder?: string;
+  /** `hero` = full-width homepage search. */
+  variant?: "nav" | "hero";
+};
+
+export function SiteSearch({
+  placeholder = "Search ticker, company, or theme…",
+  variant = "nav",
+}: SiteSearchProps = {}) {
   const router = useRouter();
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -166,11 +176,11 @@ export function SiteSearch() {
   const index = engine?.index;
 
   return (
-    <div className={styles.wrap} ref={wrapRef}>
+    <div className={variant === "hero" ? `${styles.wrap} ${styles.wrapHero}` : styles.wrap} ref={wrapRef}>
       <input
         type="search"
-        className={styles.input}
-        placeholder="Search ticker, company, or theme…"
+        className={variant === "hero" ? `${styles.input} ${styles.inputHero}` : styles.input}
+        placeholder={placeholder}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={showPanel}

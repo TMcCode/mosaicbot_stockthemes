@@ -53,3 +53,18 @@ export function buildTickerToThemeNamesMap(index: SearchIndexV0): Map<string, st
   }
   return out;
 }
+
+/** Company display names for tooltips (from search index ticker rows). */
+export function buildTickerCompanyNameMap(index: SearchIndexV0): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const row of index.tickers ?? []) {
+    const ticker = String(row.ticker || "")
+      .trim()
+      .toUpperCase();
+    const name = String(row.name || "").trim();
+    if (ticker && name) {
+      out[ticker] = name;
+    }
+  }
+  return out;
+}

@@ -1,0 +1,83 @@
+{
+  "schema_version": 0,
+  "as_of": "2026-09-24T21:07:58.832Z",
+  "sources": {
+    "beehiiv": "Field of Themes",
+    "substack": "Alt Data Observer",
+    "substack_feed": "https://altadataobserver.substack.com/feed"
+  },
+  "posts": [
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/tokens-tankers-hacks-and-heatwaves",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Tokens, Tankers, Hacks and Heatwaves",
+      "url": "https://altadataobserver.substack.com/p/tokens-tankers-hacks-and-heatwaves",
+      "published_at": "2026-09-15T00:47:37.000Z",
+      "subtitle": "More charts on bottlenecks and shifting economics of AI : AI demand is exploding, cyber risk is accelerating, oil flows are getting messier, and heat is turning into real-world capex. Meanwhile, malls are back, Dubai is "
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/ai-labs-wish-the-real-world-would",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Dario Before You Save Humanity, Fix Autocorrect",
+      "url": "https://altadataobserver.substack.com/p/ai-labs-wish-the-real-world-would",
+      "published_at": "2026-09-13T20:18:20.000Z",
+      "subtitle": "Does Superintelligence concern itself with the opinions of sheep?"
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/ais-autos-barrels-and-bay-rents-10",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "AIs, Autos, Barrels and Bay Rents: 10 Alternative-Data Signals Moving Under the Surface",
+      "url": "https://altadataobserver.substack.com/p/ais-autos-barrels-and-bay-rents-10",
+      "published_at": "2026-09-11T19:49:49.000Z",
+      "subtitle": "I've spent more than a decade at the intersection of alternative data and L/S equity investing. Each day, I rank the alt-data charts I found most valuable — with a quick read on what they're telling us and which stocks c"
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/clicks-crunches-cups-and-cars-10",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Clicks, Crunches, Cups and Cars: 10 Alternative-Data Signals Moving Under the Surface",
+      "url": "https://altadataobserver.substack.com/p/clicks-crunches-cups-and-cars-10",
+      "published_at": "2026-09-11T11:13:31.000Z",
+      "subtitle": "AI is becoming a real commerce channel. Adobe finds AI-referred retail visits now generate 53% more revenue per visit and convert 54% better than non-AI traffic . (📈 — higher-converting AI referrals could be incremental"
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/gigs-games-grids-and-gold-10-alternative",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Gigs, Games, Grids and Gold: 10 Alternative-Data Signals Moving Under the Surface",
+      "url": "https://altadataobserver.substack.com/p/gigs-games-grids-and-gold-10-alternative",
+      "published_at": "2026-09-04T11:23:51.000Z",
+      "subtitle": "The data-center backlash is having real consequences. Roughly 40%+ of Michigan counties have seen some form of data-center moratorium action since 2023, with around one-third of counties in Ohio and Maryland doing the sa"
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/ads-apps-bots-and-boats-10-alternative",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Ads, Apps, Bots and Boats: 10 Alternative-Data Signals Moving Under the Surface",
+      "url": "https://altadataobserver.substack.com/p/ads-apps-bots-and-boats-10-alternative",
+      "published_at": "2026-09-02T22:55:22.000Z",
+      "subtitle": "The beverage ad leaderboard is losing its sugar. Glucerna, Full Leaf Tea, Gold Peak Tea and Coffee mate all entered the top 10 in 2026, while Mountain Dew and Gatorade dropped out and Pepsi fell from #2 to #9. ( — Glucer"
+    },
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/chips-trips-bytes-and-bets-10-alternative",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Chips, Trips, Bytes and Bets: 10 Alternative-Data Signals Moving Under the Surface",
+      "url": "https://altadataobserver.substack.com/p/chips-trips-bytes-and-bets-10-alternative",
+      "published_at": "2026-09-01T23:18:09.000Z",
+      "subtitle": "Shein's US share losses are sticking. Even after lapping the de minimis elimination, Shein is still losing US apparel share YoY — including with 18–34 year olds. Suggests this is becoming more structural than just a tari"
+    },
+    {
+      "id": "beehiiv:post_aa7415b7-41cf-4e19-b612-2ee65961b50e",
+      "source": "beehiiv",
+      "source_label": "Field of Themes",
+      "title": "K-Defense's Toyota Moment",
+      "url": "https://field-of-themes.beehiiv.com/p/k-defense-toyota-moment",
+      "published_at": "2026-06-21T14:45:00.000Z",
+      "subtitle": "How South Korea's defense industry is following the same playbook that transformed Toyota from low-tech, cheap alternative into global leader."
+    }
+  ]
+}

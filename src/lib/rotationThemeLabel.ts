@@ -45,3 +45,14 @@ export function splitThemeDisplayName(themeName: string): {
   if (!groupPrefix) return { title, groupPrefix: null };
   return { title, groupPrefix };
 }
+
+/**
+ * Group eyebrow from ``Group '25: Subtheme`` when manifest meta is missing.
+ * ``Software '26`` → ``Software`` (year stays on the chip).
+ */
+export function groupEyebrowFromThemeName(themeName: string): string | null {
+  const { groupPrefix } = splitThemeDisplayName(themeName);
+  if (!groupPrefix) return null;
+  const stripped = groupPrefix.replace(/\s+'?\d{2}\s*$/u, "").trim();
+  return stripped || groupPrefix;
+}

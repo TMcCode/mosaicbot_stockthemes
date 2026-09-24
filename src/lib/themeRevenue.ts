@@ -155,6 +155,19 @@ export function revenueGrowthGroupsForColumns(
   }).filter((g) => g.colSpan > 0);
 }
 
+/** First metric column id in each group after the first — for between-group dividers only. */
+export function revenueGroupStartColumnIds(
+  groups: { columnIds: string[] }[],
+): Set<string> {
+  const out = new Set<string>();
+  groups.forEach((g, i) => {
+    if (i === 0) return; // no divider before the first group (Quarters / CQ)
+    const first = g.columnIds[0];
+    if (first) out.add(first);
+  });
+  return out;
+}
+
 export const REVENUE_VALUATION_MULTIPLE_COLUMNS: RevenueColumnDef[] = [
   {
     id: "ps_ly",
@@ -230,17 +243,19 @@ export const REVENUE_VALUATION_COLUMNS: RevenueColumnDef[] = [
 
 export const REVENUE_REVISION_COLUMNS: RevenueColumnDef[] = [
   { id: "rev_analysts", label: "#\nAnalysts", revisionKey: "revenue_est_analysts", format: "count" },
-  { id: "rev_latest", label: "Est Latest\n(%)", revisionKey: "growth_est_latest_pct", format: "pct" },
-  { id: "rev_first", label: "Est First\n(%)", revisionKey: "growth_est_first_pct", format: "pct" },
-  { id: "rev_delta", label: "Rev Δ\n(bps)", revisionKey: "growth_delta_bps", format: "bps" },
-  { id: "rev_low", label: "Est Low\n(%)", revisionKey: "growth_est_low_pct", format: "pct" },
-  { id: "rev_high", label: "Est High\n(%)", revisionKey: "growth_est_high_pct", format: "pct" },
-  { id: "cy_rev_latest", label: "Est Latest\n(%)", revisionKey: "cy_growth_est_latest_pct", format: "pct" },
-  { id: "cy_rev_first", label: "Est First\n(%)", revisionKey: "cy_growth_est_first_pct", format: "pct" },
-  { id: "cy_rev_delta", label: "Rev Δ\n(bps)", revisionKey: "cy_growth_delta_bps", format: "bps" },
-  { id: "ny_rev_latest", label: "Est Latest\n(%)", revisionKey: "ny_growth_est_latest_pct", format: "pct" },
-  { id: "ny_rev_first", label: "Est First\n(%)", revisionKey: "ny_growth_est_first_pct", format: "pct" },
-  { id: "ny_rev_delta", label: "Rev Δ\n(bps)", revisionKey: "ny_growth_delta_bps", format: "bps" },
+  { id: "rev_latest", label: "CQ Latest\n(%)", revisionKey: "growth_est_latest_pct", format: "pct" },
+  { id: "rev_first", label: "CQ First\n(%)", revisionKey: "growth_est_first_pct", format: "pct" },
+  { id: "rev_delta", label: "CQ Rev Δ\n(bps)", revisionKey: "growth_delta_bps", format: "bps" },
+  { id: "rev_low", label: "CQ Low\n(%)", revisionKey: "growth_est_low_pct", format: "pct" },
+  { id: "rev_high", label: "CQ High\n(%)", revisionKey: "growth_est_high_pct", format: "pct" },
+  { id: "cy_rev_latest", label: "CY Latest\n(%)", revisionKey: "cy_growth_est_latest_pct", format: "pct" },
+  { id: "cy_rev_first", label: "CY First\n(%)", revisionKey: "cy_growth_est_first_pct", format: "pct" },
+  { id: "cy_rev_delta", label: "CY Rev Δ\n(bps)", revisionKey: "cy_growth_delta_bps", format: "bps" },
+  { id: "cy_rev_low", label: "CY Low\n(%)", revisionKey: "cy_growth_est_low_pct", format: "pct" },
+  { id: "cy_rev_high", label: "CY High\n(%)", revisionKey: "cy_growth_est_high_pct", format: "pct" },
+  { id: "ny_rev_latest", label: "NY Latest\n(%)", revisionKey: "ny_growth_est_latest_pct", format: "pct" },
+  { id: "ny_rev_first", label: "NY First\n(%)", revisionKey: "ny_growth_est_first_pct", format: "pct" },
+  { id: "ny_rev_delta", label: "NY Rev Δ\n(bps)", revisionKey: "ny_growth_delta_bps", format: "bps" },
 ];
 
 /** Top header band: CQ / CY / NY groups (excludes # Analysts). */
@@ -255,7 +270,7 @@ export const REVENUE_REVISION_GROUPS: { id: string; label: string; title: string
     id: "cy",
     label: "CY",
     title: "Unfinished year (vendor 0y) consensus YoY revenue growth revisions",
-    columnIds: ["cy_rev_latest", "cy_rev_first", "cy_rev_delta"],
+    columnIds: ["cy_rev_latest", "cy_rev_first", "cy_rev_delta", "cy_rev_low", "cy_rev_high"],
   },
   {
     id: "ny",

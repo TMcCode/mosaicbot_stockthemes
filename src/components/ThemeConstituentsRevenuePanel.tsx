@@ -25,6 +25,7 @@ import {
   REVENUE_STAT_ROW_LABELS,
   revenueCellClass,
   revenueCellValue,
+  revenueGroupStartColumnIds,
   revenueGrowthGroupsForColumns,
   revenueStatValue,
   type RevenueColumnDef,
@@ -83,6 +84,14 @@ function compareRevenueRows(
   return compareText(a.name?.trim() || a.ticker, b.name?.trim() || b.ticker, "asc");
 }
 
+function metricCellClass(colId: string, groupStartIds: Set<string>, tone?: string) {
+  const parts = [tableStyles.metricCol];
+  if (groupStartIds.has(colId)) parts.push(tableStyles.metricGroupStart);
+  if (tone === "pos") parts.push(tableStyles.revenuePos);
+  if (tone === "neg") parts.push(tableStyles.revenueNeg);
+  return parts.join(" ");
+}
+
 function RevenueFooterRows({
   columns,
   mode,
@@ -90,6 +99,7 @@ function RevenueFooterRows({
   hasWeight,
   themeLabel,
   themeMetrics,
+  groupStartIds,
 }: {
   columns: RevenueColumnDef[];
   mode: RevenueDisplayMode;
@@ -97,21 +107,22 @@ function RevenueFooterRows({
   hasWeight: boolean;
   themeLabel: string;
   themeMetrics: ThemeRevenueMetricMapV0;
+  groupStartIds: Set<string>;
 }) {
   const statsBlock = mode === "accel" ? data.table_stats?.accel : data.table_stats?.growth;
   return (
     <>
       <tr className={tableStyles.themeReturnRow}>
-        <td>
+        <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
           <strong className={tableStyles.themeReturnLabel} title="Manual theme-weight aggregate">
             {themeLabel}
           </strong>
         </td>
-        {hasWeight ? <td>—</td> : null}
+        {hasWeight ? <td className={tableStyles.metaCol}>—</td> : null}
         {columns.map((col) => {
           const value = revenueCellValue(themeMetrics, col, mode);
           return (
-            <td key={col.id}>
+            <td key={col.id} className={metricCellClass(col.id, groupStartIds)}>
               <strong>{formatRevenueCell(value, col, mode)}</strong>
             </td>
           );
@@ -119,14 +130,14 @@ function RevenueFooterRows({
       </tr>
       {STAT_ROWS.map((rowKey) => (
         <tr key={rowKey}>
-          <td>
+          <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
             <strong>{REVENUE_STAT_ROW_LABELS[rowKey]}</strong>
           </td>
-          {hasWeight ? <td>—</td> : null}
+          {hasWeight ? <td className={tableStyles.metaCol}>—</td> : null}
           {columns.map((col) => {
             const value = revenueStatValue(statsBlock, rowKey, col, mode);
             return (
-              <td key={col.id}>
+              <td key={col.id} className={metricCellClass(col.id, groupStartIds)}>
                 <strong>
                   {rowKey === "positive_tickers_pct" && value != null
                     ? `${Math.round(value)}%`
@@ -153,11 +164,10 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
 
   const hasWeight = detail.constituents.some((c) => c.weight != null && Number.isFinite(c.weight));
   const columns = useMemo(() => filterRevenueColumns(mode), [mode]);
-  const headerGroups = useMemo(
-    () => (mode === "valuation" ? [] : revenueGrowthGroupsForColumns(columns)),
-    [mode, columns],
-  );
-  const useGroupedHeader = headerGroups.length > 0;
+  const groupStartIds = useMemo(() => {
+    if (mode === "valuation") return new Set<string>();
+    return revenueGroupStartColumnIds(revenueGrowthGroupsForColumns(columns));
+  }, [mode, columns]);
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
@@ -240,74 +250,52 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
         >
           <div className={styles.constituentsTableSizer}>
             <table className={styles.dataTable}>
+              <colgroup>
+                <col className={tableStyles.companyCol} />
+                {hasWeight ? <col className={tableStyles.metaCol} /> : null}
+                {columns.map((col) => (
+                  <col key={col.id} className={tableStyles.metricCol} />
+                ))}
+              </colgroup>
               <thead>
-                {useGroupedHeader ? (
-                  <>
-                    <tr>
-                      <th scope="col" rowSpan={2}>
-                        {renderSortHead("company", "Company")}
-                      </th>
-                      {hasWeight ? (
-                        <th scope="col" rowSpan={2}>
-                          {renderSortHead("weight", "Wgt")}
-                        </th>
-                      ) : null}
-                      {headerGroups.map((group) => (
-                        <th
-                          key={group.id}
-                          scope="colgroup"
-                          colSpan={group.colSpan}
-                          className={tableStyles.revisionGroupHead}
-                          title={group.title}
-                        >
-                          {group.label}
-                        </th>
-                      ))}
-                    </tr>
-                    <tr>
-                      {columns.map((col) => (
-                        <th key={col.id} scope="col">
-                          {renderSortHead(
-                            col.id,
-                            col.label.split("\n").map((line, i) => (
-                              <span key={line}>
-                                {i > 0 ? <br /> : null}
-                                {line}
-                              </span>
-                            )),
-                            col.tooltip,
-                          )}
-                        </th>
-                      ))}
-                    </tr>
-                  </>
-                ) : (
-                  <tr>
-                    <th scope="col">{renderSortHead("company", "Company")}</th>
-                    {hasWeight ? <th scope="col">{renderSortHead("weight", "Wgt")}</th> : null}
-                    {columns.map((col) => (
-                      <th key={col.id} scope="col">
-                        {renderSortHead(
-                          col.id,
-                          col.label.split("\n").map((line, i) => (
-                            <span key={line}>
-                              {i > 0 ? <br /> : null}
-                              {line}
-                            </span>
-                          )),
-                          col.tooltip,
-                        )}
-                      </th>
-                    ))}
-                  </tr>
-                )}
+                <tr>
+                  <th
+                    scope="col"
+                    className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}
+                  >
+                    {renderSortHead("company", "Company")}
+                  </th>
+                  {hasWeight ? (
+                    <th scope="col" className={tableStyles.metaCol}>
+                      {renderSortHead("weight", "Wgt")}
+                    </th>
+                  ) : null}
+                  {columns.map((col) => (
+                    <th
+                      key={col.id}
+                      scope="col"
+                      className={metricCellClass(col.id, groupStartIds)}
+                    >
+                      {renderSortHead(
+                        col.id,
+                        col.label.split("\n").map((line, i) => (
+                          <span key={line}>
+                            {i > 0 ? <br /> : null}
+                            {line}
+                          </span>
+                        )),
+                        col.tooltip,
+                      )}
+                    </th>
+                  ))}
+                </tr>
               </thead>
               <tbody>
                 {sortedRows.map((row) => {
                   const metrics = mode === "accel" ? row.revenue.accel : row.revenue.growth;
                   return (
                     <tr key={row.ticker}>
-                      <td>
+                      <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                         <div className={styles.companyCell}>
                           <ConstituentLogo ticker={row.ticker} />
                           <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
@@ -315,7 +303,9 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                         </div>
                       </td>
                       {hasWeight ? (
-                        <td>{row.weight != null ? formatWeight(row.weight) : "—"}</td>
+                        <td className={tableStyles.metaCol}>
+                          {row.weight != null ? formatWeight(row.weight) : "—"}
+                        </td>
                       ) : null}
                       {columns.map((col) => {
                         const value = revenueCellValue(metrics, col, mode);
@@ -323,13 +313,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                         return (
                           <td
                             key={col.id}
-                            className={
-                              cls === "pos"
-                                ? tableStyles.revenuePos
-                                : cls === "neg"
-                                  ? tableStyles.revenueNeg
-                                  : undefined
-                            }
+                            className={metricCellClass(col.id, groupStartIds, cls)}
                           >
                             {formatRevenueCell(value, col, mode)}
                           </td>
@@ -345,6 +329,7 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                   hasWeight={hasWeight}
                   themeLabel="Theme revenue"
                   themeMetrics={data.summary}
+                  groupStartIds={groupStartIds}
                 />
               </tbody>
             </table>
