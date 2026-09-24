@@ -82,6 +82,21 @@ if (tildeNames.length) {
   );
   process.exit(1);
 }
+const chunkTildeRe = /static\/chunks\/[^"'\\\s]*~/;
+const tildeRefFiles = walkFiles(out).filter((f) => {
+  const ext = path.extname(f).toLowerCase();
+  if (![".html", ".js", ".css", ".json", ".map"].includes(ext)) return false;
+  return chunkTildeRe.test(fs.readFileSync(f, "utf8"));
+});
+if (tildeRefFiles.length) {
+  console.error(
+    `verify-build-budgets: static/chunks/~ refs remain in:\n${tildeRefFiles
+      .slice(0, 10)
+      .map((f) => path.relative(out, f))
+      .join("\n")}`,
+  );
+  process.exit(1);
+}
 
 if (failures.length && enforce) {
   console.error(`verify-build-budgets: failed\n${failures.join("\n")}`);
