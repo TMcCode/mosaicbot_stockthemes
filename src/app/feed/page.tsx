@@ -95,7 +95,8 @@ export default async function FeedPage() {
               listClassName={feedStyles.feedList}
               initialCount={FEED_INITIAL_VISIBLE}
               batchSize={FEED_INITIAL_VISIBLE}
-              eagerCount={3}
+              // Mount the whole first batch (DeferRender was sticking at eager=3 on live).
+              eagerCount={FEED_INITIAL_VISIBLE}
             />
           )}
           {publishedLabel ? (

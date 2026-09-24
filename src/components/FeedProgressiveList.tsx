@@ -52,7 +52,7 @@ export function FeedProgressiveList({
   listClassName,
   initialCount = 8,
   batchSize = 8,
-  eagerCount = 3,
+  eagerCount = 8,
 }: Props) {
   const kindOptions = useMemo(() => feedActivityOptionsFromEvents(events), [events]);
   const [selectedKinds, setSelectedKinds] = useState<FeedActivityKind[]>(() => [...kindOptions]);
@@ -191,13 +191,13 @@ export function FeedProgressiveList({
         </div>
       )}
       {hasMore ? <div ref={sentinelRef} aria-hidden="true" style={{ height: 1 }} /> : null}
-      {hasMore && needsManualLoadMore ? (
+      {hasMore ? (
         <button
           type="button"
+          className={feedStyles.loadMore}
           onClick={() => setVisibleCount((n) => Math.min(filtered.length, n + batchSize))}
-          style={{ marginTop: 12 }}
         >
-          Load more
+          {needsManualLoadMore ? "Load more" : "Show more updates"}
         </button>
       ) : null}
     </div>

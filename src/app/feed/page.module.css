@@ -118,3 +118,22 @@
   color: var(--text-muted);
   opacity: 0.85;
 }
+
+.loadMore {
+  align-self: center;
+  margin-top: 4px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border, rgba(30, 28, 54, 0.14));
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.loadMore:hover {
+  border-color: var(--accent, #26fcd6);
+  color: var(--text-primary);
+}
