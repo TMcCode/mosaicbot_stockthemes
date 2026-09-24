@@ -550,6 +550,21 @@ export function HomeNarrativeRadar({
     return defaultNewsAsOf;
   });
 
+  // Static `/radar` export cannot read searchParams on the server — apply ?tab=&as_of= here.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.pathname !== "/radar") return;
+    const sp = new URLSearchParams(window.location.search);
+    const rawTab = String(sp.get("tab") || "").toLowerCase();
+    if (rawTab === "new" || rawTab === "accelerating" || rawTab === "fading" || rawTab === "news") {
+      setTab(rawTab);
+    } else if (rawTab === "watchlist") {
+      setTab("news");
+    }
+    const asOf = String(sp.get("as_of") || "").trim().slice(0, 10);
+    if (asOf) setNewsAsOf(asOf);
+  }, []);
+
   useEffect(() => {
     if (news) {
       setNewsLocal(null);

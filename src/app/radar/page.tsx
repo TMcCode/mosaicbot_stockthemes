@@ -17,22 +17,9 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/radar",
 });
 
-type Props = { searchParams?: Promise<{ tab?: string; as_of?: string }> | { tab?: string; as_of?: string } };
-
-const VALID_TABS = new Set(["new", "accelerating", "fading", "news", "watchlist"]);
-
-export default async function RadarPage({ searchParams }: Props) {
-  const sp = typeof (searchParams as Promise<unknown>)?.then === "function"
-    ? await (searchParams as Promise<{ tab?: string; as_of?: string }>)
-    : (searchParams as { tab?: string; as_of?: string } | undefined);
-  const rawTab = String(sp?.tab || "news").toLowerCase();
-  const tab = (VALID_TABS.has(rawTab) ? rawTab : "news") as
-    | "new"
-    | "accelerating"
-    | "fading"
-    | "news"
-    | "watchlist";
-  const initialNewsAsOf = String(sp?.as_of || "").trim().slice(0, 10) || undefined;
+// Static export: do not read `searchParams` here (forces dynamic). Tab/as_of hydrate
+// from the URL in HomeNarrativeRadar on the client.
+export default async function RadarPage() {
   const [radarRes, newsRes, searchIndexRes] = await Promise.all([
     getHomeRadarCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
@@ -103,8 +90,6 @@ export default async function RadarPage({ searchParams }: Props) {
             news={expandedNews}
             companyNames={companyNames}
             previewLimit={0}
-            initialTab={tab === "watchlist" ? "news" : tab}
-            initialNewsAsOf={initialNewsAsOf}
           />
         </div>
       </main>
