@@ -14,14 +14,11 @@ import {
   homeTopMoversTickerPeriod,
 } from "@/lib/buildTopMoversTicker";
 import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
-import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
-import { getFactorSpreadsCached } from "@/lib/getFactorSpreadsCached";
 import { getHomeTopMoversCached } from "@/lib/getHomeTopMoversCached";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
 import { loadHomeCommentary } from "@/lib/loadHomeCommentary";
 import { getManifestCached } from "@/lib/getManifestCached";
-import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -60,8 +57,6 @@ import {
   slimRadarForHome,
 } from "@/lib/slimRadarPayload";
 import { buildWatchlistRadarEnrichBySlug } from "@/lib/buildWatchlistRadarEnrich";
-import { mapOverlayFactorSpreadOptions } from "@/lib/overlayFactorSpreads";
-import { mapOverlaySectorEtfCatalog } from "@/lib/overlaySectorEtfs";
 
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
 const HOME_FEED_RENDER_LIMIT = 7;
@@ -83,9 +78,6 @@ export default async function Home() {
     radarRes,
     motionsRes,
     newsRes,
-    spyPerf,
-    benchmarksRes,
-    factorSpreadsRes,
     newsletterRes,
   ] = await Promise.all([
     getManifestCached(),
@@ -95,14 +87,11 @@ export default async function Home() {
     getHomeRadarCached().catch(() => null),
     getThemesInMotionCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
-    getSpyMarketPerfCached().catch(() => null),
-    getEtfBenchmarksCached().catch(() => null),
-    getFactorSpreadsCached().catch(() => null),
     loadNewsletterPosts().catch(() => null),
   ]);
   const motionsHomepage = motionsRes?.bundle?.homepage ?? [];
-  const sectorEtfCatalog = mapOverlaySectorEtfCatalog(benchmarksRes?.bundle);
-  const factorSpreadOptions = mapOverlayFactorSpreadOptions(factorSpreadsRes?.bundle);
+  // Motions sector/factor chart lazy-fetches etf_benchmarks + spy_snapshot + factor
+  // series from the CDN on mount — keep that out of home RSC HTML (~320KB+).
   const topMoversPeriod = homeTopMoversTickerPeriod();
   const homeJsonLd = buildHomePageJsonLd(homeSiteJsonDescription());
   const stats = manifest.stats;
@@ -285,9 +274,6 @@ export default async function Home() {
           <div className={styles.homeFeedStack}>
             <div className={styles.directoryGrid}>
               <ThemesInMotionMacroChart
-                sectorEtfCatalog={sectorEtfCatalog}
-                factorSpreadOptions={factorSpreadOptions}
-                benchmarkPerformance={spyPerf?.benchmarkPerformance}
                 selectedDates={
                   Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
                 }

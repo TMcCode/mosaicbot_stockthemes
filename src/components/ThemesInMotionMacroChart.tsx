@@ -21,6 +21,7 @@ import {
 } from "@/lib/overlayFactorSpreads";
 import {
   OVERLAY_SECTOR_SPDR_OPTIONS,
+  mapOverlaySectorEtfCatalog,
   overlaySectorItemKey,
   type OverlaySectorEtfCatalogEntry,
 } from "@/lib/overlaySectorEtfs";
@@ -29,13 +30,18 @@ import {
   MOTION_MACRO_FACTOR_SHORT_LABELS,
 } from "@/lib/motionMacroFactors";
 import { loadFactorTimeseries } from "@/lib/loadFactorTimeseries";
+import { parseSpySnapshotJson } from "@/lib/parseSpySnapshot";
 import { OVERLAY_STANDARD_PERIODS, sliceAndRebaseIndexedPerformance } from "@/lib/sliceIndexedChart";
 import {
   priceReturnsBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
-import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
+import {
+  stockthemesBrowserSidecarFetchBase,
+  stockthemesPublicDataBase,
+} from "@/lib/stockthemesPublicBase";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
+import type { EtfBenchmarksV0 } from "@/types/etf_benchmarks.v0";
 import type { FactorSpreadsV0 } from "@/types/factor_spreads.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
@@ -44,11 +50,13 @@ import styles from "./ThemesInMotionMacroChart.module.css";
 export type MacroChartMode = "sectors" | "factors";
 
 type Props = {
-  sectorEtfCatalog: Record<string, OverlaySectorEtfCatalogEntry>;
-  factorSpreadOptions: OverlayFactorSpreadOption[];
-  benchmarkPerformance?: ChartPerformanceV0;
+  /** Manifest custom event dates for period toolbar — small; safe to SSR. */
   selectedDates?: ManifestSelectedDateV0[];
 };
+
+function browserDataBase(): string | undefined {
+  return stockthemesBrowserSidecarFetchBase() ?? stockthemesPublicDataBase();
+}
 
 function isStandardPeriod(p: OverlayChartPeriod): p is OverlayStandardPeriod {
   return (OVERLAY_STANDARD_PERIODS as readonly string[]).includes(p);
@@ -67,16 +75,28 @@ function lastIsoFromPerf(perf: ChartPerformanceV0 | undefined): string | undefin
   return day.length >= 10 ? day : undefined;
 }
 
-export function ThemesInMotionMacroChart({
-  sectorEtfCatalog,
-  factorSpreadOptions,
-  benchmarkPerformance,
-  selectedDates,
-}: Props) {
+/**
+ * Home “Market backdrop” sectors/factors chart.
+ * Series are fetched from the public CDN on mount — not SSR’d into home HTML
+ * (etf_benchmarks + spy performance alone were ~320KB of RSC payload).
+ */
+export function ThemesInMotionMacroChart({ selectedDates }: Props) {
   const [mode, setMode] = useState<MacroChartMode>("sectors");
   const [period, setPeriod] = useState<OverlayChartPeriod>("1Y");
   const [hiddenIds, setHiddenIds] = useState<Set<string>>(() => new Set());
   const [chartHeight, setChartHeight] = useState(480);
+
+  const [sectorEtfCatalog, setSectorEtfCatalog] = useState<
+    Record<string, OverlaySectorEtfCatalogEntry>
+  >({});
+  const [benchmarkPerformance, setBenchmarkPerformance] = useState<
+    ChartPerformanceV0 | undefined
+  >();
+  const [sectorLoading, setSectorLoading] = useState(true);
+
+  const [factorSpreadOptions, setFactorSpreadOptions] = useState<OverlayFactorSpreadOption[]>(
+    [],
+  );
   const [factorCatalog, setFactorCatalog] = useState<
     Record<string, OverlayFactorSpreadCatalogEntry>
   >({});
@@ -89,6 +109,57 @@ export function ThemesInMotionMacroChart({
     apply();
     mq.addEventListener("change", apply);
     return () => mq.removeEventListener("change", apply);
+  }, []);
+
+  // Sectors + SPY benchmark — one CDN pull when the chart mounts.
+  useEffect(() => {
+    const base = browserDataBase();
+    if (!base) {
+      setSectorLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSectorLoading(true);
+    const q = priceReturnsBrowserCacheBusterQuery();
+
+    void Promise.all([
+      fetch(`${base.replace(/\/$/, "")}/etf_benchmarks.v0.json?${q}`, {
+        credentials: "omit",
+        cache: stockthemesBrowserFetchCache(),
+      }).then(async (res) => {
+        if (!res.ok) return null;
+        return (await res.json()) as EtfBenchmarksV0;
+      }),
+      fetch(`${base.replace(/\/$/, "")}/spy_snapshot.v0.json?${q}`, {
+        credentials: "omit",
+        cache: stockthemesBrowserFetchCache(),
+      }).then(async (res) => {
+        if (!res.ok) return null;
+        return parseSpySnapshotJson(await res.json());
+      }),
+    ])
+      .then(([etfBundle, spy]) => {
+        if (cancelled) return;
+        if (etfBundle?.rows?.length) {
+          const mapped = mapOverlaySectorEtfCatalog(etfBundle);
+          if (Object.keys(mapped).length) setSectorEtfCatalog(mapped);
+        }
+        const spyPerf = spy?.benchmarkPerformance;
+        if (spyPerf?.dates?.length && spyPerf?.values?.length) {
+          setBenchmarkPerformance(spyPerf);
+        }
+      })
+      .catch(() => {
+        /* leave empty — hint below */
+      })
+      .finally(() => {
+        if (!cancelled) setSectorLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const customPeriods = useMemo(
@@ -116,9 +187,10 @@ export function ThemesInMotionMacroChart({
     });
   }, []);
 
+  // Factors — only when that tab is selected (timeseries is large).
   useEffect(() => {
     if (mode !== "factors") return;
-    const base = stockthemesPublicDataBase();
+    const base = browserDataBase();
     if (!base) return;
 
     let cancelled = false;
@@ -130,19 +202,25 @@ export function ThemesInMotionMacroChart({
       spreads: FactorSpreadsV0 | null,
     ) => {
       if (cancelled) return;
-      const options = spreads?.rows?.length
-        ? mapOverlayFactorSpreadOptions(spreads)
-        : factorSpreadOptions;
-      if (timeseries) {
-        setFactorCatalog(mergeFactorTimeseriesIntoCatalog(options, timeseries));
-      }
+      setFactorSpreadOptions((prev) => {
+        const options = spreads?.rows?.length
+          ? mapOverlayFactorSpreadOptions(spreads)
+          : prev;
+        if (timeseries) {
+          setFactorCatalog(mergeFactorTimeseriesIntoCatalog(options, timeseries));
+        }
+        return options;
+      });
     };
 
     const loadSpreads = () =>
-      fetch(`${base}/factor_spreads.v0.json?${priceReturnsBrowserCacheBusterQuery()}`, {
-        credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
-      }).then(async (res) => {
+      fetch(
+        `${base.replace(/\/$/, "")}/factor_spreads.v0.json?${priceReturnsBrowserCacheBusterQuery()}`,
+        {
+          credentials: "omit",
+          cache: stockthemesBrowserFetchCache(),
+        },
+      ).then(async (res) => {
         if (!res.ok) return null;
         return (await res.json()) as FactorSpreadsV0;
       });
@@ -172,7 +250,7 @@ export function ThemesInMotionMacroChart({
     return () => {
       cancelled = true;
     };
-  }, [mode, factorSpreadOptions]);
+  }, [mode]);
 
   const rawPerformances = useMemo((): ChartPerformanceV0[] => {
     const out: ChartPerformanceV0[] = [];
@@ -310,7 +388,9 @@ export function ThemesInMotionMacroChart({
       ? factorLoading
         ? "Loading factor spreads…"
         : "Factor spread series not published yet."
-      : "Sector SPDR series not published yet.";
+      : sectorLoading
+        ? "Loading sector series…"
+        : "Sector SPDR series not published yet.";
 
   return (
     <section className={styles.section} aria-labelledby="motion-macro-chart-heading">
