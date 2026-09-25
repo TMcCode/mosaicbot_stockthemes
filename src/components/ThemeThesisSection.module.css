@@ -2,6 +2,15 @@
   max-width: 760px;
 }
 
+.blockFull {
+  max-width: none;
+  width: 100%;
+}
+
+.blockFull .thesis {
+  max-width: none;
+}
+
 .thesis {
   margin: 0;
   font-size: 16px;

@@ -1748,6 +1748,12 @@ a.secondary {
   margin-top: 14px;
 }
 
+/* Theme thesis under title+treemap row — full hero width. */
+.heroGrid > .heroThesisBleed.heroFullBleed {
+  margin-top: 4px;
+  padding-top: 4px;
+}
+
 /* Force SiteSearch wrap/input to fill the hero block (nav search caps at 360px). */
 .heroSearch > div {
   width: 100% !important;

@@ -143,7 +143,11 @@ export function ThemeDetailRuntimeLoader({
         </p>
       ) : null}
       {shouldShowThemeThesisUi(detail.theme_thesis) ? (
-        <ThemeThesisBlock themeThesis={detail.theme_thesis} signInNext={`/themes/${slug}`} />
+        <ThemeThesisBlock
+          fullBleed
+          themeThesis={detail.theme_thesis}
+          signInNext={`/themes/${slug}`}
+        />
       ) : null}
       <div className={styles.tightChartTop}>
         <Chart1yPanel

@@ -27,6 +27,8 @@ type Props = {
   themeThesis?: ThemeThesisV0;
   /** Return path after sign-in (e.g. `/themes/my-slug`). */
   signInNext?: string;
+  /** Span the theme hero width (below title + treemap) instead of the left rail. */
+  fullBleed?: boolean;
 };
 
 function ThesisParagraph({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
@@ -76,17 +78,18 @@ function ThesisSignInPrompt({ signInNext }: { signInNext?: string }) {
 /**
  * Theme thesis + update badge; guests see a sign-in prompt instead of thesis text.
  */
-export function ThemeThesisBlock({ themeThesis, signInNext }: Props) {
+export function ThemeThesisBlock({ themeThesis, signInNext, fullBleed = false }: Props) {
   if (!shouldShowThemeThesisUi(themeThesis)) {
     return null;
   }
 
   const thesis = themeThesis!;
   const { configured, loading, user } = useSupabaseAuth();
+  const wrapClass = fullBleed ? `${styles.block} ${styles.blockFull}` : styles.block;
 
   if (!configured) {
     return (
-      <div className={styles.block}>
+      <div className={wrapClass}>
         <ThesisParagraph themeThesis={thesis} />
         <ThesisUpdateBadge themeThesis={thesis} />
       </div>
@@ -102,14 +105,14 @@ export function ThemeThesisBlock({ themeThesis, signInNext }: Props) {
       return null;
     }
     return (
-      <div className={styles.block}>
+      <div className={wrapClass}>
         <ThesisSignInPrompt signInNext={signInNext} />
       </div>
     );
   }
 
   return (
-    <div className={styles.block}>
+    <div className={wrapClass}>
       <ThesisParagraph themeThesis={thesis} />
       <ThesisUpdateBadge themeThesis={thesis} />
     </div>

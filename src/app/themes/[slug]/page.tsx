@@ -220,12 +220,6 @@ export default async function ThemeDetailPage({ params }: Props) {
                 groupSlug={theme.group_slug}
                 groupName={group?.name}
               />
-              {shouldShowThemeThesisUi(detail?.theme_thesis) ? (
-                <ThemeThesisBlock
-                  themeThesis={detail?.theme_thesis}
-                  signInNext={`/themes/${slug}`}
-                />
-              ) : null}
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="theme" slug={slug} />
               ) : null}
@@ -272,6 +266,15 @@ export default async function ThemeDetailPage({ params }: Props) {
                 )
               ) : null}
             </div>
+            {shouldShowThemeThesisUi(detail?.theme_thesis) ? (
+              <div className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}>
+                <ThemeThesisBlock
+                  fullBleed
+                  themeThesis={detail?.theme_thesis}
+                  signInNext={`/themes/${slug}`}
+                />
+              </div>
+            ) : null}
           </div>
           {!detail && dataBaseUrl ? (
             <ThemeDetailRuntimeLoader
