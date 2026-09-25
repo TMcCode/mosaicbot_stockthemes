@@ -8,6 +8,8 @@ type Props = {
   children: React.ReactNode;
   minHeight?: number;
   rootMargin?: string;
+  /** Always mount after this many ms if IO never fires (CF / Safari edge cases). */
+  fallbackMs?: number;
 };
 
 /** Parse the vertical component of an IntersectionObserver rootMargin (px or %). */
@@ -22,11 +24,27 @@ function rootMarginYPx(rootMargin: string, viewportH: number): number {
   return Number.isFinite(n) ? n : 0;
 }
 
+function nearViewport(node: HTMLElement, rootMargin: string): boolean {
+  const vh = window.innerHeight || 0;
+  const marginY = rootMarginYPx(rootMargin, vh);
+  const rect = node.getBoundingClientRect();
+  return rect.bottom >= -marginY && rect.top <= vh + marginY;
+}
+
 /**
  * Defers mounting heavier client UI until near viewport.
  * Keeps layout stable via a lightweight placeholder box.
+ *
+ * Includes an eager on-screen check, scroll/resize re-check, and a timeout
+ * fallback — live CF Pages has left IntersectionObserver stuck before
+ * (empty Motions sector/factor chart slot).
  */
-export function DeferRender({ children, minHeight = 360, rootMargin = "320px 0px" }: Props) {
+export function DeferRender({
+  children,
+  minHeight = 360,
+  rootMargin = "320px 0px",
+  fallbackMs = 1800,
+}: Props) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const [ready, setReady] = useState(
     () => typeof window !== "undefined" && typeof IntersectionObserver === "undefined",
@@ -56,20 +74,31 @@ export function DeferRender({ children, minHeight = 360, rootMargin = "320px 0px
     );
     obs.observe(node);
 
-    // Safari / some CF Pages loads never fire IO for nodes already on-screen.
-    const vh = window.innerHeight || 0;
-    const marginY = rootMarginYPx(rootMargin, vh);
-    const rect = node.getBoundingClientRect();
-    if (rect.bottom >= -marginY && rect.top <= vh + marginY) {
+    if (nearViewport(node, rootMargin)) {
       reveal();
       obs.disconnect();
     }
 
+    const onScrollOrResize = () => {
+      if (cancelled || !hostRef.current) return;
+      if (nearViewport(hostRef.current, rootMargin)) {
+        reveal();
+        obs.disconnect();
+      }
+    };
+    window.addEventListener("scroll", onScrollOrResize, { passive: true });
+    window.addEventListener("resize", onScrollOrResize);
+
+    const t = window.setTimeout(reveal, Math.max(400, fallbackMs));
+
     return () => {
       cancelled = true;
       obs.disconnect();
+      window.clearTimeout(t);
+      window.removeEventListener("scroll", onScrollOrResize);
+      window.removeEventListener("resize", onScrollOrResize);
     };
-  }, [ready, rootMargin]);
+  }, [ready, rootMargin, fallbackMs]);
 
   return (
     <div ref={hostRef} className={styles.host}>
