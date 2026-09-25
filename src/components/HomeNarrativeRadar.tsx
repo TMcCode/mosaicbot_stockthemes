@@ -663,9 +663,10 @@ export function HomeNarrativeRadar({
     previewLimit,
   ]);
 
-  // SSR snapshot for first paint; client always refreshes from public CDN (8× weekday bake).
+  // SSR snapshot for first paint; client refreshes from public CDN (8× weekday bake).
+  // Never gate the tab on the live fetch alone — if CDN hangs, keep showing `news`.
   const [newsLocal, setNewsLocal] = useState<RadarNewsV0 | null>(null);
-  const [newsFetchDone, setNewsFetchDone] = useState(false);
+  const [newsFetchDone, setNewsFetchDone] = useState(() => Boolean(news?.today));
   const newsEffective = newsLocal ?? news;
   const newsDays = newsDayOptions(newsEffective);
   const defaultNewsAsOf = newsDays[0]?.as_of || "";
@@ -696,15 +697,15 @@ export function HomeNarrativeRadar({
 
   useEffect(() => {
     let cancelled = false;
-    setNewsFetchDone(false);
-    void fetchRadarNewsBrowser()
-      .then((data) => {
+    void (async () => {
+      try {
+        const data = await fetchRadarNewsBrowser();
         if (cancelled || !data?.today) return;
         setNewsLocal(data);
-      })
-      .finally(() => {
+      } finally {
         if (!cancelled) setNewsFetchDone(true);
-      });
+      }
+    })();
     return () => {
       cancelled = true;
     };
@@ -824,7 +825,7 @@ export function HomeNarrativeRadar({
           ) : null}
           {previewLimit <= 0 ? <RadarWatchlistPanel /> : null}
         </div>
-      ) : tab === "news" && !newsFetchDone ? (
+      ) : tab === "news" && !newsEffective && !newsFetchDone ? (
         <div className={styles.empty}>Loading news…</div>
       ) : tab === "news" && newsList.length === 0 ? (
         <div className={styles.empty}>No themes in the news yet — check back after the next publish.</div>

@@ -12,7 +12,8 @@ import styles from "../page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Themes in Motion",
-  description: "Calculated and editorially curated themes moving across public markets.",
+  description:
+    "Themes that are moving right now — ranked daily on returns, revisions, and breadth.",
   path: "/themes-in-motion",
 });
 
@@ -36,8 +37,9 @@ export default async function ThemesInMotionPage() {
           </p>
           <h1 className={styles.heroTitle}>Themes in Motion</h1>
           <p className={styles.introPunchline}>
-            Daily Motion Score plus human locks and adds. Homepage shows 10; this page lists the
-            full pool.
+            Themes heating up right now — ranked daily on returns, revisions, and how broad the
+            move is, with a few editor picks held in place. Home shows the top 10; this page has
+            the full list.
           </p>
           <HomeThemesInMotionTable
             rows={pool}

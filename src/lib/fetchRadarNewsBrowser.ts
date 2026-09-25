@@ -14,14 +14,24 @@ export function radarNewsBrowserUrl(): string | null {
   return `${base.replace(/\/$/, "")}/${RADAR_NEWS_OBJECT}?${q}`;
 }
 
-/** Fetch live radar_news from CDN; null on failure. */
+/** Fetch live radar_news from CDN; fixture fallback; null on total failure. */
 export async function fetchRadarNewsBrowser(): Promise<RadarNewsV0 | null> {
   const url = radarNewsBrowserUrl();
-  if (!url) return null;
+  if (url) {
+    try {
+      const res = await fetch(url, {
+        credentials: "omit",
+        cache: stockthemesBrowserFetchCache(),
+      });
+      if (res.ok) return parseRadarNews(await res.text());
+    } catch {
+      /* fall through to fixture */
+    }
+  }
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`/fixtures/${RADAR_NEWS_OBJECT}`, {
       credentials: "omit",
-      cache: stockthemesBrowserFetchCache(),
+      cache: "no-store",
     });
     if (!res.ok) return null;
     return parseRadarNews(await res.text());
