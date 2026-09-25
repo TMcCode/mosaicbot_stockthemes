@@ -358,8 +358,8 @@
   margin-top: 2px;
   min-height: 28px;
   width: 100%;
-  /* Allow +N past the logo chips; clipping here was hiding overflow counts. */
-  overflow: visible;
+  /* Long exchange suffixes (.SHG/.SHE) used to blow past the card and hide +N. */
+  overflow: hidden;
   position: relative;
 }
 
@@ -371,6 +371,7 @@
   justify-content: flex-end;
   gap: 3px;
   min-width: 28px;
+  max-width: 40px;
   border-radius: 4px;
   line-height: 1;
 }
@@ -382,9 +383,9 @@
   color: var(--text-secondary);
   font-variant-numeric: tabular-nums;
   line-height: 1;
-  max-width: none;
-  overflow: visible;
-  text-overflow: clip;
+  max-width: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   text-align: center;
 }
@@ -395,6 +396,7 @@
 }
 
 .logoMore {
+  flex: 0 0 auto;
   font-size: 11px;
   font-variant-numeric: tabular-nums;
   color: var(--text-secondary);
