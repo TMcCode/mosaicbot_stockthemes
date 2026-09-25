@@ -89,7 +89,12 @@ export function ThemeThesisBlock({ themeThesis, signInNext, fullBleed = false }:
 
   if (!configured) {
     return (
-      <div className={wrapClass}>
+      <div className={wrapClass} aria-labelledby="theme-thesis-heading">
+        <div className={styles.head}>
+          <h2 id="theme-thesis-heading" className={styles.title}>
+            Thesis
+          </h2>
+        </div>
         <ThesisParagraph themeThesis={thesis} />
         <ThesisUpdateBadge themeThesis={thesis} />
       </div>
@@ -105,14 +110,24 @@ export function ThemeThesisBlock({ themeThesis, signInNext, fullBleed = false }:
       return null;
     }
     return (
-      <div className={wrapClass}>
+      <div className={wrapClass} aria-labelledby="theme-thesis-heading">
+        <div className={styles.head}>
+          <h2 id="theme-thesis-heading" className={styles.title}>
+            Thesis
+          </h2>
+        </div>
         <ThesisSignInPrompt signInNext={signInNext} />
       </div>
     );
   }
 
   return (
-    <div className={wrapClass}>
+    <div className={wrapClass} aria-labelledby="theme-thesis-heading">
+      <div className={styles.head}>
+        <h2 id="theme-thesis-heading" className={styles.title}>
+          Thesis
+        </h2>
+      </div>
       <ThesisParagraph themeThesis={thesis} />
       <ThesisUpdateBadge themeThesis={thesis} />
     </div>
