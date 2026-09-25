@@ -28,7 +28,7 @@ import { HomeExploreChanging, pickExploreGroups } from "@/components/HomeExplore
 import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
 import { HomeNewsletterPostsLive } from "@/components/HomeNewsletterPostsLive";
 import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
-import { ThemesInMotionMacroChart } from "@/components/ThemesInMotionMacroChart";
+import { LazyThemesInMotionMacroChart } from "@/components/LazyThemesInMotionMacroChart";
 import { JsonLd } from "@/components/JsonLd";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
 import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
@@ -275,7 +275,7 @@ export default async function Home() {
           <div className={styles.homeFeedStack}>
             <div className={styles.directoryGrid}>
               <DeferRender minHeight={480} rootMargin="420px 0px">
-                <ThemesInMotionMacroChart
+                <LazyThemesInMotionMacroChart
                   selectedDates={
                     Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
                   }
