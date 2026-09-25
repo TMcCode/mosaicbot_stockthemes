@@ -273,7 +273,9 @@ jobs:
             -H "Content-Type: application/json" \
             "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
             -d '{"prefixes":["stockthemes.ai/_next/static/","www.stockthemes.ai/_next/static/"]}' \
-            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("purge", d.get("success"), d.get("errors")); raise SystemExit(0 if d.get("success") else 1)'
+            | python3 -c 'import json,sys; d=json.load(sys.stdin); print("purge", d.get("success"), d.get("errors")); raise SystemExit(0)'
+          # Never fail the deploy on purge — token may lack Zone.Cache Purge.
+          # New -st busted chunk URLs already avoid poisoned 404 HITs.
 
   skip_notice:
     needs: check
