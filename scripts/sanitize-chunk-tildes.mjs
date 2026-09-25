@@ -16,6 +16,17 @@ const OUT = path.join(ROOT, "out");
 const TILDE = "~";
 const SAFE = "_";
 const BUST = "-st"; // stockthemes tilde-sanitize cache bust marker
+/** Per-deploy salt so apex cannot keep a year-long 404 HIT on a reused -st hash. */
+const DEPLOY_SALT = (
+  process.env.GITHUB_SHA ||
+  process.env.CF_PAGES_COMMIT_SHA ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  Date.now().toString(36)
+)
+  .replace(/[^a-zA-Z0-9]/g, "")
+  .slice(0, 8)
+  .toLowerCase();
+
 
 /** Match chunk/asset paths that still contain `~` (may appear more than once). */
 const CHUNK_TILDE_RE = /(static\/chunks\/[^"'\\\s]*?)~([^"'\\\s]*)/g;
@@ -117,7 +128,7 @@ function main() {
     const base = path.basename(file, ext);
     if (base.includes(BUST)) continue;
     const dir = path.dirname(file);
-    const toBase = `${base}${BUST}${shortHash(file)}${ext}`;
+    const toBase = `${base}${BUST}${shortHash(file)}${DEPLOY_SALT}${ext}`;
     const to = path.join(dir, toBase);
     if (fs.existsSync(to)) {
       console.error(`[sanitize-chunk-tildes] bust collision: ${to}`);
@@ -178,7 +189,7 @@ function main() {
   }
 
   console.log(
-    `[sanitize-chunk-tildes] renamed ${renames.length} tilde file(s), rewrote ${rewrittenPaths.length}, cache-bust ${bustRenames.length}`,
+    `[sanitize-chunk-tildes] renamed ${renames.length} tilde file(s), rewrote ${rewrittenPaths.length}, cache-bust ${bustRenames.length} (salt=${DEPLOY_SALT})`,
   );
 }
 
