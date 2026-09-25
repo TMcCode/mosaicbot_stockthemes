@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
+import { DeferRender } from "@/components/DeferRender";
 import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
@@ -273,11 +274,13 @@ export default async function Home() {
 
           <div className={styles.homeFeedStack}>
             <div className={styles.directoryGrid}>
-              <ThemesInMotionMacroChart
-                selectedDates={
-                  Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
-                }
-              />
+              <DeferRender minHeight={480} rootMargin="420px 0px">
+                <ThemesInMotionMacroChart
+                  selectedDates={
+                    Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
+                  }
+                />
+              </DeferRender>
 
               <HomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
 
