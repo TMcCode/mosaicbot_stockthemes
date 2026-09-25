@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
   type MutableRefObject,
+  type ReactNode,
 } from "react";
 import {
   CrosshairMode,
@@ -59,12 +60,45 @@ import {
 } from "@/lib/chartTheme";
 import { TickerBadge } from "@/components/TickerBadge";
 import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
+import type { ChartExportLegendItem } from "@/lib/exportChartPng";
+import { brandAssetPath } from "@/lib/siteUrl";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import styles from "./Chart1yPanel.module.css";
 
 function isStandardPeriod(p: OverlayChartPeriod): p is OverlayStandardPeriod {
   return (OVERLAY_STANDARD_PERIODS as readonly string[]).includes(p);
+}
+
+/** fitContent packs flush right and clips the last day label (e.g. "25"); tiny offset fixes it. */
+function fitChartTimeScale(chart: IChartApi): void {
+  const ts = chart.timeScale();
+  ts.fitContent();
+  ts.applyOptions({ rightOffset: 1 });
+}
+
+const CHART_VIEW_HEIGHT = 420;
+/** Shareable plot aspect (~4:3) — full square was too tall; landscape strip too wide. */
+/** Shareable plot aspect (~4:3) — full square was too tall; landscape strip too wide. */
+const EXPORT_CHART_W = 1100;
+const EXPORT_CHART_H = 720;
+
+function nextPaint(): Promise<void> {
+  return new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+  });
+}
+
+/** Resize chart for export, screenshot, restore — reflows axes for a shareable plot. */
+async function takeSquareChartScreenshot(chart: IChartApi, host: HTMLElement): Promise<HTMLCanvasElement> {
+  const origW = Math.max(host.clientWidth, 200);
+  chart.applyOptions({ width: EXPORT_CHART_W, height: EXPORT_CHART_H });
+  fitChartTimeScale(chart);
+  await nextPaint();
+  const shot = chart.takeScreenshot();
+  chart.applyOptions({ width: origW, height: CHART_VIEW_HEIGHT });
+  fitChartTimeScale(chart);
+  return shot;
 }
 
 /** Stable key so composition view ignores live performance tail-only updates. */
@@ -206,6 +240,11 @@ const PALETTE = [
 const PERF_SERIES_ID = "__performance__";
 const INTEGER_PRICE_FORMAT = { type: "price" as const, precision: 0, minMove: 1 };
 
+/** Performance line — teal in both themes. */
+function performanceLineColor(_theme: "light" | "dark"): string {
+  return "#26fcd6";
+}
+
 /** Lightweight Charts: business-day ISO strings, sorted ascending. */
 function toDay(d: string): string {
   if (d.length >= 10 && d[4] === "-" && d[7] === "-") {
@@ -271,6 +310,16 @@ type Chart1yCanvasProps = {
   /** Ref so tooltip meta stays fresh without remounting the chart when `memo` skips canvas render. */
   compositionMetaRef: MutableRefObject<Record<string, CompositionMeta> | undefined>;
   performanceTitleRef: MutableRefObject<string | undefined>;
+  /** Live chart instance for PNG export (`takeScreenshot`). */
+  chartApiRef: MutableRefObject<IChartApi | null>;
+  /** Chart host element — used to restore width after square export capture. */
+  chartHostRef: MutableRefObject<HTMLDivElement | null>;
+  /** Shown in the chart footer on performance view (left of brand mark). */
+  performanceFootnote?: string | null;
+  /** Title + view toggle rendered inside the gray chart shell. */
+  header?: ReactNode;
+  /** Period chips in the footer row (right of logo + note). */
+  periodControls?: ReactNode;
 };
 
 /**
@@ -285,6 +334,11 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   lineApisRef,
   compositionMetaRef,
   performanceTitleRef,
+  chartApiRef,
+  chartHostRef,
+  performanceFootnote,
+  header,
+  periodControls,
 }: Chart1yCanvasProps) {
   const { theme } = useStockthemesTheme();
   const themeRef = useRef(theme);
@@ -296,6 +350,14 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   const tooltipRef = useRef<HTMLDivElement | null>(null);
   const [renderError, setRenderError] = useState<string | null>(null);
   const tipColors = chartThemeColors(theme);
+
+  // Keep host ref in sync for export resize/restore.
+  useEffect(() => {
+    chartHostRef.current = wrapRef.current;
+    return () => {
+      chartHostRef.current = null;
+    };
+  }, [chartHostRef]);
 
   const perf = chart1y?.performance;
   const comp = chart1y?.composition_indexed;
@@ -314,7 +376,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     lineApisRef.current.clear();
 
     const width = Math.max(el.clientWidth, 200);
-    const height = activeView === "composition" ? 460 : 420;
+    const height = CHART_VIEW_HEIGHT;
 
     let chart: IChartApi | null = null;
     try {
@@ -370,6 +432,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         },
       });
       chartRef.current = chart;
+      chartApiRef.current = chart;
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
       setRenderError(`Lightweight Charts init failed: ${msg}`);
@@ -430,7 +493,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     try {
       if (activeView === "performance" && perfPoints) {
         const series = chart.addLineSeries({
-          color: "#26fcd6",
+          color: performanceLineColor(themeRef.current),
           lineWidth: 2,
           // Empty title: LW still draws colored end labels on the pane when title is set,
           // even if lastValueVisible is false. Tooltip uses PERF_SERIES_ID map instead.
@@ -507,7 +570,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       setRenderError(`Lightweight Charts render failed: ${msg}`);
     }
 
-    chart.timeScale().fitContent();
+    fitChartTimeScale(chart);
 
     const tickerToSeriesName = new Map<string, string | undefined>();
     comp?.series?.forEach((s) => tickerToSeriesName.set(s.ticker, s.name));
@@ -651,7 +714,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
               const w2 = Math.max(wrapRef.current.clientWidth, 200);
               lastObservedWidth = w2;
               chartRef.current.applyOptions({ width: w2 });
-              chartRef.current.timeScale().fitContent();
+              fitChartTimeScale(chartRef.current);
             }, 120);
           })
         : null;
@@ -673,10 +736,11 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
         // no-op
       }
       chartRef.current = null;
+      chartApiRef.current = null;
       indexedBaselineRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps -- perf/comp/benchmark are sliced upstream; hiddenSeries applied in follow-up effect
-  }, [chart1y, benchmarkPerformance, activeView, lineApisRef]);
+  }, [chart1y, benchmarkPerformance, activeView, lineApisRef, chartApiRef]);
 
   /** Legend toggle without full chart rebuild (composition only). */
   useEffect(() => {
@@ -694,13 +758,23 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     applyChartTheme(chart, theme);
     const baseline = indexedBaselineRef.current;
     if (baseline) applyIndexedBaselineTheme(baseline, theme);
-  }, [theme]);
+    lineApisRef.current.get(PERF_SERIES_ID)?.applyOptions({
+      color: performanceLineColor(theme),
+    });
+  }, [theme, lineApisRef]);
 
   return (
-    <div ref={shellRef} style={{ position: "relative", overflow: "visible" }}>
-      <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: 420 }} />
-      <div className={styles.chartBrandMark} aria-hidden="true">
-        <BrandWatermark variant="chart" />
+    <div ref={shellRef} className={styles.chartShell}>
+      {header}
+      <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: CHART_VIEW_HEIGHT }} />
+      <div className={styles.chartFooter}>
+        <div className={styles.chartFooterLeft} aria-hidden="true">
+          <BrandWatermark className={styles.chartBrandLockup} />
+          {performanceFootnote ? (
+            <span className={styles.chartBrandNote}>{performanceFootnote}</span>
+          ) : null}
+        </div>
+        {periodControls}
       </div>
       <div
         ref={tooltipRef}
@@ -1256,11 +1330,15 @@ export function Chart1yLightweight({
     : "the Past Year";
 
   const lineApisRef = useRef<Map<string, ISeriesApi<"Line">>>(new Map());
+  const chartApiRef = useRef<IChartApi | null>(null);
+  const chartHostRef = useRef<HTMLDivElement | null>(null);
   const compositionMetaRef = useRef(compositionMetaByTicker);
   const performanceTitleRef = useRef(performanceTitle);
   /** Tickers hidden via legend click (state drives visibility; synced after canvas rebuild). */
   const [hiddenSeries, setHiddenSeries] = useState<string[]>([]);
   const hiddenSet = useMemo(() => new Set(hiddenSeries), [hiddenSeries]);
+  const [downloadBusy, setDownloadBusy] = useState(false);
+  const { theme: uiTheme } = useStockthemesTheme();
 
   useEffect(() => {
     setHiddenSeries([]);
@@ -1280,48 +1358,99 @@ export function Chart1yLightweight({
     );
   }, []);
 
+  const handleDownloadPng = useCallback(async () => {
+    const chart = chartApiRef.current;
+    const host = chartHostRef.current;
+    if (!chart || !host || downloadBusy) return;
+    setDownloadBusy(true);
+    try {
+      // Lazy-load export helpers so idle chart pages don't pay for PNG compose code.
+      const { chartExportFilename, composeAndDownloadChartPng } = await import(
+        "@/lib/exportChartPng"
+      );
+      // Reflow the live chart into a square viewport so the plot itself is shareable.
+      const plotCanvas = await takeSquareChartScreenshot(chart, host);
+      const chrome = chartThemeColors(uiTheme);
+      const themeLabel = performanceTitle?.trim() || "Theme";
+      const titleAccent =
+        activeView === "composition" ? themeLabel : `${themeLabel} Index`;
+      const titleRest =
+        activeView === "composition"
+          ? `Constituents Over ${periodWindowLabel}`
+          : `vs. S&P 500 Index Over ${periodWindowLabel}`;
+      const footnote =
+        activeView === "performance"
+          ? sidecarEntity?.kind === "group"
+            ? "Equal-weight average of the themes in this group."
+            : "Exposure-weighted average of theme constituents."
+          : null;
+
+      let legendItems: ChartExportLegendItem[] | undefined;
+      if (activeView === "composition") {
+        const series = chart1ySorted?.composition_indexed?.series ?? [];
+        const isGroup = sidecarEntity?.kind === "group" || !compositionLegendShowSeriesBadge;
+        legendItems = [];
+        series.forEach((s, i) => {
+          if (!s.dates?.length || !s.values?.length) return;
+          if (hiddenSet.has(s.ticker)) return;
+          const meta = compositionMetaByTicker?.[s.ticker.toUpperCase()];
+          const name = meta?.name?.trim() || s.name?.trim() || s.ticker;
+          const ticker = s.ticker?.trim() || "";
+          const label = isGroup || !ticker ? name : `${name} (${ticker})`;
+          legendItems!.push({
+            color: PALETTE[i % PALETTE.length],
+            label,
+          });
+        });
+      }
+
+      await composeAndDownloadChartPng({
+        plotCanvas,
+        background: chrome.background,
+        textPrimary: uiTheme === "light" ? "#0f172a" : "#eaf2f0",
+        textSecondary: chrome.text,
+        titleAccent,
+        titleRest,
+        titleAccentColor: uiTheme === "light" ? "#2a9893" : "#26fcd6",
+        footnote,
+        logoUrl: brandAssetPath("/brand/logo-icon-custom.png"),
+        legendItems,
+        filename: chartExportFilename({
+          slug: sidecarEntity?.slug || themeLabel,
+          period: String(period),
+          view: activeView,
+        }),
+      });
+    } finally {
+      setDownloadBusy(false);
+    }
+  }, [
+    downloadBusy,
+    uiTheme,
+    performanceTitle,
+    activeView,
+    periodWindowLabel,
+    sidecarEntity?.kind,
+    sidecarEntity?.slug,
+    chart1ySorted?.composition_indexed?.series,
+    compositionLegendShowSeriesBadge,
+    compositionMetaByTicker,
+    hiddenSet,
+    period,
+  ]);
+
   if (!hasPerf && !hasComp) {
     return null;
   }
   const themeLabel = performanceTitle?.trim() || "Theme";
+  const performanceFootnote =
+    activeView === "performance"
+      ? sidecarEntity?.kind === "group"
+        ? "Equal-weight average of the themes in this group."
+        : "Exposure-weighted average of theme constituents."
+      : null;
   return (
     <section className={styles.section} aria-label="Theme performance chart">
-      <div className={styles.toolbar}>
-        <span className={styles.toolbarLabel}>
-          {activeView === "composition" ? (
-            <>
-              <span className={styles.themeTitleAccent}>{themeLabel}</span> Constituents Over{" "}
-              {periodWindowLabel}
-            </>
-          ) : (
-            <>
-              <span className={styles.themeTitleAccent}>{themeLabel} Index</span>
-              <span className={styles.benchmarkTitle}>
-                {" "}
-                vs. S&P 500 Index Over {periodWindowLabel}
-              </span>
-            </>
-          )}
-        </span>
-        {hasPerf && hasComp ? (
-          <div className={styles.toggle} role="group" aria-label="Chart type">
-            <button
-              type="button"
-              className={activeView === "performance" ? styles.active : undefined}
-              onClick={() => startTransition(() => setView("performance"))}
-            >
-              Performance
-            </button>
-            <button
-              type="button"
-              className={activeView === "composition" ? styles.active : undefined}
-              onClick={() => startTransition(() => setView("composition"))}
-            >
-              Composition (line)
-            </button>
-          </div>
-        ) : null}
-      </div>
       <div
         className={
           compositionHistoryLoading
@@ -1338,6 +1467,68 @@ export function Chart1yLightweight({
           lineApisRef={lineApisRef}
           compositionMetaRef={compositionMetaRef}
           performanceTitleRef={performanceTitleRef}
+          chartApiRef={chartApiRef}
+          chartHostRef={chartHostRef}
+          performanceFootnote={performanceFootnote}
+          header={
+            <div className={styles.toolbar}>
+              <span className={styles.toolbarLabel}>
+                {activeView === "composition" ? (
+                  <>
+                    <span className={styles.themeTitleAccent}>{themeLabel}</span>
+                    <span className={styles.benchmarkTitle}>
+                      Constituents Over {periodWindowLabel}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className={styles.themeTitleAccent}>{themeLabel} Index</span>
+                    <span className={styles.benchmarkTitle}>
+                      vs. S&P 500 Index Over {periodWindowLabel}
+                    </span>
+                  </>
+                )}
+              </span>
+              {hasPerf && hasComp ? (
+                <div className={styles.toggle} role="group" aria-label="Chart type">
+                  <button
+                    type="button"
+                    className={activeView === "performance" ? styles.active : undefined}
+                    onClick={() => startTransition(() => setView("performance"))}
+                  >
+                    Performance
+                  </button>
+                  <button
+                    type="button"
+                    className={activeView === "composition" ? styles.active : undefined}
+                    onClick={() => startTransition(() => setView("composition"))}
+                  >
+                    Composition
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          }
+          periodControls={
+            showPeriodControls ? (
+              <div className={styles.periodBar}>
+                <ChartPeriodToolbar
+                  period={period}
+                  onPeriodChange={(next) => {
+                    startTransition(() => setPeriod(next));
+                  }}
+                  supportedPeriods={supportedPeriods}
+                  supportedCustomPeriodKeys={supportedCustomPeriodKeys}
+                  customPeriods={customPeriods}
+                  variant="detail"
+                  onDownloadPng={() => {
+                    void handleDownloadPng();
+                  }}
+                  downloadBusy={downloadBusy}
+                />
+              </div>
+            ) : null
+          }
         />
         {compositionHistoryLoading ? (
           <span className={styles.chartUpdatingHint} aria-live="polite">
@@ -1345,20 +1536,6 @@ export function Chart1yLightweight({
           </span>
         ) : null}
       </div>
-      {showPeriodControls ? (
-        <div className={styles.periodBar}>
-          <ChartPeriodToolbar
-            period={period}
-            onPeriodChange={(next) => {
-              startTransition(() => setPeriod(next));
-            }}
-            supportedPeriods={supportedPeriods}
-            supportedCustomPeriodKeys={supportedCustomPeriodKeys}
-            customPeriods={customPeriods}
-            variant="detail"
-          />
-        </div>
-      ) : null}
       {activeView === "composition" && hasComp && chart1ySorted?.composition_indexed?.series ? (
         <div
           className={styles.legend}

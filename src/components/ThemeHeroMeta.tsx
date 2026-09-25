@@ -60,15 +60,16 @@ export function ThemeHeroMeta({
   if (showTickers) {
     statsItems.push(
       <>
-        <strong>{tickerCount!.toLocaleString()}</strong>{" "}
-        {tickerCount === 1 ? "ticker" : "tickers"}
+        <strong>{tickerCount!.toLocaleString()}</strong>
+        {` ${tickerCount === 1 ? "ticker" : "tickers"}`}
       </>,
     );
   }
   if (hasMcap) {
     statsItems.push(
       <>
-        <strong>{formatUsdMarketCap(totalMarketCapUsd)}</strong> market cap
+        <strong>{formatUsdMarketCap(totalMarketCapUsd)}</strong>
+        {" market cap"}
       </>,
     );
   }

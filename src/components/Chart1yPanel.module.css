@@ -2,23 +2,98 @@
   width: 100%;
   align-self: stretch;
   /* Tighter when parent sets vars, e.g. homepage highlighted card (see HomeHighlightedThemes.chartWrap). */
-  margin-top: var(--chart-panel-section-margin-top, 1.5rem);
+  margin-top: var(--chart-panel-section-margin-top, 0.75rem);
 }
 
 .toolbar {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--chart-panel-toolbar-gap, 8px);
+  margin: 0;
+  padding: 6px 12px 4px;
+}
+
+.chartFooter {
+  display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--chart-panel-toolbar-gap, 12px);
-  margin-bottom: var(--chart-panel-toolbar-margin-bottom, 12px);
+  gap: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 4px 12px 6px;
+  background: #0f1115;
+}
+
+:global(.st-theme[data-theme="light"]) .chartFooter {
+  background: #f7f6fc;
+}
+
+.chartFooterLeft {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1 1 auto;
+  pointer-events: none;
 }
 
 .periodBar {
   display: flex;
   justify-content: flex-end;
-  width: 100%;
-  margin-top: 10px;
+  flex: 0 0 auto;
+  width: auto;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Span (not p) — theme pages wrap charts in `.intro`, and `.intro p` forces 18px. */
+.chartBrandNote {
+  margin: 0;
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-muted, #6e7d7b);
+  opacity: 0.8;
+}
+
+.chartBrandNoteSpacer {
+  min-width: 0;
+}
+
+:global(.st-theme[data-theme="light"]) .chartBrandNote {
+  color: var(--text-muted, #5c5978);
+  opacity: 0.7;
+}
+
+.chartBrandLockup {
+  display: inline-flex;
+  flex-shrink: 0;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.88;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.chartBrandLockup :global(img) {
+  width: 12px;
+  height: 12px;
+  max-width: 12px;
+  max-height: 12px;
+}
+
+:global(.st-theme[data-theme="light"]) .chartBrandLockup {
+  color: var(--text-secondary, #5c5978);
+  opacity: 0.82;
 }
 
 .periodControls {
@@ -64,6 +139,15 @@
   cursor: pointer;
   white-space: nowrap;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.downloadIcon {
+  display: block;
+  flex-shrink: 0;
 }
 
 .periodBtnActive {
@@ -89,22 +173,38 @@
 }
 
 .toolbarLabel {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0;
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: var(--text-secondary, #9aa8a6);
+  line-height: 1.2;
 }
 
 .themeTitleAccent {
   color: #26fcd6;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
 }
 
 .benchmarkTitle {
+  margin-left: 0.35em;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
   color: var(--text-secondary, #9aa8a6);
 }
 
 .toggle {
   display: inline-flex;
+  flex-shrink: 0;
   border-radius: 999px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   background: rgba(255, 255, 255, 0.02);
@@ -113,9 +213,9 @@
 
 .toggle button {
   appearance: none;
-  font-size: 13px;
+  font-size: 12px;
   font-family: inherit;
-  padding: 8px 14px;
+  padding: 6px 12px;
   border: none;
   background: transparent;
   color: var(--text-secondary, #9aa8a6);
@@ -133,10 +233,21 @@
   color: #d8fff8;
 }
 
+.chartShell {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f1115;
+}
+
+:global(.st-theme[data-theme="light"]) .chartShell {
+  background: #f7f6fc;
+}
+
 .chartBox {
   width: 100%;
   min-height: 340px;
-  border-radius: 8px;
   overflow: hidden;
   background: #0f1115;
 }
@@ -150,7 +261,7 @@
   width: 100%;
 }
 
-.chartStageUpdating .chartBox {
+.chartStageUpdating .chartShell {
   opacity: 0.72;
   transition: opacity 160ms ease;
 }
@@ -169,17 +280,6 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   pointer-events: none;
-}
-
-.chartBrandMark {
-  position: absolute;
-  inset: 0;
-  z-index: 6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: none;
-  opacity: 0.14;
 }
 
 .legend {

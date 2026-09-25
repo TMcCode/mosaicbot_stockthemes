@@ -13,8 +13,7 @@
 }
 
 .item {
-  display: inline-flex;
-  align-items: center;
+  display: inline;
   font-size: 14px;
   line-height: 1.45;
   color: var(--text-secondary);

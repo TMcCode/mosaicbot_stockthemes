@@ -1,22 +1,19 @@
-import { brandAssetPath } from "@/lib/siteUrl";
+import { BrandWatermark } from "@/components/BrandWatermark";
+
+import styles from "./TableFooterBrandMark.module.css";
 
 type Props = {
   className?: string;
 };
 
-/** Icon-only footer mark — readable on light and dark table backgrounds. */
+/**
+ * Table footer brand: full icon + stockthemes.ai on desktop;
+ * icon-only on narrow widths to avoid overlapping sort hints.
+ */
 export function TableFooterBrandMark({ className }: Props) {
   return (
-    <div className={className} aria-hidden="true">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={brandAssetPath("/brand/logo-icon.svg")}
-        alt=""
-        width={22}
-        height={22}
-        loading="lazy"
-        decoding="async"
-      />
-    </div>
+    <BrandWatermark
+      className={[styles.lockup, className].filter(Boolean).join(" ")}
+    />
   );
 }

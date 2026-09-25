@@ -28,7 +28,7 @@ export function FeedLogoRow({
     <div className={styles.logoRow} aria-label="Theme holdings">
       {shown.map((ticker) => (
         <div key={ticker} className={styles.logoHit} title={ticker}>
-          <ConstituentLogo ticker={ticker} priority />
+          <ConstituentLogo ticker={ticker} />
           <span className={styles.logoTicker}>{ticker}</span>
         </div>
       ))}

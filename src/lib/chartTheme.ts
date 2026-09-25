@@ -55,10 +55,12 @@ export function chartThemeOptions(theme: StockthemesTheme): Parameters<IChartApi
       horzLines: { color: c.grid },
     },
     rightPriceScale: {
-      borderColor: c.border,
+      // Hide axis border — last vert grid sits flush to the edge after fitContent and doubles it.
+      borderVisible: false,
     },
     timeScale: {
-      borderColor: c.border,
+      // Same for the bottom: horz grid + time-scale border stack into a double line.
+      borderVisible: false,
     },
     crosshair: {
       vertLine: { labelBackgroundColor: c.crosshairLabelBg },

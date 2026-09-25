@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
-import { HomeCommentaryPreview } from "@/components/HomeCommentaryPreview";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeTopMoversTickerLive } from "@/components/HomeTopMoversTickerLive";
@@ -24,10 +23,12 @@ import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
 import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { brandAssetPath } from "@/lib/siteUrl";
-import { HomeExploreChanging, pickExploreGroups } from "@/components/HomeExploreChanging";
+import { HomeExploreChanging } from "@/components/HomeExploreChanging";
+import { pickExploreGroups } from "@/lib/pickExploreGroups";
 import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
-import { HomeNewsletterPostsLive } from "@/components/HomeNewsletterPostsLive";
-import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
+import { LazyHomeCommentaryPreview } from "@/components/LazyHomeCommentaryPreview";
+import { LazyHomeNewsletterPostsLive } from "@/components/LazyHomeNewsletterPostsLive";
+import { LazyHomeThemesInMotionTable } from "@/components/LazyHomeThemesInMotionTable";
 import { LazyThemesInMotionMacroChart } from "@/components/LazyThemesInMotionMacroChart";
 import { JsonLd } from "@/components/JsonLd";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
@@ -57,7 +58,10 @@ import {
   slimNewsForHome,
   slimRadarForHome,
 } from "@/lib/slimRadarPayload";
-import { buildWatchlistRadarEnrichBySlug } from "@/lib/buildWatchlistRadarEnrich";
+import {
+  buildWatchlistRadarEnrichBySlug,
+  collectHomeWatchlistEnrichSlugs,
+} from "@/lib/buildWatchlistRadarEnrich";
 
 /** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
 const HOME_FEED_RENDER_LIMIT = 7;
@@ -154,9 +158,22 @@ export default async function Home() {
       : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
 
   const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
+  const feedThemeSlugs = homeFeedDisplay.flatMap((slot) => {
+    const events = [slot.lead, ...(slot.siblings || [])];
+    return events
+      .map((e) => String(e.theme_slug || "").trim())
+      .filter(Boolean);
+  });
   const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(
     compareRes?.bundle ?? null,
     homeThesisBySlug,
+    {
+      slugAllowlist: collectHomeWatchlistEnrichSlugs({
+        radar: homeRadar,
+        feedThemeSlugs,
+        thesisBySlug: homeThesisBySlug,
+      }),
+    },
   );
 
   return (
@@ -235,7 +252,7 @@ export default async function Home() {
             </div>
           </div>
 
-          <HomeCommentaryPreview
+          <LazyHomeCommentaryPreview
             initialItems={commentaryRes?.commentary.items ?? []}
             previewDays={commentaryRes?.commentary.preview_days ?? 7}
           />
@@ -245,6 +262,7 @@ export default async function Home() {
             news={homeNews}
             companyNames={radarCompanyNamesFilled}
             watchlistEnrichBySlug={watchlistEnrichBySlug}
+            refreshNewsOnMount={!homeNews?.today}
           />
 
           <HomeTopMoversTickerLive
@@ -260,14 +278,16 @@ export default async function Home() {
             serverTopMovers={topMoversRes?.bundle ?? null}
           />
 
-          <HomeExploreChanging
-            groups={exploreGroups}
-            feedSlots={homeFeedDisplay}
-            tickersByThemeSlug={tickersByThemeSlug}
-            themeMetaBySlug={themeMetaBySlug}
-          />
+          <DeferRender minHeight={420} rootMargin="400px 0px">
+            <HomeExploreChanging
+              groups={exploreGroups}
+              feedSlots={homeFeedDisplay}
+              tickersByThemeSlug={tickersByThemeSlug}
+              themeMetaBySlug={themeMetaBySlug}
+            />
+          </DeferRender>
 
-          <HomeThemesInMotionTable
+          <LazyHomeThemesInMotionTable
             rows={motionsHomepage}
             asOf={motionsRes?.bundle?.as_of ?? motionsRes?.bundle?.calc_as_of}
           />
@@ -282,7 +302,7 @@ export default async function Home() {
                 />
               </DeferRender>
 
-              <HomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
+              <LazyHomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
 
               <AdPlacement
                 placement="homeDiscoveryMid"

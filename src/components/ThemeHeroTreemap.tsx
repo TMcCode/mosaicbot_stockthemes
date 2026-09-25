@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 
+import { BrandWatermark } from "@/components/BrandWatermark";
 import {
   TREEMAP_RETURN_PERIODS,
   pickDefaultTreemapPeriod,
@@ -188,11 +189,10 @@ export function ThemeHeroTreemap({
           );
         })}
       </div>
-      {asOfLabel ? (
-        <div className={styles.mapCaptionRow}>
-          <p className={styles.mapCaptionBelow}>As of {asOfLabel}</p>
-        </div>
-      ) : null}
+      <div className={styles.mapCaptionRow}>
+        <BrandWatermark className={styles.mapBrand} />
+        {asOfLabel ? <p className={styles.mapCaptionBelow}>As of {asOfLabel}</p> : null}
+      </div>
       </div>
     </div>
   );

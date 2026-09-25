@@ -25,7 +25,7 @@ function HoldingChip({
   return (
     <div className={styles.holdingChip}>
       <div className={styles.holdingTop}>
-        <ConstituentLogo ticker={h.ticker} logoUrl={h.logo_url} priority />
+        <ConstituentLogo ticker={h.ticker} logoUrl={h.logo_url} />
         <span className={styles.holdingTicker}>{h.ticker}</span>
         {showWeight ? (
           <span className={styles.holdingWeight}>{formatWeight(Number(h.weight))}</span>

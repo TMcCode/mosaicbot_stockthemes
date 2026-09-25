@@ -42,16 +42,16 @@ export function GroupHeroMeta({ themeCount, tickerCount, rank10d }: Props) {
   if (showThemes) {
     statsItems.push(
       <>
-        <strong>{themeCount!.toLocaleString()}</strong>{" "}
-        {themeCount === 1 ? "theme" : "themes"}
+        <strong>{themeCount!.toLocaleString()}</strong>
+        {` ${themeCount === 1 ? "theme" : "themes"}`}
       </>,
     );
   }
   if (showTickers) {
     statsItems.push(
       <>
-        <strong>{tickerCount!.toLocaleString()}</strong>{" "}
-        {tickerCount === 1 ? "ticker" : "tickers"}
+        <strong>{tickerCount!.toLocaleString()}</strong>
+        {` ${tickerCount === 1 ? "ticker" : "tickers"}`}
       </>,
     );
   }

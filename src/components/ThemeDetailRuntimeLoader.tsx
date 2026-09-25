@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByWeightDesc } from "@/lib/constituentMeta";
@@ -205,11 +204,6 @@ export function ThemeDetailRuntimeLoader({
       ) : (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
       )}
-      <DetailAboutIntro
-        heading="About this theme"
-        headingId="about-theme-heading-runtime"
-        intro={detail.seo_intro}
-      />
     </>
   );
 }

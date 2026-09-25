@@ -571,14 +571,6 @@
   color: var(--text-primary);
 }
 
-.detailAboutProse {
-  margin: 0;
-  max-width: 720px;
-  font-size: 15px;
-  line-height: 1.55;
-  color: var(--text-secondary, #9aa8a6);
-}
-
 .trendingScrollWrap {
   /* Keep theme names single-line; scroll horizontally for overflow */
   --trending-theme-col: max-content;
@@ -669,10 +661,11 @@
 
 .trendingSortHint {
   margin: 4px 0 0;
-  font-size: 9px;
+  font-size: 8px;
   line-height: 1.2;
   color: var(--text-muted);
-  opacity: 0.7;
+  opacity: 0.65;
+  zoom: 0.7;
 }
 
 .trendingThemeCell {
@@ -962,7 +955,7 @@ a.feedTitle:hover {
   scrollbar-width: thin;
   scrollbar-gutter: stable;
   cursor: grab;
-  padding-bottom: 4px;
+  padding-bottom: 0;
   /* Same company column width in Period Returns vs Earnings so Wgt stays aligned */
   --constituents-company-col-width: 280px;
 }
@@ -992,7 +985,14 @@ a.feedTitle:hover {
   gap: 10px 14px;
   border-top: 1px solid var(--button-secondary-border);
   padding: 5px 0 5px 10px;
-  padding-right: clamp(30px, 8vw, 34px);
+  /* Reserve space for full lockup (desktop) / icon (mobile). */
+  padding-right: clamp(118px, 18vw, 138px);
+}
+
+@media (max-width: 720px) {
+  .tableFooter {
+    padding-right: clamp(28px, 8vw, 36px);
+  }
 }
 
 .tableFootnote {
@@ -1019,8 +1019,8 @@ a.feedTitle:hover {
 
 .tableWatermark img {
   display: block;
-  width: 22px;
-  height: 22px;
+  width: 14px;
+  height: 14px;
   object-fit: contain;
 }
 
@@ -1041,6 +1041,11 @@ a.feedTitle:hover {
   border-bottom: 1px solid var(--button-secondary-border);
   vertical-align: middle;
   white-space: nowrap;
+}
+
+/* Avoid double rule with .tableFooter border-top */
+.dataTable tbody tr:last-child td {
+  border-bottom: 0;
 }
 
 .dataTable th:first-child,

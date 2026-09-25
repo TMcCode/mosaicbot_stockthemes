@@ -609,6 +609,11 @@ type Props = {
   initialTab?: TabKey;
   /** Initial In the News day (`YYYY-MM-DD`) from `/radar?as_of=…`. */
   initialNewsAsOf?: string;
+  /**
+   * When false, keep SSR `news` and skip the mount CDN refetch (home).
+   * `/radar` leaves default true so weekday bakes stay fresh.
+   */
+  refreshNewsOnMount?: boolean;
 };
 
 export function HomeNarrativeRadar({
@@ -619,6 +624,7 @@ export function HomeNarrativeRadar({
   previewLimit = HOME_RADAR_PREVIEW_LIMIT,
   initialTab = "news",
   initialNewsAsOf,
+  refreshNewsOnMount = true,
 }: Props) {
   const watchlist = useWatchlist();
   const [tab, setTab] = useState<TabKey>(initialTab);
@@ -696,6 +702,10 @@ export function HomeNarrativeRadar({
   }, []);
 
   useEffect(() => {
+    if (!refreshNewsOnMount) {
+      setNewsFetchDone(true);
+      return;
+    }
     let cancelled = false;
     void (async () => {
       try {
@@ -709,7 +719,7 @@ export function HomeNarrativeRadar({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [refreshNewsOnMount]);
 
   // Keep selection valid when news bundle loads / refreshes.
   useEffect(() => {

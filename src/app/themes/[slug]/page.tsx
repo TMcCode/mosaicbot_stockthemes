@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
-import { DetailAboutIntro } from "@/components/DetailAboutIntro";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
@@ -345,11 +344,6 @@ export default async function ThemeDetailPage({ params }: Props) {
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
           ) : null}
-          <DetailAboutIntro
-            heading="About this theme"
-            headingId="about-theme-heading"
-            intro={detail?.seo_intro}
-          />
           <p>
             <Link href="/themes" style={{ fontWeight: 500 }}>
               ← All themes

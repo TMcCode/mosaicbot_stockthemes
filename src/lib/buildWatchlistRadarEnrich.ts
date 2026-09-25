@@ -1,5 +1,5 @@
 import type { CompareThemesV0 } from "@/types/compare_themes.v0";
-import type { HomeRadarCardV0 } from "@/types/home_radar.v0";
+import type { HomeRadarCardV0, HomeRadarV0 } from "@/types/home_radar.v0";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 
@@ -13,15 +13,69 @@ export type WatchlistRadarEnrichV0 = {
   tickers_preview_more?: number | null;
 };
 
+function collectCardSlugs(cards: HomeRadarCardV0[] | undefined, into: Set<string>) {
+  for (const c of cards || []) {
+    const slug = normalizeWatchlistKey("theme", c.slug || "");
+    if (slug) into.add(slug);
+    if (c.siblings?.length) collectCardSlugs(c.siblings, into);
+  }
+}
+
+/**
+ * Slugs worth shipping enrich for on home: radar strip + feed cards + thesis map.
+ * Keeps watchlist cards useful without serializing every compare_themes row.
+ */
+export function collectHomeWatchlistEnrichSlugs(opts: {
+  radar?: HomeRadarV0 | null;
+  feedThemeSlugs?: Iterable<string> | null;
+  thesisBySlug?: Record<string, string> | null;
+}): Set<string> {
+  const out = new Set<string>();
+  const tabs = opts.radar?.tabs;
+  if (tabs) {
+    collectCardSlugs(tabs.new?.home, out);
+    collectCardSlugs(tabs.new?.all, out);
+    collectCardSlugs(tabs.accelerating?.home, out);
+    collectCardSlugs(tabs.accelerating?.all, out);
+    collectCardSlugs(tabs.fading?.home, out);
+    collectCardSlugs(tabs.fading?.all, out);
+  }
+  for (const raw of opts.feedThemeSlugs || []) {
+    const slug = normalizeWatchlistKey("theme", raw);
+    if (slug) out.add(slug);
+  }
+  if (opts.thesisBySlug) {
+    for (const raw of Object.keys(opts.thesisBySlug)) {
+      const slug = normalizeWatchlistKey("theme", raw);
+      if (slug) out.add(slug);
+    }
+  }
+  return out;
+}
+
+export type BuildWatchlistRadarEnrichOpts = {
+  /** When set, only these slugs are emitted (home). Omit on `/radar` for full map. */
+  slugAllowlist?: Iterable<string> | null;
+};
+
 /** Build enrich map from already-loaded compare_themes (+ optional thesis map). */
 export function buildWatchlistRadarEnrichBySlug(
   compare: CompareThemesV0 | null | undefined,
   thesisBySlug?: Record<string, string> | null,
+  opts?: BuildWatchlistRadarEnrichOpts,
 ): Record<string, WatchlistRadarEnrichV0> {
+  const allow =
+    opts?.slugAllowlist != null ? new Set(
+      [...opts.slugAllowlist]
+        .map((s) => normalizeWatchlistKey("theme", s))
+        .filter(Boolean),
+    ) : null;
+  const allowed = (slug: string) => !allow || allow.has(slug);
+
   const out: Record<string, WatchlistRadarEnrichV0> = {};
   const put = (slugRaw: string, patch: WatchlistRadarEnrichV0) => {
     const slug = normalizeWatchlistKey("theme", slugRaw);
-    if (!slug) return;
+    if (!slug || !allowed(slug)) return;
     const prev = out[slug] || {};
     out[slug] = {
       name: patch.name ?? prev.name,
