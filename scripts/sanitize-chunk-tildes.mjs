@@ -101,16 +101,19 @@ function main() {
     }
   }
 
-  // 3) Cache-bust rewritten JS/CSS under _next/static whose basename did not
-  // already change via step 1 (CF edge would otherwise keep the old body).
-  const renamedTo = new Set(renames.map((r) => r.to));
+  // 3) Cache-bust JS/CSS under _next/static that we rewrote **or** tilde-renamed.
+  // Custom domains can poison a year-long 404 HIT on a post-rename URL
+  // (e.g. 0z6.vl98_g6o7.css) before the asset exists — skipping bust on
+  // renamed files left Narrative Radar unstyled on stockthemes.ai while
+  // pages.dev served the same path fine.
+  const bustCandidates = new Set(rewrittenPaths);
+  for (const { to } of renames) bustCandidates.add(to);
   const bustRenames = [];
-  for (const file of rewrittenPaths) {
+  for (const file of bustCandidates) {
     const rel = path.relative(path.join(OUT, "_next", "static"), file);
     if (rel.startsWith("..")) continue;
     const ext = path.extname(file).toLowerCase();
     if (ext !== ".js" && ext !== ".css") continue;
-    if (renamedTo.has(file)) continue;
     const base = path.basename(file, ext);
     if (base.includes(BUST)) continue;
     const dir = path.dirname(file);
