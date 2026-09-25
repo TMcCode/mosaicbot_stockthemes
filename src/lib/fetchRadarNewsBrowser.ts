@@ -1,8 +1,8 @@
 import { stockthemesBrowserSidecarFetchBase } from "@/lib/stockthemesPublicBase";
 import { RADAR_NEWS_OBJECT, parseRadarNews } from "@/lib/parseRadarNews";
 import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
+  commentaryBrowserCacheBusterQuery,
+  commentaryBrowserFetchCache,
 } from "@/lib/stockthemesCache";
 import type { RadarNewsV0 } from "@/types/radar_news.v0";
 
@@ -10,7 +10,9 @@ import type { RadarNewsV0 } from "@/types/radar_news.v0";
 export function radarNewsBrowserUrl(): string | null {
   const base = stockthemesBrowserSidecarFetchBase();
   if (!base) return null;
-  const q = stockthemesBrowserCacheBusterQuery();
+  // ~5 min window (same as commentary) — not the 2h general GCS bucket, or
+  // weekday 8× top-story bakes stay invisible until hard refresh.
+  const q = commentaryBrowserCacheBusterQuery();
   return `${base.replace(/\/$/, "")}/${RADAR_NEWS_OBJECT}?${q}`;
 }
 
@@ -21,7 +23,7 @@ export async function fetchRadarNewsBrowser(): Promise<RadarNewsV0 | null> {
     try {
       const res = await fetch(url, {
         credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
+        cache: commentaryBrowserFetchCache(),
       });
       if (res.ok) return parseRadarNews(await res.text());
     } catch {
