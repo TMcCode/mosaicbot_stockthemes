@@ -1,0 +1,110 @@
+{
+  "schema_version": 0,
+  "symbol": "business-services-26-ai-governance-trust-compliance",
+  "slug": "notes",
+  "display_name": "Notes",
+  "gcs_table": "Theme_Notes",
+  "as_of": "2026-09-14T10:00:24Z",
+  "format": "multi_row",
+  "columns": [
+    {
+      "id": "Date",
+      "label": "Date",
+      "kind": "text"
+    },
+    {
+      "id": "Type",
+      "label": "Type",
+      "kind": "text"
+    },
+    {
+      "id": "Comment",
+      "label": "Comment",
+      "kind": "text"
+    },
+    {
+      "id": "Detail",
+      "label": "Detail",
+      "kind": "markdown"
+    },
+    {
+      "id": "Sentiment",
+      "label": "Sentiment",
+      "kind": "text"
+    },
+    {
+      "id": "Tickers",
+      "label": "Tickers",
+      "kind": "text"
+    },
+    {
+      "id": "IS_CHANGE",
+      "label": "IS_CHANGE",
+      "kind": "text"
+    },
+    {
+      "id": "Source",
+      "label": "Source",
+      "kind": "text"
+    },
+    {
+      "id": "_updated_by",
+      "label": "_updated_by",
+      "kind": "text"
+    },
+    {
+      "id": "_update_method",
+      "label": "_update_method",
+      "kind": "text"
+    },
+    {
+      "id": "_update_date",
+      "label": "_update_date",
+      "kind": "text"
+    }
+  ],
+  "rows": [
+    {
+      "Theme": "Business Services '26: AI Governance, Trust & Compliance",
+      "Date": "2026-08-04 09:31:49.634091",
+      "Type": "Theme Refresh Synthesis",
+      "Comment": "The theme is strongly validated by accelerating enterprise AI adoption and monetization across constituents, driven by the proliferation of agentic AI expanding the attack surface. Upcoming EU AI Act enforcement in August 2026 provides a mandatory regulatory catalyst, reinforcing demand for integrated AI-native platforms and independent auditors. While massive AI infrastructure CapEx creates some margin pressure, the overall shift towards fiduciary-grade AI and compliance solutions underscores significant, sustained growth.",
+      "Detail": "Transcript Summary",
+      "Sentiment": "Bullish",
+      "Tickers": "CRWD, PANW, MSFT, GOOG, NOW, RELX, TRI, BAH, CTSH, IBM, SPGI, DDOG, META",
+      "IS_CHANGE": "False",
+      "Source": "LLM_Approved",
+      "_updated_by": "automation",
+      "_update_method": "LLM_Transcript_Analysis",
+      "_update_date": "2026-08-04 09:31:49.635478"
+    },
+    {
+      "Theme": "Business Services '26: AI Governance, Trust & Compliance",
+      "Date": "2026-08-15 09:37:12.398068",
+      "Type": "Theme Refresh Synthesis",
+      "Comment": "The theme is strongly validated by accelerating enterprise AI adoption and monetization, particularly with agentic AI expanding attack surfaces. Constituent updates highlight surging demand for AI-native security (CRWD, PANW), observability (DDOG), and \"fiduciary-grade AI\" solutions (TRI, RELX, SPGI). Microsoft and Google show widespread AI integration requiring robust governance, while ServiceNow and IBM reinforce policy workflow and GRC. Upcoming EU AI Act enforcement further mandates these critical containment and compliance solutions.",
+      "Detail": "Transcript Summary",
+      "Sentiment": "Bullish",
+      "Tickers": "CRWD, PANW, MSFT, GOOG, NOW, RELX, TRI, BAH, CTSH, IBM, SPGI, DDOG, META",
+      "IS_CHANGE": "False",
+      "Source": "LLM_Approved",
+      "_updated_by": "automation",
+      "_update_method": "LLM_Transcript_Analysis",
+      "_update_date": "2026-08-15 09:37:12.399747"
+    },
+    {
+      "Theme": "Business Services '26: AI Governance, Trust & Compliance",
+      "Date": "2026-08-29 09:40:54.684092",
+      "Type": "Theme Refresh Synthesis",
+      "Comment": "The theme is strongly validated by accelerating enterprise AI adoption and monetization, particularly with agentic AI expanding attack surfaces. Constituent updates highlight surging demand for AI-native security (CRWD, PANW), observability (DDOG), and \"fiduciary-grade AI\" solutions (TRI, RELX, SPGI). Microsoft and Google show widespread AI integration requiring robust governance, while ServiceNow and IBM reinforce policy workflow and GRC. Upcoming EU AI Act enforcement further mandates these critical containment and compliance solutions.",
+      "Detail": "Transcript Summary",
+      "Sentiment": "Bullish",
+      "Tickers": "CRWD, PANW, MSFT, GOOG, NOW, RELX, TRI, BAH, CTSH, IBM, SPGI, DDOG, META",
+      "IS_CHANGE": "False",
+      "Source": "LLM_Approved",
+      "_updated_by": "automation",
+      "_update_method": "LLM_Transcript_Analysis",
+      "_update_date": "2026-08-29 09:40:54.686724"
+    }
+  ]
+}

@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"/>
+<title>Tear sheet v6 — Business Services &#x27;26: AI Governance, Trust &amp; Compliance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --fg:#e8f0ed; --muted:#8a9a94; --line:rgba(38,252,214,.12);
+    --mint:#26fcd6; --mint-dim:rgba(38,252,214,.12);
+    --up:#3dde9a; --down:#ff6b7a;
+    --sheet-w:1600px; --sheet-h:900px;
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html, body { background:#0b0b0b; color:var(--fg); font-family:"IBM Plex Sans",system-ui,sans-serif; }
+  body { min-height:100vh; display:grid; place-items:center; padding:10px; }
+  .sheet {
+    width:var(--sheet-w); height:var(--sheet-h); overflow:hidden;
+    padding:16px 18px 12px;
+    display:grid;
+    grid-template-rows:auto auto minmax(0,1fr) auto;
+    gap:8px;
+    background:
+      radial-gradient(860px 340px at 8% -12%, rgba(42,207,200,.14), transparent 55%),
+      radial-gradient(700px 300px at 100% 0%, rgba(106,125,255,.10), transparent 50%),
+      #070a0c;
+    border:1px solid var(--line);
+  }
+  .top { display:grid; grid-template-columns:auto 1fr auto; align-items:center; gap:14px; }
+  .brand { display:flex; align-items:center; gap:8px; }
+  .brand img { width:26px; height:26px; }
+  .brand-name { font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--mint); }
+  .brand-sub { font-size:10px; color:var(--muted); }
+  h1 { font-family:"Space Grotesk",sans-serif; font-weight:700; font-size:22px; line-height:1.05; letter-spacing:-.02em; }
+  .subhead { font-size:10px; color:var(--muted); margin-top:2px; }
+  .pills { display:flex; gap:5px; flex-wrap:wrap; justify-content:flex-end; }
+  .pill { border:1px solid var(--line); background:rgba(255,255,255,.03); padding:3px 7px; font-size:10px; color:var(--muted); white-space:nowrap; }
+  .pill strong { color:var(--fg); }
+  .perf { display:grid; grid-template-columns:repeat(5,1fr); gap:6px; }
+  .perf-card { background:var(--mint-dim); border:1px solid var(--line); padding:7px 10px; }
+  .perf-card .lbl { font-size:9px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+  .perf-card .val { font-family:"Space Grotesk",sans-serif; font-size:19px; font-weight:600; }
+  .perf-card .sub { font-size:9px; color:var(--muted); }
+  .up { color:var(--up); } .down { color:var(--down); } .flat { color:var(--fg); }
+
+  /* 3 equal-height columns fill remaining canvas */
+  .body {
+    display:grid;
+    grid-template-columns: 1.05fr 0.78fr 1fr;
+    gap:8px;
+    min-height:0;
+  }
+  .col { display:flex; flex-direction:column; gap:8px; min-height:0; height:100%; }
+  .panel {
+    background:rgba(10,14,18,.78); border:1px solid var(--line); padding:9px 11px;
+    min-height:0;
+  }
+  .panel.grow { flex:1 1 auto; display:flex; flex-direction:column; overflow:hidden; }
+  .panel h2, .sec-title {
+    font-family:"Space Grotesk",sans-serif; font-size:10px; font-weight:600;
+    letter-spacing:.08em; text-transform:uppercase; color:var(--mint); margin-bottom:6px;
+  }
+  .thesis { font-size:12px; line-height:1.35; color:#d5e2dc; }
+  .cases { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:6px; }
+  .case { font-size:10px; line-height:1.3; color:var(--muted); border-left:2px solid var(--line); padding-left:7px; }
+  .case.bull { border-color:rgba(61,222,154,.55); }
+  .case.bear { border-color:rgba(255,107,122,.55); }
+  .case strong { display:block; color:var(--fg); font-size:9px; letter-spacing:.05em; text-transform:uppercase; margin-bottom:2px; }
+
+  .ds-list { display:flex; flex-direction:column; gap:5px; flex:1; }
+  .ds { border-top:1px solid var(--line); padding-top:5px; }
+  .ds:first-child { border-top:0; padding-top:0; }
+  .ds-top { display:flex; justify-content:space-between; gap:8px; align-items:baseline; }
+  .ds-name { font-size:11px; font-weight:600; }
+  .ds-type { font-size:9px; color:var(--muted); white-space:nowrap; }
+  .ds-why { font-size:10px; line-height:1.25; color:#8fa399; margin-top:1px; }
+
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .stat { border:1px solid var(--line); background:rgba(255,255,255,.02); padding:5px 7px; }
+  .sl { font-size:8px; text-transform:uppercase; letter-spacing:.05em; color:var(--muted); }
+  .sv { font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:14px; }
+  .cats { display:flex; flex-wrap:wrap; gap:4px; margin-top:6px; }
+  .cat { font-size:9px; color:#b7c9c1; border:1px solid var(--line); padding:2px 5px; background:rgba(38,252,214,.04); }
+
+  .chart-head { display:flex; justify-content:space-between; align-items:baseline; }
+  .legend { display:flex; gap:8px; font-size:9px; color:var(--muted); }
+  .legend i { display:inline-block; width:11px; height:2px; vertical-align:middle; margin-right:3px; }
+  .legend .t i { background:var(--mint); } .legend .s i { background:rgba(234,242,240,.35); }
+  svg.chart { width:100%; height:auto; display:block; margin-top:2px; }
+
+  .facs { display:grid; grid-template-columns:1fr 1fr; gap:5px; }
+  .fac-col h3 { font-size:8.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:3px; }
+  .fac { display:flex; justify-content:space-between; gap:4px; padding:4px 6px; margin-bottom:3px; border:1px solid var(--line); font-size:10px; background:rgba(255,255,255,.02); }
+  .fac.pos { border-left:2px solid var(--up); } .fac.neg { border-left:2px solid var(--down); }
+  .rk { color:var(--muted); } .fac-meta { margin-top:3px; font-size:9px; color:var(--muted); }
+
+  .holds-head { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:4px; }
+  .holds-head h2 { margin:0; }
+  .holds-head span { font-size:9px; color:var(--muted); }
+  .holds {
+    display:grid; grid-template-columns:1fr 1fr; gap:0 10px;
+    flex:1; align-content:start;
+  }
+  .h { display:flex; gap:6px; align-items:flex-start; border-top:1px solid var(--line); padding:4px 0 3px; }
+  .h img { width:16px; height:16px; border-radius:2px; background:#fff; object-fit:contain; flex-shrink:0; margin-top:1px; }
+  .h-main { min-width:0; flex:1; }
+  .h-top { display:flex; align-items:baseline; gap:4px; font-size:10px; }
+  .sym { font-family:"Space Grotesk",sans-serif; font-weight:600; font-size:11px; }
+  .tier { font-size:7px; color:var(--mint); border:1px solid rgba(38,252,214,.35); padding:0 2px; }
+  .wgt { margin-left:auto; font-family:"Space Grotesk",sans-serif; font-weight:600; }
+  .ytd { font-size:9px; min-width:36px; text-align:right; }
+  .note { font-size:9.5px; line-height:1.2; color:#8fa399; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+  .foot { display:flex; justify-content:space-between; gap:10px; padding-top:5px; border-top:1px solid var(--line); font-size:9px; color:var(--muted); }
+  .hint { position:fixed; bottom:8px; left:50%; transform:translateX(-50%); background:#1c1c1c; color:#aaa; font-size:12px; padding:6px 12px; border-radius:4px; }
+  @media print {
+    @page { size:1600px 900px; margin:0; }
+    html, body { width:1600px; height:900px; background:#000; }
+    body { padding:0; display:block; }
+    .sheet { border:none; } .hint { display:none; }
+  }
+</style>
+</head>
+<body>
+  <div class="sheet" id="sheet">
+    <div class="top">
+      <div class="brand">
+        <img src="logo-icon.svg" alt=""/>
+        <div>
+          <div class="brand-name">stockthemes.ai</div>
+          <div class="brand-sub">v6 · locked 1600×900</div>
+        </div>
+      </div>
+      <div>
+        <h1>Business Services &#x27;26: AI Governance, Trust &amp; Compliance</h1>
+        <div class="subhead">Business Services · Manual theme weights · Indexed vs SPY</div>
+      </div>
+      <div class="pills">
+        <div class="pill">As of <strong>2026-09-14</strong></div>
+        <div class="pill"><strong>15</strong> names</div>
+        <div class="pill">10D <strong>#695/1061</strong></div>
+        <div class="pill">Group <strong>#3/11</strong></div>
+      </div>
+    </div>
+
+    <div class="perf">
+      <div class="perf-card"><div class="lbl">YTD</div><div class="val up">+14.6%</div><div class="sub">SPY +11.9%</div></div>
+      <div class="perf-card"><div class="lbl">1Y</div><div class="val up">+12.0%</div><div class="sub">SPY +16.4%</div></div>
+      <div class="perf-card"><div class="lbl">10D</div><div class="val down">-1.8%</div><div class="sub">SPY -1.1%</div></div>
+      <div class="perf-card"><div class="lbl">2Y</div><div class="val up">+36.9%</div><div class="sub">SPY +38.3%</div></div>
+      <div class="perf-card"><div class="lbl">1D</div><div class="val up">+0.4%</div><div class="sub">SPY -0.5%</div></div>
+    </div>
+
+    <div class="body">
+      <div class="col">
+        <div class="panel">
+          <h2>Thesis</h2>
+          <p class="thesis">AI&#x27;s hyper-proliferation mandates robust enterprise governance, trust, and compliance. This theme thrives on escalating demand for AI security, ethical frameworks, and regulatory adherence, positioning platform providers as critical infrastructure.…</p>
+          <div class="cases">
+            <div class="case bull"><strong>Bull</strong>AI&#x27;s recognition as critical infrastructure is fueling unprecedented and accelerating enterprise investment in AI security and governance. The proliferation…</div>
+            <div class="case bear"><strong>Bear</strong>The extremely fast pace of AI development leads to rapidly evolving threats and solutions, creating intense competitive pressure. Hyperscalers bundling AI…</div>
+          </div>
+        </div>
+        <div class="panel grow">
+          <h2>Datasets to track</h2>
+          <div class="ds-list"><div class="ds">
+      <div class="ds-top"><span class="ds-name">AI/ML job postings</span><span class="ds-type">Alternative Data</span></div>
+      <div class="ds-why">Tracks demand for specialized AI, ML, and AI security/governance/audit…</div>
+    </div><div class="ds">
+      <div class="ds-top"><span class="ds-name">EU AI Act tracker</span><span class="ds-type">Policy Data</span></div>
+      <div class="ds-why">Monitors the rollout, enforcement, and market response to a foundational…</div>
+    </div><div class="ds">
+      <div class="ds-top"><span class="ds-name">Enterprise AI adoption</span><span class="ds-type">Survey / Proprietary…</span></div>
+      <div class="ds-why">Directly measures how quickly businesses are integrating and monetizing AI…</div>
+    </div><div class="ds">
+      <div class="ds-top"><span class="ds-name">AI cyber incidents</span><span class="ds-type">Security Intelligence</span></div>
+      <div class="ds-why">Provides real-world evidence of AI-specific attack vectors, prompt injection…</div>
+    </div><div class="ds">
+      <div class="ds-top"><span class="ds-name">Governance M&amp;A / funding</span><span class="ds-type">Financial Data</span></div>
+      <div class="ds-why">Indicates investor confidence, strategic consolidation, and emerging…</div>
+    </div></div>
+        </div>
+        <div class="panel">
+          <div class="chart-head">
+            <h2 style="margin:0">1Y performance</h2>
+            <div class="legend">
+              <span class="t"><i></i>Theme +10.9%</span>
+              <span class="s"><i></i>SPY +16.4%</span>
+            </div>
+          </div>
+          <svg class="chart" viewBox="0 0 560 118" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="g" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="#26fcd6" stop-opacity="0.28"/>
+                <stop offset="100%" stop-color="#26fcd6" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <path d="M2.0,105.0 L2.0,50.3 L8.6,48.8 L15.2,52.0 L21.9,52.9 L28.5,50.1 L35.1,47.3 L41.7,47.2 L48.3,50.6 L55.0,50.5 L61.6,45.4 L68.2,39.6 L74.8,43.7 L81.4,48.0 L88.0,47.0 L94.7,45.6 L101.3,52.2 L107.9,61.8 L114.5,54.7 L121.1,55.1 L127.8,51.5 L134.4,52.2 L141.0,53.7 L147.6,60.2 L154.2,55.0 L160.9,55.3 L167.5,58.6 L174.1,57.2 L180.7,56.3 L187.3,60.1 L194.0,69.2 L200.6,61.0 L207.2,60.5 L213.8,69.4 L220.4,93.0 L227.0,86.2 L233.7,90.9 L240.3,94.3 L246.9,102.5 L253.5,92.9 L260.1,87.6 L266.8,81.6 L273.4,87.7 L280.0,87.5 L286.6,95.0 L293.2,101.4 L299.9,105.0 L306.5,97.5 L313.1,94.2 L319.7,97.2 L326.3,83.7 L333.0,78.7 L339.6,82.7 L346.2,82.1 L352.8,78.8 L359.4,69.6 L366.0,70.2 L372.7,63.7 L379.3,56.8 L385.9,54.2 L392.5,37.4 L399.1,42.2 L405.8,49.5 L412.4,53.6 L419.0,51.7 L425.6,65.3 L432.2,67.7 L438.9,51.3 L445.5,38.7 L452.1,38.6 L458.7,37.2 L465.3,36.8 L472.0,47.4 L478.6,43.3 L485.2,35.7 L491.8,14.5 L498.4,19.4 L505.0,18.2 L511.7,24.3 L518.3,24.4 L524.9,25.0 L531.5,10.7 L538.1,22.9 L544.8,23.1 L551.4,22.0 L558.0,22.0 L558.0,105.0 Z" fill="url(#g)"/>
+            <path d="M2.0,50.3 L8.6,49.8 L15.2,48.7 L21.9,49.2 L28.5,46.6 L35.1,45.4 L41.7,45.6 L48.3,49.1 L55.0,48.2 L61.6,46.9 L68.2,40.0 L74.8,42.2 L81.4,44.0 L88.0,45.6 L94.7,40.8 L101.3,47.7 L107.9,52.9 L114.5,44.0 L121.1,42.0 L127.8,40.4 L134.4,40.9 L141.0,41.4 L147.6,45.5 L154.2,39.4 L160.9,37.2 L167.5,40.5 L174.1,36.7 L180.7,35.8 L187.3,37.2 L194.0,42.2 L200.6,37.7 L207.2,35.2 L213.8,35.2 L220.4,42.2 L227.0,36.5 L233.7,40.6 L240.3,39.5 L246.9,38.4 L253.5,38.9 L260.1,39.3 L266.8,42.0 L273.4,46.8 L280.0,44.9 L286.6,53.0 L293.2,49.7 L299.9,59.5 L306.5,50.1 L313.1,42.1 L319.7,38.2 L326.3,32.0 L333.0,31.1 L339.6,27.2 L346.2,28.1 L352.8,25.6 L359.4,20.2 L366.0,17.6 L372.7,17.2 L379.3,16.4 L385.9,12.7 L392.5,10.4 L399.1,11.3 L405.8,17.2 L412.4,17.8 L419.0,12.8 L425.6,14.4 L432.2,18.4 L438.9,13.5 L445.5,11.7 L452.1,11.5 L458.7,11.5 L465.3,14.9 L472.0,13.2 L478.6,16.5 L485.2,15.5 L491.8,3.8 L498.4,3.0 L505.0,3.3 L511.7,3.2 L518.3,7.2 L524.9,5.9 L531.5,4.5 L538.1,6.2 L544.8,5.9 L551.4,6.5 L558.0,8.0" fill="none" stroke="rgba(234,242,240,0.35)" stroke-width="1.4"/>
+            <path d="M2.0,50.3 L8.6,48.8 L15.2,52.0 L21.9,52.9 L28.5,50.1 L35.1,47.3 L41.7,47.2 L48.3,50.6 L55.0,50.5 L61.6,45.4 L68.2,39.6 L74.8,43.7 L81.4,48.0 L88.0,47.0 L94.7,45.6 L101.3,52.2 L107.9,61.8 L114.5,54.7 L121.1,55.1 L127.8,51.5 L134.4,52.2 L141.0,53.7 L147.6,60.2 L154.2,55.0 L160.9,55.3 L167.5,58.6 L174.1,57.2 L180.7,56.3 L187.3,60.1 L194.0,69.2 L200.6,61.0 L207.2,60.5 L213.8,69.4 L220.4,93.0 L227.0,86.2 L233.7,90.9 L240.3,94.3 L246.9,102.5 L253.5,92.9 L260.1,87.6 L266.8,81.6 L273.4,87.7 L280.0,87.5 L286.6,95.0 L293.2,101.4 L299.9,105.0 L306.5,97.5 L313.1,94.2 L319.7,97.2 L326.3,83.7 L333.0,78.7 L339.6,82.7 L346.2,82.1 L352.8,78.8 L359.4,69.6 L366.0,70.2 L372.7,63.7 L379.3,56.8 L385.9,54.2 L392.5,37.4 L399.1,42.2 L405.8,49.5 L412.4,53.6 L419.0,51.7 L425.6,65.3 L432.2,67.7 L438.9,51.3 L445.5,38.7 L452.1,38.6 L458.7,37.2 L465.3,36.8 L472.0,47.4 L478.6,43.3 L485.2,35.7 L491.8,14.5 L498.4,19.4 L505.0,18.2 L511.7,24.3 L518.3,24.4 L524.9,25.0 L531.5,10.7 L538.1,22.9 L544.8,23.1 L551.4,22.0 L558.0,22.0" fill="none" stroke="#26fcd6" stroke-width="2.1" stroke-linejoin="round"/>
+            <text x="2" y="117" fill="#8a9a94" font-size="8" font-family="IBM Plex Sans, sans-serif">2025-09-15</text>
+            <text x="558" y="117" fill="#8a9a94" font-size="8" font-family="IBM Plex Sans, sans-serif" text-anchor="end">2026-09-14</text>
+          </svg>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel">
+          <h2>Quality &amp; setup</h2>
+          <div class="stats"><div class="stat"><div class="sl">Gross TTM</div><div class="sv">64.5%</div></div><div class="stat"><div class="sl">EBITDA TTM</div><div class="sv">32.9%</div></div><div class="stat"><div class="sl">FY26 EBITDA</div><div class="sv">34.8%</div></div><div class="stat"><div class="sl">FY27e</div><div class="sv">37.5%</div></div><div class="stat"><div class="sl">Beta</div><div class="sv">0.9</div></div><div class="stat"><div class="sl">Debt/EBITDA</div><div class="sv">0.5</div></div><div class="stat"><div class="sl">Altman Z</div><div class="sv">8.2</div></div><div class="stat"><div class="sl">Top 5 wgt</div><div class="sv">46%</div></div></div>
+          <div class="cats"><span class="cat">EU AI Act enforcement</span><span class="cat">NIST AI RMF updates</span><span class="cat">AI safety standards</span><span class="cat">algorithmic transparency law</span><span class="cat">AI liability law</span><span class="cat">digital sovereignty AI</span></div>
+        </div>
+        <div class="panel grow">
+          <h2>Factor snapshot</h2>
+          <div class="facs">
+            <div class="fac-col"><h3>Highest</h3><div class="fac pos"><span>Market Beta</span><span class="rk">#111</span></div><div class="fac pos"><span>AI / Innovation</span><span class="rk">#92</span></div><div class="fac pos"><span>Retail Speculation</span><span class="rk">#235</span></div></div>
+            <div class="fac-col"><h3>Lowest</h3><div class="fac neg"><span>Momentum</span><span class="rk">#1031</span></div><div class="fac neg"><span>Small-Cap</span><span class="rk">#995</span></div><div class="fac neg"><span>Crypto Sensitivity</span><span class="rk">#954</span></div></div>
+          </div>
+          <div class="fac-meta">R² 0.72 · Conf 70% · Financials</div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="panel grow">
+          <div class="holds-head">
+            <h2>Who’s in &amp; why</h2>
+            <span>All 15 · wgt · YTD · tier</span>
+          </div>
+          <div class="holds"><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/MSFT.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">MSFT</span><span class="tier">T2</span><span class="wgt">10.5%</span><span class="ytd up">+2.3%</span></div>
+        <div class="note">The foundational data layer anchor. Through Microsoft…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/GOOG.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">GOOG</span><span class="tier">T1</span><span class="wgt">9.5%</span><span class="ytd up">+6.8%</span></div>
+        <div class="note">Co-anchors the platform layer. Vertex AI Governance delivers…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/PANW.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">PANW</span><span class="tier">T3</span><span class="wgt">9.5%</span><span class="ytd up">+79.6%</span></div>
+        <div class="note">The runtime filter leader. Its Prisma AIRS (AI Runtime…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/CRWD.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">CRWD</span><span class="tier">T3</span><span class="wgt">8.0%</span><span class="ytd up">+76.1%</span></div>
+        <div class="note">The pipeline perimeter. Treats unapproved shadow-AI software…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/META.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">META</span><span class="tier">T2</span><span class="wgt">8.0%</span><span class="ytd down">-1.9%</span></div>
+        <div class="note">The open-source compliance baseline. By distributing the…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/NOW.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">NOW</span><span class="tier">T2</span><span class="wgt">8.0%</span><span class="ytd down">-10.6%</span></div>
+        <div class="note">Controls the policy intake workflow. It orchestrates…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/DDOG.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">DDOG</span><span class="tier">T3</span><span class="wgt">7.5%</span><span class="ytd up">+62.9%</span></div>
+        <div class="note">Monitors the telemetry cost and drift plane. Tracks prompt…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/RELX.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">RELX</span><span class="tier">T1</span><span class="wgt">6.5%</span><span class="ytd down">-16.1%</span></div>
+        <div class="note">A highly defensive, un-scratched data moat. Owns global…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/TRI.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">TRI</span><span class="tier">T2</span><span class="wgt">6.5%</span><span class="ytd down">-24.0%</span></div>
+        <div class="note">Pairs with RELX to dominate legal data. Westlaw&#x27;s deep…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/SPGI.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">SPGI</span><span class="tier">T3</span><span class="wgt">6.0%</span><span class="ytd down">-15.1%</span></div>
+        <div class="note">Translating classic scoring to the digital age. Establishing…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/BAH.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">BAH</span><span class="tier">T1</span><span class="wgt">5.0%</span><span class="ytd down">-11.5%</span></div>
+        <div class="note">The federal gatekeeper. Specializes in building air-gapped,…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/IBM.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">IBM</span><span class="tier">T3</span><span class="wgt">4.0%</span><span class="ytd down">-18.2%</span></div>
+        <div class="note">The enterprise GRC aggregator. Its OpenPages platform…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/ITRK.LSE.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">ITRK</span><span class="tier">T3</span><span class="wgt">4.0%</span><span class="ytd up">+27.2%</span></div>
+        <div class="note">The hardware-to-software physical validator. Examines edge…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/SGSN.SW.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">SGSN</span><span class="tier">T3</span><span class="wgt">4.0%</span><span class="ytd up">+2.9%</span></div>
+        <div class="note">The premier international independent auditor. Delivers…</div>
+      </div>
+    </div><div class="h">
+      <img src="https://storage.stockthemes.ai/logos/v0/CTSH.png" alt="" onerror="this.style.opacity=0"/>
+      <div class="h-main">
+        <div class="h-top"><span class="sym">CTSH</span><span class="tier">T3</span><span class="wgt">3.0%</span><span class="ytd down">-28.5%</span></div>
+        <div class="note">The outsourced Quality Engineering (QE) and Quality…</div>
+      </div>
+    </div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">
+      <div>Informational only — not investment advice. Past performance ≠ future results. Manual theme weights. Quality metrics are theme-weighted. Datasets from stockcontext.</div>
+      <div style="white-space:nowrap">stockthemes.ai/themes/business-services-26-ai-governance-trust-compliance</div>
+    </div>
+  </div>
+  <div class="hint">v6 · canvas locked at 1600×900 — open ai-governance-v6.html</div>
+</body>
+</html>

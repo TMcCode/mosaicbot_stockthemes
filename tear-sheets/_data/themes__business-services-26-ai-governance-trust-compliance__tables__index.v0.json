@@ -1,0 +1,64 @@
+{
+  "schema_version": 0,
+  "slug": "business-services-26-ai-governance-trust-compliance",
+  "name": "Business Services '26: AI Governance, Trust & Compliance",
+  "as_of": "2026-09-14T10:00:24Z",
+  "build_id": "b70893815470c52a34065c5d747c3f1b",
+  "tables": [
+    {
+      "slug": "overview",
+      "display_name": "Overview",
+      "gcs_table": "Theme_Overview",
+      "format": "single_row",
+      "has_data": true,
+      "updated_at": "2026-08-29T09:40:19Z",
+      "status": "ready",
+      "preview": "",
+      "body_url": "themes/business-services-26-ai-governance-trust-compliance/tables/overview.v0.json"
+    },
+    {
+      "slug": "bull-bear-details",
+      "display_name": "Bull / Bear Details",
+      "gcs_table": "Theme_BullBearDetails",
+      "format": "single_row",
+      "has_data": true,
+      "updated_at": "2026-08-29T09:39:48Z",
+      "status": "ready",
+      "preview": "AI's hyper-proliferation mandates robust enterprise governance, trust, and compliance. This theme thrives on escalating demand for AI security, ethical framewor",
+      "body_url": "themes/business-services-26-ai-governance-trust-compliance/tables/bull-bear-details.v0.json"
+    },
+    {
+      "slug": "notes",
+      "display_name": "Notes",
+      "gcs_table": "Theme_Notes",
+      "format": "multi_row",
+      "has_data": true,
+      "updated_at": "2026-08-29T09:40:54Z",
+      "status": "ready",
+      "preview": "Transcript Summary",
+      "body_url": "themes/business-services-26-ai-governance-trust-compliance/tables/notes.v0.json"
+    },
+    {
+      "slug": "key-metrics",
+      "display_name": "Key Metrics",
+      "gcs_table": "Theme_KeyMetrics",
+      "format": "multi_row",
+      "has_data": true,
+      "updated_at": "2026-08-29T09:39:52Z",
+      "status": "ready",
+      "preview": "",
+      "body_url": "themes/business-services-26-ai-governance-trust-compliance/tables/key-metrics.v0.json"
+    },
+    {
+      "slug": "upcoming-catalysts",
+      "display_name": "Upcoming Catalysts",
+      "gcs_table": "Theme_UpcomingCatalysts",
+      "format": "multi_row",
+      "has_data": true,
+      "updated_at": "2026-09-08T04:22:05Z",
+      "status": "ready",
+      "preview": "",
+      "body_url": "themes/business-services-26-ai-governance-trust-compliance/tables/upcoming-catalysts.v0.json"
+    }
+  ]
+}

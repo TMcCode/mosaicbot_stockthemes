@@ -1,0 +1,144 @@
+{
+  "schema_version": 0,
+  "slug": "business-services-26-ai-governance-trust-compliance",
+  "name": "Business Services '26: AI Governance, Trust & Compliance",
+  "as_of": "2026-09-14T10:00:24Z",
+  "build_id": "b70893815470c52a34065c5d747c3f1b",
+  "has_table_data": true,
+  "ticker_count": 15,
+  "constituents_with_data": 13,
+  "constituents": [
+    {
+      "symbol": "GOOG",
+      "company_name": "Alphabet Inc.",
+      "tier": 1,
+      "portfolio_weight": 0.055,
+      "has_table_data": true,
+      "meta_url": "tickers/GOOG/meta.v0.json"
+    },
+    {
+      "symbol": "RELX",
+      "company_name": "RELX Plc",
+      "tier": 1,
+      "portfolio_weight": 0.045,
+      "has_table_data": true,
+      "meta_url": "tickers/RELX/meta.v0.json"
+    },
+    {
+      "symbol": "BAH",
+      "company_name": "Booz Allen Hamilton Holding Corporation",
+      "tier": 1,
+      "portfolio_weight": 0.035,
+      "has_table_data": true,
+      "meta_url": "tickers/BAH/meta.v0.json"
+    },
+    {
+      "symbol": "META",
+      "company_name": "Meta Platforms, Inc.",
+      "tier": 2,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/META/meta.v0.json"
+    },
+    {
+      "symbol": "MSFT",
+      "company_name": "Microsoft Corporation",
+      "tier": 2,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/MSFT/meta.v0.json"
+    },
+    {
+      "symbol": "NOW",
+      "company_name": "ServiceNow, Inc.",
+      "tier": 2,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/NOW/meta.v0.json"
+    },
+    {
+      "symbol": "TRI",
+      "company_name": "Thomson Reuters Corporation",
+      "tier": 2,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/TRI/meta.v0.json"
+    },
+    {
+      "symbol": "CRWD",
+      "company_name": "CrowdStrike Holdings, Inc.",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/CRWD/meta.v0.json"
+    },
+    {
+      "symbol": "CTSH",
+      "company_name": "Cognizant Technology Solutions Corporation",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/CTSH/meta.v0.json"
+    },
+    {
+      "symbol": "DDOG",
+      "company_name": "Datadog, Inc.",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/DDOG/meta.v0.json"
+    },
+    {
+      "symbol": "IBM",
+      "company_name": "International Business Machines Corporation",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/IBM/meta.v0.json"
+    },
+    {
+      "symbol": "PANW",
+      "company_name": "Palo Alto Networks, Inc.",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/PANW/meta.v0.json"
+    },
+    {
+      "symbol": "SPGI",
+      "company_name": "S&P Global Inc.",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": true,
+      "meta_url": "tickers/SPGI/meta.v0.json"
+    },
+    {
+      "symbol": "ITRK.LSE",
+      "company_name": "ITRK.LSE",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": false,
+      "meta_url": null
+    },
+    {
+      "symbol": "SGSN.SW",
+      "company_name": "SGSN.SW",
+      "tier": 3,
+      "portfolio_weight": null,
+      "has_table_data": false,
+      "meta_url": null
+    }
+  ],
+  "tables_index_url": "themes/business-services-26-ai-governance-trust-compliance/tables/index.v0.json",
+  "last_updated_at": "2026-08-29T09:41:58Z",
+  "on_portfolio": false,
+  "on_watchlist": false,
+  "coverage": null,
+  "content": {
+    "sections_ready": 5,
+    "sections_total": 5,
+    "has_thesis": true,
+    "thesis_updated_at": "2026-08-29",
+    "theme_upload_count": 0
+  }
+}
