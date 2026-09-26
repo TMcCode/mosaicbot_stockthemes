@@ -316,9 +316,11 @@ type Chart1yCanvasProps = {
   chartHostRef: MutableRefObject<HTMLDivElement | null>;
   /** Shown in the chart footer on performance view (left of brand mark). */
   performanceFootnote?: string | null;
-  /** Title + view toggle rendered inside the gray chart shell. */
+  /** Title (+ desktop view toggle) inside the gray chart shell. */
   header?: ReactNode;
-  /** Period chips in the footer row (right of logo + note). */
+  /** Performance / Composition toggle — footer on mobile only. */
+  viewToggle?: ReactNode;
+  /** Period chips in the footer row (right of logo + note on desktop). */
   periodControls?: ReactNode;
 };
 
@@ -338,6 +340,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   chartHostRef,
   performanceFootnote,
   header,
+  viewToggle,
   periodControls,
 }: Chart1yCanvasProps) {
   const { theme } = useStockthemesTheme();
@@ -768,11 +771,14 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
       {header}
       <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: CHART_VIEW_HEIGHT }} />
       <div className={styles.chartFooter}>
-        <div className={styles.chartFooterLeft} aria-hidden="true">
-          <BrandWatermark className={styles.chartBrandLockup} />
-          {performanceFootnote ? (
-            <span className={styles.chartBrandNote}>{performanceFootnote}</span>
-          ) : null}
+        <div className={styles.chartFooterMeta}>
+          {viewToggle ? <div className={styles.viewToggleBar}>{viewToggle}</div> : null}
+          <div className={styles.chartFooterLeft} aria-hidden="true">
+            <BrandWatermark className={styles.chartBrandLockup} />
+            {performanceFootnote ? (
+              <span className={styles.chartBrandNote}>{performanceFootnote}</span>
+            ) : null}
+          </div>
         </div>
         {periodControls}
       </div>
@@ -1490,7 +1496,11 @@ export function Chart1yLightweight({
                 )}
               </span>
               {hasPerf && hasComp ? (
-                <div className={styles.toggle} role="group" aria-label="Chart type">
+                <div
+                  className={`${styles.toggle} ${styles.viewToggleDesktop}`}
+                  role="group"
+                  aria-label="Chart type"
+                >
                   <button
                     type="button"
                     className={activeView === "performance" ? styles.active : undefined}
@@ -1508,6 +1518,26 @@ export function Chart1yLightweight({
                 </div>
               ) : null}
             </div>
+          }
+          viewToggle={
+            hasPerf && hasComp ? (
+              <div className={styles.toggle} role="group" aria-label="Chart type">
+                <button
+                  type="button"
+                  className={activeView === "performance" ? styles.active : undefined}
+                  onClick={() => startTransition(() => setView("performance"))}
+                >
+                  Performance
+                </button>
+                <button
+                  type="button"
+                  className={activeView === "composition" ? styles.active : undefined}
+                  onClick={() => startTransition(() => setView("composition"))}
+                >
+                  Composition
+                </button>
+              </div>
+            ) : null
           }
           periodControls={
             showPeriodControls ? (

@@ -10,14 +10,13 @@ import {
   factorProfileHasContent,
   factorProfileNeedsLeaderboardEnrich,
   factorProfileUiAllowed,
-  formatFactorRankLabel,
   formatThemeFactorDisplayRank,
   parseFactorLeaderboards,
   parseThemeFactorProfile,
   themeFactorDisplayScore,
   themeFactorProfileUrl,
 } from "@/lib/themeFactorProfile";
-import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
+import { factorDisplayLabel, factorDisplayLabelShort } from "@/lib/factorDisplayLabel";
 import { factorTooltipSummaryForId } from "@/lib/factorTooltipSummaries";
 import {
   stockthemesBrowserCacheBusterQuery,
@@ -58,8 +57,27 @@ function resolveProfileState(profile: ThemeFactorProfileV0): ProfileState {
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
   const displayScore = themeFactorDisplayScore(entry);
   const rankLabel = formatThemeFactorDisplayRank(entry);
+  const rankNum =
+    entry.score_standalone != null && Number.isFinite(entry.score_standalone)
+      ? entry.rank_standalone
+      : entry.rank;
+  const rankTotal = entry.total;
+  const rankShort =
+    rankNum != null && Number.isFinite(rankNum)
+      ? rankTotal != null && Number.isFinite(rankTotal)
+        ? `#${rankNum} of ${rankTotal.toLocaleString()}`
+        : `#${rankNum}`
+      : null;
   const label = factorDisplayLabel(entry.id, entry.label);
+  const shortLabel = factorDisplayLabelShort(entry.id, entry.label);
   const tooltipSummary = factorTooltipSummaryForId(entry.id);
+  const titleBits = [
+    label,
+    displayScore != null ? `score ${displayScore}` : null,
+    rankLabel,
+  ]
+    .filter(Boolean)
+    .join(" · ");
   return (
     <li className={styles.row}>
       <div className={styles.rowHead}>
@@ -67,12 +85,23 @@ function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant
           <span
             className={styles.label}
             tabIndex={tooltipSummary ? 0 : undefined}
-            aria-label={tooltipSummary ? `${label}. ${tooltipSummary}` : undefined}
+            title={titleBits || undefined}
+            aria-label={
+              tooltipSummary
+                ? `${label}, score ${displayScore}${rankLabel ? `, ${rankLabel}` : ""}. ${tooltipSummary}`
+                : titleBits || undefined
+            }
           >
-            {label}
+            <span className={styles.labelFull}>{label}</span>
+            <span className={styles.labelShort}>{shortLabel}</span>
             {tooltipSummary ? <span className={styles.tooltip}>{tooltipSummary}</span> : null}
           </span>
-          {rankLabel ? <span className={styles.rank}>({rankLabel})</span> : null}
+          {rankLabel ? (
+            <span className={styles.rank} title={rankLabel}>
+              <span className={styles.rankFull}>{rankLabel}</span>
+              <span className={styles.rankShort}>({rankShort ?? rankLabel})</span>
+            </span>
+          ) : null}
         </div>
         <span className={styles.score}>{displayScore}</span>
       </div>
@@ -114,6 +143,7 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
   const pos = profile.factors_positive ?? [];
   const neg = profile.factors_negative ?? [];
   const industry = profile.dominant_sector;
+  const industryRank = industry ? formatThemeFactorDisplayRank(industry) : null;
 
   return (
     <div className={styles.panel}>
@@ -146,11 +176,15 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
 
       {industry ? (
         <div className={styles.sector}>
-          <p className={styles.sectorLine}>
+          <div className={styles.sectorLine}>
             Closest industry: <strong>{industry.label}</strong>
-            {industry.score != null ? ` (score ${industry.score})` : ""}
-            {formatFactorRankLabel(industry) ? ` · ${formatFactorRankLabel(industry)}` : ""}
-          </p>
+            {industry.score != null ? (
+              <span className={styles.sectorMeta}>{` (score ${industry.score})`}</span>
+            ) : null}
+            {industryRank ? (
+              <span className={styles.sectorMeta}>{` · ${industryRank}`}</span>
+            ) : null}
+          </div>
         </div>
       ) : null}
     </div>

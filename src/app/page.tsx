@@ -234,8 +234,11 @@ export default async function Home() {
                 {manifest.as_of ? (
                   <li className={`${styles.statCard} ${styles.statAsOf}`}>
                     <strong>
-                      <time dateTime={manifest.as_of}>
-                        {formatSiteDataPublished(manifest.as_of)}
+                      <time
+                        dateTime={manifest.as_of}
+                        title={formatSiteDataPublished(manifest.as_of)}
+                      >
+                        {formatSiteDataPublished(manifest.as_of, { compact: true })}
                       </time>
                     </strong>
                     <span>Data as of</span>

@@ -52,8 +52,8 @@ export function HomeExploreChanging({
   themeMetaBySlug,
 }: Props) {
   return (
-    <section className={styles.split} aria-label="Explore and what is changing">
-      <div className={styles.col}>
+    <section className={styles.split} aria-label="What is changing and explore">
+      <div className={`${styles.col} ${styles.colExplore}`}>
         <div className={styles.head}>
           <h2 className={styles.title}>Explore Themes</h2>
           <Link href="/groups" className={styles.viewAll}>
@@ -97,7 +97,7 @@ export function HomeExploreChanging({
           ))}
         </div>
       </div>
-      <div className={styles.col}>
+      <div className={`${styles.col} ${styles.colChanging}`}>
         <div className={styles.head}>
           <h2 className={styles.title}>What&apos;s changing</h2>
           <Link href="/feed" className={styles.viewAll}>

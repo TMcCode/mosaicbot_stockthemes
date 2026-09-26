@@ -16,6 +16,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
+import { ConstituentsTableSortHint } from "@/components/ConstituentsTableSortHint";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
   buildAcceleratingNote,
@@ -234,9 +235,9 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
           </button>
         </div>
         {acceleratingNote && mode !== "valuation" ? (
-          <p className={tableStyles.acceleratingNote} title={acceleratingNote}>
+          <span className={tableStyles.acceleratingNote} title={acceleratingNote}>
             {acceleratingNote}
-          </p>
+          </span>
         ) : null}
       </div>
       <div className={styles.tableWrap}>
@@ -298,7 +299,9 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
                       <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                         <div className={styles.companyCell}>
                           <ConstituentLogo ticker={row.ticker} />
-                          <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
+                          <span className={styles.companyName} title={row.name?.trim() || undefined}>
+                            {row.name?.trim() || "—"}
+                          </span>
                           <TickerBadge ticker={row.ticker} />
                         </div>
                       </td>
@@ -337,15 +340,11 @@ export function ThemeConstituentsRevenuePanel({ detail, sidecarState }: Props) {
         </HorizontalScrollArea>
         <div className={styles.tableFooter}>
           <p className={styles.tableFootnote}>
-            Manual theme weights for the theme row; footer stats are equal-weight across constituents.
-            {mode === "accel" ? " Accel = change in growth (percentage points)." : null}
-            {mode === "valuation"
-              ? " PSG = P/S ÷ YoY revenue growth %. NTM P/S blends remaining CY sales with NY."
-              : null}
+            Theme: manual weights; footer: equal-weight.
+            {mode === "accel" ? " Accel = Δ growth (pp)." : null}
+            {mode === "valuation" ? " PSG = P/S ÷ YoY growth %." : null}
           </p>
-          <p className={tableStyles.sortHint}>
-            Default: Wgt ↓ · Click headers to sort · Shift+click secondary
-          </p>
+          <ConstituentsTableSortHint />
           <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>

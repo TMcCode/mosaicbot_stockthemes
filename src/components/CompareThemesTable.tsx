@@ -10,6 +10,7 @@ import {
 } from "@/lib/customDateColumnHelp";
 import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { downloadCompareThemesCsv } from "@/lib/compareThemesCsv";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -177,6 +178,14 @@ export function CompareThemesTable({
           {displayRows.flatMap((row) => {
             const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
+            const split =
+              !isBenchmark && entityKind === "theme"
+                ? splitThemeDisplayName(row.name)
+                : { title: row.name, groupPrefix: null as string | null };
+            const groupLine =
+              !isBenchmark && entityKind === "theme"
+                ? split.groupPrefix || String(row.groupName || "").trim() || null
+                : null;
             const nameCell = isBenchmark ? (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
                 <span className={styles.benchmarkName} title={row.name}>
@@ -200,13 +209,18 @@ export function CompareThemesTable({
                     className={styles.themeName}
                     title={row.name}
                   >
-                    {row.name}
+                    <span className={styles.themeNameFull}>{row.name}</span>
+                    <span className={styles.themeNameShort}>{split.title}</span>
                   </Link>
                 ) : (
                   <span className={styles.themeName} title={row.name}>
-                    {row.name}
+                    <span className={styles.themeNameFull}>{row.name}</span>
+                    <span className={styles.themeNameShort}>{split.title}</span>
                   </span>
                 )}
+                {groupLine ? (
+                  <div className={`${styles.meta} ${styles.groupMeta}`}>{groupLine}</div>
+                ) : null}
                 {row.tickersPreview ? (
                   <div className={`${styles.meta} ${styles.tickersMeta}`}>{row.tickersPreview}</div>
                 ) : entityKind === "group" && row.themeCount != null ? (

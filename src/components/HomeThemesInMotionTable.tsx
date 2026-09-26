@@ -15,6 +15,17 @@ function fmtPct(v: number | null | undefined): string {
   return `${sign}${n.toFixed(1)}%`;
 }
 
+function breadthParts(r: ThemesInMotionRowV0): { pct: string | null; suffix: string } {
+  const pct =
+    r.breadth_pct != null && Number.isFinite(Number(r.breadth_pct))
+      ? `${Math.round(Number(r.breadth_pct))}%`
+      : (String(r.breadth_label || "").match(/^(\d+%)/)?.[1] ?? null);
+  const suffix = String(r.breadth_label || "")
+    .replace(/^\d+%\s*/, "")
+    .trim();
+  return { pct, suffix };
+}
+
 type Props = {
   rows: ThemesInMotionRowV0[];
   /** Homepage shows 10; view-all can pass a larger cap (or Infinity). */
@@ -59,7 +70,9 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
                 </td>
               </tr>
             ) : (
-              shown.map((r) => (
+              shown.map((r) => {
+                const { pct: breadthPct, suffix: breadthSuffix } = breadthParts(r);
+                return (
                 <tr key={r.slug || r.name}>
                   <td className={styles.stickyCol}>
                     <div className={styles.themeCell}>
@@ -85,11 +98,20 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
                   <td className={`${styles.num} ${styles.hideOnNarrow}`}>{fmtPct(r.return_ytd)}</td>
                   <td>{r.revisions_label || "—"}</td>
                   <td>
-                    {r.breadth_label ||
-                      (r.breadth_pct != null ? `${Math.round(r.breadth_pct)}%` : "—")}
+                    {!breadthPct && !breadthSuffix
+                      ? "—"
+                      : (
+                          <>
+                            {breadthPct ?? "—"}
+                            {breadthSuffix ? (
+                              <span className={styles.breadthSuffix}> {breadthSuffix}</span>
+                            ) : null}
+                          </>
+                        )}
                   </td>
                 </tr>
-              ))
+                );
+              })
             )}
           </tbody>
         </table>

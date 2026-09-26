@@ -111,14 +111,6 @@
   }
 }
 
-.feedFootnote {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.35;
-  color: var(--text-muted);
-  opacity: 0.85;
-}
-
 .loadMore {
   align-self: center;
   margin-top: 4px;

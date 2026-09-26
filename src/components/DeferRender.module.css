@@ -1,23 +1,15 @@
 /**
- * Full-width host only from tablet-up. Below 601px we omit fixed width so flex layout
- * matches pre-fix mobile (user-confirmed fine); desktop needs width for chart clientWidth.
+ * Full-width host so chart clientWidth matches the intro column on all viewports.
+ * min-width:0 prevents LW Charts canvas from expanding flex parents past the phone width.
  */
 .host {
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
-}
-
-@media (min-width: 601px) {
-  .host {
-    width: 100%;
-  }
 }
 
 .placeholder {
   width: 100%;
-}
-
-@media (max-width: 600px) {
-  .placeholder {
-    width: auto;
-  }
+  max-width: 100%;
+  min-width: 0;
 }

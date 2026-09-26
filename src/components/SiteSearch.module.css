@@ -85,6 +85,26 @@
   box-shadow: 0 0 0 2px rgba(38, 252, 214, 0.12);
 }
 
+/* Nav field — light theme (hero input already had these; bare `.input` did not). */
+:global(.st-theme[data-theme="light"]) .input {
+  border-color: rgba(59, 77, 161, 0.2);
+  background: #f3f2f8;
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .input::placeholder {
+  color: #7a7796;
+}
+
+:global(.st-theme[data-theme="light"]) .input:hover {
+  border-color: rgba(59, 77, 161, 0.32);
+}
+
+:global(.st-theme[data-theme="light"]) .input:focus {
+  border-color: rgba(42, 152, 147, 0.65);
+  box-shadow: 0 0 0 2px rgba(42, 152, 147, 0.16);
+}
+
 .panel {
   position: absolute;
   z-index: 50;
@@ -217,8 +237,15 @@
 
 @media (max-width: 720px) {
   .wrap {
-    order: 3;
-    flex: 1 1 100%;
+    flex: 1 1 auto;
+    /* Keep a usable field — 0 lets brand + Browse squeeze search away. */
+    min-width: 96px;
     max-width: none;
+  }
+
+  .inputHero {
+    height: 44px;
+    padding: 0 16px;
+    font-size: 14px;
   }
 }

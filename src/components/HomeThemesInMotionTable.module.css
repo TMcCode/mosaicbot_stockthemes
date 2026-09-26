@@ -161,6 +161,11 @@
     display: none;
   }
 
+  /* Mobile: show breadth % only — drop "beat SPY …". */
+  .breadthSuffix {
+    display: none;
+  }
+
   .table {
     font-size: 12px;
   }

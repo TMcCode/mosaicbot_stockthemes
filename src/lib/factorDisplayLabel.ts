@@ -6,3 +6,8 @@ const FACTOR_DISPLAY_LABELS: Partial<Record<string, string>> = {
 export function factorDisplayLabel(factorId: string, publishedLabel?: string): string {
   return FACTOR_DISPLAY_LABELS[factorId] ?? publishedLabel?.trim() ?? factorId;
 }
+
+/** Compact label for tight layouts (drops trailing “Exposure”). */
+export function factorDisplayLabelShort(factorId: string, publishedLabel?: string): string {
+  return factorDisplayLabel(factorId, publishedLabel).replace(/\s+Exposure$/i, "").trim();
+}

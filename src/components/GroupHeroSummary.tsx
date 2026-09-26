@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import type { GroupTopTickerYtdV0 } from "@/types/group.detail.v0";
 
 import styles from "./GroupHeroSummary.module.css";
@@ -7,7 +8,6 @@ import styles from "./GroupHeroSummary.module.css";
 type Props = {
   intro?: string | null;
   topTickers: GroupTopTickerYtdV0[];
-  groupSlug: string;
   /** Stretch panel to align bottom with hero treemap rail. */
   fillRail?: boolean;
 };
@@ -24,7 +24,7 @@ function returnClass(v: number): string {
   return styles.returnFlat;
 }
 
-export function GroupHeroSummary({ intro, topTickers, groupSlug, fillRail = false }: Props) {
+export function GroupHeroSummary({ intro, topTickers, fillRail = false }: Props) {
   const introText = intro?.trim();
   const hasIntro = Boolean(introText);
   const hasTickers = topTickers.length > 0;
@@ -35,45 +35,43 @@ export function GroupHeroSummary({ intro, topTickers, groupSlug, fillRail = fals
 
   return (
     <div className={fillRail ? styles.heroFillRail : styles.heroWrap}>
-      <div className={styles.panel}>
-        {hasIntro ? <p className={styles.intro}>{introText}</p> : null}
-
-        {hasTickers ? (
+      {hasIntro ? <div className={styles.intro}>{introText}</div> : null}
+      {hasTickers ? (
+        <div className={styles.panel}>
           <div className={styles.tickersBlock}>
-            <p className={styles.sectionLabel}>Top tickers (YTD)</p>
+            <div className={styles.sectionLabel}>Top tickers (YTD)</div>
             <ul className={styles.tickerList}>
-              {topTickers.map((row) => (
-                <li key={row.ticker}>
-                  <Link href={`/themes/${encodeURIComponent(row.theme_slug)}`} className={styles.tickerRow}>
-                    <span className={styles.tickerTheme}>{row.theme_name}</span>
-                    <span className={styles.tickerSep} aria-hidden="true">
-                      ·
-                    </span>
-                    <span className={styles.tickerSymbol}>{row.ticker}</span>
-                    <span className={`${styles.tickerReturn} ${returnClass(row.ytd_pct)}`}>
-                      {fmtPct(row.ytd_pct)}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+              {topTickers.map((row) => {
+                const { title, groupPrefix } = splitThemeDisplayName(row.theme_name);
+                return (
+                  <li key={row.ticker}>
+                    <Link
+                      href={`/themes/${encodeURIComponent(row.theme_slug)}`}
+                      className={styles.tickerRow}
+                    >
+                      <span className={styles.tickerText}>
+                        <span className={styles.tickerMain}>
+                          <span className={styles.tickerTheme}>{title}</span>
+                          <span className={styles.tickerSep} aria-hidden="true">
+                            ·
+                          </span>
+                          <span className={styles.tickerSymbol}>{row.ticker}</span>
+                        </span>
+                        {groupPrefix ? (
+                          <span className={styles.tickerGroup}>{groupPrefix}</span>
+                        ) : null}
+                      </span>
+                      <span className={`${styles.tickerReturn} ${returnClass(row.ytd_pct)}`}>
+                        {fmtPct(row.ytd_pct)}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ul>
           </div>
-        ) : null}
-
-        <nav className={styles.quickLinks} aria-label="Group quick links">
-          <Link href="/compare">Theme returns</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/rotation">Rotation map</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/heatmap">Heatmap</Link>
-          <span aria-hidden="true">·</span>
-          <Link href="/overlay">Compare chart</Link>
-          <span aria-hidden="true">·</span>
-          <Link href={`/groups/${encodeURIComponent(groupSlug)}#group-themes-heading`}>
-            All themes
-          </Link>
-        </nav>
-      </div>
+        </div>
+      ) : null}
     </div>
   );
 }

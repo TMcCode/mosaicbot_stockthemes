@@ -14,14 +14,14 @@ import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 
 export const metadata: Metadata = buildPageMetadata({
-  title: "Theme compare chart",
+  title: "Theme compare",
   description:
     "Compare indexed performance for up to 12 themes, groups, tickers, sector SPDRs, or factor spreads on one chart.",
   path: "/overlay",
 });
 
 function OverlayFallback() {
-  return <p className={styles.introPunchline}>Loading theme compare chart…</p>;
+  return <p className={styles.introPunchline}>Loading theme compare…</p>;
 }
 
 export default async function OverlayPage() {
@@ -50,7 +50,7 @@ export default async function OverlayPage() {
         <div className={styles.intro}>
           <Suspense fallback={<OverlayFallback />}>
             <OverlayPageClient
-              eyebrow={catalogEyebrowText("Theme compare chart", source)}
+              eyebrow={catalogEyebrowText("Theme compare", source)}
               selectedDates={selectedDates}
               benchmarkPerformance={spyPerf?.benchmarkPerformance}
               groupLegendMetaBySlug={groupLegendMetaBySlug}

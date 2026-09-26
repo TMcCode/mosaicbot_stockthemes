@@ -16,6 +16,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
+import { ConstituentsTableSortHint } from "@/components/ConstituentsTableSortHint";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
   formatRevenueCell,
@@ -178,6 +179,7 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                           {line}
                         </span>
                       )),
+                      analystsCol.tooltip,
                     )}
                   </th>
                 ) : null}
@@ -202,7 +204,9 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                   <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                     <div className={styles.companyCell}>
                       <ConstituentLogo ticker={row.ticker} />
-                      <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
+                      <span className={styles.companyName} title={row.name?.trim() || undefined}>
+                        {row.name?.trim() || "—"}
+                      </span>
                       <TickerBadge ticker={row.ticker} />
                     </div>
                   </td>
@@ -280,14 +284,10 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
       </HorizontalScrollArea>
       <div className={styles.tableFooter}>
         <p className={styles.tableFootnote}>
-          Lock-quarter (CQ) plus unfinished-year (CY) and next-year (NY) consensus
-          revenue growth revisions vs prior-year actual. Vendor period labels (0q / 0y /
-          +1y). Theme row uses manual weights; footer stats are equal-weight across names
-          with data.
+          CQ / CY / NY consensus growth revisions vs prior year. Theme: manual weights;
+          footer: equal-weight.
         </p>
-        <p className={tableStyles.sortHint}>
-          Default: Wgt ↓ · Click headers to sort · Shift+click secondary
-        </p>
+        <ConstituentsTableSortHint />
         <TableFooterBrandMark className={styles.tableWatermark} />
       </div>
     </div>

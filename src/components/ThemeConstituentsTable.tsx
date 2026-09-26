@@ -26,6 +26,7 @@ import {
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { formatWeight } from "@/lib/formatWeight";
+import { ConstituentsTableSortHint } from "@/components/ConstituentsTableSortHint";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
   constituentTickerNote,
@@ -600,7 +601,9 @@ export function ThemeConstituentsTable({
                             ticker={c.ticker}
                             logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
                           />
-                          <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
+                          <span className={styles.companyName} title={c.name?.trim() || undefined}>
+                            {c.name?.trim() || "—"}
+                          </span>
                           <TickerBadge ticker={c.ticker} />
                         </div>
                       </td>
@@ -950,9 +953,7 @@ export function ThemeConstituentsTable({
               EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
             </p>
           ) : null}
-          <p className={tableStyles.sortHint}>
-            Default: Wgt ↓ · Click headers to sort · Shift+click secondary
-          </p>
+          <ConstituentsTableSortHint showScrollHint={!showNotes} />
           <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>

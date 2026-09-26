@@ -19,6 +19,9 @@
   flex: 1;
   justify-content: center;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   min-height: calc(100vh - 64px);
   padding: 24px;
   overflow-x: hidden;
@@ -43,8 +46,9 @@
   display: flex;
   width: 100%;
   max-width: 1320px;
+  min-width: 0;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   justify-content: flex-start;
   background: var(--card-surface);
   border: 1px solid var(--card-border);
@@ -58,16 +62,24 @@
 
 .heroGrid {
   width: 100%;
+  min-width: 0;
+  max-width: 100%;
   display: grid;
   grid-template-columns: minmax(0, 1fr) 220px;
   gap: 16px;
   align-items: start;
 }
 
-/* Theme/group detail: wide rail for the hero treemap. */
+/* Theme detail desktop (= GitHub): title+factor | treemap, thesis full-bleed under.
+   Mobile uses a separate tree via ThemeDetailHeroSwitch (title → thesis → map → factor). */
 .heroGridThemeDetail {
   grid-template-columns: minmax(0, 1fr) minmax(400px, 520px);
   align-items: stretch;
+}
+
+.heroGridThemeDetail > .themeHeroRail {
+  min-width: 0;
+  width: 100%;
 }
 
 .heroGridCompare {
@@ -116,12 +128,15 @@
   gap: 12px;
   width: 100%;
   min-width: 0;
+  max-width: 100%;
   min-height: 100%;
   align-self: stretch;
 }
 
-.heroGridThemeDetail .heroMain {
-  min-height: 100%;
+.themeHeroDesktopRoot,
+.themeHeroMobileRoot {
+  width: 100%;
+  min-width: 0;
 }
 
 .heroGridThemeDetail .heroFactorSlot {
@@ -131,6 +146,7 @@
   min-height: 0;
   width: 100%;
   max-width: 720px;
+  align-self: stretch;
 }
 
 .heroGridGroupDetail .heroSummarySlot {
@@ -155,12 +171,15 @@
 
 .heroTitle {
   margin: 0;
-  max-width: 720px;
+  max-width: 100%;
+  min-width: 0;
   font-size: 52px;
   font-weight: 650;
   line-height: 1.05;
   letter-spacing: -0.03em;
   text-wrap: balance;
+  overflow-wrap: anywhere;
+  word-break: break-word;
   color: var(--text-primary);
 }
 
@@ -179,6 +198,8 @@
   display: flex;
   flex-direction: column;
   gap: 20px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .heroBrand {
@@ -514,11 +535,14 @@
 
 .tightChartTop {
   width: 100%;
+  max-width: 100%;
   min-width: 0;
+  align-self: stretch;
+  overflow-x: clip;
   --chart-panel-section-margin-top: 0.5rem;
 }
 
-/* Desktop / tablet: stretch past flex-start so chart gets full .intro width (mobile unchanged). */
+/* Desktop / tablet: stretch past flex-start so chart gets full .intro width. */
 @media (min-width: 601px) {
   .tightChartTop {
     align-self: stretch;
@@ -661,11 +685,10 @@
 
 .trendingSortHint {
   margin: 4px 0 0;
-  font-size: 8px;
-  line-height: 1.2;
+  font-size: 13px;
+  line-height: 1.3;
   color: var(--text-muted);
-  opacity: 0.65;
-  zoom: 0.7;
+  opacity: 0.85;
 }
 
 .trendingThemeCell {
@@ -933,6 +956,7 @@ a.feedTitle:hover {
   border: 1px solid var(--button-secondary-border);
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.02);
+  overflow-x: auto;
 }
 
 .constituentsTableSizer {
@@ -995,6 +1019,14 @@ a.feedTitle:hover {
   }
 }
 
+@media (max-width: 600px) {
+  .tableFooter {
+    padding: 3px 0 3px 6px;
+    padding-right: clamp(24px, 8vw, 32px);
+    gap: 6px 8px;
+  }
+}
+
 .tableFootnote {
   margin: 0;
   flex: 1 1 auto;
@@ -1003,6 +1035,19 @@ a.feedTitle:hover {
   line-height: 1.35;
   color: var(--text-muted);
   zoom: 0.85;
+}
+
+@media (max-width: 600px) {
+  .tableFootnote {
+    /* Beat `.intro p` (~18px) on theme pages. */
+    font-size: 7px !important;
+    line-height: 1.2 !important;
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+    opacity: 0.72;
+    zoom: 1;
+    max-width: 100%;
+  }
 }
 
 .tableWatermark {
@@ -1112,6 +1157,51 @@ a.feedTitle:hover {
   font-variant-numeric: normal;
 }
 
+@media (max-width: 600px) {
+  /* Notes: fit Company + Wgt + wrapped rationale in the viewport — no horizontal scroll. */
+  .constituentsScrollWrap[data-constituents-view="notes"] {
+    --constituents-company-col-width: 108px;
+    overflow-x: hidden;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="notes"] .constituentsTableSizer {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="notes"] .constituentsTableSizer .dataTable {
+    width: 100%;
+    table-layout: fixed;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:first-child,
+  .constituentsScrollWrap[data-constituents-view="notes"] .dataTable td:first-child {
+    width: var(--constituents-company-col-width);
+    min-width: var(--constituents-company-col-width);
+    max-width: var(--constituents-company-col-width);
+  }
+
+  .constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:not(:first-child):not(:last-child),
+  .constituentsScrollWrap[data-constituents-view="notes"] .dataTable td:not(:first-child):not(:last-child) {
+    width: 44px;
+    min-width: 44px;
+    max-width: 48px;
+    padding-left: 4px;
+    padding-right: 4px;
+  }
+
+  .noteCell {
+    min-width: 0 !important;
+    max-width: none;
+    width: auto;
+    font-size: 9px !important;
+    line-height: 1.35 !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+}
+
 /* Wide revenue / revisions tables: keep the company column visible while panning.
    Do NOT use th:first-child — row-2 first cell is L5Q / Est Latest, not Company. */
 .constituentsScrollWrap[data-constituents-view="revenue"] .dataTable,
@@ -1123,6 +1213,49 @@ a.feedTitle:hover {
   table-layout: fixed;
 }
 
+/* Period / earnings / notes / quality-risk: sticky company col (needs separate borders). */
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable,
+.constituentsScrollWrap[data-constituents-view="earnings"] .dataTable,
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable,
+.constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable td:first-child,
+.constituentsScrollWrap[data-constituents-view="earnings"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="earnings"] .dataTable td:first-child,
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable td:first-child,
+.constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th:first-child,
+.constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--card-surface, #ffffff);
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.22);
+}
+
+.constituentsScrollWrap[data-constituents-view="returns"] .dataTable thead th:first-child,
+.constituentsScrollWrap[data-constituents-view="earnings"] .dataTable thead th:first-child,
+.constituentsScrollWrap[data-constituents-view="notes"] .dataTable thead th:first-child,
+.constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable thead th:first-child {
+  z-index: 3;
+}
+
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="returns"] .dataTable th:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="returns"] .dataTable td:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable th:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="earnings"] .dataTable td:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="notes"] .dataTable th:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="notes"] .dataTable td:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th:first-child,
+:global(.st-theme[data-theme="dark"]) .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td:first-child {
+  background: var(--card-surface, #0c1014);
+  box-shadow: 6px 0 12px -8px rgba(0, 0, 0, 0.55);
+}
+
 /* Don't stretch to the viewport (was blowing up L5Q / Est Latest). */
 .constituentsScrollWrap[data-constituents-view="revenue"] .constituentsTableSizer,
 .constituentsScrollWrap[data-constituents-view="revisions"] .constituentsTableSizer {
@@ -1130,15 +1263,16 @@ a.feedTitle:hover {
   width: max-content;
 }
 
-/* Company column: lock to same 280px as Period Returns / Earnings. */
+/* Company column: same width token as Period Returns / Earnings (152px on phones). */
 .constituentsScrollWrap[data-constituents-view="revenue"] .dataTable tbody td:first-child,
 .constituentsScrollWrap[data-constituents-view="revisions"] .dataTable tbody td:first-child,
 .constituentsScrollWrap[data-constituents-view="revenue"] .dataTable thead th:first-child,
 .constituentsScrollWrap[data-constituents-view="revisions"] .dataTable thead th:first-child {
-  width: 280px !important;
-  min-width: 280px !important;
-  max-width: 280px !important;
+  width: var(--constituents-company-col-width) !important;
+  min-width: var(--constituents-company-col-width) !important;
+  max-width: var(--constituents-company-col-width) !important;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* No per-cell vertical grid — group dividers (.metricGroupStart) keep !important. */
@@ -1197,9 +1331,13 @@ a.feedTitle:hover {
 
 .companyName {
   min-width: 0;
+  max-width: 100%;
   flex: 1 1 auto;
   color: var(--text-primary);
   line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .list {
@@ -1229,6 +1367,38 @@ a.feedTitle:hover {
   font-size: 12px;
   line-height: 1.35;
   color: var(--text-muted);
+}
+
+.backLink {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.3;
+  font-weight: 500;
+}
+
+.intro .backLink {
+  max-width: none;
+  font-size: 12px;
+  line-height: 1.3;
+  text-wrap: nowrap;
+}
+
+.backLink a {
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.backLink a:hover {
+  color: var(--accent, #26fcd6);
+}
+
+@media (max-width: 600px) {
+  .backLink,
+  .intro .backLink {
+    margin-top: 10px;
+    font-size: 10px;
+  }
 }
 
 .groupThemeGrid {
@@ -1268,6 +1438,7 @@ a.feedTitle:hover {
   align-items: flex-start;
   text-align: left;
   width: 100%;
+  max-width: 100%;
   min-width: 0;
   gap: 22px;
 }
@@ -1410,12 +1581,12 @@ a.feedTitle:hover {
 
 .intro .introPunchline {
   margin: 0;
-  font-size: clamp(22px, 2.6vw, 30px);
-  line-height: 1.2;
-  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.45;
+  font-weight: 450;
   color: var(--text-secondary);
-  max-width: 920px;
-  text-wrap: balance;
+  max-width: 520px;
+  text-wrap: pretty;
 }
 
 .introPunchlineLead {
@@ -1500,33 +1671,90 @@ a.secondary {
 @media (max-width: 600px) {
   .mobileTableScrollHint {
     display: block;
-    margin: 0 0 6px;
-    font-size: 10px;
-    line-height: 1.35;
-    color: var(--text-muted);
+    margin: 0 0 4px;
+    /* Beat `.intro p` (~18px) on theme pages. */
+    font-size: 8px !important;
+    line-height: 1.25 !important;
+    font-weight: 400 !important;
+    color: var(--text-muted) !important;
+    opacity: 0.75;
   }
 
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] {
+  .constituentsScrollWrap {
+    --constituents-company-col-width: 152px;
     scrollbar-gutter: auto;
   }
 
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable {
-    font-size: 11px;
+  .constituentsScrollWrap .dataTable {
+    font-size: 10px;
   }
 
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th,
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td {
-    padding: 7px 8px;
+  .constituentsScrollWrap .dataTable th,
+  .constituentsScrollWrap .dataTable td {
+    padding: 5px 6px;
   }
 
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable th:first-child,
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .dataTable td:first-child {
-    min-width: 150px;
-    max-width: 170px;
+  .constituentsScrollWrap .dataTable th:first-child,
+  .constituentsScrollWrap .dataTable td:first-child {
+    min-width: 152px;
+    max-width: 168px;
   }
 
-  .constituentsScrollWrap[data-constituents-view="quality-risk"] .companyCell {
-    gap: 6px;
+  /* Logo | name
+           ticker — frees width vs name+chip side-by-side. */
+  .companyCell {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    column-gap: 6px;
+    row-gap: 2px;
+    align-items: start;
+  }
+
+  .constituentsScrollWrap[data-constituents-view="returns"] .companyCell,
+  .constituentsScrollWrap[data-constituents-view="earnings"] .companyCell,
+  .constituentsScrollWrap[data-constituents-view="revenue"] .companyCell,
+  .constituentsScrollWrap[data-constituents-view="revisions"] .companyCell,
+  .constituentsScrollWrap[data-constituents-view="quality-risk"] .companyCell,
+  .constituentsScrollWrap[data-constituents-view="notes"] .companyCell {
+    gap: 0;
+    column-gap: 6px;
+    row-gap: 2px;
+  }
+
+  .companyCell > :first-child {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  .constituentLogoSlot {
+    flex: none;
+    width: 14px;
+    height: 14px;
+  }
+
+  .constituentLogo {
+    width: 14px;
+    height: 14px;
+  }
+
+  .companyName {
+    grid-column: 2;
+    grid-row: 1;
+    min-width: 0;
+    max-width: 100%;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .companyCell > :last-child {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
   }
 
   .main {
@@ -1558,9 +1786,14 @@ a.secondary {
 
   /* Theme returns (/compare): keep the blurb compact so the table stays above the fold. */
   .heroMainCompare .introLead {
-    font-size: 13px;
-    line-height: 1.4;
-    font-weight: 400;
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+    font-weight: 400 !important;
+    max-width: none;
+  }
+
+  .heroMainCompare {
+    gap: 8px;
   }
 
   .intro .introCopy {
@@ -1569,8 +1802,8 @@ a.secondary {
   }
 
   .intro .introPunchline {
-    font-size: 24px;
-    line-height: 1.15;
+    font-size: 14px;
+    line-height: 1.4;
   }
 
   .introMore {
@@ -1600,8 +1833,10 @@ a.secondary {
     padding: 10px;
   }
 
-  .heroGrid {
-    grid-template-columns: 1fr;
+  .heroGrid,
+  .heroGridThemeDetail,
+  .heroGridCompare {
+    grid-template-columns: minmax(0, 1fr);
   }
 
   .statGridHero {
@@ -1635,8 +1870,20 @@ a.secondary {
 }
 
 @media (max-width: 1100px) {
-  .heroGrid {
-    grid-template-columns: 1fr;
+  .heroGrid,
+  .heroGridThemeDetail,
+  .heroGridCompare {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .heroGridThemeDetail .heroFactorSlot {
+    flex: none;
+    max-width: 100%;
+  }
+
+  .heroGridThemeDetail > .heroFullBleed {
+    grid-column: 1 / -1;
+    width: 100%;
   }
 
   .heroTitle {
@@ -1702,6 +1949,13 @@ a.secondary {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .trendingSortHint {
+    font-size: 8px;
+    line-height: 1.2;
+    opacity: 0.65;
+    zoom: 0.7;
   }
 }
 
@@ -1772,6 +2026,23 @@ a.secondary {
   width: 100% !important;
   height: 58px !important;
   font-size: 20px !important;
+}
+
+@media (max-width: 600px) {
+  .heroSearch {
+    padding: 10px 12px;
+  }
+
+  .heroSearchLabel {
+    margin-bottom: 6px;
+    font-size: 10px;
+  }
+
+  .heroSearch input[type="search"] {
+    height: 40px !important;
+    font-size: 13px !important;
+    padding: 0 12px !important;
+  }
 }
 
 /* Light theme: main column tokens live in ThemeRoot.module.css (`.st-surface`). */

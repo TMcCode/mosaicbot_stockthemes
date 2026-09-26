@@ -20,9 +20,9 @@ export function SiteFooter({ dataAsOf }: Props) {
             <span className={styles.copyright}>© {new Date().getFullYear()} stockthemes.ai</span>
             {publishedLabel ? (
               <>
-                {"\u2003"}
+                {" · "}
                 <span className={styles.dataAsOf}>
-                  Site data published{" "}
+                  Last published:{" "}
                   <time dateTime={asOfIso} title="US Eastern (manifest as_of)">
                     {publishedLabel}
                   </time>
@@ -44,7 +44,8 @@ export function SiteFooter({ dataAsOf }: Props) {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Charting by TradingView
+                <span className={styles.tvFull}>Charting by TradingView</span>
+                <span className={styles.tvShort}>TradingView</span>
               </a>
             </span>
           </nav>

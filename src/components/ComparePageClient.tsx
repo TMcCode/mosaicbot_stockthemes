@@ -201,8 +201,6 @@ export function ComparePageClient({
     [groupRows, sectorOptions, selectedSectors],
   );
   const filtered = viewMode === "groups" ? filteredGroups : filteredThemes;
-  const totalRows = viewMode === "groups" ? groupRows.length : rows.length;
-  const entityLabel = viewMode === "groups" ? "groups" : "themes";
 
   const tableBenchmarkRows = useMemo(() => {
     const out: CompareBenchmarkRow[] = [];
@@ -241,14 +239,6 @@ export function ComparePageClient({
                 Groups
               </button>
             </div>
-            <p className={styles.metaCount}>
-              {viewMode === "groups" && groupsLoading && totalRows === 0
-                ? "Loading groups"
-                : filtered.length === totalRows
-                  ? `${totalRows} ${entityLabel}`
-                  : `${filtered.length} of ${totalRows} ${entityLabel}`}{" "}
-              · {visibleColumns.length} metrics
-            </p>
           </div>
           <div className={pageStyles.compareHeroFilters}>
             {sectorOptions.length > 0 ? (
@@ -259,6 +249,7 @@ export function ComparePageClient({
                 onChange={setSelectedSectors}
                 emptyLabel="All sectors"
                 layout="inline"
+                compact
               />
             ) : null}
             {viewMode === "themes" ? (
@@ -270,6 +261,7 @@ export function ComparePageClient({
                   onChange={setSelectedGroups}
                   emptyLabel="All groups"
                   layout="inline"
+                  compact
                 />
                 <CheckboxMultiSelectDropdown
                   label="Years"
@@ -278,6 +270,7 @@ export function ComparePageClient({
                   onChange={setSelectedYears}
                   emptyLabel="All years"
                   layout="inline"
+                  compact
                 />
               </>
             ) : null}
@@ -317,7 +310,8 @@ export function ComparePageClient({
                         checked={showBenchmarks}
                         onChange={(e) => setShowBenchmarks(e.target.checked)}
                       />
-                      Sector ETFs
+                      <span className={styles.toggleLabelFull}>Sector ETFs</span>
+                      <span className={styles.toggleLabelShort}>ETFs</span>
                     </label>
                   ) : null}
                   {factorSpreadRows.length > 0 ? (
@@ -327,7 +321,8 @@ export function ComparePageClient({
                         checked={showFactorSpreads}
                         onChange={(e) => setShowFactorSpreads(e.target.checked)}
                       />
-                      Factor Spreads
+                      <span className={styles.toggleLabelFull}>Factor Spreads</span>
+                      <span className={styles.toggleLabelShort}>Factors</span>
                     </label>
                   ) : null}
                   {viewMode === "themes" ? (
@@ -338,7 +333,8 @@ export function ComparePageClient({
                           checked={excludeShortThemes}
                           onChange={(e) => setExcludeShortThemes(e.target.checked)}
                         />
-                        Exclude Short Themes
+                        <span className={styles.toggleLabelFull}>Exclude Short Themes</span>
+                        <span className={styles.toggleLabelShort}>No short themes</span>
                       </label>
                       <label className={styles.benchmarkToggle}>
                         <input
@@ -346,7 +342,8 @@ export function ComparePageClient({
                           checked={excludeSupportingThemes}
                           onChange={(e) => setExcludeSupportingThemes(e.target.checked)}
                         />
-                        Exclude Supporting Themes
+                        <span className={styles.toggleLabelFull}>Exclude Supporting Themes</span>
+                        <span className={styles.toggleLabelShort}>No supporting</span>
                       </label>
                     </>
                   ) : null}

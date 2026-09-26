@@ -1167,7 +1167,7 @@ export function OverlayPageClient({
     <>
       <div className={`${pageStyles.heroMain} ${pageStyles.heroMainCompare} ${styles.overlayHero}`}>
         <p className={pageStyles.eyebrow}>{eyebrow}</p>
-        <h1>Theme compare chart</h1>
+        <h1>Theme compare</h1>
         <p className={pageStyles.introLead}>
           Compare up to {MAX_SERIES} themes, groups, tickers, sector SPDRs, or factor spreads on one
           indexed chart.

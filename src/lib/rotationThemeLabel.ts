@@ -1,3 +1,19 @@
+/** Quote-like chars used before a 2-digit year suffix. */
+const YEAR_QUOTE = `['\u2019\u2018\u2032\u00B4\`]`;
+
+/** Drop trailing `` '26`` / ``'26`` / ``’26`` so the year can live in a chip. */
+export function stripThemeYearSuffix(label: string): string {
+  return String(label || "")
+    .replace(new RegExp(`\\s*${YEAR_QUOTE}?\\d{2}\\s*$`, "u"), "")
+    .trim();
+}
+
+/** ``'24`` / ``’24`` from a theme or group name. */
+export function themeYearChipFromName(name: string): string | null {
+  const m = new RegExp(`${YEAR_QUOTE}(\\d{2})\\b`, "u").exec(String(name || ""));
+  return m ? `'${m[1]}` : null;
+}
+
 /** Subtheme label after group prefix, e.g. "Home Improvement '24: Retail" → "Retail". */
 export function rotationThemeLabelSuffix(
   themeName: string,
@@ -9,7 +25,7 @@ export function rotationThemeLabelSuffix(
   const colonIdx = name.indexOf(":");
   if (colonIdx >= 0) {
     const suffix = name.slice(colonIdx + 1).trim();
-    if (suffix) return suffix;
+    if (suffix) return stripThemeYearSuffix(suffix) || suffix;
   }
 
   const group = String(groupName ?? "").trim();
@@ -18,16 +34,26 @@ export function rotationThemeLabelSuffix(
     const lowerGroup = group.toLowerCase();
     if (lowerName.startsWith(lowerGroup)) {
       const rest = name.slice(group.length).replace(/^[\s\-–—:|]+/, "").trim();
-      if (rest) return rest;
+      if (rest) return stripThemeYearSuffix(rest) || rest;
+    }
+    // Catalog group often includes year (`Chemicals '26`); theme may match without it.
+    const groupBare = stripThemeYearSuffix(group);
+    if (groupBare && groupBare.toLowerCase() !== lowerGroup) {
+      const lowerBare = groupBare.toLowerCase();
+      if (lowerName.startsWith(lowerBare)) {
+        const rest = name.slice(groupBare.length).replace(/^[\s\-–—:|]+/, "").trim();
+        if (rest) return stripThemeYearSuffix(rest) || rest;
+      }
     }
   }
 
-  return name;
+  return stripThemeYearSuffix(name) || name;
 }
 
 /**
  * Split "Euro Spend '26: European Shipbuilding" → title + group prefix for stacked UI.
  * Themes without a colon keep the full name on the title line.
+ * Keeps year tokens in the strings (callers that want chips strip separately).
  */
 export function splitThemeDisplayName(themeName: string): {
   title: string;
@@ -53,6 +79,6 @@ export function splitThemeDisplayName(themeName: string): {
 export function groupEyebrowFromThemeName(themeName: string): string | null {
   const { groupPrefix } = splitThemeDisplayName(themeName);
   if (!groupPrefix) return null;
-  const stripped = groupPrefix.replace(/\s+'?\d{2}\s*$/u, "").trim();
+  const stripped = stripThemeYearSuffix(groupPrefix);
   return stripped || groupPrefix;
 }

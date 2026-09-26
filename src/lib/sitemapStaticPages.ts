@@ -11,7 +11,7 @@ export const SITEMAP_STATIC_PATHS: {
   { path: "/groups", label: "All groups", changeFrequency: "daily", priority: 0.9 },
   { path: "/themes", label: "All themes", changeFrequency: "daily", priority: 0.9 },
   { path: "/compare", label: "Theme returns table", changeFrequency: "weekly", priority: 0.8 },
-  { path: "/overlay", label: "Theme compare chart", changeFrequency: "weekly", priority: 0.75 },
+  { path: "/overlay", label: "Theme compare", changeFrequency: "weekly", priority: 0.75 },
   { path: "/feed", label: "Theme activity feed", changeFrequency: "daily", priority: 0.75 },
   { path: "/commentary", label: "Market commentary", changeFrequency: "daily", priority: 0.75 },
   { path: "/about", label: "About", changeFrequency: "monthly", priority: 0.5 },

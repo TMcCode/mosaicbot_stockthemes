@@ -2,12 +2,16 @@
   width: 100%;
   max-width: 720px;
   margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .heroFillRail {
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
+  gap: 10px;
   min-height: 0;
   width: 100%;
   max-width: 720px;
@@ -29,9 +33,20 @@
 
 .intro {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.55;
+  /* Beat page `.intro p` if a parent still wraps this as a paragraph. */
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  font-weight: 400 !important;
+  max-width: none;
   color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+@media (max-width: 640px) {
+  .intro {
+    font-size: 11px !important;
+    line-height: 1.35 !important;
+  }
 }
 
 .tickersBlock {
@@ -60,13 +75,38 @@
 
 .tickerRow {
   display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.tickerMain {
+  display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   gap: 6px;
-  font-size: 13px;
-  line-height: 1.4;
-  color: var(--text-secondary);
-  text-decoration: none;
+  min-width: 0;
+}
+
+.tickerText {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.tickerGroup {
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1.25;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tickerRow:hover .tickerTheme,
@@ -77,6 +117,7 @@
 .tickerTheme {
   font-weight: 600;
   color: var(--text-primary);
+  min-width: 0;
 }
 
 .tickerSep {
@@ -88,10 +129,11 @@
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .tickerReturn {
-  margin-left: auto;
+  flex-shrink: 0;
   font-weight: 650;
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
@@ -107,28 +149,6 @@
 
 .returnFlat {
   color: var(--text-secondary);
-}
-
-.quickLinks {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 10px;
-  margin-top: auto;
-  padding-top: 2px;
-  font-size: 12px;
-  line-height: 1.35;
-  color: var(--text-muted);
-}
-
-.quickLinks a {
-  font-weight: 600;
-  color: var(--text-primary);
-  text-decoration: none;
-}
-
-.quickLinks a:hover {
-  color: var(--accent);
 }
 
 :global(.st-theme[data-theme="light"]) .panel {

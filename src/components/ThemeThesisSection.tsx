@@ -36,7 +36,8 @@ function ThesisParagraph({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
   if (!thesis) {
     return null;
   }
-  return <p className={styles.thesis}>{thesis}</p>;
+  // div — not p: theme pages wrap this in `.intro`, and `.intro p` forces 16–18px.
+  return <div className={styles.thesis}>{thesis}</div>;
 }
 
 function ThesisUpdateBadge({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
@@ -45,9 +46,9 @@ function ThesisUpdateBadge({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
     return null;
   }
   return (
-    <p className={styles.updateBadge}>
+    <div className={styles.updateBadge}>
       <span className={styles.badge}>Thesis update: {formatThesisUpdateDate(upd)}</span>
-    </p>
+    </div>
   );
 }
 

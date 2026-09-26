@@ -24,17 +24,41 @@
   accent-color: var(--accent, #26fcd6);
 }
 
+.toggleLabelShort {
+  display: none;
+}
+
+@media (max-width: 640px) {
+  .referenceToggles {
+    gap: 4px 10px;
+  }
+
+  .benchmarkToggle {
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .benchmarkToggle input {
+    width: 13px;
+    height: 13px;
+  }
+
+  .toggleLabelFull {
+    display: none;
+  }
+
+  .toggleLabelShort {
+    display: inline;
+  }
+}
+
 .metaRow {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 10px 14px;
   width: 100%;
-}
-
-.metaCount {
-  margin: 0;
-  max-width: none;
 }
 
 .viewToggle {
@@ -65,6 +89,23 @@
 .viewToggleActive {
   background: rgba(38, 252, 214, 0.14) !important;
   color: var(--text-primary) !important;
+}
+
+@media (max-width: 640px) {
+  .metaRow {
+    gap: 6px 10px;
+  }
+
+  .viewToggle {
+    gap: 2px;
+    padding: 2px;
+  }
+
+  .viewToggle button {
+    min-width: 0;
+    padding: 4px 10px;
+    font-size: 10px;
+  }
 }
 
 .loadError {

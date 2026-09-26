@@ -5,11 +5,45 @@ import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 
 import styles from "./SiteNav.module.css";
 
-export function SiteNavAuth() {
+type Props = {
+  /** `menu` = Browse dropdown items (mobile). Default = inline links. */
+  variant?: "inline" | "menu";
+};
+
+export function SiteNavAuth({ variant = "inline" }: Props) {
   const { configured, loading, user } = useSupabaseAuth();
 
   if (!configured) {
     return null;
+  }
+
+  if (variant === "menu") {
+    if (user) {
+      return (
+        <>
+          <PrefetchIntentLink
+            href="/radar?tab=watchlist"
+            className={styles.menuItem}
+            role="menuitem"
+          >
+            Watchlist
+          </PrefetchIntentLink>
+          <PrefetchIntentLink href="/account" className={styles.menuItem} role="menuitem">
+            Account
+          </PrefetchIntentLink>
+        </>
+      );
+    }
+    return (
+      <PrefetchIntentLink
+        href="/sign-in"
+        className={styles.menuItem}
+        role="menuitem"
+        aria-busy={loading || undefined}
+      >
+        Sign in
+      </PrefetchIntentLink>
+    );
   }
 
   if (user) {

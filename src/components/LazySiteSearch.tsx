@@ -16,7 +16,7 @@ const SiteSearchDynamic = dynamic(
 );
 
 export function LazySiteSearch({
-  placeholder = "Search ticker, company, or theme…",
+  placeholder = "Search…",
   variant = "nav",
 }: LazySiteSearchProps = {}) {
   const isProd = process.env.NODE_ENV === "production";

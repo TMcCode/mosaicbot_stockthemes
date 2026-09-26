@@ -242,7 +242,13 @@ export const REVENUE_VALUATION_COLUMNS: RevenueColumnDef[] = [
 ];
 
 export const REVENUE_REVISION_COLUMNS: RevenueColumnDef[] = [
-  { id: "rev_analysts", label: "#\nAnalysts", revisionKey: "revenue_est_analysts", format: "count" },
+  {
+    id: "rev_analysts",
+    label: "#",
+    tooltip: "Number of analysts on the consensus estimate",
+    revisionKey: "revenue_est_analysts",
+    format: "count",
+  },
   { id: "rev_latest", label: "CQ Latest\n(%)", revisionKey: "growth_est_latest_pct", format: "pct" },
   { id: "rev_first", label: "CQ First\n(%)", revisionKey: "growth_est_first_pct", format: "pct" },
   { id: "rev_delta", label: "CQ Rev Δ\n(bps)", revisionKey: "growth_delta_bps", format: "bps" },

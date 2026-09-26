@@ -281,8 +281,8 @@ export function MarketHeatmapClient({
       <div className={pageStyles.heroGrid}>
         <div className={pageStyles.heroMain}>
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
-          <h1>Market heatmap</h1>
-          <p className={pageStyles.introLead}>
+          <h1 className={styles.title}>Market heatmap</h1>
+          <p className={styles.lead}>
             Sector heat map of every {mode === "group" ? "group" : "theme"} on stockthemes.ai.
             Tile size reflects average constituent market cap; color shows return for the selected
             horizon. Click a tile to open its detail page.

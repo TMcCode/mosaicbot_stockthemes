@@ -395,10 +395,20 @@ export function ThemesInMotionMacroChart({ selectedDates }: Props) {
   return (
     <section className={styles.section} aria-labelledby="motion-macro-chart-heading">
       <div className={styles.titlePeriodRow}>
-        <div className={styles.titleToggle}>
-          <h2 id="motion-macro-chart-heading" className={styles.title}>
-            Market backdrop
-          </h2>
+        <h2 id="motion-macro-chart-heading" className={styles.title}>
+          Market backdrop
+        </h2>
+        <div className={styles.controlsRow}>
+          <div className={styles.periodBar}>
+            <ChartPeriodToolbar
+              period={period}
+              onPeriodChange={setPeriod}
+              supportedPeriods={supportedPeriods}
+              supportedCustomPeriodKeys={supportedCustomPeriodKeys}
+              customPeriods={customPeriods}
+              variant="overlay"
+            />
+          </div>
           <div className={styles.toggle} role="group" aria-label="Backdrop series">
             <button
               type="button"
@@ -417,16 +427,6 @@ export function ThemesInMotionMacroChart({ selectedDates }: Props) {
               Factors
             </button>
           </div>
-        </div>
-        <div className={styles.periodBar}>
-          <ChartPeriodToolbar
-            period={period}
-            onPeriodChange={setPeriod}
-            supportedPeriods={supportedPeriods}
-            supportedCustomPeriodKeys={supportedCustomPeriodKeys}
-            customPeriods={customPeriods}
-            variant="overlay"
-          />
         </div>
       </div>
 

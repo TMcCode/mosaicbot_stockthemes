@@ -17,6 +17,7 @@ import {
   type ConstituentSortState,
 } from "@/lib/constituentTableSort";
 import { formatWeight } from "@/lib/formatWeight";
+import { ConstituentsTableSortHint } from "@/components/ConstituentsTableSortHint";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import {
   formatQualityRiskValue,
@@ -252,7 +253,9 @@ export default function ThemeConstituentsQualityRiskPanel({
                     <td>
                       <div className={styles.companyCell}>
                         <ConstituentLogo ticker={row.ticker} />
-                        <span className={styles.companyName}>{row.name?.trim() || "—"}</span>
+                        <span className={styles.companyName} title={row.name?.trim() || undefined}>
+                          {row.name?.trim() || "—"}
+                        </span>
                         <TickerBadge ticker={row.ticker} />
                       </div>
                     </td>
@@ -319,16 +322,14 @@ export default function ThemeConstituentsQualityRiskPanel({
         </HorizontalScrollArea>
         <div className={styles.tableFooter}>
           <p className={styles.tableFootnote}>
-            Theme row uses manual weights; footer stats are equal-weight across constituents.
+            Theme: manual weights; footer: equal-weight.
             {mode === "quarterly"
-              ? " Displayed quarters and TTM use reported periods only."
+              ? " Quarters/TTM: reported only."
               : mode === "fiscal_ebitda"
-                ? " Gross margins use reported fiscal data; E = EBITDA estimate."
+                ? " GM: reported; E = EBITDA est."
                 : null}
           </p>
-          <p className={tableStyles.sortHint}>
-            Default: Wgt ↓ · Click headers to sort · Shift+click secondary
-          </p>
+          <ConstituentsTableSortHint />
           <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>

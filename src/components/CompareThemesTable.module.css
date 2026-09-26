@@ -139,6 +139,7 @@
 }
 
 .meta {
+  margin-top: 1px;
   font-size: 11px;
   line-height: 1.25;
   color: var(--text-muted);
@@ -151,14 +152,43 @@
   margin-top: 1px;
 }
 
+/* Desktop: full “Group: Theme” name + tickers (matches origin/main). */
+.themeNameShort {
+  display: none;
+}
+
+.groupMeta {
+  display: none;
+}
+
 @media (max-width: 640px) {
   .scrollWrap {
-    --compare-theme-col: minmax(160px, 58vw);
+    --compare-theme-col: minmax(112px, 38vw);
   }
 
-  /* Keep name + tickers; narrower theme column so returns stay visible. */
+  /* Mobile: short theme title + group line; hide tickers. */
   .themeName {
     font-size: 13px;
+  }
+
+  .themeNameFull {
+    display: none;
+  }
+
+  .themeNameShort {
+    display: inline;
+  }
+
+  .groupMeta {
+    display: block;
+  }
+
+  .meta {
+    font-size: 10px;
+  }
+
+  .tickersMeta {
+    display: none;
   }
 }
 

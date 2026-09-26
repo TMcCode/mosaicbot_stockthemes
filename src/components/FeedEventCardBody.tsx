@@ -8,6 +8,8 @@ import { FeedThesisThemesSummary } from "@/components/FeedThesisThemesSummary";
 import {
   groupEyebrowFromThemeName,
   rotationThemeLabelSuffix,
+  stripThemeYearSuffix,
+  themeYearChipFromName,
 } from "@/lib/rotationThemeLabel";
 import type {
   ManifestHomeFeedEventV0,
@@ -80,8 +82,7 @@ function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
 
 /** ``'24`` from ``Auto OEMs '24: …`` (same idea as Narrative Radar). */
 function yearChipFromName(name: string): string | null {
-  const m = /'(\d{2})\b/.exec(String(name || ""));
-  return m ? `'${m[1]}` : null;
+  return themeYearChipFromName(name);
 }
 
 /** Parse ``"AAPL, MSFT added"`` / ``"ETB.BO removed"`` phrases into chips. */
@@ -209,19 +210,26 @@ export function FeedEventCardBody({
   const meta = slug && themeMetaBySlug ? themeMetaBySlug[slug] : undefined;
   const fullThemeName = cleanFeedTitle(evt);
   // Prefer catalog group; fall back to ``Group 'YY: …`` parsed from the title.
-  const groupName =
+  const groupNameRaw =
     String(meta?.groupName || "").trim() ||
     groupEyebrowFromThemeName(fullThemeName) ||
     "";
+  // Year lives in the chip — never leave `'26` in the eyebrow or title text.
+  const groupName = stripThemeYearSuffix(groupNameRaw) || groupNameRaw;
   const groupSlug = String(meta?.groupSlug || "").trim();
   const tickerCount =
     meta?.tickerCount != null && Number.isFinite(Number(meta.tickerCount))
       ? Math.max(0, Math.trunc(Number(meta.tickerCount)))
       : null;
-  // Group is already the eyebrow — show subtheme only; year as chip.
-  const themeLabel =
-    rotationThemeLabelSuffix(fullThemeName, groupName) || fullThemeName;
-  const yearChip = yearChipFromName(fullThemeName);
+  // Match suffix against raw group (may include year); strip year from what we render.
+  const themeLabelRaw =
+    rotationThemeLabelSuffix(fullThemeName, groupNameRaw) ||
+    stripThemeYearSuffix(fullThemeName);
+  const themeLabel = stripThemeYearSuffix(themeLabelRaw) || themeLabelRaw;
+  const yearChip =
+    yearChipFromName(fullThemeName) ||
+    yearChipFromName(groupNameRaw) ||
+    yearChipFromName(themeLabelRaw);
 
   let holdings = Array.isArray(evt.holdings_preview) ? [...evt.holdings_preview] : [];
   let holdingsMore = Number(evt.holdings_more_count) || 0;

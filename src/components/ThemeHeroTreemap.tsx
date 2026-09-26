@@ -16,6 +16,7 @@ import {
   returnTileBackground,
   type TreemapLayoutNode,
 } from "@/lib/treemapLayout";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 
 import styles from "./ThemeHeroTreemap.module.css";
 
@@ -117,10 +118,13 @@ export function ThemeHeroTreemap({
         {rects.map((r) => {
           const n = r.data;
           const ret = activePeriod != null ? (n.returns[activePeriod] ?? null) : null;
-          const left = r.x + gap / 2;
-          const top = r.y + gap / 2;
-          const width = Math.max(2, r.w - gap);
-          const height = Math.max(2, r.h - gap);
+          // Never force a min size larger than the layout cell — that clips the right/bottom edge.
+          const cellGapX = Math.min(gap, Math.max(0, r.w * 0.2));
+          const cellGapY = Math.min(gap, Math.max(0, r.h * 0.2));
+          const left = r.x + cellGapX / 2;
+          const top = r.y + cellGapY / 2;
+          const width = Math.max(0, Math.min(r.w - cellGapX, 100 - left));
+          const height = Math.max(0, Math.min(r.h - cellGapY, 100 - top));
           const href =
             tileMode === "theme" ? `/themes/${encodeURIComponent(n.ticker)}` : undefined;
           const title =
@@ -146,7 +150,9 @@ export function ThemeHeroTreemap({
                 {tileMode === "constituent" ? (
                   <span className={styles.ticker}>{n.ticker}</span>
                 ) : (
-                  <span className={`${styles.ticker} ${styles.themeTileLabel}`}>{n.name}</span>
+                  <span className={`${styles.ticker} ${styles.themeTileLabel}`}>
+                    {splitThemeDisplayName(n.name).title}
+                  </span>
                 )}
                 {activePeriod != null ? (
                   <span
@@ -191,7 +197,9 @@ export function ThemeHeroTreemap({
       </div>
       <div className={styles.mapCaptionRow}>
         <BrandWatermark className={styles.mapBrand} />
-        {asOfLabel ? <p className={styles.mapCaptionBelow}>As of {asOfLabel}</p> : null}
+        {asOfLabel ? (
+          <span className={styles.mapCaptionBelow}>As of {asOfLabel}</span>
+        ) : null}
       </div>
       </div>
     </div>

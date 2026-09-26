@@ -62,12 +62,20 @@ export function GroupHeroMeta({ themeCount, tickerCount, rank10d }: Props) {
       {showRanks ? (
         <div className={styles.rankRow}>
           <span className={styles.rankPill}>
-            <span className={styles.rankPillTag}>10D rank</span>
+            <span className={styles.rankPillTag}>
+              <span className={styles.rankFull}>10D rank</span>
+              <span className={styles.rankShort}>10D</span>
+            </span>
           </span>
           <span className={styles.rankPill}>
             <span className={styles.rankValue}>#{rank10d!.universeRank.toLocaleString()}</span>
             <span className={styles.rankMuted}>
-              of {rank10d!.universeTotal.toLocaleString()} groups
+              <span className={styles.rankFull}>
+                of {rank10d!.universeTotal.toLocaleString()} groups
+              </span>
+              <span className={styles.rankShort}>
+                /{rank10d!.universeTotal.toLocaleString()}
+              </span>
             </span>
           </span>
         </div>

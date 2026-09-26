@@ -62,11 +62,32 @@ function fmtPct(v: number | null | undefined): string {
   return `${sign}${n.toFixed(1)}%`;
 }
 
-function fmtRevPp(v: number | null | undefined, label = "CQ rev"): string | null {
+/** Arrow intensity from CQ revenue-revision Δ (percentage points). */
+function revRevisionArrows(pp: number): string {
+  const mag = Math.abs(pp);
+  // Keep triple arrows rare — only large CQ growth-revision moves.
+  if (mag < 0.5) return "→";
+  const count = mag < 2 ? 1 : mag < 5 ? 2 : 3;
+  const arrow = pp > 0 ? "↑" : "↓";
+  return arrow.repeat(count);
+}
+
+function fmtRevRevisions(v: number | null | undefined): {
+  label: string;
+  title: string;
+  tone: "up" | "down" | "flat";
+} | null {
   if (v == null || Number.isNaN(Number(v))) return null;
   const n = Number(v);
   const sign = n > 0 ? "+" : "";
-  return `${label} ${sign}${n.toFixed(1)}pp`;
+  const arrows = revRevisionArrows(n);
+  const tone: "up" | "down" | "flat" =
+    Math.abs(n) < 0.5 ? "flat" : n > 0 ? "up" : "down";
+  return {
+    label: `Rev revisions ${arrows}`,
+    title: `${REV_DELTA_TITLE} · ${sign}${n.toFixed(1)}pp`,
+    tone,
+  };
 }
 
 const REV_DELTA_TITLE =
@@ -321,14 +342,27 @@ function RadarCardBody({
     : 0;
   const title = rotationThemeLabelSuffix(card.name, card.group_name);
   const secondary = metricSecondaryLabel(card);
+  const rev = fmtRevRevisions(card.rev_delta_pp);
   return (
     <>
       {!omitTitle ? <div className={styles.cardTitle}>{title || card.name}</div> : null}
       {card.thesis ? <p className={styles.whyNow}>{card.thesis}</p> : null}
       <div className={styles.metrics}>
         <span>1M {fmtPct(card.return_1m)}</span>
-        {fmtRevPp(card.rev_delta_pp) ? (
-          <span title={REV_DELTA_TITLE}>{fmtRevPp(card.rev_delta_pp)}</span>
+        {rev ? (
+          <span
+            className={
+              rev.tone === "up"
+                ? styles.metricUp
+                : rev.tone === "down"
+                  ? styles.metricDown
+                  : styles.metricFlat
+            }
+            title={rev.title}
+            aria-label={rev.title}
+          >
+            {rev.label}
+          </span>
         ) : null}
         {secondary ? <span>{secondary}</span> : null}
       </div>

@@ -331,7 +331,12 @@ export function OverlayMultiChart({
 
   return (
     <div className={styles.chartShell} ref={shellRef}>
-      <div className={styles.chartBox} ref={wrapRef} aria-label="Theme compare chart" />
+      <div
+        className={styles.chartBox}
+        ref={wrapRef}
+        style={{ height: Math.max(180, Math.floor(height)) }}
+        aria-label="Theme compare"
+      />
       <div ref={tooltipRef} className={styles.chartTooltip} />
       <div className={styles.chartBrandMark} aria-hidden="true">
         <BrandWatermark variant="chart" />

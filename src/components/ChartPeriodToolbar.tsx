@@ -40,7 +40,7 @@ export function ChartPeriodToolbar({
     onDownloadPng != null ? (
       <button
         type="button"
-        className={styles.periodBtn}
+        className={`${styles.periodBtn} ${styles.periodDownloadBtn}`}
         disabled={downloadBusy}
         title="Download chart PNG"
         aria-label="Download chart PNG"
@@ -94,7 +94,11 @@ export function ChartPeriodToolbar({
               <button
                 key={c.key}
                 type="button"
-                className={period === c.key ? styles.periodBtnActive : styles.periodBtn}
+                className={
+                  period === c.key
+                    ? `${styles.periodBtnActive} ${styles.periodBtnCustom}`
+                    : `${styles.periodBtn} ${styles.periodBtnCustom}`
+                }
                 disabled={disabled}
                 title={
                   disabled

@@ -194,7 +194,6 @@ export default async function GroupDetailPage({ params }: Props) {
                   <GroupHeroSummary
                     intro={detail.seo_intro}
                     topTickers={topTickersYtd}
-                    groupSlug={slug}
                     fillRail={groupTreemapNodes.length > 0}
                   />
                 </div>
@@ -268,21 +267,14 @@ export default async function GroupDetailPage({ params }: Props) {
           ) : null}
           <section className={styles.section} aria-labelledby="group-themes-heading">
             <h2 id="group-themes-heading">Themes in this group</h2>
-            {detail?.build_id ? (
-              <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-                Build <code className={styles.code}>{detail.build_id}</code>
-              </p>
-            ) : null}
             <GroupThemesTableLive
               rows={groupThemeTableRows}
               metricColumns={groupThemeMetricColumns}
               selectedDates={selectedDates}
             />
           </section>
-          <p>
-            <Link href="/groups" style={{ fontWeight: 500 }}>
-              ← All groups
-            </Link>
+          <p className={styles.backLink}>
+            <Link href="/groups">← All groups</Link>
           </p>
         </div>
       </main>

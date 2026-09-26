@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 
 import { FeedProgressiveList } from "@/components/FeedProgressiveList";
 import { PageSurface } from "@/components/PageSurface";
-import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import {
   FEED_PAGE_INTRO_SECONDARY,
   FEED_PAGE_PUNCHLINE,
@@ -83,9 +82,6 @@ export default async function FeedPage() {
       )
     : undefined;
   const sectorOptions = feedSectorOptionsFromEvents(events, themeMetaBySlug);
-  const asOfIso =
-    homeFeedRes?.bundle?.as_of?.trim() || manifest.as_of?.trim() || "";
-  const publishedLabel = asOfIso ? formatSiteDataPublished(asOfIso) : null;
 
   return (
     <PageSurface>
@@ -118,15 +114,6 @@ export default async function FeedPage() {
               eagerCount={FEED_INITIAL_VISIBLE}
             />
           )}
-          {publishedLabel ? (
-            <p className={feedStyles.feedFootnote}>
-              Published{" "}
-              <time dateTime={asOfIso} title="US Eastern (manifest as_of)">
-                {publishedLabel}
-              </time>
-              . New rows after the next data publish.
-            </p>
-          ) : null}
         </div>
       </main>
     </PageSurface>

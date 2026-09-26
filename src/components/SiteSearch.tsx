@@ -24,7 +24,7 @@ type SiteSearchProps = {
 };
 
 export function SiteSearch({
-  placeholder = "Search ticker, company, or theme…",
+  placeholder = "Search…",
   variant = "nav",
 }: SiteSearchProps = {}) {
   const router = useRouter();

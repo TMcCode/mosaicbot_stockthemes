@@ -83,6 +83,12 @@
   color: var(--nav-accent, #26fcd6);
 }
 
+.searchSlot {
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: 360px;
+}
+
 .links {
   display: flex;
   flex-wrap: wrap;
@@ -294,52 +300,62 @@
   color: var(--nav-accent, #3b4da1);
 }
 
+.menuMobileAccount {
+  display: none;
+}
+
 @media (max-width: 600px) {
   .wrap {
     padding: 6px 12px 0;
   }
 
   .row {
-    padding: 0 0 6px;
-  }
-
-  .links {
-    gap: 10px;
-  }
-
-  .brand {
-    gap: 5px;
-    font-size: 13px;
-    letter-spacing: 0;
-  }
-
-  .brandMark {
-    width: 20px;
-    height: 20px;
-    max-width: 20px;
-    max-height: 20px;
-  }
-
-  .searchHideMobileHome {
-    display: none;
-  }
-}
-
-
-@media (max-width: 430px) {
-  .row {
+    flex-wrap: nowrap;
     gap: 8px 10px;
+    padding: 0 0 6px;
+    min-width: 0;
+    max-width: 100%;
   }
 
   .links {
     flex-wrap: nowrap;
-    gap: 8px;
+    flex-shrink: 1;
     min-width: 0;
-    flex-shrink: 0;
+    gap: 8px;
+    margin-left: 0;
   }
 
-  .authNav {
-    gap: 8px;
+  /* Account/Watchlist live in Browse on phones — keep top row to logo · search · Browse · theme. */
+  .authInline {
+    display: none;
+  }
+
+  .menuMobileAccount {
+    display: block;
+  }
+
+  .menuPanel {
+    left: auto;
+    right: 0;
+  }
+
+  .brand {
+    gap: 3px;
+    font-size: 13px;
+    letter-spacing: 0;
+    flex: 0 0 auto;
+  }
+
+  .brandMark {
+    width: 22px;
+    height: 22px;
+    max-width: 22px;
+    max-height: 22px;
+    margin-right: 0;
+  }
+
+  .searchSlot {
+    max-width: none;
   }
 
   .links a,

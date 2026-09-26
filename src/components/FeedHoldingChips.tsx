@@ -8,7 +8,7 @@ import type { ManifestHomeFeedHoldingV0 } from "@/types/manifest.v0";
 
 import styles from "./FeedEventCard.module.css";
 
-const INITIAL_VISIBLE = 4;
+const INITIAL_VISIBLE = 6;
 
 function HoldingChip({
   h,

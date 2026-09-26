@@ -44,6 +44,14 @@
   gap: 6px;
   align-items: center;
   justify-self: end;
+  align-self: start;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  scrollbar-width: thin;
 }
 
 .periodBtn,
@@ -85,25 +93,55 @@
 .toolbar {
   display: grid;
   grid-template-columns: minmax(140px, 280px) minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px 16px;
+  grid-template-areas: "search bench period";
+  align-items: start;
+  gap: 10px 16px;
   width: 100%;
+  min-width: 0;
   position: relative;
   z-index: 1;
 }
 
 .toolbarSearch {
+  grid-area: search;
   width: 100%;
   min-width: 0;
 }
 
 .benchmarkCluster {
+  grid-area: bench;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 12px 14px;
   min-width: 0;
   overflow: visible;
+}
+
+.periodRow {
+  grid-area: period;
+}
+
+@media (max-width: 1100px) {
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "search"
+      "bench"
+      "period";
+  }
+
+  .periodRow {
+    justify-self: start;
+  }
+}
+
+@media (max-width: 700px) {
+  .benchmarkCluster {
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 12px;
+  }
 }
 
 .benchmarkToggle {

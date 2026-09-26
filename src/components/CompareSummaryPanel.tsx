@@ -9,6 +9,7 @@ import {
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
 import styles from "./CompareSummaryPanel.module.css";
@@ -66,7 +67,12 @@ function GroupLine({ label, group }: { label: string; group: CompareGroupExtreme
         <span className={styles.detailLinkMuted}>{group.name}</span>
       )}
       <span className={styles.detailValue}>
-        ({fmtPct(group.median)} median, {group.themeCount} themes)
+        <span className={styles.groupDetailFull}>
+          ({fmtPct(group.median)} median, {group.themeCount} themes)
+        </span>
+        <span className={styles.groupDetailShort}>
+          ({fmtPct(group.median)}, {group.themeCount})
+        </span>
       </span>
     </li>
   );
@@ -85,15 +91,23 @@ function ExtremeLine({
   value: number;
   entityKind: "theme" | "group";
 }) {
+  const displayName =
+    entityKind === "theme" ? splitThemeDisplayName(name).title : name;
   return (
     <li>
       <span className={styles.detailLabel}>{label}</span>
       {slug ? (
-        <Link href={`/${entityKind === "group" ? "groups" : "themes"}/${slug}`} className={styles.detailLink}>
-          {name}
+        <Link
+          href={`/${entityKind === "group" ? "groups" : "themes"}/${slug}`}
+          className={styles.detailLink}
+          title={name}
+        >
+          {displayName}
         </Link>
       ) : (
-        <span className={styles.detailLinkMuted}>{name}</span>
+        <span className={styles.detailLinkMuted} title={name}>
+          {displayName}
+        </span>
       )}
       <span className={styles.detailValue}>{fmtPct(value)}</span>
     </li>
@@ -130,7 +144,6 @@ export function CompareSummaryPanel({
             className={styles.toggle}
             role="group"
             aria-label="Return period for summary stats"
-            style={{ marginTop: 6 }}
           >
             {periods.map(({ key, label }) => (
               <button
@@ -153,7 +166,7 @@ export function CompareSummaryPanel({
           <div className={styles.median} style={medianHeat}>
             {fmtPct(summary.median)}
           </div>
-          <p className={styles.breadth}>
+          <div className={styles.breadth}>
           <span className={styles.breadthUp}>{summary.up.toLocaleString()} up</span>
           {" · "}
           <span className={styles.breadthDown}>{summary.down.toLocaleString()} down</span>
@@ -163,11 +176,11 @@ export function CompareSummaryPanel({
               {summary.flat.toLocaleString()} flat
             </>
           ) : null}
-          </p>
+          </div>
         </div>
       </div>
 
-      <p className={styles.meta}>
+      <div className={styles.meta}>
         {summaryMetaLine(
           summary.filteredCount,
           summary.withDataCount,
@@ -175,7 +188,7 @@ export function CompareSummaryPanel({
           summary.positivePct,
           entityKind,
         )}
-      </p>
+      </div>
 
       <ul className={styles.detailList}>
         {summary.best ? (

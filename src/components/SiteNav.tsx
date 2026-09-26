@@ -12,7 +12,11 @@ export function SiteNav() {
     <>
       <header className={styles.wrap} data-site-nav>
         <nav className={styles.row} aria-label="Primary">
-        <PrefetchIntentLink href="/" className={styles.brand}>
+        <PrefetchIntentLink
+          href="/"
+          className={styles.brand}
+          aria-label="stockthemes.ai home"
+        >
           <img
             className={styles.brandMark}
             src={brandAssetPath("/brand/logo-icon-custom.png")}
@@ -22,9 +26,7 @@ export function SiteNav() {
             decoding="async"
             aria-hidden
           />
-          <span className={styles.brandLabel}>
-            stockthemes.ai
-          </span>
+          <span className={styles.brandLabel}>stockthemes.ai</span>
         </PrefetchIntentLink>
         <SiteNavSearch />
         <div className={styles.links}>
@@ -47,7 +49,7 @@ export function SiteNav() {
                 Theme returns table
               </PrefetchIntentLink>
               <PrefetchIntentLink href="/overlay" className={styles.menuItem} role="menuitem">
-                Theme compare chart
+                Theme compare
               </PrefetchIntentLink>
               <PrefetchIntentLink href="/heatmap" className={styles.menuItem} role="menuitem">
                 Market heatmap
@@ -58,13 +60,19 @@ export function SiteNav() {
               <PrefetchIntentLink href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure
               </PrefetchIntentLink>
+              <div className={styles.menuMobileAccount}>
+                <div className={styles.menuDivider} role="separator" />
+                <SiteNavAuth variant="menu" />
+              </div>
             </div>
           </div>
-          <span className={styles.sep} aria-hidden="true">
+          <span className={`${styles.sep} ${styles.authInline}`} aria-hidden="true">
             ·
           </span>
-          <SiteNavAuth />
-          <span className={styles.sep} aria-hidden="true">
+          <div className={styles.authInline}>
+            <SiteNavAuth />
+          </div>
+          <span className={`${styles.sep} ${styles.authInline}`} aria-hidden="true">
             ·
           </span>
           <ThemeToggle />

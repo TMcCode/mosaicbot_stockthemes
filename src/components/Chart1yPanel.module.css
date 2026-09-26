@@ -17,17 +17,29 @@
 
 .chartFooter {
   display: flex;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
+  gap: 10px 16px;
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   box-sizing: border-box;
   padding: 4px 12px 6px;
   background: #0f1115;
+  overflow: hidden;
 }
 
 :global(.st-theme[data-theme="light"]) .chartFooter {
   background: #f7f6fc;
+}
+
+.chartFooterMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .chartFooterLeft {
@@ -39,15 +51,26 @@
   pointer-events: none;
 }
 
+/* Desktop: Performance / Composition stays in the title toolbar. */
+.viewToggleDesktop {
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.viewToggleBar {
+  display: none;
+}
+
 .periodBar {
   display: flex;
   justify-content: flex-end;
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   width: auto;
-  max-width: 100%;
+  max-width: min(100%, 62%);
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  min-width: 0;
 }
 
 /* Span (not p) — theme pages wrap charts in `.intro`, and `.intro p` forces 18px. */
@@ -98,32 +121,121 @@
 
 .periodControls {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   justify-content: flex-end;
   gap: 6px;
-  width: 100%;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
 }
 
 .periodRow,
 .periodRowCustom {
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 6px;
   align-items: center;
   justify-content: flex-end;
+  flex: 0 0 auto;
 }
 
 @media (max-width: 640px) {
-  .periodControls {
+  /* Mobile: chips on top, then toggle + logo on one row. */
+  .chartFooter {
     flex-direction: column;
+    flex-wrap: nowrap;
     align-items: stretch;
+    gap: 8px;
+    padding: 8px 10px 10px;
+    overflow: visible;
+  }
+
+  /* Must beat `.toggle { display: inline-flex }` later in this file. */
+  .toggle.viewToggleDesktop {
+    display: none !important;
+  }
+
+  .periodBar {
+    order: 1;
+    width: 100%;
+    max-width: 100%;
+    flex: none;
+    justify-content: flex-start;
+    min-width: 0;
+  }
+
+  .chartFooterMeta {
+    order: 2;
+    width: 100%;
+    flex: none;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .viewToggleBar {
+    display: flex;
+    flex: 0 0 auto;
+    align-items: center;
+  }
+
+  .chartFooterLeft {
+    flex: 0 0 auto;
+    margin-left: auto;
+    justify-content: flex-end;
+  }
+
+  /* Fit on one row (standards + custom events); denser chips, scroll only if needed. */
+  .periodControls {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    width: 100%;
+    max-width: 100%;
+    gap: 3px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    touch-action: pan-x;
+  }
+
+  .periodControls::-webkit-scrollbar {
+    display: none;
   }
 
   .periodRow,
   .periodRowCustom {
-    width: 100%;
-    justify-content: flex-start;
+    display: contents;
+  }
+
+  .periodBtn,
+  .periodBtnActive {
+    padding: 2px 5px;
+    font-size: 9px;
+    border-radius: 4px;
+    flex: 0 0 auto;
+  }
+
+  .viewToggleBar .toggle {
+    align-self: center;
+    border-radius: 999px;
+  }
+
+  .viewToggleBar .toggle button {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  /* Footnote truncates badly next to the lockup on phones. */
+  .chartBrandNote {
+    display: none;
   }
 }
 

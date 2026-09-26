@@ -231,9 +231,9 @@
 }
 
 :global(.st-theme[data-theme="light"]) .yearChip {
-  border-color: rgba(59, 77, 161, 0.18);
-  background: rgba(59, 77, 161, 0.06);
-  color: var(--text-secondary);
+  border-color: rgba(59, 77, 161, 0.22);
+  background: #f3f3f7;
+  color: var(--text-primary, #1a1a2e);
 }
 
 .head {
@@ -257,6 +257,9 @@
   margin: 0;
   min-width: 0;
   flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .groupEyebrowLink,
@@ -394,7 +397,9 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  align-self: flex-start;
   margin-top: 1px;
+  margin-left: 0;
   padding: 1px 7px;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -405,6 +410,7 @@
   letter-spacing: 0.02em;
   color: var(--text-secondary);
   line-height: 1.35;
+  white-space: nowrap;
 }
 
 .cardInteractive:hover .title,
@@ -669,8 +675,85 @@ a.moreLink:hover {
   text-decoration: underline;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 600px) {
+  /* Year chip sits at the end of the theme text (not pushed to the far right). */
+  .titleLeft {
+    display: block;
+  }
+
+  .title {
+    display: inline;
+    flex: none;
+  }
+
+  .yearChip {
+    display: inline-flex;
+    vertical-align: middle;
+    align-self: auto;
+    margin-top: 0;
+    margin-left: 6px;
+  }
+
+  /* Chips use full card width; date drops under (was side-by-side and starved chips). */
+  .feedBody {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: stretch;
+    row-gap: 6px;
+    column-gap: 0;
+  }
+
+  .feedBody .when {
+    justify-self: end;
+    padding-bottom: 0;
+  }
+
   .holdings {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 3px;
+    margin-top: 6px;
+  }
+
+  .holdingChip {
+    padding: 2px 5px;
+    border-radius: 5px;
+  }
+
+  .holdingTop {
+    gap: 4px;
+  }
+
+  .logo,
+  .logoFallback {
+    width: 11px;
+    height: 11px;
+    border-radius: 2px;
+  }
+
+  .logoFallback {
+    font-size: 7px;
+  }
+
+  .holdingTicker {
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.2;
+  }
+
+  .holdingWeight {
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  .actionAdded,
+  .actionRemoved {
+    font-size: 8px;
+    letter-spacing: 0.02em;
+  }
+
+  .holdingNote {
+    margin: 2px 0 0;
+    font-size: 9px;
+    line-height: 1.25;
+    -webkit-line-clamp: 1;
   }
 }

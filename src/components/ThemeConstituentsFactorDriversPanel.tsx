@@ -113,10 +113,10 @@ export default function ThemeConstituentsFactorDriversPanel({
     <div className={panelStyles.panel}>
       <div className={panelStyles.toolbar}>
         <div>
-          <p className={panelStyles.eyebrow}>Return attribution</p>
-          <p className={panelStyles.asOf}>
+          <div className={panelStyles.eyebrow}>Return attribution</div>
+          <div className={panelStyles.asOf}>
             Through {data.as_of} · {attribution.sample_size} trading sessions
-          </p>
+          </div>
         </div>
         <label className={panelStyles.horizonControl}>
           Horizon
@@ -141,7 +141,10 @@ export default function ThemeConstituentsFactorDriversPanel({
           className={panelStyles.metricCard}
           title={`The theme's compounded return over the selected ${horizon} horizon.`}
         >
-          <p className={panelStyles.metricLabel}>Actual return</p>
+          <div className={panelStyles.metricLabel}>
+            <span className={panelStyles.labelFull}>Actual return</span>
+            <span className={panelStyles.labelShort}>Actual</span>
+          </div>
           <span className={`${panelStyles.metricValue} ${valueClass(attribution.actual_return_pct)}`}>
             {formatSignedPercent(attribution.actual_return_pct)}
           </span>
@@ -150,7 +153,10 @@ export default function ThemeConstituentsFactorDriversPanel({
           className={panelStyles.metricCard}
           title="The portion attributed to the core factor model. Daily contributions use 252-session rolling exposures estimated only through the prior session."
         >
-          <p className={panelStyles.metricLabel}>Factor explained</p>
+          <div className={panelStyles.metricLabel}>
+            <span className={panelStyles.labelFull}>Factor explained</span>
+            <span className={panelStyles.labelShort}>Factor</span>
+          </div>
           <span
             className={`${panelStyles.metricValue} ${valueClass(attribution.explained_return_pct)}`}
           >
@@ -161,7 +167,10 @@ export default function ThemeConstituentsFactorDriversPanel({
           className={panelStyles.metricCard}
           title="Actual return minus core factor contributions. This can include earnings, company news, omitted factors, changing constituent behavior, and model error; it is not labeled alpha."
         >
-          <p className={panelStyles.metricLabel}>Theme-specific</p>
+          <div className={panelStyles.metricLabel}>
+            <span className={panelStyles.labelFull}>Theme-specific</span>
+            <span className={panelStyles.labelShort}>Theme</span>
+          </div>
           <span
             className={`${panelStyles.metricValue} ${valueClass(attribution.theme_specific_return_pct)}`}
           >
@@ -172,7 +181,10 @@ export default function ThemeConstituentsFactorDriversPanel({
           className={panelStyles.metricCard}
           title="Realized model fit over the selected horizon. Higher means daily core factor contributions tracked more of the theme's movement; negative values indicate a poor fit."
         >
-          <p className={panelStyles.metricLabel}>Model fit (R²)</p>
+          <div className={panelStyles.metricLabel}>
+            <span className={panelStyles.labelFull}>Model fit (R²)</span>
+            <span className={panelStyles.labelShort}>R²</span>
+          </div>
           <span className={panelStyles.metricValue}>
             {attribution.model_r2 == null ? "—" : percent(attribution.model_r2 * 100)}
           </span>
@@ -181,7 +193,7 @@ export default function ThemeConstituentsFactorDriversPanel({
           className={panelStyles.metricCard}
           title="Share of the requested horizon with valid theme and core-factor observations."
         >
-          <p className={panelStyles.metricLabel}>Coverage</p>
+          <div className={panelStyles.metricLabel}>Coverage</div>
           <span className={panelStyles.metricValue}>{percent(attribution.coverage_pct)}</span>
         </div>
       </div>
@@ -263,7 +275,7 @@ export default function ThemeConstituentsFactorDriversPanel({
               className={panelStyles.metricCard}
               title="Median correlation between each ticker and the weighted theme return after excluding that ticker from its comparator."
             >
-              <p className={panelStyles.metricLabel}>Median correlation</p>
+              <div className={panelStyles.metricLabel}>Median correlation</div>
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.median_correlation)}
               </span>
@@ -282,7 +294,7 @@ export default function ThemeConstituentsFactorDriversPanel({
               className={panelStyles.metricCard}
               title="Median leave-one-out correlation after removing each series' relationship with the broad market. This helps distinguish theme-specific co-movement from shared equity beta."
             >
-              <p className={panelStyles.metricLabel}>Market-adjusted</p>
+              <div className={panelStyles.metricLabel}>Market-adjusted</div>
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.market_adjusted_median_correlation)}
               </span>
@@ -303,7 +315,7 @@ export default function ThemeConstituentsFactorDriversPanel({
               className={panelStyles.metricCard}
               title="Percentage of valid constituents with leave-one-out theme correlation at or above 0.50."
             >
-              <p className={panelStyles.metricLabel}>Above 0.50</p>
+              <div className={panelStyles.metricLabel}>Above 0.50</div>
               <span className={panelStyles.metricValue}>
                 {percent(cohesion.pct_above_0_50)}
               </span>
@@ -312,14 +324,14 @@ export default function ThemeConstituentsFactorDriversPanel({
               className={panelStyles.metricCard}
               title="Percentage of valid constituents moving negatively relative to their leave-one-out theme comparator."
             >
-              <p className={panelStyles.metricLabel}>Negative</p>
+              <div className={panelStyles.metricLabel}>Negative</div>
               <span className={panelStyles.metricValue}>{percent(cohesion.pct_negative)}</span>
             </div>
             <div
               className={panelStyles.metricCard}
               title={`Average share of the selected ${horizon} period with overlapping valid returns for each stock, its leave-one-out theme basket, and SPY. ${Math.round(cohesion.coverage_pct)}% is approximately ${Math.round((attribution.sample_size * cohesion.coverage_pct) / 100)} of ${attribution.sample_size} sessions per constituent. Foreign-market calendars, newer listings, suspended trading, and missing prices can reduce coverage. This is a data-confidence measure, not a quality score.`}
             >
-              <p className={panelStyles.metricLabel}>Fit coverage</p>
+              <div className={panelStyles.metricLabel}>Fit coverage</div>
               <span className={panelStyles.metricValue}>{percent(cohesion.coverage_pct)}</span>
             </div>
           </div>
@@ -366,7 +378,10 @@ export default function ThemeConstituentsFactorDriversPanel({
                       <td>
                         <div className={panelStyles.company}>
                           <ConstituentLogo ticker={row.ticker} logoUrl={meta?.logo_url} />
-                          <span className={panelStyles.companyName}>
+                          <span
+                            className={panelStyles.companyName}
+                            title={meta?.name || row.ticker}
+                          >
                             {meta?.name || row.ticker}
                           </span>
                           <TickerBadge ticker={row.ticker} />
@@ -390,13 +405,13 @@ export default function ThemeConstituentsFactorDriversPanel({
         </section>
       ) : null}
 
-      <p className={panelStyles.disclosure}>
+      <div className={panelStyles.disclosure}>
         Estimated from daily returns using rolling 252-session ridge exposures known before each
         return. Core contributions plus theme-specific return reconcile to actual return. Long-term
         results use reconstructed history based on current theme membership and are not
         point-in-time investable portfolio results. Cohesion describes how tightly constituents
         traded together; low cohesion is not automatically poor quality.
-      </p>
+      </div>
     </div>
   );
 }

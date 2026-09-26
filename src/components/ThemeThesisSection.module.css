@@ -29,9 +29,16 @@
 
 .thesis {
   margin: 0;
+  max-width: 760px;
   font-size: 16px;
   line-height: 1.55;
   color: var(--text-secondary, #9aa8a6);
+}
+
+/* Beat `.intro p` / page-level type if a parent still uses a paragraph. */
+:global(.intro) .thesis,
+:global(.intro) .title {
+  max-width: none;
 }
 
 .locked {
@@ -115,4 +122,61 @@
 :global(.st-theme[data-theme="light"]) .signInBtn {
   background: var(--accent-strong, #3b4da1);
   color: var(--button-primary-fg, #ffffff);
+}
+
+@media (max-width: 640px) {
+  .head {
+    margin-bottom: 4px;
+    gap: 4px 8px;
+  }
+
+  /* Match ThemeFactorProfile `.heroTitle` (15px) on all breakpoints. */
+  .title,
+  :global(.intro) .title {
+    font-size: 15px !important;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+
+  .thesis,
+  :global(.intro) .thesis {
+    font-size: 12px !important;
+    line-height: 1.4 !important;
+    max-width: none;
+  }
+
+  .locked {
+    padding: 10px 12px;
+    border-radius: 8px;
+  }
+
+  .lockedTitle {
+    margin: 0 0 4px;
+    font-size: 12px;
+  }
+
+  .lockedCopy {
+    margin: 0 0 10px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+
+  .signInBtn {
+    padding: 6px 12px;
+    font-size: 11px;
+  }
+
+  .secondaryLink {
+    font-size: 11px;
+  }
+
+  .updateBadge {
+    margin: 6px 0 0;
+  }
+
+  .badge {
+    padding: 2px 7px;
+    font-size: 10px;
+  }
 }

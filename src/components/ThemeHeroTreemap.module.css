@@ -1,5 +1,7 @@
 .panel {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   flex: 1 1 auto;
   min-height: 380px;
   display: flex;
@@ -21,6 +23,30 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-secondary, #9aa8a6);
+}
+
+@media (max-width: 640px) {
+  /* Period chips + aria-label are enough on phones. */
+  .toolbarLabel {
+    display: none;
+  }
+
+  .toolbar {
+    gap: 0;
+  }
+
+  /* Keep caption denser on mobile only. */
+  .mapBrand {
+    font-size: 10px;
+    opacity: 0.6;
+    transform: scale(0.72);
+    transform-origin: left top;
+  }
+
+  .mapCaptionBelow {
+    font-size: 10px;
+    opacity: 0.65;
+  }
 }
 
 .soloLabel {
@@ -89,19 +115,19 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 8px;
-  height: 7px;
+  min-height: 12px;
   overflow: visible;
   flex-shrink: 0;
+  min-width: 0;
+  width: 100%;
 }
 
 .mapBrand {
   flex-shrink: 0;
   gap: 3px;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 600;
-  opacity: 0.6;
-  transform: scale(0.72);
-  transform-origin: left top;
+  opacity: 0.88;
   color: var(--text-muted, #6e7d7b);
 }
 
@@ -116,16 +142,19 @@
   margin: 0;
   margin-left: auto;
   padding: 0;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 400;
-  line-height: 1;
+  line-height: 1.2;
   letter-spacing: 0;
   text-align: right;
   white-space: nowrap;
+  text-wrap: nowrap;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: var(--text-muted, #6e7d7b);
-  opacity: 0.6;
-  transform: scale(0.45);
-  transform-origin: right top;
+  opacity: 0.9;
 }
 
 .cell {
@@ -260,12 +289,12 @@
 
 :global(.st-theme[data-theme="light"]) .mapBrand {
   color: var(--text-muted, #94a3b8);
-  opacity: 0.5;
+  opacity: 0.85;
 }
 
 :global(.st-theme[data-theme="light"]) .mapCaptionBelow {
   color: var(--text-muted, #94a3b8);
-  opacity: 0.55;
+  opacity: 0.88;
 }
 
 :global(.st-theme[data-theme="light"]) .cell {

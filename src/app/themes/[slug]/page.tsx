@@ -13,6 +13,7 @@ import { ThemeConstituentsTableLive } from "@/components/ThemeConstituentsTableL
 import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
+import { ThemeDetailHeroSwitch } from "@/components/ThemeDetailHeroSwitch";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
@@ -196,32 +197,49 @@ export default async function ThemeDetailPage({ params }: Props) {
       <JsonLd id={`theme-json-ld-${slug}`} data={jsonLd} />
       <main className={styles.main}>
         <div className={styles.intro}>
-          <div className={`${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`}>
-            <div className={styles.heroMain}>
-              <p className={styles.eyebrow}>
-                {detailEyebrowText("Theme", source, loaded?.source ?? null)}
-              </p>
-              <h1 className={`${styles.heroTitle} ${styles.heroTitleWithStar}`}>
-                <span className={styles.heroTitleText}>{theme.name}</span>
-                <WatchlistStar
-                  inline
-                  titleAdjacent
-                  itemType="theme"
-                  itemKey={slug}
-                  label={theme.name}
-                  signInNext={`/themes/${slug}`}
+          {(() => {
+            const showThesis = shouldShowThemeThesisUi(detail?.theme_thesis);
+            const gridClass = `${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`;
+
+            const renderTitle = () => (
+              <>
+                <p className={styles.eyebrow}>
+                  {detailEyebrowText("Theme", source, loaded?.source ?? null)}
+                </p>
+                <h1 className={`${styles.heroTitle} ${styles.heroTitleWithStar}`}>
+                  <span className={styles.heroTitleText}>{theme.name}</span>
+                  <WatchlistStar
+                    inline
+                    titleAdjacent
+                    itemType="theme"
+                    itemKey={slug}
+                    label={theme.name}
+                    signInNext={`/themes/${slug}`}
+                  />
+                </h1>
+                <ThemeHeroMeta
+                  tickerCount={theme.ticker_count ?? detail?.constituents?.length}
+                  totalMarketCapUsd={hasTotalMarketCap ? totalMarketCapUsd : undefined}
+                  rank10d={rank10d}
+                  groupSlug={theme.group_slug}
+                  groupName={group?.name}
                 />
-              </h1>
-              <ThemeHeroMeta
-                tickerCount={theme.ticker_count ?? detail?.constituents?.length}
-                totalMarketCapUsd={hasTotalMarketCap ? totalMarketCapUsd : undefined}
-                rank10d={rank10d}
-                groupSlug={theme.group_slug}
-                groupName={group?.name}
-              />
-              {!detail && !dataBaseUrl ? (
-                <StockthemesDetailUnavailable kind="theme" slug={slug} />
-              ) : null}
+                {!detail && !dataBaseUrl ? (
+                  <StockthemesDetailUnavailable kind="theme" slug={slug} />
+                ) : null}
+                {!dataBaseUrl ? (
+                  <AdPlacement
+                    placement="themeRail"
+                    className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                    classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
+                    placeholderLabel="Ad Slot · Theme detail"
+                    format="horizontal"
+                  />
+                ) : null}
+              </>
+            );
+
+            const renderFactor = () => (
               <div className={treemapNodes.length ? styles.heroFactorSlot : undefined}>
                 <ThemeFactorProfile
                   slug={slug}
@@ -231,50 +249,71 @@ export default async function ThemeDetailPage({ params }: Props) {
                   signInNext={`/themes/${slug}`}
                 />
               </div>
-              {!dataBaseUrl ? (
-                <AdPlacement
-                  placement="themeRail"
-                  className={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
-                  classNameWhenActive={`${styles.adSlot} ${styles.groupsAdCompact} ${styles.heroMainAd}`}
-                  placeholderLabel="Ad Slot · Theme detail"
-                  format="horizontal"
-                />
-              ) : null}
-            </div>
-            <div className={styles.themeHeroRail}>
-              {treemapNodes.length ? (
-                detail && dataBaseUrl && stockthemesLivePriceReturnsEnabled() ? (
-                  <ThemeHeroTreemapLive
-                    slug={slug}
-                    dataBaseUrl={dataBaseUrl}
-                    serverDetail={liveDetailSeed ?? detail}
-                    themeName={theme.name}
-                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
-                  />
-                ) : (
-                  <ThemeHeroTreemap
-                    nodes={treemapNodes}
-                    themeName={theme.name}
-                    defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
-                    asOfLabel={
-                      detail?.ticker_performance_as_of
-                        ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
-                        : undefined
-                    }
-                  />
-                )
-              ) : null}
-            </div>
-            {shouldShowThemeThesisUi(detail?.theme_thesis) ? (
-              <div className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}>
-                <ThemeThesisBlock
-                  fullBleed
-                  themeThesis={detail?.theme_thesis}
-                  signInNext={`/themes/${slug}`}
-                />
+            );
+
+            const renderTreemap = () => (
+              <div className={styles.themeHeroRail}>
+                {treemapNodes.length ? (
+                  detail && dataBaseUrl && stockthemesLivePriceReturnsEnabled() ? (
+                    <ThemeHeroTreemapLive
+                      slug={slug}
+                      dataBaseUrl={dataBaseUrl}
+                      serverDetail={liveDetailSeed ?? detail}
+                      themeName={theme.name}
+                      defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                    />
+                  ) : (
+                    <ThemeHeroTreemap
+                      nodes={treemapNodes}
+                      themeName={theme.name}
+                      defaultReturnPeriod={pickDefaultTreemapPeriod(treemapNodes)}
+                      asOfLabel={
+                        detail?.ticker_performance_as_of
+                          ? formatTickerPerformanceAsOf(detail.ticker_performance_as_of)
+                          : undefined
+                      }
+                    />
+                  )
+                ) : null}
               </div>
-            ) : null}
-          </div>
+            );
+
+            const renderThesis = () =>
+              showThesis ? (
+                <div className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}>
+                  <ThemeThesisBlock
+                    fullBleed
+                    themeThesis={detail?.theme_thesis}
+                    signInNext={`/themes/${slug}`}
+                  />
+                </div>
+              ) : null;
+
+            return (
+              <ThemeDetailHeroSwitch
+                desktop={
+                  <div className={gridClass}>
+                    {/* GitHub desktop: title+factor | treemap, thesis under. */}
+                    <div className={styles.heroMain}>
+                      {renderTitle()}
+                      {renderFactor()}
+                    </div>
+                    {renderTreemap()}
+                    {renderThesis()}
+                  </div>
+                }
+                mobile={
+                  <div className={gridClass}>
+                    {/* Mobile: title → thesis → treemap → factor. */}
+                    <div className={styles.heroMain}>{renderTitle()}</div>
+                    {renderThesis()}
+                    {renderTreemap()}
+                    {renderFactor()}
+                  </div>
+                }
+              />
+            );
+          })()}
           {!detail && dataBaseUrl ? (
             <ThemeDetailRuntimeLoader
               slug={slug}

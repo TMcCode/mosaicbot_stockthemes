@@ -36,7 +36,18 @@ type Props = {
   dataBaseUrl: string;
   benchmarkPerformance?: ChartPerformanceV0;
   selectedDates?: ManifestSelectedDateV0[];
+  /**
+   * `hero` = thesis + chart (above factor profile).
+   * `constituents` = table only (below factor).
+   * `all` = previous single-block behavior.
+   */
+  parts?: "all" | "hero" | "constituents";
 };
+
+type LoaderState =
+  | { status: "loading" }
+  | { status: "error"; message: string }
+  | { status: "ok"; detail: ThemeDetailV0 };
 
 function parseDetail(raw: string): ThemeDetailV0 {
   const data = JSON.parse(raw) as ThemeDetailV0;
@@ -49,6 +60,29 @@ function parseDetail(raw: string): ThemeDetailV0 {
   return data;
 }
 
+const detailFetchCache = new Map<string, Promise<ThemeDetailV0>>();
+
+function fetchThemeDetail(slug: string, dataBaseUrl: string): Promise<ThemeDetailV0> {
+  const key = `${dataBaseUrl}::${slug}`;
+  const existing = detailFetchCache.get(key);
+  if (existing) return existing;
+  const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
+  const promise = fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
+    .then((res) => {
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+      return res.text();
+    })
+    .then((raw) => parseDetail(raw))
+    .catch((err) => {
+      detailFetchCache.delete(key);
+      throw err;
+    });
+  detailFetchCache.set(key, promise);
+  return promise;
+}
+
 /**
  * When static export had no theme JSON at build time, try fetching the same URL in the
  * browser (needs GCS CORS for this origin). Fills charts + constituents when the object exists.
@@ -58,12 +92,9 @@ export function ThemeDetailRuntimeLoader({
   dataBaseUrl,
   benchmarkPerformance,
   selectedDates,
+  parts = "all",
 }: Props) {
-  const [state, setState] = useState<
-    | { status: "loading" }
-    | { status: "error"; message: string }
-    | { status: "ok"; detail: ThemeDetailV0 }
-  >({ status: "loading" });
+  const [state, setState] = useState<LoaderState>({ status: "loading" });
 
   useEffect(() => {
     if (stockthemesLiveHydrationDisabled()) {
@@ -79,17 +110,9 @@ export function ThemeDetailRuntimeLoader({
     }
 
     let cancelled = false;
-    const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
-    fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`HTTP ${res.status}`);
-        }
-        return res.text();
-      })
-      .then((raw) => {
+    fetchThemeDetail(slug, dataBaseUrl)
+      .then((detail) => {
         if (cancelled) return;
-        const detail = parseDetail(raw);
         capturePostHog("theme_detail_runtime_loaded", { slug });
         setState({ status: "ok", detail });
       })
@@ -112,6 +135,7 @@ export function ThemeDetailRuntimeLoader({
   } as const;
 
   if (state.status === "loading") {
+    if (parts === "constituents") return null;
     return (
       <p style={bodyStyle}>
         {stockthemesDevBuildHintsEnabled() ? THEME_RUNTIME_LOADING_DEV : THEME_RUNTIME_LOADING_COPY}
@@ -120,6 +144,7 @@ export function ThemeDetailRuntimeLoader({
   }
 
   if (state.status === "error") {
+    if (parts === "constituents") return null;
     if (stockthemesDevBuildHintsEnabled()) {
       return (
         <p style={bodyStyle}>
@@ -133,39 +158,38 @@ export function ThemeDetailRuntimeLoader({
   const detail = state.detail;
   const hasWeight = Boolean(detail.constituents?.some((c) => c.weight != null));
   const compositionMetaByTicker = buildCompositionMetaMap(detail.constituents);
+  const showHero = parts === "all" || parts === "hero";
+  const showConstituents = parts === "all" || parts === "constituents";
 
   return (
     <>
-      {stockthemesDevBuildHintsEnabled() ? (
+      {showHero && stockthemesDevBuildHintsEnabled() ? (
         <p className={styles.eyebrow} style={{ marginTop: 8 }}>
           Loaded in browser · live theme JSON
         </p>
       ) : null}
-      {shouldShowThemeThesisUi(detail.theme_thesis) ? (
+      {showHero && shouldShowThemeThesisUi(detail.theme_thesis) ? (
         <ThemeThesisBlock
           fullBleed
           themeThesis={detail.theme_thesis}
           signInNext={`/themes/${slug}`}
         />
       ) : null}
-      <div className={styles.tightChartTop}>
-        <Chart1yPanel
-          chart1y={detail.chart_1y}
-          compositionMetaByTicker={compositionMetaByTicker}
-          performanceTitle={detail.name}
-          benchmarkPerformance={benchmarkPerformance}
-          selectedDates={selectedDates}
-          sidecarEntity={{ kind: "theme", slug }}
-        />
-      </div>
-      {detail.constituents?.length ? (
+      {showHero ? (
+        <div className={styles.tightChartTop}>
+          <Chart1yPanel
+            chart1y={detail.chart_1y}
+            compositionMetaByTicker={compositionMetaByTicker}
+            performanceTitle={detail.name}
+            benchmarkPerformance={benchmarkPerformance}
+            selectedDates={selectedDates}
+            sidecarEntity={{ kind: "theme", slug }}
+          />
+        </div>
+      ) : null}
+      {showConstituents && detail.constituents?.length ? (
         <section className={styles.section} aria-labelledby="constituents-heading-runtime">
           <h2 id="constituents-heading-runtime">Constituents</h2>
-          {detail.build_id ? (
-            <p style={{ fontSize: 14, color: "var(--text-secondary)", marginTop: 0 }}>
-              Build <code className={styles.code}>{detail.build_id}</code>
-            </p>
-          ) : null}
           <div className={styles.tableWrap}>
             <HorizontalScrollArea className={styles.constituentsScrollWrap}>
             <div className={styles.constituentsTableSizer}>
@@ -186,7 +210,9 @@ export function ThemeDetailRuntimeLoader({
                           ticker={c.ticker}
                           logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
                         />
-                        <span className={styles.companyName}>{c.name?.trim() || "—"}</span>
+                        <span className={styles.companyName} title={c.name?.trim() || undefined}>
+                          {c.name?.trim() || "—"}
+                        </span>
                         <TickerBadge ticker={c.ticker} />
                       </div>
                     </td>
@@ -201,9 +227,10 @@ export function ThemeDetailRuntimeLoader({
             </HorizontalScrollArea>
           </div>
         </section>
-      ) : (
+      ) : null}
+      {showConstituents && !detail.constituents.length ? (
         <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
-      )}
+      ) : null}
     </>
   );
 }

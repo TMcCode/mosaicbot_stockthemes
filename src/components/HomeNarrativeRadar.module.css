@@ -336,6 +336,26 @@
   color: var(--accent);
 }
 
+.metricUp {
+  color: #2f9e6e;
+}
+
+.metricDown {
+  color: #d4535a;
+}
+
+.metricFlat {
+  color: var(--text-secondary, #9aa8a6);
+}
+
+:global(.st-theme[data-theme="light"]) .metricUp {
+  color: #1f7a54;
+}
+
+:global(.st-theme[data-theme="light"]) .metricDown {
+  color: #c43b44;
+}
+
 .metricSource {
   max-width: min(22em, 100%);
   overflow: hidden;

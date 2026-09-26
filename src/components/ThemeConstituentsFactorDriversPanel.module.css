@@ -22,6 +22,10 @@
   text-transform: uppercase;
 }
 
+.labelShort {
+  display: none;
+}
+
 .asOf {
   margin: 4px 0 0;
   color: var(--text-muted, #788582);
@@ -182,7 +186,7 @@
   color: var(--text-muted, #788582);
   font-size: 9px;
   line-height: 1.35;
-  opacity: 0.72;
+  opacity: 0.75;
 }
 
 @media (max-width: 780px) {
@@ -193,6 +197,171 @@
 
   .metricCard:last-child {
     grid-column: span 2;
+  }
+}
+
+@media (max-width: 600px) {
+  .panel {
+    gap: 8px;
+  }
+
+  .toolbar {
+    gap: 4px 8px;
+    margin: 0;
+  }
+
+  .eyebrow,
+  .sectionTitle,
+  .metricLabel {
+    font-size: 8px !important;
+    letter-spacing: 0.04em;
+    line-height: 1.2 !important;
+    max-width: none;
+  }
+
+  .asOf {
+    margin: 1px 0 0;
+    font-size: 7px !important;
+    line-height: 1.2 !important;
+    max-width: none;
+  }
+
+  .horizonControl {
+    gap: 5px;
+    font-size: 10px;
+  }
+
+  .horizonControl select {
+    min-height: 26px;
+    padding: 3px 24px 3px 7px;
+    border-radius: 6px;
+    font-size: 10px;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .summaryGrid .labelFull {
+    display: none;
+  }
+
+  .summaryGrid .labelShort {
+    display: inline;
+  }
+
+  .summaryGrid > .metricCard {
+    padding: 5px 4px;
+  }
+
+  .summaryGrid > .metricCard:last-child {
+    grid-column: span 1;
+  }
+
+  /* Cohesion: Median + Market-adjusted wide on row 1; Above/Negative/Coverage on row 2. */
+  .cohesionGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .cohesionGrid > .metricCard:nth-child(1),
+  .cohesionGrid > .metricCard:nth-child(2) {
+    grid-column: span 3;
+  }
+
+  .cohesionGrid > .metricCard:nth-child(n + 3) {
+    grid-column: span 2;
+  }
+
+  .metricCard {
+    padding: 5px 6px;
+    border-radius: 6px;
+  }
+
+  .metricValue {
+    margin-top: 2px;
+    font-size: 12px !important;
+    line-height: 1.1 !important;
+    font-weight: 700;
+  }
+
+  .metricContext {
+    padding-top: 2px;
+    font-size: 7px !important;
+    line-height: 1.2 !important;
+  }
+
+  .section {
+    gap: 5px;
+  }
+
+  .contributionTable,
+  .fitTable {
+    font-size: 10px;
+  }
+
+  .contributionTable th,
+  .contributionTable td,
+  .fitTable th,
+  .fitTable td {
+    padding: 4px 5px;
+  }
+
+  .contributionTable th,
+  .fitTable th {
+    font-size: 8px;
+  }
+
+  .factorCell {
+    min-width: 0;
+    max-width: 42vw;
+  }
+
+  .barTrack {
+    min-width: 48px;
+    height: 3px;
+    margin-top: 2px;
+  }
+
+  .disclosure {
+    font-size: 7px !important;
+    line-height: 1.25 !important;
+    max-width: none;
+  }
+
+  .company {
+    display: grid;
+    grid-template-columns: 14px minmax(0, 1fr);
+    column-gap: 6px;
+    row-gap: 2px;
+    align-items: start;
+    white-space: normal;
+    gap: 0;
+  }
+
+  .company > :first-child {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+
+  .companyName {
+    grid-column: 2;
+    grid-row: 1;
+    max-width: none;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.25;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .company > :last-child {
+    grid-column: 2;
+    grid-row: 2;
+    justify-self: start;
   }
 }
 
@@ -208,6 +377,40 @@
 
   .horizonControl select {
     flex: 1;
+  }
+
+  .summaryGrid {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 3px;
+  }
+
+  .summaryGrid .labelFull {
+    display: none;
+  }
+
+  .summaryGrid .labelShort {
+    display: inline;
+  }
+
+  .cohesionGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+
+  .cohesionGrid > .metricCard:nth-child(1),
+  .cohesionGrid > .metricCard:nth-child(2) {
+    grid-column: span 3;
+  }
+
+  .cohesionGrid > .metricCard:nth-child(n + 3) {
+    grid-column: span 2;
+  }
+
+  .metricValue {
+    font-size: 11px !important;
+  }
+
+  .metricLabel {
+    font-size: 7px !important;
   }
 }
 

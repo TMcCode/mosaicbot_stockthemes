@@ -6,6 +6,7 @@ import { useMemo, useState } from "react";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
+import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 import type { GroupThemeTableRow } from "@/lib/groupThemesTable";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import {
@@ -137,11 +138,19 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
                 </tr>
               </thead>
               <tbody>
-                {sortedRows.map((row) => (
+                {sortedRows.map((row) => {
+                  const { title } = splitThemeDisplayName(row.name);
+                  return (
                   <tr key={row.slug}>
                     <td>
-                      <Link href={`/themes/${row.slug}`} className={styles.name} prefetch={false}>
-                        {row.name}
+                      <Link
+                        href={`/themes/${row.slug}`}
+                        className={styles.name}
+                        prefetch={false}
+                        title={row.name}
+                      >
+                        <span className={localStyles.nameFull}>{row.name}</span>
+                        <span className={localStyles.nameShort}>{title}</span>
                       </Link>
                     </td>
                     <td>{row.ticker_count != null ? row.ticker_count.toLocaleString() : "—"}</td>
@@ -163,7 +172,8 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
                       );
                     })}
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>
