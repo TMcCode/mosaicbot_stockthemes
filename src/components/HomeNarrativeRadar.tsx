@@ -619,7 +619,7 @@ function NewsRadarCard({
           companyNames={companyNames}
         />
       ) : null}
-      <span className={styles.newsApiCredit}>via NewsAPI.ai</span>
+      {card.editorial ? null : <span className={styles.newsApiCredit}>via NewsAPI.ai</span>}
     </div>
   );
 }
