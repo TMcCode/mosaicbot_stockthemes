@@ -644,8 +644,8 @@ type Props = {
   /** Initial In the News day (`YYYY-MM-DD`) from `/radar?as_of=…`. */
   initialNewsAsOf?: string;
   /**
-   * When false, keep SSR `news` and skip the mount CDN refetch (home).
-   * `/radar` leaves default true so weekday bakes stay fresh.
+   * When false, keep SSR `news` and skip the mount CDN refetch.
+   * Default true so weekday bakes and TimBot editorial publishes show without a site rebuild.
    */
   refreshNewsOnMount?: boolean;
 };
@@ -715,6 +715,9 @@ export function HomeNarrativeRadar({
     if (want && newsDays.some((d) => d.as_of === want)) return want;
     return defaultNewsAsOf;
   });
+  // Explicit day (URL ?as_of= or dropdown) sticks; otherwise follow the newest day when the
+  // live CDN payload replaces the build-time snapshot (e.g. a TimBot editorial publish).
+  const userPickedNewsDay = useRef(Boolean(String(initialNewsAsOf || "").trim()));
 
   // Static `/radar` export cannot read searchParams on the server — apply ?tab=&as_of= here.
   useEffect(() => {
@@ -732,7 +735,10 @@ export function HomeNarrativeRadar({
       setTab(rawTab);
     }
     const asOf = String(sp.get("as_of") || "").trim().slice(0, 10);
-    if (asOf) setNewsAsOf(asOf);
+    if (asOf) {
+      userPickedNewsDay.current = true;
+      setNewsAsOf(asOf);
+    }
   }, []);
 
   useEffect(() => {
@@ -759,6 +765,10 @@ export function HomeNarrativeRadar({
   useEffect(() => {
     const days = newsDayOptions(newsEffective);
     if (days.length === 0) return;
+    if (!userPickedNewsDay.current) {
+      if (days[0].as_of !== newsAsOf) setNewsAsOf(days[0].as_of);
+      return;
+    }
     if (!days.some((d) => d.as_of === newsAsOf)) {
       const want = String(initialNewsAsOf || "").slice(0, 10);
       setNewsAsOf(days.some((d) => d.as_of === want) ? want : days[0].as_of);
@@ -774,6 +784,7 @@ export function HomeNarrativeRadar({
   const newsList = tab === "news" ? newsCardsForTab(newsEffective, previewLimit, newsAsOf) : [];
 
   const onNewsDayChange = (next: string) => {
+    userPickedNewsDay.current = true;
     setNewsAsOf(next);
     if (typeof window === "undefined") return;
     if (window.location.pathname !== "/radar") return;

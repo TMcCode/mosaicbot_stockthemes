@@ -265,7 +265,6 @@ export default async function Home() {
             news={homeNews}
             companyNames={radarCompanyNamesFilled}
             watchlistEnrichBySlug={watchlistEnrichBySlug}
-            refreshNewsOnMount={!homeNews?.today}
           />
 
           <HomeTopMoversTickerLive
