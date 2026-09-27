@@ -25,7 +25,6 @@ import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { isShortThemeName } from "@/lib/shortThemeChart";
 import { isSupportingThemeRankVisibility } from "@/lib/supportingTheme";
 import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
-import type { CompareThemesV0 } from "@/types/compare_themes.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
@@ -58,8 +57,6 @@ type Props = {
   sectorOptions: string[];
   yearOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
-  /** SSR compare bundle — seeds live hook so first paint skips a cold ~942KB CDN fetch. */
-  serverCompare?: CompareThemesV0 | null;
 };
 
 export function ComparePageClient({
@@ -73,14 +70,13 @@ export function ComparePageClient({
   sectorOptions,
   yearOptions,
   selectedDates,
-  serverCompare = null,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("themes");
   const {
     compareBundle: liveCompareBundle,
     compareLoading: themesLoading,
     compareFailed: themesFailed,
-  } = useLiveCompareBundles(serverCompare, null);
+  } = useLiveCompareBundles(null, null);
   const {
     bundle: groupBundle,
     loading: groupsLoading,

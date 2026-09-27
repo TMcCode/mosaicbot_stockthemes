@@ -13,7 +13,6 @@ import { ThemeConstituentsTableLive } from "@/components/ThemeConstituentsTableL
 import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
-import { ThemeDetailHeroSwitch } from "@/components/ThemeDetailHeroSwitch";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
@@ -240,7 +239,9 @@ export default async function ThemeDetailPage({ params }: Props) {
             );
 
             const renderFactor = () => (
-              <div className={treemapNodes.length ? styles.heroFactorSlot : undefined}>
+              <div
+                className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}`}
+              >
                 <ThemeFactorProfile
                   slug={slug}
                   dataBaseUrl={dataBaseUrl ?? ""}
@@ -289,29 +290,16 @@ export default async function ThemeDetailPage({ params }: Props) {
                 </div>
               ) : null;
 
+            // DOM is mobile order; `.themeHeroAreas` places desktop as title+factor | treemap, thesis under.
             return (
-              <ThemeDetailHeroSwitch
-                desktop={
-                  <div className={gridClass}>
-                    {/* GitHub desktop: title+factor | treemap, thesis under. */}
-                    <div className={styles.heroMain}>
-                      {renderTitle()}
-                      {renderFactor()}
-                    </div>
-                    {renderTreemap()}
-                    {renderThesis()}
-                  </div>
-                }
-                mobile={
-                  <div className={gridClass}>
-                    {/* Mobile: title → thesis → treemap → factor. */}
-                    <div className={styles.heroMain}>{renderTitle()}</div>
-                    {renderThesis()}
-                    {renderTreemap()}
-                    {renderFactor()}
-                  </div>
-                }
-              />
+              <div className={`${gridClass} ${styles.themeHeroAreas}`}>
+                <div className={`${styles.heroMain} ${styles.themeHeroTitleArea}`}>
+                  {renderTitle()}
+                </div>
+                {renderThesis()}
+                {renderTreemap()}
+                {renderFactor()}
+              </div>
             );
           })()}
           {!detail && dataBaseUrl ? (

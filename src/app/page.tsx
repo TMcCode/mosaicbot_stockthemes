@@ -35,11 +35,13 @@ import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
 import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
 import { getRadarNewsCached } from "@/lib/getRadarNewsCached";
 import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
+import { slimMotionsRows } from "@/lib/slimMotionsRows";
 import { loadNewsletterPosts } from "@/lib/loadNewsletterPosts";
 import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
 import { buildTickerCompanyNameMap } from "@/lib/loadSearchIndex";
 import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
 import { collapseFeedGroupFlippers } from "@/lib/collapseFeedGroupFlippers";
+import { slimFeedSlotsForClient } from "@/lib/slimFeedSlots";
 import {
   buildFeedThemeMetaBySlug,
   slimFeedThemeMetaForSlots,
@@ -94,7 +96,7 @@ export default async function Home() {
     getRadarNewsCached().catch(() => null),
     loadNewsletterPosts().catch(() => null),
   ]);
-  const motionsHomepage = motionsRes?.bundle?.homepage ?? [];
+  const motionsHomepage = slimMotionsRows(motionsRes?.bundle?.homepage, 10);
   // Motions sector/factor chart lazy-fetches etf_benchmarks + spy_snapshot + factor
   // series from the CDN on mount — keep that out of home RSC HTML (~320KB+).
   const topMoversPeriod = homeTopMoversTickerPeriod();
@@ -283,7 +285,7 @@ export default async function Home() {
           <DeferRender minHeight={420} rootMargin="400px 0px">
             <HomeExploreChanging
               groups={exploreGroups}
-              feedSlots={homeFeedDisplay}
+              feedSlots={slimFeedSlotsForClient(homeFeedDisplay)}
               tickersByThemeSlug={tickersByThemeSlug}
               themeMetaBySlug={themeMetaBySlug}
             />

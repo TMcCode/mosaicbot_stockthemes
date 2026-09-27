@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import {
@@ -52,6 +52,10 @@ function fmtPct(v?: number): string {
   return `${sign}${v.toFixed(2)}%`;
 }
 
+/** ~1.2k themes × 13 columns is ~45k nodes; mount in batches as the user scrolls. */
+const ROWS_INITIAL = 120;
+const ROWS_BATCH = 200;
+
 export function CompareThemesTable({
   benchmarkRows = [],
   rows,
@@ -86,6 +90,24 @@ export function CompareThemesTable({
     });
     return out;
   }, [benchmarkRows, rows, sorts]);
+
+  const [renderLimit, setRenderLimit] = useState(ROWS_INITIAL);
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const hasMore = renderLimit < displayRows.length;
+  const renderedRows = hasMore ? displayRows.slice(0, renderLimit) : displayRows;
+
+  useEffect(() => {
+    const node = sentinelRef.current;
+    if (!node || !hasMore || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) setRenderLimit((n) => n + ROWS_BATCH);
+      },
+      { rootMargin: "1200px 0px" },
+    );
+    obs.observe(node);
+    return () => obs.disconnect();
+  }, [hasMore, renderLimit, displayRows.length]);
 
   const gridTemplateColumns = `var(--compare-theme-col) repeat(${columns.length}, minmax(76px, max-content))`;
 
@@ -175,7 +197,7 @@ export function CompareThemesTable({
             );
           })}
 
-          {displayRows.flatMap((row) => {
+          {renderedRows.flatMap((row) => {
             const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
             const split =
@@ -253,6 +275,7 @@ export function CompareThemesTable({
           })}
         </div>
       </div>
+      {hasMore ? <div ref={sentinelRef} aria-hidden style={{ height: 1 }} /> : null}
     </section>
   );
 }

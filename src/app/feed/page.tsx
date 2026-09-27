@@ -13,6 +13,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
 import { mergeHomeFeedEvents, prioritizeLifecycleFeedFull } from "@/lib/mergeHomeFeedEvents";
 import { collapseFeedGroupFlippers } from "@/lib/collapseFeedGroupFlippers";
+import { slimFeedSlotsForClient } from "@/lib/slimFeedSlots";
 import {
   buildFeedThemeMetaBySlug,
   feedSectorOptionsFromEvents,
@@ -102,7 +103,7 @@ export default async function FeedPage() {
             <p className={feedStyles.empty}>No feed events available.</p>
           ) : (
             <FeedProgressiveList
-              events={events}
+              events={slimFeedSlotsForClient(events)}
               themeMetaBySlug={themeMetaBySlug}
               thesisBySlug={thesisBySlug}
               tickersByThemeSlug={tickersByThemeSlug}

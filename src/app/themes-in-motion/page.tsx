@@ -7,6 +7,7 @@ import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
 import { PageSurface } from "@/components/PageSurface";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
+import { slimMotionsRows } from "@/lib/slimMotionsRows";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import styles from "../page.module.css";
 
@@ -22,9 +23,9 @@ export default async function ThemesInMotionPage() {
     getThemesInMotionCached().catch(() => null),
     getSpyMarketPerfCached().catch(() => null),
   ]);
-  const pool = motionsRes?.bundle?.pool?.length
-    ? motionsRes.bundle.pool
-    : motionsRes?.bundle?.homepage ?? [];
+  const pool = slimMotionsRows(
+    motionsRes?.bundle?.pool?.length ? motionsRes.bundle.pool : motionsRes?.bundle?.homepage,
+  );
 
   return (
     <PageSurface>

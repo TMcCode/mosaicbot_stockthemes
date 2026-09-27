@@ -71,7 +71,7 @@
 }
 
 /* Theme detail desktop (= GitHub): title+factor | treemap, thesis full-bleed under.
-   Mobile uses a separate tree via ThemeDetailHeroSwitch (title → thesis → map → factor). */
+   Mobile (≤1100px) stacks title → thesis → map → factor via `.themeHeroAreas`. */
 .heroGridThemeDetail {
   grid-template-columns: minmax(0, 1fr) minmax(400px, 520px);
   align-items: stretch;
@@ -133,10 +133,30 @@
   align-self: stretch;
 }
 
-.themeHeroDesktopRoot,
-.themeHeroMobileRoot {
-  width: 100%;
+.themeHeroAreas {
+  grid-template-areas:
+    "title rail"
+    "factor rail"
+    "thesis thesis";
+  grid-template-rows: auto 1fr auto;
+}
+
+.themeHeroAreas > .themeHeroTitleArea {
+  grid-area: title;
+  margin-bottom: 4px;
+}
+
+.themeHeroAreas > .themeHeroFactorArea {
+  grid-area: factor;
   min-width: 0;
+}
+
+.themeHeroAreas > .themeHeroRail {
+  grid-area: rail;
+}
+
+.themeHeroAreas > .heroThesisBleed {
+  grid-area: thesis;
 }
 
 .heroGridThemeDetail .heroFactorSlot {
@@ -1886,6 +1906,19 @@ a.secondary {
   .heroGridThemeDetail > .heroFullBleed {
     grid-column: 1 / -1;
     width: 100%;
+  }
+
+  .themeHeroAreas {
+    grid-template-areas:
+      "title"
+      "thesis"
+      "rail"
+      "factor";
+    grid-template-rows: none;
+  }
+
+  .themeHeroAreas > .themeHeroTitleArea {
+    margin-bottom: 0;
   }
 
   .heroTitle {

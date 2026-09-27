@@ -9,6 +9,8 @@ const enforce = process.env.STOCKTHEMES_ENFORCE_BUNDLE_BUDGET === "1";
 const budgets = {
   homeHtml: 500_000,
   compareHtml: 500_000,
+  themesInMotionHtml: 400_000,
+  feedHtml: 1_200_000,
   maxThemeHtml: 200_000,
   maxGroupHtml: 350_000,
   initialJs: 750_000,
@@ -46,6 +48,8 @@ const largestGroup = maxHtml(path.join(out, "groups"));
 const actual = {
   homeHtml: size(path.join(out, "index.html")),
   compareHtml: size(path.join(out, "compare.html")),
+  themesInMotionHtml: size(path.join(out, "themes-in-motion.html")),
+  feedHtml: size(path.join(out, "feed.html")),
   maxThemeHtml: largestTheme.bytes,
   maxGroupHtml: largestGroup.bytes,
   initialJs: initialJsBytes(path.join(out, "privacy.html")),
@@ -104,6 +108,9 @@ if (failures.length && enforce) {
 }
 if (failures.length) {
   console.warn("verify-build-budgets: over budget (report-only mode)");
+  if (process.env.GITHUB_ACTIONS) {
+    for (const f of failures) console.log(`::warning title=Page size over budget::${f}`);
+  }
 } else if (!enforce) {
   console.log("verify-build-budgets: report-only mode; set STOCKTHEMES_ENFORCE_BUNDLE_BUDGET=1 to enforce");
 }
