@@ -203,6 +203,13 @@
   color: var(--text-primary);
 }
 
+@media (min-width: 1101px) {
+  .heroTitleOneLine {
+    white-space: nowrap;
+    font-size: clamp(38px, 3.7vw, 52px);
+  }
+}
+
 /* Watchlist star stays on the last line of the title (balance on h1 alone breaks inline children). */
 .heroTitleWithStar {
   text-wrap: wrap;

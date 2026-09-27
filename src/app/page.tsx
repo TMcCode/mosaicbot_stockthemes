@@ -197,12 +197,12 @@ export default async function Home() {
                 />
                 <span className={styles.heroBrandLabel}>stockthemes.ai</span>
               </div>
-              <h1 className={styles.heroTitle}>
-                Discover the themes shaping public markets.
+              <h1 className={`${styles.heroTitle} ${styles.heroTitleOneLine}`}>
+                For investors who think in narratives.
               </h1>
               <p className={styles.introPunchline}>
-                Follow narratives at the theme level — performance, news, and thesis updates — then
-                drill into the companies behind each story.
+                Track equity markets at the theme level — performance, KPIs, news, and thesis
+                commentary — then drill into the companies behind each story.
               </p>
             </div>
             {stats ? (
