@@ -35,14 +35,12 @@ type Props = {
   asOfLabel?: string;
 };
 
-function normalizeLoopScroll(el: HTMLDivElement) {
-  const half = el.scrollWidth / 2;
-  if (half <= 0) return;
-  if (el.scrollLeft >= half) {
-    el.scrollLeft -= half;
-  } else if (el.scrollLeft < 0) {
-    el.scrollLeft += half;
-  }
+const KEY_STEP_PX = 120;
+
+function wrapOffset(offset: number, half: number): number {
+  if (half <= 0) return 0;
+  const wrapped = offset % half;
+  return wrapped < 0 ? wrapped + half : wrapped;
 }
 
 function TickerChip({
@@ -84,9 +82,21 @@ function TickerChip({
 /** Auto-scroll marquee with hover pause, wheel/drag scrub, and theme links. */
 export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
   const suppressClickUntil = useRef(0);
-  const dragRef = useRef({ pointerId: -1, startX: 0, startScroll: 0, moved: false });
+  const dragRef = useRef({ pointerId: -1, startX: 0, startOffset: 0, moved: false });
   const loopSecondsRef = useRef(LOOP_SECONDS_DESKTOP);
+  /** Fractional px; transforms keep sub-pixel steps that Safari drops from `scrollLeft`. */
+  const offsetRef = useRef(0);
+  const halfRef = useRef(0);
+
+  const setOffset = useCallback((next: number) => {
+    const track = trackRef.current;
+    offsetRef.current = wrapOffset(next, halfRef.current);
+    if (track) {
+      track.style.transform = `translate3d(${-offsetRef.current}px, 0, 0)`;
+    }
+  }, []);
 
   const [hoverPaused, setHoverPaused] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
@@ -114,21 +124,31 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
   }, []);
 
   useEffect(() => {
-    const el = viewportRef.current;
-    if (!el || reducedMotion) return;
+    const track = trackRef.current;
+    if (!track) return;
+    const measure = () => {
+      halfRef.current = track.scrollWidth / 2;
+      setOffset(offsetRef.current);
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    return () => ro.disconnect();
+  }, [items.length, setOffset]);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || reducedMotion || autoPaused) return;
 
     let raf = 0;
     let last = performance.now();
 
     const tick = (now: number) => {
-      if (!el.isConnected) return;
-      if (!autoPaused) {
-        const half = el.scrollWidth / 2;
-        if (half > 0) {
-          const dt = Math.min(now - last, 48);
-          el.scrollLeft += (half / (loopSecondsRef.current * 1000)) * dt;
-          normalizeLoopScroll(el);
-        }
+      if (!track.isConnected) return;
+      const half = halfRef.current;
+      if (half > 0) {
+        const dt = Math.min(now - last, 48);
+        setOffset(offsetRef.current + (half / (loopSecondsRef.current * 1000)) * dt);
       }
       last = now;
       raf = requestAnimationFrame(tick);
@@ -136,7 +156,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
 
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [autoPaused, reducedMotion, items.length]);
+  }, [autoPaused, reducedMotion, items.length, setOffset]);
 
   useEffect(() => {
     return () => {
@@ -148,7 +168,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
       } catch {
         /* capture already released */
       }
-      dragRef.current = { pointerId: -1, startX: 0, startScroll: 0, moved: false };
+      dragRef.current = { pointerId: -1, startX: 0, startOffset: 0, moved: false };
     };
   }, []);
 
@@ -159,21 +179,18 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
       const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
       if (delta === 0) return;
       e.preventDefault();
-      el.scrollLeft += delta;
-      normalizeLoopScroll(el);
+      setOffset(offsetRef.current + delta);
     };
     el.addEventListener("wheel", handler, { passive: false });
     return () => el.removeEventListener("wheel", handler);
-  }, [items.length]);
+  }, [items.length, setOffset]);
 
   const onPointerDown = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     if (e.button !== 0) return;
-    const el = viewportRef.current;
-    if (!el) return;
     dragRef.current = {
       pointerId: e.pointerId,
       startX: e.clientX,
-      startScroll: el.scrollLeft,
+      startOffset: offsetRef.current,
       moved: false,
     };
   }, []);
@@ -193,10 +210,9 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
       }
     }
     if (drag.moved) {
-      el.scrollLeft = drag.startScroll - dx;
-      normalizeLoopScroll(el);
+      setOffset(drag.startOffset - dx);
     }
-  }, []);
+  }, [setOffset]);
 
   const endPointerDrag = useCallback((e: ReactPointerEvent<HTMLDivElement>) => {
     const el = viewportRef.current;
@@ -205,7 +221,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
     if (drag.moved) {
       suppressClickUntil.current = Date.now() + CLICK_SUPPRESS_MS;
     }
-    dragRef.current = { pointerId: -1, startX: 0, startScroll: 0, moved: false };
+    dragRef.current = { pointerId: -1, startX: 0, startOffset: 0, moved: false };
     setScrubbing(false);
     try {
       el.releasePointerCapture(e.pointerId);
@@ -285,12 +301,21 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
         onPointerMove={onPointerMove}
         onPointerUp={endPointerDrag}
         onPointerCancel={endPointerDrag}
+        onKeyDown={(e) => {
+          if (e.key === "ArrowRight") {
+            e.preventDefault();
+            setOffset(offsetRef.current + KEY_STEP_PX);
+          } else if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            setOffset(offsetRef.current - KEY_STEP_PX);
+          }
+        }}
         role="region"
         aria-roledescription="carousel"
         tabIndex={0}
         aria-label="Scroll horizontally to browse top movers; drag or use trackpad to scrub"
       >
-        <div className={styles.track}>
+        <div ref={trackRef} className={styles.track}>
           {renderSequence("a")}
           {renderSequence("b")}
         </div>

@@ -102,18 +102,11 @@
 }
 
 .viewport {
-  overflow-x: auto;
-  overflow-y: hidden;
-  overscroll-behavior-x: contain;
-  touch-action: pan-x;
+  overflow: hidden;
+  touch-action: pan-y;
   cursor: grab;
-  scrollbar-width: none;
   mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
-  -webkit-overflow-scrolling: touch;
-}
-
-.viewport::-webkit-scrollbar {
-  display: none;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent);
 }
 
 .viewport:focus-visible {
@@ -137,6 +130,7 @@
 .track {
   display: flex;
   width: max-content;
+  will-change: transform;
 }
 
 .sequence {
