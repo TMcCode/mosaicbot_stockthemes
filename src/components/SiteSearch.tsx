@@ -302,8 +302,15 @@ export function SiteSearch({
                             <span className={styles.badge}>Theme</span>
                             {h.ref.name}
                           </div>
-                          {h.ref.group_name ? (
-                            <div className={styles.rowSub}>Group: {h.ref.group_name}</div>
+                          {h.ref.group_name || h.matched ? (
+                            <div className={styles.rowSub}>
+                              {[
+                                h.ref.group_name ? `Group: ${h.ref.group_name}` : null,
+                                h.matched ? `matches “${h.matched}”` : null,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </div>
                           ) : null}
                         </Link>
                         <WatchlistStar
@@ -339,8 +346,12 @@ export function SiteSearch({
                           <span className={styles.badge}>Group</span>
                           {h.ref.name}
                         </div>
-                        {h.ref.spy_sector ? (
-                          <div className={styles.rowSub}>{h.ref.spy_sector}</div>
+                        {h.ref.spy_sector || h.matched ? (
+                          <div className={styles.rowSub}>
+                            {[h.ref.spy_sector, h.matched ? `matches “${h.matched}”` : null]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </div>
                         ) : null}
                       </Link>
                     )}

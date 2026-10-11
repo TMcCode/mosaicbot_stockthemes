@@ -45,11 +45,12 @@ function stemToken(t: string): string {
   return t;
 }
 
-type PreparedText = { compact: string; tokens: string[] };
+type PreparedText = { raw: string; compact: string; tokens: string[] };
 
 function prepareText(raw: string): PreparedText {
   const norm = normalizeSearchText(raw);
   return {
+    raw,
     compact: norm.replace(/ /g, ""),
     tokens: norm ? norm.split(" ").map(stemToken) : [],
   };
@@ -66,6 +67,11 @@ function allTokensMatch(queryTokens: string[], fieldTokens: string[]): boolean {
   );
 }
 
+/** Every query word appears in the field as a whole word (not just a prefix: "dog" vs "dogwalkers"). */
+function allWholeWords(queryTokens: string[], fieldTokens: string[]): boolean {
+  return queryTokens.every((qt) => fieldTokens.includes(qt));
+}
+
 /** Space-insensitive substring ("make up" ≈ "makeup" ≈ "make-up"); short queries only match at the start. */
 function compactContains(field: string, query: string): boolean {
   if (query.length >= 4) return field.includes(query);
@@ -77,6 +83,10 @@ type Tier = { exact: number; starts: number; tokens: number; contains: number };
 const NAME_TIER: Tier = { exact: 100, starts: 90, tokens: 80, contains: 70 };
 const ALIAS_TIER: Tier = { exact: 66, starts: 60, tokens: 56, contains: 46 };
 const CROSS_FIELD_SCORE = 40;
+/** Concept-theme `related` terms: below every direct match on the entity. */
+const RELATED_TIER: Tier = { exact: 36, starts: 34, tokens: 32, contains: 30 };
+/** Words that only match as prefixes rank just below whole-word matches (still above substrings). */
+const PREFIX_WORD_PENALTY = 3;
 /** Tie-break within a tier: each extra matching alias adds a little (never crosses tiers). */
 const EXTRA_ALIAS_BONUS = 0.5;
 const MAX_EXTRA_ALIAS_BONUS = 2;
@@ -85,15 +95,18 @@ function scoreText(q: PreparedText, t: PreparedText, tier: Tier): number {
   if (!t.compact) return 0;
   if (t.compact === q.compact) return tier.exact;
   if (t.compact.startsWith(q.compact)) return tier.starts;
-  if (allTokensMatch(q.tokens, t.tokens)) return tier.tokens;
+  if (allTokensMatch(q.tokens, t.tokens)) {
+    return allWholeWords(q.tokens, t.tokens) ? tier.tokens : tier.tokens - PREFIX_WORD_PENALTY;
+  }
   if (compactContains(t.compact, q.compact)) return tier.contains;
   return 0;
 }
 
+/** `matched`: the alias / related term that matched when the name itself didn't. */
 export type SiteSearchHit =
-  | { kind: "ticker"; ref: SearchIndexTickerRowV0; key: string }
-  | { kind: "theme"; ref: SearchIndexThemeRowV0; key: string }
-  | { kind: "group"; ref: SearchIndexGroupRowV0; key: string };
+  | { kind: "ticker"; ref: SearchIndexTickerRowV0; key: string; matched?: string }
+  | { kind: "theme"; ref: SearchIndexThemeRowV0; key: string; matched?: string }
+  | { kind: "group"; ref: SearchIndexGroupRowV0; key: string; matched?: string };
 
 export type SiteSearchEngine = { index: SearchIndexV0 };
 
@@ -112,6 +125,7 @@ type PreparedEntity = {
   order: number;
   names: PreparedText[];
   aliases: PreparedText[];
+  related: PreparedText[];
   /** Every token on the entity (names, aliases, slug, group/sector) for multi-field queries. */
   allTokens: string[];
 };
@@ -133,6 +147,7 @@ function prepareEntity(
   names: string[],
   aliases: string[],
   extras: string[],
+  related: string[] = [],
 ): PreparedEntity {
   const n = names.filter(Boolean).map(prepareText);
   const a = aliases.filter(Boolean).map(prepareText);
@@ -142,6 +157,7 @@ function prepareEntity(
     order,
     names: n,
     aliases: a,
+    related: related.filter(Boolean).map(prepareText),
     allTokens: [...n, ...a, ...e].flatMap((p) => p.tokens),
   };
 }
@@ -166,6 +182,7 @@ function preparedIndex(index: SearchIndexV0): PreparedIndex {
         [t.name, themeShortName(t.name)],
         t.aliases ?? [],
         [t.slug, t.group_name ?? ""],
+        t.related ?? [],
       ),
     );
   });
@@ -183,7 +200,8 @@ function preparedIndex(index: SearchIndexV0): PreparedIndex {
 
   const wordCount = new Map<string, number>();
   for (const e of out) {
-    for (const w of new Set(e.allTokens)) wordCount.set(w, (wordCount.get(w) ?? 0) + 1);
+    const entityWords = new Set([...e.allTokens, ...e.related.flatMap((r) => r.tokens)]);
+    for (const w of entityWords) wordCount.set(w, (wordCount.get(w) ?? 0) + 1);
   }
   const words = [...wordCount.keys()];
   const wordsByLength = new Map<number, string[]>();
@@ -206,19 +224,37 @@ export function warmSiteSearchIndex(index: SearchIndexV0): void {
   preparedIndex(index);
 }
 
-function scoreEntity(q: PreparedText, e: PreparedEntity): number {
-  let best = 0;
-  for (const n of e.names) best = Math.max(best, scoreText(q, n, NAME_TIER));
-  if (best >= NAME_TIER.contains) return best;
-  let aliasHits = 0;
-  for (const a of e.aliases) {
-    const s = scoreText(q, a, ALIAS_TIER);
-    if (s > 0) aliasHits += 1;
-    best = Math.max(best, s);
+type EntityScore = { score: number; matched?: string };
+
+/** Best scoring text in `texts` for `tier`, plus how many texts matched at all. */
+function bestText(q: PreparedText, texts: PreparedText[], tier: Tier) {
+  let score = 0;
+  let matched: string | undefined;
+  let hits = 0;
+  for (const t of texts) {
+    const s = scoreText(q, t, tier);
+    if (s <= 0) continue;
+    hits += 1;
+    if (s > score) {
+      score = s;
+      matched = t.raw;
+    }
   }
-  if (aliasHits > 1) best += Math.min((aliasHits - 1) * EXTRA_ALIAS_BONUS, MAX_EXTRA_ALIAS_BONUS);
-  if (best === 0 && allTokensMatch(q.tokens, e.allTokens)) best = CROSS_FIELD_SCORE;
-  return best;
+  return { score, matched, hits };
+}
+
+function scoreEntity(q: PreparedText, e: PreparedEntity): EntityScore {
+  const name = bestText(q, e.names, NAME_TIER);
+  if (name.score >= NAME_TIER.contains) return { score: name.score };
+  const alias = bestText(q, e.aliases, ALIAS_TIER);
+  if (alias.score > name.score) {
+    const bonus = Math.min((alias.hits - 1) * EXTRA_ALIAS_BONUS, MAX_EXTRA_ALIAS_BONUS);
+    return { score: alias.score + bonus, matched: alias.matched };
+  }
+  if (name.score > 0) return { score: name.score };
+  if (allTokensMatch(q.tokens, e.allTokens)) return { score: CROSS_FIELD_SCORE };
+  const related = bestText(q, e.related, RELATED_TIER);
+  return { score: related.score, matched: related.matched };
 }
 
 export type DirectSearchOptions = { kinds?: ReadonlyArray<SiteSearchHit["kind"]> };
@@ -239,11 +275,11 @@ export function rankDirectSearchHits(
 function rankPrepared(p: PreparedIndex, q: PreparedText, opts: DirectSearchOptions): SiteSearchHit[] {
   if (!q.compact) return [];
   const kinds = new Set(opts.kinds ?? ["group", "theme", "ticker"]);
-  const scored: { e: PreparedEntity; score: number }[] = [];
+  const scored: { e: PreparedEntity; score: number; matched?: string }[] = [];
   for (const e of p.entities) {
     if (!kinds.has(e.hit.kind)) continue;
-    const score = scoreEntity(q, e);
-    if (score > 0) scored.push({ e, score });
+    const { score, matched } = scoreEntity(q, e);
+    if (score > 0) scored.push({ e, score, matched });
   }
   scored.sort(
     (a, b) =>
@@ -251,7 +287,7 @@ function rankPrepared(p: PreparedIndex, q: PreparedText, opts: DirectSearchOptio
       KIND_RANK[a.e.hit.kind] - KIND_RANK[b.e.hit.kind] ||
       a.e.order - b.e.order,
   );
-  return scored.map((s) => s.e.hit);
+  return scored.map((s) => (s.matched ? { ...s.e.hit, matched: s.matched } : s.e.hit));
 }
 
 /** Optimal-string-alignment distance (adjacent swaps count as 1), or `max + 1` once it can't stay ≤ max. */
@@ -305,7 +341,7 @@ function correctPrepared(p: PreparedIndex, query: string): PreparedText | null {
   const q = prepareText(query);
   const tokens = q.tokens.map((t) => correctWord(t, p));
   if (tokens.every((t, i) => t === q.tokens[i])) return null;
-  return { compact: tokens.join(""), tokens };
+  return { raw: tokens.join(" "), compact: tokens.join(""), tokens };
 }
 
 /**
@@ -314,7 +350,7 @@ function correctPrepared(p: PreparedIndex, query: string): PreparedText | null {
  * that match nothing may be 1 edit off (2 edits from 9 letters). Null when nothing changed.
  */
 export function correctSearchTypos(index: SearchIndexV0, query: string): string | null {
-  return correctPrepared(preparedIndex(index), query)?.tokens.join(" ") ?? null;
+  return correctPrepared(preparedIndex(index), query)?.raw ?? null;
 }
 
 /** Direct ranking of the spell-corrected query; empty when no word needed correcting. */

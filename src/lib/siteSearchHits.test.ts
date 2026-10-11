@@ -192,6 +192,61 @@ test("typo correction leaves known words, prefixes, and short words alone", () =
   assert.equal(correctSearchTypos(beautyIndex, "cosmetcs beauty"), "cosmetic beauty");
 });
 
+const conceptIndex: SearchIndexV0 = {
+  schema_version: 0,
+  as_of: "2026-10-11T00:00:00Z",
+  tickers: [],
+  themes: [
+    {
+      slug: "archetypes-26-subaru-socialist",
+      name: "Archetypes '26: Subaru Socialist",
+      group_slug: "archetypes",
+      group_name: "Archetypes",
+      aliases: ["rei shoppers"],
+      related: ["pet supplies", "hiking gear"],
+    },
+    {
+      slug: "consumer-24-pet-parents",
+      name: "Consumer Behavior '24: Pet Parents",
+      group_slug: "consumer",
+      group_name: "Consumer Behavior",
+      aliases: ["dog owners", "pet supplies"],
+    },
+  ],
+  groups: [],
+};
+
+test("related terms rank below direct alias matches", () => {
+  const keys = collectSiteSearchHits(conceptIndex, "pet supplies").map((h) => h.key);
+  assert.deepEqual(keys, ["theme:consumer-24-pet-parents", "theme:archetypes-26-subaru-socialist"]);
+  const hiking = collectSiteSearchHits(conceptIndex, "hiking").map((h) => h.key);
+  assert.deepEqual(hiking, ["theme:archetypes-26-subaru-socialist"]);
+});
+
+test("whole-word alias matches rank above prefix-only matches", () => {
+  const index: SearchIndexV0 = {
+    schema_version: 0,
+    as_of: "2026-10-11T00:00:00Z",
+    tickers: [],
+    themes: [
+      { slug: "cannabis", name: "Cannabis '24: Operators", aliases: ["dogwalkers"] },
+      { slug: "pet-food", name: "Pets '26: Pet Food", aliases: ["dog food"] },
+    ],
+    groups: [],
+  };
+  const keys = collectSiteSearchHits(index, "dogs").map((h) => h.key);
+  assert.deepEqual(keys, ["theme:pet-food", "theme:cannabis"]);
+});
+
+test("hits report which alias or related term matched, but not for name matches", () => {
+  const [hit] = collectSiteSearchHits(conceptIndex, "hiking");
+  assert.equal(hit.matched, "hiking gear");
+  const [alias] = collectSiteSearchHits(conceptIndex, "dog");
+  assert.equal(alias.matched, "dog owners");
+  const [byName] = collectSiteSearchHits(conceptIndex, "subaru");
+  assert.equal(byName.matched, undefined);
+});
+
 test("unrelated words are not forced onto a near match", () => {
   assert.deepEqual(collectSiteSearchHits(beautyIndex, "lipstick"), []);
   assert.deepEqual(collectSiteSearchThemeHits(beautyIndex, "semiconductors"), []);

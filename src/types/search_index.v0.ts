@@ -15,6 +15,8 @@ export type SearchIndexThemeRowV0 = {
   group_slug?: string | null;
   group_name?: string | null;
   aliases?: string[];
+  /** Concept themes: plain categories the holdings sell; ranked below direct matches. */
+  related?: string[];
 };
 
 export type SearchIndexGroupRowV0 = {
