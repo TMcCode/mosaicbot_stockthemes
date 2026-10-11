@@ -72,7 +72,7 @@ export function SiteSearch({
     if (!engine || !debounced.trim()) {
       return [];
     }
-    return collectSiteSearchHits(engine.index, engine.fuse, debounced);
+    return collectSiteSearchHits(engine.index, debounced);
   }, [engine, debounced]);
 
   useEffect(() => {

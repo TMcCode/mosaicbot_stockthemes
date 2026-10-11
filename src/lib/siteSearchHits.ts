@@ -1,15 +1,10 @@
 import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
-import type Fuse from "fuse.js";
-
 import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
-  buildSiteSearchFuseRows,
-  collectSiteSearchHits,
-  SITE_SEARCH_FUSE_THRESHOLD,
+  warmSiteSearchIndex,
   type SiteSearchEngine,
-  type SiteSearchFuseRow,
   type SiteSearchHit,
 } from "@/lib/siteSearchRank";
 import {
@@ -18,14 +13,11 @@ import {
 } from "@/lib/stockthemesCache";
 import type { SearchIndexV0 } from "@/types/search_index.v0";
 
-export type { SiteSearchEngine, SiteSearchFuseRow, SiteSearchHit };
+export type { SiteSearchEngine, SiteSearchHit };
 export {
-  buildSiteSearchFuseRows,
   collectSiteSearchHits,
   collectSiteSearchThemeHits,
   isTickerishQuery,
-  SITE_SEARCH_FUSE_THRESHOLD,
-  SITE_SEARCH_MAX_FUZZY_SCORE,
 } from "@/lib/siteSearchRank";
 
 export function parseSiteSearchIndex(raw: string): SearchIndexV0 {
@@ -90,17 +82,9 @@ export async function loadSiteSearchEngine(): Promise<SiteSearchEngine> {
     throw lastErr instanceof Error ? lastErr : new Error("Failed to load search index");
   }
 
-  const { default: FuseCtor } = await import("fuse.js");
   const parsed = parseSiteSearchIndex(raw);
-  const fuse = new FuseCtor(buildSiteSearchFuseRows(parsed), {
-    keys: ["text"],
-    threshold: SITE_SEARCH_FUSE_THRESHOLD,
-    ignoreLocation: true,
-    minMatchCharLength: 2,
-    includeScore: true,
-  }) as Fuse<SiteSearchFuseRow>;
-
-  return { index: parsed, fuse };
+  warmSiteSearchIndex(parsed);
+  return { index: parsed };
 }
 
 /** Overlay chart series key for a search hit (tickers map to their primary theme). */

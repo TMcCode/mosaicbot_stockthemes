@@ -26,7 +26,6 @@
   "dependencies": {
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.112.1",
-    "fuse.js": "^7.3.0",
     "lightweight-charts": "^4.2.2",
     "next": "16.2.1",
     "posthog-js": "^1.364.7",

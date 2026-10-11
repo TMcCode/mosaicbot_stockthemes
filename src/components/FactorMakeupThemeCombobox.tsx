@@ -1,14 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
-import type Fuse from "fuse.js";
 
 import {
-  buildThemeFuseRows,
-  createThemeSearchFuse,
   loadSearchIndexClient,
   searchThemeHits,
-  type ThemeFuseRow,
+  warmSiteSearchIndex,
 } from "@/lib/searchThemeHits";
 import type { SearchIndexV0 } from "@/types/search_index.v0";
 
@@ -29,7 +26,6 @@ type Props = {
 
 type SearchEngine = {
   index: SearchIndexV0;
-  fuse: Fuse<ThemeFuseRow>;
 };
 
 export function FactorMakeupThemeCombobox({
@@ -64,14 +60,13 @@ export function FactorMakeupThemeCombobox({
     setLoadBusy(true);
     setLoadError(null);
     void loadSearchIndexClient()
-      .then(async (index) => {
+      .then((index) => {
         if (!index) {
           setLoadError("Theme search is unavailable.");
           return;
         }
-        const rows = buildThemeFuseRows(index);
-        const fuse = await createThemeSearchFuse(rows);
-        setEngine({ index, fuse });
+        warmSiteSearchIndex(index);
+        setEngine({ index });
       })
       .catch((e: unknown) => {
         setLoadError(e instanceof Error ? e.message : "Failed to load search index");
@@ -85,7 +80,7 @@ export function FactorMakeupThemeCombobox({
 
   const candidates = useMemo(() => {
     if (!engine || !debounced.trim()) return [];
-    return searchThemeHits(engine.index, engine.fuse, debounced, 12).filter(
+    return searchThemeHits(engine.index, debounced, 12).filter(
       (t) => !selectedSlugs.has(t.slug),
     );
   }, [engine, debounced, selectedSlugs]);

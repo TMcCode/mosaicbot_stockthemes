@@ -1,12 +1,11 @@
-import type Fuse from "fuse.js";
-
 import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
   isTickerishQuery,
-  SITE_SEARCH_FUSE_THRESHOLD,
-  SITE_SEARCH_MAX_FUZZY_SCORE,
+  rankDirectSearchHits,
+  rankTypoCorrectedHits,
+  shouldRunTypoFallback,
 } from "@/lib/siteSearchRank";
 import {
   stockthemesBrowserCacheBusterQuery,
@@ -14,7 +13,7 @@ import {
 } from "@/lib/stockthemesCache";
 import type { SearchIndexThemeRowV0, SearchIndexV0 } from "@/types/search_index.v0";
 
-export type ThemeFuseRow = { text: string; ref: SearchIndexThemeRowV0 };
+export { warmSiteSearchIndex } from "@/lib/siteSearchRank";
 
 export function parseSearchIndex(raw: string): SearchIndexV0 {
   const data = parseJsonPayload<SearchIndexV0>(raw);
@@ -53,42 +52,13 @@ export async function loadSearchIndexClient(): Promise<SearchIndexV0 | null> {
   return null;
 }
 
-export function buildThemeFuseRows(index: SearchIndexV0): ThemeFuseRow[] {
-  return index.themes.map((t) => ({
-    text: [t.name, t.slug, t.group_name ?? "", ...(t.aliases ?? [])].join(" ").trim(),
-    ref: t,
-  }));
-}
-
-export async function createThemeSearchFuse(
-  rows: ThemeFuseRow[],
-): Promise<Fuse<ThemeFuseRow>> {
-  const { default: FuseCtor } = await import("fuse.js");
-  return new FuseCtor(rows, {
-    keys: ["text"],
-    threshold: SITE_SEARCH_FUSE_THRESHOLD,
-    ignoreLocation: true,
-    minMatchCharLength: 2,
-    includeScore: true,
-  });
-}
-
-function themeDirectMatch(theme: SearchIndexThemeRowV0, qLower: string): boolean {
-  if (theme.name.toLowerCase().includes(qLower) || theme.slug.toLowerCase().includes(qLower)) {
-    return true;
-  }
-  return (theme.aliases ?? []).some((a) => a.toLowerCase().includes(qLower));
-}
-
 export function searchThemeHits(
   index: SearchIndexV0,
-  fuse: Fuse<ThemeFuseRow>,
   query: string,
   limit = 10,
 ): SearchIndexThemeRowV0[] {
   const q = query.trim();
   if (!q) return [];
-  const qLower = q.toLowerCase();
   const seen = new Set<string>();
   const out: SearchIndexThemeRowV0[] = [];
   const tickerish = isTickerishQuery(q);
@@ -111,25 +81,25 @@ export function searchThemeHits(
     }
   }
 
-  for (const t of index.themes) {
+  const direct = rankDirectSearchHits(index, q, { kinds: ["theme"] });
+  for (const hit of direct) {
     if (out.length >= limit) break;
-    if (!themeDirectMatch(t, qLower)) continue;
-    const slug = t.slug.toLowerCase();
+    if (hit.kind !== "theme") continue;
+    const slug = hit.ref.slug.toLowerCase();
     if (seen.has(slug)) continue;
     seen.add(slug);
-    out.push(t);
+    out.push(hit.ref);
   }
 
-  // Fuzzy only for non-tickerish queries (typos); keep aliases findable via direct match above.
-  if (!tickerish && q.length >= 2) {
-    for (const r of fuse.search(q, { limit: limit * 2 })) {
+  // Spell-corrected query only for non-tickerish queries, and only when direct matching came up short.
+  if (!tickerish && shouldRunTypoFallback(direct.length)) {
+    for (const hit of rankTypoCorrectedHits(index, q, { kinds: ["theme"] })) {
       if (out.length >= limit) break;
-      const score = typeof r.score === "number" ? r.score : 1;
-      if (score > SITE_SEARCH_MAX_FUZZY_SCORE) continue;
-      const slug = r.item.ref.slug.toLowerCase();
+      if (hit.kind !== "theme") continue;
+      const slug = hit.ref.slug.toLowerCase();
       if (seen.has(slug)) continue;
       seen.add(slug);
-      out.push(r.item.ref);
+      out.push(hit.ref);
     }
   }
 

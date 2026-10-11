@@ -73,7 +73,7 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
 
   const candidates = useMemo(() => {
     if (!engine || !debounced.trim()) return [];
-    return collectSiteSearchThemeHits(engine.index, engine.fuse, debounced, 12).filter(
+    return collectSiteSearchThemeHits(engine.index, debounced, 12).filter(
       (t) => !savedSlugs.has(normalizeWatchlistKey("theme", t.slug)),
     );
   }, [engine, debounced, savedSlugs]);

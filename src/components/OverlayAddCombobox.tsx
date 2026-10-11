@@ -134,7 +134,7 @@ export function OverlayAddCombobox({ selectedKeys, atLimit, onAdd }: Props) {
     if (!engine || !debounced.trim()) {
       return [];
     }
-    return collectSiteSearchHits(engine.index, engine.fuse, debounced).filter((hit) =>
+    return collectSiteSearchHits(engine.index, debounced).filter((hit) =>
       hitStillSelectable(hit, selectedKeys),
     );
   }, [engine, debounced, selectedKeys]);
