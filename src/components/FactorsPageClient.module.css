@@ -474,6 +474,13 @@
   background: var(--accent, #26fcd6);
 }
 
+.themeCell {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
 .themeLink {
   color: var(--text-primary, #e8edec);
   text-decoration: none;

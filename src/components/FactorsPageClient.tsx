@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import type { FactorChartSeries } from "@/components/FactorTrendChart";
 import type { FactorMakeupTheme } from "@/components/FactorMakeupPanel";
+import { WatchlistStar } from "@/components/WatchlistStar";
 import { factorDisplayLabel } from "@/lib/factorDisplayLabel";
 import {
   FACTOR_MAKEUP_DESKTOP_CAP,
@@ -357,9 +358,18 @@ function FactorRankingTable({
             <td className={`${styles.scoreCell} ${styles.rankCell}`}>#{rowRank(row, effectiveScoreMode)}</td>
             <td>
               {row.slug ? (
-                <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
-                  {row.theme}
-                </Link>
+                <div className={styles.themeCell}>
+                  <WatchlistStar
+                    compact
+                    itemType="theme"
+                    itemKey={row.slug}
+                    label={row.theme}
+                    signInNext="/factors"
+                  />
+                  <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
+                    {row.theme}
+                  </Link>
+                </div>
               ) : (
                 row.theme
               )}
