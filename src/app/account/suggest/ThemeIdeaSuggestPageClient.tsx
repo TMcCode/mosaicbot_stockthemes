@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useMemo, useSyncExternalStore } from "react";
 
 import styles from "@/app/page.module.css";
 import { PageSurface } from "@/components/PageSurface";
@@ -16,8 +17,23 @@ type Props = {
   themes: ThemeOption[];
 };
 
+const noopSubscribe = () => () => {};
+
 export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
   const { configured, loading, user } = useSupabaseAuth();
+  // Static export: ?theme= (from the site search "Suggest a new theme" link) is client-only.
+  const search = useSyncExternalStore(
+    noopSubscribe,
+    () => window.location.search,
+    () => "",
+  );
+  const prefillTheme = useMemo(
+    () => (new URLSearchParams(search).get("theme") ?? "").trim().slice(0, 120),
+    [search],
+  );
+  const nextPath = prefillTheme
+    ? `/account/suggest?theme=${encodeURIComponent(prefillTheme)}`
+    : "/account/suggest";
 
   if (!configured) {
     return (
@@ -48,7 +64,8 @@ export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
             <p className={styles.eyebrow}>Suggest</p>
             <h1>Sign in required</h1>
             <p className={styles.introCopy}>
-              <Link href="/sign-in?next=%2Faccount%2Fsuggest">Sign in</Link> to suggest a group or theme.
+              <Link href={`/sign-in?next=${encodeURIComponent(nextPath)}`}>Sign in</Link> to suggest a
+              group or theme.
             </p>
           </div>
         </main>
@@ -63,6 +80,8 @@ export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
           <p className={styles.eyebrow}>Account · Suggest</p>
           <h1>Suggest a group or theme</h1>
           <ThemeIdeaSuggestForm
+            key={prefillTheme}
+            initialThemeName={prefillTheme}
             userId={user.id}
             submitterEmail={user.email ?? ""}
             groups={groups}

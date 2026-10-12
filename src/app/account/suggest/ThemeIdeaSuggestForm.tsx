@@ -20,6 +20,8 @@ type Props = {
   submitterEmail: string;
   groups: GroupOption[];
   themes: ThemeOption[];
+  /** From the site search "Suggest a new theme" link — opens the theme tab pre-filled. */
+  initialThemeName?: string;
 };
 
 const MIN_THEMES = 2;
@@ -28,8 +30,14 @@ const MIN_WORDS = 20;
 const MAX_WORDS = 300;
 const MIN_WEIGHT_CHANGES_CHARS = 5;
 
-export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups, themes }: Props) {
-  const [kind, setKind] = useState<ThemeIdeaKind>("new_group");
+export function ThemeIdeaSuggestForm({
+  userId,
+  submitterEmail,
+  groups,
+  themes,
+  initialThemeName = "",
+}: Props) {
+  const [kind, setKind] = useState<ThemeIdeaKind>(initialThemeName ? "theme_in_group" : "new_group");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -39,7 +47,7 @@ export function ThemeIdeaSuggestForm({ userId, submitterEmail, groups, themes }:
   const [groupNote, setGroupNote] = useState("");
 
   const [groupSlug, setGroupSlug] = useState(groups[0]?.slug ?? "");
-  const [themeName, setThemeName] = useState("");
+  const [themeName, setThemeName] = useState(initialThemeName);
   const [tickersRaw, setTickersRaw] = useState("");
   const [themeReasoning, setThemeReasoning] = useState("");
 

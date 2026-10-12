@@ -16,6 +16,13 @@ import {
 
 import styles from "./SiteSearch.module.css";
 
+/** Queries shorter than this don't get the "suggest a theme" link (still typing). */
+const SUGGEST_MIN_CHARS = 3;
+
+function suggestThemeHref(query: string): string {
+  return `/account/suggest?theme=${encodeURIComponent(query.slice(0, 120))}`;
+}
+
 type SiteSearchProps = {
   /** Defaults to nav placeholder. */
   placeholder?: string;
@@ -165,6 +172,26 @@ export function SiteSearch({
     [router],
   );
 
+  const suggestQuery = debounced.trim();
+  const suggestLink =
+    suggestQuery.length >= SUGGEST_MIN_CHARS ? (
+      <Link
+        href={suggestThemeHref(suggestQuery)}
+        className={styles.themeLink}
+        prefetch={false}
+        onClick={() => {
+          capturePostHog("search_suggest_clicked", {
+            query: suggestQuery,
+            had_results: hits.length > 0,
+          });
+          setOpen(false);
+          setQuery("");
+        }}
+      >
+        Suggest a new theme →
+      </Link>
+    ) : null;
+
   const showPanel = Boolean(
     open &&
       (loadBusy ||
@@ -207,8 +234,9 @@ export function SiteSearch({
               Loading search…
             </div>
           ) : index && debounced.trim() && hits.length === 0 ? (
-            <div className={styles.meta} role="status">
-              No matches.
+            <div className={styles.empty} role="status">
+              No matches for “{suggestQuery}”.
+              {suggestLink ? <> {suggestLink}</> : null}
             </div>
           ) : index && hits.length > 0 ? (
             <>
@@ -358,6 +386,9 @@ export function SiteSearch({
                   </li>
                 ))}
               </ul>
+              {suggestLink ? (
+                <div className={styles.suggestFooter}>Can’t find it? {suggestLink}</div>
+              ) : null}
             </>
           ) : null}
         </div>
