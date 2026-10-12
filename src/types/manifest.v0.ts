@@ -41,6 +41,8 @@ export type ManifestHomeFeedEventV0 = {
     | "theme_deleted";
   event_at: string;
   title: string;
+  /** Set on ticker-level thesis rows; empty for theme-level rows. */
+  ticker?: string;
   summary?: string;
   /** Theme new_note / update_note, or delete reason. */
   note?: string;

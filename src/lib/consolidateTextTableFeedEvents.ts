@@ -114,6 +114,7 @@ export function consolidateTextTableFeedEvents(
       kind: "text_table_update",
       event_at: latest.event_at,
       title,
+      ticker: parsed.kind === "ticker" ? parsed.id : undefined,
       summary: "",
       theme_name: primaryTheme || undefined,
       theme_slug: primaryTheme

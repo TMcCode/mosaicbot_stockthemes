@@ -279,11 +279,20 @@ export function FeedEventCardBody({
       : "";
 
   const isThesisUpdate = evt.kind === "text_table_update";
+  // Ticker-level thesis rows borrow a theme slug for the link/eyebrow only;
+  // that theme's constituents are not this event's tickers.
+  const isTickerThesis =
+    isThesisUpdate &&
+    (Boolean(String(evt.ticker || "").trim()) ||
+      /\s+—\s+(?:\d+\s+)?text tables updated$/i.test(String(evt.title || "").trim()));
 
-  const chipTickers = (membership.length ? membership : holdings)
-    .map((h) => String(h.ticker || "").trim().toUpperCase())
-    .filter(Boolean);
-  const fallback = slug && tickersByThemeSlug?.[slug] ? tickersByThemeSlug[slug] : null;
+  const chipTickers = isTickerThesis
+    ? []
+    : (membership.length ? membership : holdings)
+        .map((h) => String(h.ticker || "").trim().toUpperCase())
+        .filter(Boolean);
+  const fallback =
+    !isTickerThesis && slug && tickersByThemeSlug?.[slug] ? tickersByThemeSlug[slug] : null;
   const fallbackTickers = fallback?.tickers ?? [];
   // Thesis cards historically baked only 4 holdings; fill to radar's 6 from search index.
   const logoTickers: string[] = [];
@@ -300,7 +309,7 @@ export function FeedEventCardBody({
       : holdingsMore
     : Math.max(0, fallback?.more ?? 0);
   const totalKnown = Math.max(
-    tickerCount ?? 0,
+    isTickerThesis ? 0 : (tickerCount ?? 0),
     chipTickers.length + bakedMore,
     fallbackTickers.length + Math.max(0, fallback?.more ?? 0),
   );
@@ -347,7 +356,7 @@ export function FeedEventCardBody({
         ) : null}
       </div>
 
-      {showRichMeta && tickerCount != null ? (
+      {showRichMeta && tickerCount != null && !isTickerThesis ? (
         <div className={styles.metaRow}>
           <span className={styles.metaText}>
             {tickerCount} {tickerCount === 1 ? "stock" : "stocks"}
