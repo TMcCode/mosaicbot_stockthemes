@@ -131,7 +131,11 @@ async function main() {
     return;
   }
 
-  if (event === "workflow_dispatch") {
+  // VPS publish jobs dispatch with skip_if_unchanged=true — gate like a scheduled run.
+  const skipIfUnchanged =
+    process.env.SKIP_IF_UNCHANGED === "true" || process.env.SKIP_IF_UNCHANGED === "1";
+
+  if (event === "workflow_dispatch" && !skipIfUnchanged) {
     writeOutputs({
       shouldBuild: true,
       fullCacheRefresh,
@@ -140,7 +144,7 @@ async function main() {
     return;
   }
 
-  if (event !== "schedule") {
+  if (event !== "schedule" && event !== "workflow_dispatch") {
     writeOutputs({
       shouldBuild: true,
       fullCacheRefresh,
