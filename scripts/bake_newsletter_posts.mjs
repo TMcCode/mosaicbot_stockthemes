@@ -30,9 +30,15 @@ const OUT_REL = "newsletter_posts.v0.json";
 const FIXTURE = path.join(root, "public", "fixtures", OUT_REL);
 
 const DEFAULT_SUBSTACK_FEED = "https://altadataobserver.substack.com/feed";
+const DEFAULT_SUBSTACK_ARCHIVE =
+  "https://altadataobserver.substack.com/api/v1/archive?sort=new&limit=20";
+/** Cloudflare Worker proxy — Substack blocks GitHub Actions IPs on origin. */
+const DEFAULT_SUBSTACK_PROXY =
+  "https://stockthemes-substack-feed-proxy.tmclynn421.workers.dev/";
 const BROWSER_UA =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const RSS_ACCEPT = "application/rss+xml, application/xml, text/xml, */*";
+const JSON_ACCEPT = "application/json, text/plain, */*";
 
 function loadDotEnvLocal() {
   const p = path.join(root, ".env.local");
@@ -197,7 +203,7 @@ async function fetchBeehiivPosts() {
   return out;
 }
 
-async function fetchTextViaCurl(url) {
+async function fetchTextViaCurl(url, accept) {
   const { stdout, stderr } = await execFileAsync(
     "curl",
     [
@@ -208,7 +214,7 @@ async function fetchTextViaCurl(url) {
       "-A",
       BROWSER_UA,
       "-H",
-      `Accept: ${RSS_ACCEPT}`,
+      `Accept: ${accept}`,
       url,
     ],
     { maxBuffer: 12 * 1024 * 1024, encoding: "utf8" },
@@ -219,31 +225,53 @@ async function fetchTextViaCurl(url) {
   return stdout;
 }
 
-async function fetchSubstackXml(feedUrl) {
-  const headers = {
-    Accept: RSS_ACCEPT,
-    "User-Agent": BROWSER_UA,
-  };
+async function fetchTextWithFallback(url, accept, label) {
+  const headers = { Accept: accept, "User-Agent": BROWSER_UA };
   let fetchErr = null;
   try {
-    const res = await fetch(feedUrl, { headers });
+    const res = await fetch(url, { headers });
     if (res.ok) {
-      const xml = await res.text();
-      if (xml && !/just a moment/i.test(xml.slice(0, 500))) return xml;
-      fetchErr = new Error("Substack returned Cloudflare challenge HTML");
+      const text = await res.text();
+      if (text && !/just a moment/i.test(text.slice(0, 500))) return text;
+      fetchErr = new Error(`${label} returned Cloudflare challenge HTML`);
     } else {
-      fetchErr = new Error(`Substack feed HTTP ${res.status}`);
+      fetchErr = new Error(`${label} HTTP ${res.status}`);
     }
   } catch (err) {
     fetchErr = err instanceof Error ? err : new Error(String(err));
   }
-  // GHA / Cloudflare often blocks Node fetch TLS fingerprint; curl usually works.
-  console.warn(`  Substack fetch retry via curl (${fetchErr.message})`);
-  return fetchTextViaCurl(feedUrl);
+  console.warn(`  ${label} retry via curl (${fetchErr.message})`);
+  return fetchTextViaCurl(url, accept);
 }
 
-async function fetchSubstackFeed(feedUrl) {
-  const xml = await fetchSubstackXml(feedUrl);
+function parseSubstackArchiveJson(raw) {
+  const data = JSON.parse(raw);
+  const rows = Array.isArray(data) ? data : Array.isArray(data?.posts) ? data.posts : [];
+  const items = [];
+  for (const p of rows) {
+    if (!p || p.is_published === false) continue;
+    const title = String(p.title || "").trim();
+    const href = String(p.canonical_url || "").trim();
+    if (!title || !href) continue;
+    const published =
+      isoFromRssDate(p.post_date) ||
+      isoFromRssDate(p.published_at) ||
+      isoFromUnix(p.post_date);
+    items.push({
+      id: `substack:${href}`,
+      source: "substack",
+      source_label: "Alt Data Observer",
+      title,
+      url: href,
+      published_at: published,
+      subtitle: String(p.subtitle || p.description || p.truncated_description || "").trim() || null,
+      image_url: String(p.cover_image || "").trim() || null,
+    });
+  }
+  return items;
+}
+
+function parseSubstackRssXml(xml) {
   const items = [];
   const blocks = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
   for (const block of blocks) {
@@ -265,6 +293,37 @@ async function fetchSubstackFeed(feedUrl) {
     });
   }
   return items;
+}
+
+async function fetchSubstackFeed(feedUrl) {
+  const archiveUrl =
+    String(process.env.STOCKTHEMES_NEWSLETTER_SUBSTACK_ARCHIVE || "").trim() ||
+    DEFAULT_SUBSTACK_ARCHIVE;
+  const proxyUrl =
+    String(process.env.STOCKTHEMES_NEWSLETTER_SUBSTACK_PROXY || "").trim() ||
+    DEFAULT_SUBSTACK_PROXY;
+
+  const archiveCandidates = [archiveUrl, proxyUrl].filter(Boolean);
+  const seen = new Set();
+  for (const url of archiveCandidates) {
+    if (seen.has(url)) continue;
+    seen.add(url);
+    try {
+      const raw = await fetchTextWithFallback(url, JSON_ACCEPT, `Substack archive ${url}`);
+      const items = parseSubstackArchiveJson(raw);
+      if (items.length) {
+        console.log(`  Substack archive ok via ${url} (${items.length})`);
+        return items;
+      }
+    } catch (err) {
+      console.warn(`  Substack archive failed (${url}): ${err?.message || err}`);
+    }
+  }
+
+  // Legacy RSS path (local / non-GHA).
+  const rssUrl = feedUrl || DEFAULT_SUBSTACK_FEED;
+  const xml = await fetchTextWithFallback(rssUrl, RSS_ACCEPT, "Substack RSS");
+  return parseSubstackRssXml(xml);
 }
 
 function sortPosts(posts) {

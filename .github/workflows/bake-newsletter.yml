@@ -4,6 +4,7 @@
 # Home/desk can hydrate from that JSON without a full Pages rebuild.
 # Secrets: R2_* (required). BEEHIIV_API_KEY + BEEHIIV_PUBLICATION_ID (optional;
 # without them prior Beehiiv posts are kept). Substack empty → job fails.
+# Substack origin blocks GHA IPs; bake falls back to workers/substack-feed-proxy.
 
 name: Bake newsletter posts
 

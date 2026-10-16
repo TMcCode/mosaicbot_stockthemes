@@ -1,0 +1,7 @@
+name = "stockthemes-substack-feed-proxy"
+main = "src/index.js"
+compatibility_date = "2026-10-01"
+
+# Proxies Alt Data Observer archive JSON for GitHub Actions (Substack blocks GHA IPs).
+[vars]
+UPSTREAM_ARCHIVE = "https://altadataobserver.substack.com/api/v1/archive?sort=new&limit=20"

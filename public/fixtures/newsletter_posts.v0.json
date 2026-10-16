@@ -1,6 +1,6 @@
 {
   "schema_version": 0,
-  "as_of": "2026-10-16T16:07:07.252Z",
+  "as_of": "2026-10-16T18:27:51.402Z",
   "sources": {
     "beehiiv": "Field of Themes",
     "substack": "Alt Data Observer",
@@ -13,8 +13,8 @@
       "source_label": "Alt Data Observer",
       "title": "Chatbots, Chips, Pizza and Profits: 10 Charts",
       "url": "https://altadataobserver.substack.com/p/chatbots-chips-pizza-and-profits",
-      "published_at": "2026-10-14T00:55:29.000Z",
-      "subtitle": "Today: OpenAI fighting back against Anthropic. AI is at least coming for call centers and abstract mathematical research. Elsewhere, china's memory chipmakers are gaining ground, transistors aren't getting cheaper anymor",
+      "published_at": "2026-10-14T00:55:29.018Z",
+      "subtitle": "10/13 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!bmSv!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F98484699-f4c0-41e2-882a-fb5f76413912_1566x644.png"
     },
     {
@@ -23,8 +23,8 @@
       "source_label": "Alt Data Observer",
       "title": "Tokens, Tankers, Hacks and Heatwaves",
       "url": "https://altadataobserver.substack.com/p/tokens-tankers-hacks-and-heatwaves",
-      "published_at": "2026-09-15T00:47:37.000Z",
-      "subtitle": "More charts on bottlenecks and shifting economics of AI : AI demand is exploding, cyber risk is accelerating, oil flows are getting messier, and heat is turning into real-world capex. Meanwhile, malls are back, Dubai is ",
+      "published_at": "2026-09-15T00:47:37.372Z",
+      "subtitle": "9/14 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!ft-c!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F1359fd7a-1fda-4579-8c90-75a29302b511_1788x714.png"
     },
     {
@@ -33,7 +33,7 @@
       "source_label": "Alt Data Observer",
       "title": "Dario Before You Save Humanity, Fix Autocorrect",
       "url": "https://altadataobserver.substack.com/p/ai-labs-wish-the-real-world-would",
-      "published_at": "2026-09-13T20:18:20.000Z",
+      "published_at": "2026-09-13T20:18:20.163Z",
       "subtitle": "Does Superintelligence concern itself with the opinions of sheep?",
       "image_url": "https://substackcdn.com/image/fetch/$s_!NjKe!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fd1698c40-de1f-4488-ac99-2e6b1ed0ecb1_1088x820.png"
     },
@@ -43,8 +43,8 @@
       "source_label": "Alt Data Observer",
       "title": "AIs, Autos, Barrels and Bay Rents: 10 Alternative-Data Signals Moving Under the Surface",
       "url": "https://altadataobserver.substack.com/p/ais-autos-barrels-and-bay-rents-10",
-      "published_at": "2026-09-11T19:49:49.000Z",
-      "subtitle": "I've spent more than a decade at the intersection of alternative data and L/S equity investing. Each day, I rank the alt-data charts I found most valuable — with a quick read on what they're telling us and which stocks c",
+      "published_at": "2026-09-11T19:49:49.272Z",
+      "subtitle": "9/11 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!7qAE!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F3ba70de4-4e35-4cf9-94ee-c9d70e089282_1576x484.png"
     },
     {
@@ -53,8 +53,8 @@
       "source_label": "Alt Data Observer",
       "title": "Clicks, Crunches, Cups and Cars: 10 Alternative-Data Signals Moving Under the Surface",
       "url": "https://altadataobserver.substack.com/p/clicks-crunches-cups-and-cars-10",
-      "published_at": "2026-09-11T11:13:31.000Z",
-      "subtitle": "AI is becoming a real commerce channel. Adobe finds AI-referred retail visits now generate 53% more revenue per visit and convert 54% better than non-AI traffic . (📈 — higher-converting AI referrals could be incremental",
+      "published_at": "2026-09-11T11:13:31.443Z",
+      "subtitle": "9/11 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!ZGdt!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F79140d65-0f58-4c6f-983c-91b31038ca8c_1126x852.png"
     },
     {
@@ -63,8 +63,8 @@
       "source_label": "Alt Data Observer",
       "title": "Gigs, Games, Grids and Gold: 10 Alternative-Data Signals Moving Under the Surface",
       "url": "https://altadataobserver.substack.com/p/gigs-games-grids-and-gold-10-alternative",
-      "published_at": "2026-09-04T11:23:51.000Z",
-      "subtitle": "The data-center backlash is having real consequences. Roughly 40%+ of Michigan counties have seen some form of data-center moratorium action since 2023, with around one-third of counties in Ohio and Maryland doing the sa",
+      "published_at": "2026-09-04T11:23:51.456Z",
+      "subtitle": "9/3 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!EN4l!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F27631459-0844-4692-91af-7d9312f893ef_680x746.png"
     },
     {
@@ -73,8 +73,8 @@
       "source_label": "Alt Data Observer",
       "title": "Ads, Apps, Bots and Boats: 10 Alternative-Data Signals Moving Under the Surface",
       "url": "https://altadataobserver.substack.com/p/ads-apps-bots-and-boats-10-alternative",
-      "published_at": "2026-09-02T22:55:22.000Z",
-      "subtitle": "The beverage ad leaderboard is losing its sugar. Glucerna, Full Leaf Tea, Gold Peak Tea and Coffee mate all entered the top 10 in 2026, while Mountain Dew and Gatorade dropped out and Pepsi fell from #2 to #9. ( — Glucer",
+      "published_at": "2026-09-02T22:55:22.667Z",
+      "subtitle": "9/2 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!WBS7!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F0c57a4f8-ccb2-4424-bc39-4fd763f16d05_1552x1148.png"
     },
     {
@@ -83,8 +83,8 @@
       "source_label": "Alt Data Observer",
       "title": "Chips, Trips, Bytes and Bets: 10 Alternative-Data Signals Moving Under the Surface",
       "url": "https://altadataobserver.substack.com/p/chips-trips-bytes-and-bets-10-alternative",
-      "published_at": "2026-09-01T23:18:09.000Z",
-      "subtitle": "Shein's US share losses are sticking. Even after lapping the de minimis elimination, Shein is still losing US apparel share YoY — including with 18–34 year olds. Suggests this is becoming more structural than just a tari",
+      "published_at": "2026-09-01T23:18:09.842Z",
+      "subtitle": "9/1 Issue",
       "image_url": "https://substackcdn.com/image/fetch/$s_!1q1R!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2Fff544983-81fe-4404-a135-d46eeae8dcdf_2750x1100.png"
     },
     {
