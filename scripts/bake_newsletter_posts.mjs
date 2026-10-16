@@ -9,10 +9,20 @@
  *
  * Usage: node scripts/bake_newsletter_posts.mjs
  * CI: `.github/workflows/bake-newsletter.yml` (every 6h) + deploy-pages pre-build step.
+ *
+ * Substack often 403s Node fetch from GitHub Actions IPs; we retry with curl
+ * (better TLS fingerprint). When STOCKTHEMES_PUBLIC_BUCKET is set, empty Substack
+ * or failed R2 upload exits non-zero so the schedule cannot silently go stale.
  */
+import { execFile } from "child_process";
 import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
+import { promisify } from "util";
+
+import { downloadR2Object, uploadR2Object } from "./lib/r2Download.mjs";
+
+const execFileAsync = promisify(execFile);
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.join(__dirname, "..");
@@ -20,6 +30,9 @@ const OUT_REL = "newsletter_posts.v0.json";
 const FIXTURE = path.join(root, "public", "fixtures", OUT_REL);
 
 const DEFAULT_SUBSTACK_FEED = "https://altadataobserver.substack.com/feed";
+const BROWSER_UA =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
+const RSS_ACCEPT = "application/rss+xml, application/xml, text/xml, */*";
 
 function loadDotEnvLocal() {
   const p = path.join(root, ".env.local");
@@ -184,15 +197,53 @@ async function fetchBeehiivPosts() {
   return out;
 }
 
+async function fetchTextViaCurl(url) {
+  const { stdout, stderr } = await execFileAsync(
+    "curl",
+    [
+      "-sL",
+      "--fail",
+      "--max-time",
+      "30",
+      "-A",
+      BROWSER_UA,
+      "-H",
+      `Accept: ${RSS_ACCEPT}`,
+      url,
+    ],
+    { maxBuffer: 12 * 1024 * 1024, encoding: "utf8" },
+  );
+  if (!stdout || /just a moment/i.test(stdout.slice(0, 500))) {
+    throw new Error(`curl returned challenge/empty${stderr ? `: ${stderr.slice(0, 120)}` : ""}`);
+  }
+  return stdout;
+}
+
+async function fetchSubstackXml(feedUrl) {
+  const headers = {
+    Accept: RSS_ACCEPT,
+    "User-Agent": BROWSER_UA,
+  };
+  let fetchErr = null;
+  try {
+    const res = await fetch(feedUrl, { headers });
+    if (res.ok) {
+      const xml = await res.text();
+      if (xml && !/just a moment/i.test(xml.slice(0, 500))) return xml;
+      fetchErr = new Error("Substack returned Cloudflare challenge HTML");
+    } else {
+      fetchErr = new Error(`Substack feed HTTP ${res.status}`);
+    }
+  } catch (err) {
+    fetchErr = err instanceof Error ? err : new Error(String(err));
+  }
+  // GHA / Cloudflare often blocks Node fetch TLS fingerprint; curl usually works.
+  console.warn(`  Substack fetch retry via curl (${fetchErr.message})`);
+  return fetchTextViaCurl(feedUrl);
+}
+
 async function fetchSubstackFeed(feedUrl) {
-  const res = await fetch(feedUrl, {
-    headers: {
-      Accept: "application/rss+xml, application/xml, text/xml, */*",
-      "User-Agent": "stockthemes-newsletter-bake/1.0",
-    },
-  });
-  if (!res.ok) throw new Error(`Substack feed HTTP ${res.status}`);
-  const xml = await res.text();
+  const xml = await fetchSubstackXml(feedUrl);
   const items = [];
   const blocks = xml.match(/<item>[\s\S]*?<\/item>/gi) || [];
   for (const block of blocks) {
@@ -224,40 +275,60 @@ function sortPosts(posts) {
   });
 }
 
+function requireR2Upload() {
+  return Boolean(String(process.env.STOCKTHEMES_PUBLIC_BUCKET || "").trim());
+}
+
+async function loadPreviousPosts() {
+  try {
+    const raw = await downloadR2Object(OUT_REL);
+    const data = JSON.parse(raw);
+    if (Array.isArray(data?.posts)) return data.posts;
+  } catch (err) {
+    console.warn(`  Previous R2 posts unavailable: ${err?.message || err}`);
+  }
+  try {
+    if (fs.existsSync(FIXTURE)) {
+      const data = JSON.parse(fs.readFileSync(FIXTURE, "utf8"));
+      if (Array.isArray(data?.posts)) return data.posts;
+    }
+  } catch {
+    /* ignore */
+  }
+  return [];
+}
+
+function mergePosts(beehiiv, substack, previous) {
+  const keptBeehiiv = beehiiv.length
+    ? beehiiv
+    : previous.filter((p) => p?.source === "beehiiv");
+  const keptSubstack = substack.length
+    ? substack
+    : previous.filter((p) => p?.source === "substack");
+  if (!beehiiv.length && keptBeehiiv.length) {
+    console.warn(`  Beehiiv empty; kept ${keptBeehiiv.length} prior Beehiiv post(s)`);
+  }
+  return sortPosts([...keptBeehiiv, ...keptSubstack]).slice(0, 40);
+}
+
 async function maybeUploadR2(body) {
   const bucket = String(process.env.STOCKTHEMES_PUBLIC_BUCKET || "").trim();
   if (!bucket) {
     console.log("  R2 upload skipped (STOCKTHEMES_PUBLIC_BUCKET unset)");
-    return;
+    return false;
   }
-  // Optional: reuse MosaicBot storage if available from sibling — keep bake useful offline.
-  try {
-    const { S3Client, PutObjectCommand } = await import("@aws-sdk/client-s3");
-    const endpoint = String(process.env.R2_ENDPOINT_URL || "").trim();
-    const accessKeyId = String(process.env.R2_ACCESS_KEY_ID || "").trim();
-    const secretAccessKey = String(process.env.R2_SECRET_ACCESS_KEY || "").trim();
-    if (!endpoint || !accessKeyId || !secretAccessKey) {
-      console.log("  R2 upload skipped (R2_* unset)");
-      return;
-    }
-    const client = new S3Client({
-      region: "auto",
-      endpoint,
-      credentials: { accessKeyId, secretAccessKey },
-    });
-    await client.send(
-      new PutObjectCommand({
-        Bucket: bucket,
-        Key: OUT_REL,
-        Body: body,
-        ContentType: "application/json",
-        CacheControl: "public, max-age=300",
-      }),
-    );
-    console.log(`  Uploaded r2://${bucket}/${OUT_REL}`);
-  } catch (err) {
-    console.warn(`  R2 upload skipped: ${err?.message || err}`);
+  const endpoint = String(process.env.R2_ENDPOINT_URL || "").trim();
+  const accessKeyId = String(process.env.R2_ACCESS_KEY_ID || "").trim();
+  const secretAccessKey = String(process.env.R2_SECRET_ACCESS_KEY || "").trim();
+  if (!endpoint || !accessKeyId || !secretAccessKey) {
+    throw new Error("R2_* unset but STOCKTHEMES_PUBLIC_BUCKET is set");
   }
+  await uploadR2Object(OUT_REL, body, {
+    contentType: "application/json",
+    cacheControl: "public, max-age=300",
+  });
+  console.log(`  Uploaded r2://${bucket}/${OUT_REL}`);
+  return true;
 }
 
 async function main() {
@@ -265,9 +336,9 @@ async function main() {
   const substackFeed =
     String(process.env.STOCKTHEMES_NEWSLETTER_SUBSTACK_FEED || "").trim() ||
     DEFAULT_SUBSTACK_FEED;
+  const mustUpload = requireR2Upload();
 
   console.log("Baking newsletter_posts.v0.json …");
-  // Soft-fail sources: Substack occasionally 403s GitHub Actions IPs; deploy must not hard-fail.
   const [beehiiv, substack] = await Promise.all([
     fetchBeehiivPosts().catch((err) => {
       console.warn(`  Beehiiv skipped: ${err?.message || err}`);
@@ -279,14 +350,31 @@ async function main() {
     }),
   ]);
   console.log(`  Beehiiv: ${beehiiv.length}  Substack: ${substack.length}`);
-  if (beehiiv.length === 0 && substack.length === 0) {
+
+  if (substack.length === 0) {
+    const msg =
+      "Substack returned 0 posts (feed blocked or empty). Desk will go stale until this succeeds.";
+    if (mustUpload) {
+      console.error(`  ${msg}`);
+      process.exit(1);
+    }
+    console.warn(`  ${msg}`);
+  }
+
+  const previous = beehiiv.length === 0 || substack.length === 0 ? await loadPreviousPosts() : [];
+  const posts = mergePosts(beehiiv, substack, previous);
+  if (posts.length === 0) {
+    if (mustUpload) {
+      console.error("  No posts to publish");
+      process.exit(1);
+    }
     console.warn("  No fresh posts; keeping existing fixture if present and exiting 0");
     if (fs.existsSync(FIXTURE)) {
       console.log(`  Left ${path.relative(root, FIXTURE)} unchanged`);
       return;
     }
   }
-  const posts = sortPosts([...beehiiv, ...substack]).slice(0, 40);
+
   const payload = {
     schema_version: 0,
     as_of: new Date().toISOString(),
@@ -301,7 +389,7 @@ async function main() {
   fs.mkdirSync(path.dirname(FIXTURE), { recursive: true });
   fs.writeFileSync(FIXTURE, body, "utf8");
   console.log(`  Wrote ${path.relative(root, FIXTURE)} (${posts.length} posts)`);
-  await maybeUploadR2(Buffer.from(body, "utf8"));
+  await maybeUploadR2(body);
 }
 
 main().catch((err) => {

@@ -1,12 +1,22 @@
 {
   "schema_version": 0,
-  "as_of": "2026-09-24T21:28:26.710Z",
+  "as_of": "2026-10-16T16:07:07.252Z",
   "sources": {
     "beehiiv": "Field of Themes",
     "substack": "Alt Data Observer",
     "substack_feed": "https://altadataobserver.substack.com/feed"
   },
   "posts": [
+    {
+      "id": "substack:https://altadataobserver.substack.com/p/chatbots-chips-pizza-and-profits",
+      "source": "substack",
+      "source_label": "Alt Data Observer",
+      "title": "Chatbots, Chips, Pizza and Profits: 10 Charts",
+      "url": "https://altadataobserver.substack.com/p/chatbots-chips-pizza-and-profits",
+      "published_at": "2026-10-14T00:55:29.000Z",
+      "subtitle": "Today: OpenAI fighting back against Anthropic. AI is at least coming for call centers and abstract mathematical research. Elsewhere, china's memory chipmakers are gaining ground, transistors aren't getting cheaper anymor",
+      "image_url": "https://substackcdn.com/image/fetch/$s_!bmSv!,f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F98484699-f4c0-41e2-882a-fb5f76413912_1566x644.png"
+    },
     {
       "id": "substack:https://altadataobserver.substack.com/p/tokens-tankers-hacks-and-heatwaves",
       "source": "substack",

@@ -84,7 +84,7 @@ function encodeKey(key) {
     .join("/");
 }
 
-function signedRequest(method, objectPath) {
+function signedRequest(method, objectPath, { body, contentType, cacheControl } = {}) {
   const cfg = r2Config();
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
@@ -93,9 +93,22 @@ function signedRequest(method, objectPath) {
   const pathname = `/${encodeURIComponent(cfg.bucket)}/${encodeKey(objectPath)}`;
   const url = `${endpoint.origin}${pathname}`;
   const host = endpoint.host;
-  const payloadHash = "UNSIGNED-PAYLOAD";
-  const canonicalHeaders = `host:${host}\nx-amz-content-sha256:${payloadHash}\nx-amz-date:${amzDate}\n`;
-  const signedHeaders = "host;x-amz-content-sha256;x-amz-date";
+  const payloadBuf =
+    body == null ? null : Buffer.isBuffer(body) ? body : Buffer.from(body);
+  const payloadHash = payloadBuf ? sha256(payloadBuf) : "UNSIGNED-PAYLOAD";
+
+  /** @type {Array<[string, string]>} */
+  const headerPairs = [
+    ["host", host],
+    ["x-amz-content-sha256", payloadHash],
+    ["x-amz-date", amzDate],
+  ];
+  if (contentType) headerPairs.push(["content-type", contentType]);
+  if (cacheControl) headerPairs.push(["cache-control", cacheControl]);
+  headerPairs.sort((a, b) => a[0].localeCompare(b[0]));
+
+  const canonicalHeaders = `${headerPairs.map(([k, v]) => `${k}:${v}`).join("\n")}\n`;
+  const signedHeaders = headerPairs.map(([k]) => k).join(";");
   const canonicalRequest = [
     method,
     pathname,
@@ -112,16 +125,22 @@ function signedRequest(method, objectPath) {
     sha256(canonicalRequest),
   ].join("\n");
   const signature = hmac(signingKey(cfg.secretAccessKey, dateStamp), stringToSign, "hex");
+
+  /** @type {Record<string, string>} */
+  const headers = {
+    Authorization:
+      `AWS4-HMAC-SHA256 Credential=${cfg.accessKeyId}/${credentialScope}, ` +
+      `SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    "x-amz-content-sha256": payloadHash,
+    "x-amz-date": amzDate,
+  };
+  if (contentType) headers["Content-Type"] = contentType;
+  if (cacheControl) headers["Cache-Control"] = cacheControl;
+
   return {
     url,
     bucket: cfg.bucket,
-    headers: {
-      Authorization:
-        `AWS4-HMAC-SHA256 Credential=${cfg.accessKeyId}/${credentialScope}, ` +
-        `SignedHeaders=${signedHeaders}, Signature=${signature}`,
-      "x-amz-content-sha256": payloadHash,
-      "x-amz-date": amzDate,
-    },
+    headers,
   };
 }
 
@@ -232,4 +251,41 @@ export async function r2ObjectMetadata(objectPath) {
     etag: etag || undefined,
     lastModified: res.headers.get("last-modified") || undefined,
   };
+}
+
+/**
+ * PUT an object to stockthemes-public (SigV4; no @aws-sdk dependency).
+ * @param {string} objectPath
+ * @param {string | Buffer | Uint8Array} body
+ * @param {{ contentType?: string, cacheControl?: string }} [opts]
+ */
+export async function uploadR2Object(objectPath, body, opts = {}) {
+  const contentType = opts.contentType || "application/octet-stream";
+  const cacheControl = opts.cacheControl;
+  const payload = Buffer.isBuffer(body)
+    ? body
+    : Buffer.from(body);
+  const req = signedRequest("PUT", objectPath, {
+    body: payload,
+    contentType,
+    cacheControl,
+  });
+  let res;
+  try {
+    res = await fetchWithRetry(
+      req.url,
+      { method: "PUT", headers: req.headers, body: payload },
+      { label: `R2 PUT s3://${req.bucket}/${objectPath}` },
+    );
+  } catch (err) {
+    throw new Error(
+      formatFetchError(`R2 upload fetch failed for s3://${req.bucket}/${objectPath}`, err),
+    );
+  }
+  if (!res.ok) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(
+      `R2 PUT ${res.status} s3://${req.bucket}/${objectPath}${detail ? `: ${detail.slice(0, 200)}` : ""}`,
+    );
+  }
 }
