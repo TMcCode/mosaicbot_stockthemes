@@ -1,0 +1,222 @@
+.section {
+  margin: 0;
+  min-width: 0;
+}
+
+.heading {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary, #e8eaed);
+}
+
+.tableWrap {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-secondary, #9aa8a6);
+  font-variant-numeric: tabular-nums;
+}
+
+.table th,
+.table td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  vertical-align: middle;
+}
+
+.table thead th {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted, #7a8886);
+  background: rgba(255, 255, 255, 0.03);
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.colDate {
+  width: 3.6rem;
+  font-size: 10px;
+  line-height: 1.3;
+  white-space: nowrap;
+  color: var(--text-muted, #7a8886);
+}
+
+.colTickers {
+  width: 6.5rem;
+  max-width: 7.5rem;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-muted, #7a8886);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colSource {
+  width: 7.5rem;
+  max-width: 8.5rem;
+  font-size: 10px;
+  line-height: 1.3;
+  color: var(--text-muted, #7a8886);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.colStory {
+  min-width: 0;
+}
+
+.storyCell {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  min-width: 0;
+}
+
+.title {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 10px;
+  font-weight: 550;
+  line-height: 1.3;
+  color: var(--text-primary, #e8eaed);
+  text-decoration: none;
+}
+
+.title:hover {
+  color: var(--accent, #26fcd6);
+}
+
+.pick {
+  flex: 0 0 auto;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  padding: 1px 5px;
+  border-radius: 999px;
+  border: 1px solid var(--accent, #26fcd6);
+  color: var(--accent, #26fcd6);
+  line-height: 1.2;
+}
+
+.footer {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  border-top: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  padding: 4px 8px;
+  /* Room for always-on brand lockup on the right. */
+  padding-right: clamp(118px, 18vw, 138px);
+}
+
+.footerCenter {
+  grid-column: 2;
+  justify-self: center;
+  text-align: center;
+  min-height: 1.1em;
+}
+
+.watermark {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  z-index: 2;
+  flex: 0 0 auto;
+  line-height: 0;
+  opacity: 0.98;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+@media (max-width: 720px) {
+  .footer {
+    padding-right: clamp(28px, 8vw, 36px);
+  }
+}
+
+.footnote {
+  grid-column: 1;
+  margin: 0;
+  min-width: 0;
+  font-size: 9px !important;
+  line-height: 1.3 !important;
+  font-weight: 400 !important;
+  color: var(--text-muted, #7a8886) !important;
+}
+
+.more {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--accent, #26fcd6);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.more:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.more:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+@media (max-width: 560px) {
+  .heading {
+    font-size: 13px;
+  }
+
+  .colSource,
+  .colTickers {
+    display: none;
+  }
+
+  .table th,
+  .table td {
+    padding: 4px 6px;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .tableWrap {
+  background: #fff;
+  border-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .table thead th {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+:global(.st-theme[data-theme="light"]) .table th,
+:global(.st-theme[data-theme="light"]) .table td,
+:global(.st-theme[data-theme="light"]) .footer {
+  border-color: rgba(0, 0, 0, 0.08);
+}

@@ -8,8 +8,11 @@ type Props = {
   children: React.ReactNode;
   minHeight?: number;
   rootMargin?: string;
-  /** Always mount after this many ms if IO never fires (CF / Safari edge cases). */
-  fallbackMs?: number;
+  /**
+   * Always mount after this many ms if IO never fires (CF / Safari edge cases).
+   * Pass `false` to rely on IntersectionObserver / scroll only (no timed fetch).
+   */
+  fallbackMs?: number | false;
 };
 
 /** Parse the vertical component of an IntersectionObserver rootMargin (px or %). */
@@ -89,12 +92,15 @@ export function DeferRender({
     window.addEventListener("scroll", onScrollOrResize, { passive: true });
     window.addEventListener("resize", onScrollOrResize);
 
-    const t = window.setTimeout(reveal, Math.max(400, fallbackMs));
+    const t =
+      fallbackMs === false
+        ? undefined
+        : window.setTimeout(reveal, Math.max(400, fallbackMs ?? 1800));
 
     return () => {
       cancelled = true;
       obs.disconnect();
-      window.clearTimeout(t);
+      if (t != null) window.clearTimeout(t);
       window.removeEventListener("scroll", onScrollOrResize);
       window.removeEventListener("resize", onScrollOrResize);
     };

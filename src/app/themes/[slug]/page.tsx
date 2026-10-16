@@ -15,6 +15,7 @@ import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
+import { LazyThemeNewsPanel } from "@/components/LazyThemeNewsPanel";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { JsonLd } from "@/components/JsonLd";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
@@ -370,6 +371,13 @@ export default async function ThemeDetailPage({ params }: Props) {
           ) : null}
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>
+          ) : null}
+          {dataBaseUrl ? (
+            <div className={styles.themeNewsDefer}>
+              <DeferRender minHeight={0} rootMargin="480px 0px" fallbackMs={false}>
+                <LazyThemeNewsPanel slug={slug} themeName={theme.name} />
+              </DeferRender>
+            </div>
           ) : null}
           <p>
             <Link href="/themes" style={{ fontWeight: 500 }}>
