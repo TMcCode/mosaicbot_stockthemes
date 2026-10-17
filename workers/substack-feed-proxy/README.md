@@ -15,3 +15,7 @@ npx wrangler@4.14.1 deploy
 ```
 
 Live URL: `https://stockthemes-substack-feed-proxy.tmclynn421.workers.dev/`
+
+## Resilience
+
+Successful upstream responses are cached for 5 minutes. If Substack returns 403/429, the Worker serves the last-good body when available (`x-proxy-cache: STALE-…`) instead of caching the error.

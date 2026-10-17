@@ -11,8 +11,10 @@
  * CI: `.github/workflows/bake-newsletter.yml` (every 6h) + deploy-pages pre-build step.
  *
  * Substack often 403s Node fetch from GitHub Actions IPs; we retry with curl
- * (better TLS fingerprint). When STOCKTHEMES_PUBLIC_BUCKET is set, empty Substack
- * or failed R2 upload exits non-zero so the schedule cannot silently go stale.
+ * and the Cloudflare Worker proxy (workers/substack-feed-proxy). When Substack
+ * is blocked/empty we keep prior R2/fixture Substack posts and still upload
+ * (exit 0) so scheduled CI stays green; exit 1 only if there are zero posts
+ * after merge or R2 upload fails.
  */
 import { execFile } from "child_process";
 import fs from "fs";
@@ -203,6 +205,15 @@ async function fetchBeehiivPosts() {
   return out;
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRateLimitedError(err) {
+  const msg = String(err?.message || err || "");
+  return /\b429\b|rate.?limit|too many requests/i.test(msg);
+}
+
 async function fetchTextViaCurl(url, accept) {
   const { stdout, stderr } = await execFileAsync(
     "curl",
@@ -225,7 +236,7 @@ async function fetchTextViaCurl(url, accept) {
   return stdout;
 }
 
-async function fetchTextWithFallback(url, accept, label) {
+async function fetchTextOnce(url, accept, label) {
   const headers = { Accept: accept, "User-Agent": BROWSER_UA };
   let fetchErr = null;
   try {
@@ -242,6 +253,26 @@ async function fetchTextWithFallback(url, accept, label) {
   }
   console.warn(`  ${label} retry via curl (${fetchErr.message})`);
   return fetchTextViaCurl(url, accept);
+}
+
+/** Fetch with short backoff on 429 (proxy / Substack rate limits). */
+async function fetchTextWithFallback(url, accept, label, attempts = 3) {
+  let lastErr = null;
+  for (let i = 1; i <= attempts; i += 1) {
+    try {
+      return await fetchTextOnce(url, accept, label);
+    } catch (err) {
+      lastErr = err;
+      if (i < attempts && isRateLimitedError(err)) {
+        const waitMs = 1500 * i;
+        console.warn(`  ${label} rate-limited; sleep ${waitMs}ms then retry (${i}/${attempts})`);
+        await sleep(waitMs);
+        continue;
+      }
+      throw err;
+    }
+  }
+  throw lastErr || new Error(`${label} failed`);
 }
 
 function parseSubstackArchiveJson(raw) {
@@ -302,10 +333,16 @@ async function fetchSubstackFeed(feedUrl) {
   const proxyUrl =
     String(process.env.STOCKTHEMES_NEWSLETTER_SUBSTACK_PROXY || "").trim() ||
     DEFAULT_SUBSTACK_PROXY;
+  // GHA IPs are blocked on Substack origin — try the Worker proxy first in CI.
+  const inCi = Boolean(
+    String(process.env.GITHUB_ACTIONS || process.env.CI || "").trim(),
+  );
+  const archiveCandidates = inCi
+    ? [proxyUrl, archiveUrl]
+    : [archiveUrl, proxyUrl];
 
-  const archiveCandidates = [archiveUrl, proxyUrl].filter(Boolean);
   const seen = new Set();
-  for (const url of archiveCandidates) {
+  for (const url of archiveCandidates.filter(Boolean)) {
     if (seen.has(url)) continue;
     seen.add(url);
     try {
@@ -322,8 +359,13 @@ async function fetchSubstackFeed(feedUrl) {
 
   // Legacy RSS path (local / non-GHA).
   const rssUrl = feedUrl || DEFAULT_SUBSTACK_FEED;
-  const xml = await fetchTextWithFallback(rssUrl, RSS_ACCEPT, "Substack RSS");
-  return parseSubstackRssXml(xml);
+  try {
+    const xml = await fetchTextWithFallback(rssUrl, RSS_ACCEPT, "Substack RSS");
+    return parseSubstackRssXml(xml);
+  } catch (err) {
+    console.warn(`  Substack RSS failed: ${err?.message || err}`);
+    return [];
+  }
 }
 
 function sortPosts(posts) {
@@ -366,6 +408,9 @@ function mergePosts(beehiiv, substack, previous) {
     : previous.filter((p) => p?.source === "substack");
   if (!beehiiv.length && keptBeehiiv.length) {
     console.warn(`  Beehiiv empty; kept ${keptBeehiiv.length} prior Beehiiv post(s)`);
+  }
+  if (!substack.length && keptSubstack.length) {
+    console.warn(`  Substack empty; kept ${keptSubstack.length} prior Substack post(s)`);
   }
   return sortPosts([...keptBeehiiv, ...keptSubstack]).slice(0, 40);
 }
@@ -410,21 +455,21 @@ async function main() {
   ]);
   console.log(`  Beehiiv: ${beehiiv.length}  Substack: ${substack.length}`);
 
+  const previous =
+    beehiiv.length === 0 || substack.length === 0 ? await loadPreviousPosts() : [];
   if (substack.length === 0) {
+    const priorSubstack = previous.filter((p) => p?.source === "substack").length;
     const msg =
-      "Substack returned 0 posts (feed blocked or empty). Desk will go stale until this succeeds.";
-    if (mustUpload) {
-      console.error(`  ${msg}`);
-      process.exit(1);
-    }
+      priorSubstack > 0
+        ? `Substack returned 0 posts (blocked/empty); keeping ${priorSubstack} prior post(s) so the desk stays populated.`
+        : "Substack returned 0 posts and no prior Substack posts are available.";
     console.warn(`  ${msg}`);
   }
 
-  const previous = beehiiv.length === 0 || substack.length === 0 ? await loadPreviousPosts() : [];
   const posts = mergePosts(beehiiv, substack, previous);
   if (posts.length === 0) {
     if (mustUpload) {
-      console.error("  No posts to publish");
+      console.error("  No posts to publish (fresh + prior empty)");
       process.exit(1);
     }
     console.warn("  No fresh posts; keeping existing fixture if present and exiting 0");
