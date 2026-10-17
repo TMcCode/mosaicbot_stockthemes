@@ -245,14 +245,24 @@ async function fetchTextOnce(url, accept, label) {
       const text = await res.text();
       if (text && !/just a moment/i.test(text.slice(0, 500))) return text;
       fetchErr = new Error(`${label} returned Cloudflare challenge HTML`);
+    } else if (res.status === 429) {
+      // Don't burn a curl attempt — surface 429 so the caller can back off.
+      throw new Error(`${label} HTTP 429`);
     } else {
       fetchErr = new Error(`${label} HTTP ${res.status}`);
     }
   } catch (err) {
+    if (isRateLimitedError(err)) throw err;
     fetchErr = err instanceof Error ? err : new Error(String(err));
   }
   console.warn(`  ${label} retry via curl (${fetchErr.message})`);
-  return fetchTextViaCurl(url, accept);
+  try {
+    return await fetchTextViaCurl(url, accept);
+  } catch (err) {
+    // curl --fail omits the status code; preserve rate-limit signal from fetch.
+    if (isRateLimitedError(fetchErr)) throw fetchErr;
+    throw err;
+  }
 }
 
 /** Fetch with short backoff on 429 (proxy / Substack rate limits). */
