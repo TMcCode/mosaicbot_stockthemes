@@ -3,7 +3,11 @@ import Link from "next/link";
 
 import { PageSurface } from "@/components/PageSurface";
 import styles from "../page.module.css";
-import { ABOUT_VISION_DISCLAIMER, ABOUT_VISION_PARAGRAPHS } from "@/lib/aboutVisionCopy";
+import {
+  ABOUT_VISION_DISCLAIMER,
+  ABOUT_VISION_PARAGRAPHS,
+  ABOUT_VISION_ROADMAP,
+} from "@/lib/aboutVisionCopy";
 import { HELLO_EMAIL, mailtoHref, SUPPORT_EMAIL } from "@/lib/contactEmails";
 import { ABOUT_FOUNDER_FEEDBACK, DEFAULT_HOME_INTRO } from "@/lib/aboutFounderCopy";
 import { SITE_PRODUCT_SUMMARY } from "@/lib/homeSiteCopy";
@@ -112,6 +116,14 @@ export default async function AboutPage() {
                 {p}
               </p>
             ))}
+            <h3 className={styles.aboutRoadmapHeading}>Roadmap</h3>
+            <ol className={styles.aboutRoadmapList}>
+              {ABOUT_VISION_ROADMAP.map((item) => (
+                <li key={item.title} className={styles.introCopy}>
+                  <strong>{item.title}</strong>: {item.body}
+                </li>
+              ))}
+            </ol>
             <p className={styles.introCopy}>
               Subscriber support on the MosaicBot roadmap funds these data layers. If you want to
               weigh in on what ships next, use the <Link href="/contact">contact page</Link>.

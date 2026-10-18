@@ -1,4 +1,4 @@
-/** Public inflection hunt list — relative 10D−YTD ranks for TimBot Tuesday. */
+/** Public inflection hunt list — relative 10D−YTD ranks. */
 export type InflectionHuntRevCompanyV0 = {
   ticker: string;
   dual: boolean;

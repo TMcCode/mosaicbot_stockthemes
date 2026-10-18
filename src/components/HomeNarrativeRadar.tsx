@@ -51,7 +51,7 @@ const PREVIEW_LOGOS_VISIBLE_MAX = 6;
 export const HOME_RADAR_PREVIEW_LIMIT = 6;
 /** Full radar page cap for Accelerating / Fading (matches bake). */
 const ACCEL_FADING_ALL_LIMIT = 15;
-/** Progressive reveal on full `/radar` grids. */
+/** Progressive reveal on full `/radar` grids (15 first paint; Show more adds batches). */
 const RADAR_PAGE_INITIAL = 15;
 const RADAR_PAGE_BATCH = 15;
 
@@ -278,6 +278,21 @@ function newsDayForAsOf(news: RadarNewsV0 | null, asOf: string | null): RadarNew
   return news.today || null;
 }
 
+/** Lead article time for date-desc sort after the featured strip. */
+function newsCardLeadTs(card: RadarNewsCardV0): number {
+  const latest = String(card.latest_at || "").trim();
+  if (latest) {
+    const t = Date.parse(latest);
+    if (Number.isFinite(t)) return t;
+  }
+  const pub = String(card.headlines?.[0]?.published_at || "").trim();
+  if (pub) {
+    const t = Date.parse(pub);
+    if (Number.isFinite(t)) return t;
+  }
+  return 0;
+}
+
 function newsCardsForTab(
   news: RadarNewsV0 | null,
   previewLimit: number,
@@ -294,7 +309,15 @@ function newsCardsForTab(
           ? day.all
           : [];
   if (previewLimit > 0) return pool.slice(0, previewLimit);
-  return pool;
+  // Featured strip (home_limit) keeps bake order; everything after is date desc.
+  const featured = Math.max(0, Number(news?.home_limit) || HOME_RADAR_PREVIEW_LIMIT);
+  if (pool.length <= featured) return pool;
+  const head = pool.slice(0, featured);
+  const rest = pool
+    .slice(featured)
+    .slice()
+    .sort((a, b) => newsCardLeadTs(b) - newsCardLeadTs(a));
+  return [...head, ...rest];
 }
 
 function yearChipLabel(card: { year_suffix?: number | null; name?: string }): string | null {
@@ -514,36 +537,28 @@ function RadarProgressiveGrid({
   const [visible, setVisible] = useState(() =>
     enabled ? Math.min(items.length, RADAR_PAGE_INITIAL) : items.length,
   );
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
   const hasMore = enabled && visible < items.length;
+  const remaining = Math.max(0, items.length - visible);
+  const nextBatch = Math.min(RADAR_PAGE_BATCH, remaining);
 
   useEffect(() => {
     setVisible(enabled ? Math.min(items.length, RADAR_PAGE_INITIAL) : items.length);
   }, [enabled, items.length]);
 
-  useEffect(() => {
-    const node = sentinelRef.current;
-    if (!node || !hasMore) return;
-    if (typeof IntersectionObserver === "undefined") return;
-    let cancelled = false;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (!entries[0]?.isIntersecting || cancelled) return;
-        setVisible((n) => Math.min(items.length, n + RADAR_PAGE_BATCH));
-      },
-      { root: null, rootMargin: "480px 0px", threshold: 0.01 },
-    );
-    obs.observe(node);
-    return () => {
-      cancelled = true;
-      obs.disconnect();
-    };
-  }, [hasMore, visible, items.length]);
-
   return (
     <>
       <div className={styles.grid}>{items.slice(0, visible)}</div>
-      {hasMore ? <div ref={sentinelRef} aria-hidden style={{ height: 1 }} /> : null}
+      {hasMore ? (
+        <div className={styles.showMoreWrap}>
+          <button
+            type="button"
+            className={styles.showMore}
+            onClick={() => setVisible((n) => Math.min(items.length, n + RADAR_PAGE_BATCH))}
+          >
+            Show more ({nextBatch})
+          </button>
+        </div>
+      ) : null}
     </>
   );
 }
@@ -645,7 +660,7 @@ type Props = {
   initialNewsAsOf?: string;
   /**
    * When false, keep SSR `news` and skip the mount CDN refetch.
-   * Default true so weekday bakes and TimBot editorial publishes show without a site rebuild.
+   * Default true so weekday bakes and editorial publishes show without a site rebuild.
    */
   refreshNewsOnMount?: boolean;
 };
@@ -716,7 +731,7 @@ export function HomeNarrativeRadar({
     return defaultNewsAsOf;
   });
   // Explicit day (URL ?as_of= or dropdown) sticks; otherwise follow the newest day when the
-  // live CDN payload replaces the build-time snapshot (e.g. a TimBot editorial publish).
+  // live CDN payload replaces the build-time snapshot (e.g. an editorial publish).
   const userPickedNewsDay = useRef(Boolean(String(initialNewsAsOf || "").trim()));
 
   // Static `/radar` export cannot read searchParams on the server — apply ?tab=&as_of= here.

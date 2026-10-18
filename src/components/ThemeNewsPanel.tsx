@@ -149,8 +149,8 @@ export function ThemeNewsPanel({ slug, themeName }: Props) {
                         className={styles.pick}
                         title={
                           item.on_site
-                            ? "TimBot pick · shown on Narrative Radar"
-                            : "TimBot pick"
+                            ? "Editorial pick · shown on Narrative Radar"
+                            : "Editorial pick"
                         }
                       >
                         Pick
@@ -173,7 +173,7 @@ export function ThemeNewsPanel({ slug, themeName }: Props) {
         </table>
         <div className={styles.footer}>
           <p className={styles.footnote}>
-            {index.total} {index.total === 1 ? "story" : "stories"} · Narrative Radar / TimBot
+            {index.total} {index.total === 1 ? "story" : "stories"} · Narrative Radar
           </p>
           <div className={styles.footerCenter}>
             {hasMore ? (

@@ -14,7 +14,7 @@ export async function fetchRadarNewsBrowser(): Promise<RadarNewsV0 | null> {
   const url = radarNewsBrowserUrl();
   if (url) {
     try {
-      // Stable URL + ETag revalidation: every load sees a TimBot publish / bake within
+      // Stable URL + ETag revalidation: every load sees an editorial publish / bake within
       // seconds, and an unchanged file costs a 304 instead of a re-download.
       const res = await fetch(url, {
         credentials: "omit",

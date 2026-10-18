@@ -1,6 +1,9 @@
 .section {
-  margin: 0;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
+  margin: 0;
+  align-self: stretch;
 }
 
 .heading {
@@ -145,8 +148,6 @@
   top: 50%;
   z-index: 2;
   flex: 0 0 auto;
-  line-height: 0;
-  opacity: 0.98;
   pointer-events: none;
   transform: translateY(-50%);
 }

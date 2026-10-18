@@ -1046,7 +1046,8 @@ a.feedTitle:hover {
   justify-content: space-between;
   gap: 10px 14px;
   border-top: 1px solid var(--button-secondary-border);
-  padding: 5px 0 5px 10px;
+  /* Match theme-news footer inset so the brand lockup isn’t flush to the border. */
+  padding: 4px 8px 4px 10px;
   /* Reserve space for full lockup (desktop) / icon (mobile). */
   padding-right: clamp(118px, 18vw, 138px);
 }
@@ -1059,7 +1060,7 @@ a.feedTitle:hover {
 
 @media (max-width: 600px) {
   .tableFooter {
-    padding: 3px 0 3px 6px;
+    padding: 3px 6px;
     padding-right: clamp(24px, 8vw, 32px);
     gap: 6px 8px;
   }
@@ -1090,21 +1091,12 @@ a.feedTitle:hover {
 
 .tableWatermark {
   position: absolute;
-  right: 0;
+  right: 8px;
   top: 50%;
   z-index: 2;
   flex: 0 0 auto;
-  line-height: 0;
-  opacity: 0.98;
   pointer-events: none;
   transform: translateY(-50%);
-}
-
-.tableWatermark img {
-  display: block;
-  width: 14px;
-  height: 14px;
-  object-fit: contain;
 }
 
 .dataTable {
@@ -1600,6 +1592,26 @@ a.feedTitle:hover {
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+
+.aboutRoadmapHeading {
+  margin: 6px 0 0;
+  font-size: 18px;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.aboutRoadmapList {
+  margin: 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aboutRoadmapList li::marker {
+  color: var(--accent);
+  font-weight: 600;
 }
 
 .aboutVisionDisclaimer {

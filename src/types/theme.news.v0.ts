@@ -7,7 +7,7 @@ export type ThemeNewsItemV0 = {
   source?: string | null;
   /** YYYY-MM-DD (article publish date, or first-seen when missing). */
   date: string;
-  /** Picked in TimBot (editorial). */
+  /** Editorial pick (hand-selected). */
   picked?: boolean;
   /** Shown on a stockthemes Narrative Radar card. */
   on_site?: boolean;

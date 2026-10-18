@@ -116,6 +116,31 @@
   background: rgba(38, 252, 214, 0.08);
 }
 
+.showMoreWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+.showMore {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.showMore:hover {
+  border-color: rgba(38, 252, 214, 0.45);
+  color: var(--accent);
+  background: rgba(38, 252, 214, 0.08);
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -455,6 +480,18 @@
 :global(.st-theme[data-theme="light"]) .newsDaySelect:hover,
 :global(.st-theme[data-theme="light"]) .newsDaySelect:focus {
   border-color: rgba(42, 152, 147, 0.55);
+}
+
+:global(.st-theme[data-theme="light"]) .showMore {
+  border-color: rgba(59, 77, 161, 0.18);
+  background: rgba(59, 77, 161, 0.05);
+  color: var(--text-secondary);
+}
+
+:global(.st-theme[data-theme="light"]) .showMore:hover {
+  border-color: rgba(42, 152, 147, 0.55);
+  color: var(--accent);
+  background: rgba(42, 152, 147, 0.1);
 }
 
 :global(.st-theme[data-theme="light"]) .card {

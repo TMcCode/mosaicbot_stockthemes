@@ -24,7 +24,7 @@ export type RadarNewsCardV0 = {
   trending_boost?: boolean;
   /** Master-pub top story was pinned onto this theme card. */
   top_story?: boolean;
-  /** Hand-picked in TimBot, not found by the NewsAPI.ai radar. */
+  /** Hand-picked editorial item, not found by the NewsAPI.ai radar. */
   editorial?: boolean;
   headlines: RadarNewsHeadlineV0[];
   tickers_preview: HomeRadarTickerPreviewV0[];
