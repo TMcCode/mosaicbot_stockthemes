@@ -49,6 +49,11 @@ const TAB_TITLES: Partial<Record<TabKey, string>> = {
 const PREVIEW_LOGOS_VISIBLE_MAX = 6;
 /** Home grid: 2 rows × 3 columns. Full `/radar` page passes `previewLimit={0}`. */
 export const HOME_RADAR_PREVIEW_LIMIT = 6;
+/**
+ * In the News: keep cards whose lead headline is on the selected day or the prior
+ * N calendar days (ET). Older backlog in the bake stays out of the featured strip.
+ */
+export const NEWS_LEAD_MAX_AGE_DAYS = 2;
 /** Full radar page cap for Accelerating / Fading (matches bake). */
 const ACCEL_FADING_ALL_LIMIT = 15;
 /** Progressive reveal on full `/radar` grids (15 first paint; Show more adds batches). */
@@ -293,6 +298,43 @@ function newsCardLeadTs(card: RadarNewsCardV0): number {
   return 0;
 }
 
+/** YYYY-MM-DD for the card's lead headline (ET calendar day when parseable). */
+function newsCardLeadDay(card: RadarNewsCardV0): string {
+  const raw = String(
+    card.headlines?.[0]?.published_at || card.latest_at || "",
+  ).trim();
+  const m = /^(\d{4}-\d{2}-\d{2})/.exec(raw);
+  if (m) return m[1];
+  const t = Date.parse(raw);
+  if (!Number.isFinite(t)) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "America/New_York",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(t));
+}
+
+function calendarDaysBetween(asOf: string, leadDay: string): number | null {
+  const a = /^(\d{4})-(\d{2})-(\d{2})$/.exec(asOf.trim());
+  const b = /^(\d{4})-(\d{2})-(\d{2})$/.exec(leadDay.trim());
+  if (!a || !b) return null;
+  const asOfMs = Date.UTC(+a[1], +a[2] - 1, +a[3]);
+  const leadMs = Date.UTC(+b[1], +b[2] - 1, +b[3]);
+  return Math.round((asOfMs - leadMs) / 86_400_000);
+}
+
+function newsCardLeadIsFresh(
+  card: RadarNewsCardV0,
+  asOf: string,
+  maxAgeDays: number = NEWS_LEAD_MAX_AGE_DAYS,
+): boolean {
+  const leadDay = newsCardLeadDay(card);
+  if (!leadDay) return false;
+  const age = calendarDaysBetween(asOf.slice(0, 10), leadDay);
+  return age != null && age >= 0 && age <= maxAgeDays;
+}
+
 function newsCardsForTab(
   news: RadarNewsV0 | null,
   previewLimit: number,
@@ -300,7 +342,10 @@ function newsCardsForTab(
 ): RadarNewsCardV0[] {
   const day = newsDayForAsOf(news, asOf ?? null);
   if (!day) return [];
-  const pool =
+  const asOfKey = String(asOf || day.as_of || news?.as_of || "")
+    .trim()
+    .slice(0, 10);
+  const rawPool =
     previewLimit <= 0 && Array.isArray(day.all) && day.all.length > 0
       ? day.all
       : Array.isArray(day.home)
@@ -308,8 +353,12 @@ function newsCardsForTab(
         : Array.isArray(day.all)
           ? day.all
           : [];
+  // Drop stale leads so home + /radar featured strip don't show week-old cafe guides.
+  const pool = asOfKey
+    ? rawPool.filter((c) => newsCardLeadIsFresh(c, asOfKey))
+    : rawPool;
   if (previewLimit > 0) return pool.slice(0, previewLimit);
-  // Featured strip (home_limit) keeps bake order; everything after is date desc.
+  // Featured strip (home_limit) keeps bake order among fresh cards; rest date desc.
   const featured = Math.max(0, Number(news?.home_limit) || HOME_RADAR_PREVIEW_LIMIT);
   if (pool.length <= featured) return pool;
   const head = pool.slice(0, featured);
