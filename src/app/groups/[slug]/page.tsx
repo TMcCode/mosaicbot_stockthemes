@@ -9,8 +9,8 @@ import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { GroupHeroMeta } from "@/components/GroupHeroMeta";
 import { GroupHeroSummary } from "@/components/GroupHeroSummary";
+import { GroupHeroTreemapLive } from "@/components/GroupHeroTreemapLive";
 import { GroupThemesTableLive } from "@/components/GroupThemesTableLive";
-import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { JsonLd } from "@/components/JsonLd";
 import styles from "../../page.module.css";
 
@@ -207,14 +207,13 @@ export default async function GroupDetailPage({ params }: Props) {
               />
             </div>
             <div className={styles.themeHeroRail}>
-              {groupTreemapNodes.length ? (
-                <ThemeHeroTreemap
-                  nodes={groupTreemapNodes}
+              {detail?.theme_treemap && groupTreemapNodes.length ? (
+                <GroupHeroTreemapLive
+                  treemap={detail.theme_treemap}
                   themeName={group.name}
-                  tileMode="theme"
                   defaultReturnPeriod={pickDefaultTreemapPeriod(groupTreemapNodes)}
-                  asOfLabel={
-                    detail?.as_of ? formatSiteDataPublished(detail.as_of) : undefined
+                  serverAsOfLabel={
+                    detail.as_of ? formatSiteDataPublished(detail.as_of) : undefined
                   }
                 />
               ) : null}
