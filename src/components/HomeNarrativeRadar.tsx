@@ -23,6 +23,7 @@ import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
 import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
 import { fetchRadarNewsBrowser } from "@/lib/fetchRadarNewsBrowser";
+import { splitAfternoonMorning } from "@/lib/radarNewsLayout";
 import { trendingReturnCardGradientStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeNarrativeRadar.module.css";
@@ -49,11 +50,6 @@ const TAB_TITLES: Partial<Record<TabKey, string>> = {
 const PREVIEW_LOGOS_VISIBLE_MAX = 6;
 /** Home grid: 2 rows × 3 columns. Full `/radar` page passes `previewLimit={0}`. */
 export const HOME_RADAR_PREVIEW_LIMIT = 6;
-/**
- * In the News: keep cards whose lead headline is on the selected day or the prior
- * N calendar days (ET). Older backlog in the bake stays out of the featured strip.
- */
-export const NEWS_LEAD_MAX_AGE_DAYS = 2;
 /** Full radar page cap for Accelerating / Fading (matches bake). */
 const ACCEL_FADING_ALL_LIMIT = 15;
 /** Progressive reveal on full `/radar` grids (15 first paint; Show more adds batches). */
@@ -283,58 +279,6 @@ function newsDayForAsOf(news: RadarNewsV0 | null, asOf: string | null): RadarNew
   return news.today || null;
 }
 
-/** Lead article time for date-desc sort after the featured strip. */
-function newsCardLeadTs(card: RadarNewsCardV0): number {
-  const latest = String(card.latest_at || "").trim();
-  if (latest) {
-    const t = Date.parse(latest);
-    if (Number.isFinite(t)) return t;
-  }
-  const pub = String(card.headlines?.[0]?.published_at || "").trim();
-  if (pub) {
-    const t = Date.parse(pub);
-    if (Number.isFinite(t)) return t;
-  }
-  return 0;
-}
-
-/** YYYY-MM-DD for the card's lead headline (ET calendar day when parseable). */
-function newsCardLeadDay(card: RadarNewsCardV0): string {
-  const raw = String(
-    card.headlines?.[0]?.published_at || card.latest_at || "",
-  ).trim();
-  const m = /^(\d{4}-\d{2}-\d{2})/.exec(raw);
-  if (m) return m[1];
-  const t = Date.parse(raw);
-  if (!Number.isFinite(t)) return "";
-  return new Intl.DateTimeFormat("en-CA", {
-    timeZone: "America/New_York",
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(new Date(t));
-}
-
-function calendarDaysBetween(asOf: string, leadDay: string): number | null {
-  const a = /^(\d{4})-(\d{2})-(\d{2})$/.exec(asOf.trim());
-  const b = /^(\d{4})-(\d{2})-(\d{2})$/.exec(leadDay.trim());
-  if (!a || !b) return null;
-  const asOfMs = Date.UTC(+a[1], +a[2] - 1, +a[3]);
-  const leadMs = Date.UTC(+b[1], +b[2] - 1, +b[3]);
-  return Math.round((asOfMs - leadMs) / 86_400_000);
-}
-
-function newsCardLeadIsFresh(
-  card: RadarNewsCardV0,
-  asOf: string,
-  maxAgeDays: number = NEWS_LEAD_MAX_AGE_DAYS,
-): boolean {
-  const leadDay = newsCardLeadDay(card);
-  if (!leadDay) return false;
-  const age = calendarDaysBetween(asOf.slice(0, 10), leadDay);
-  return age != null && age >= 0 && age <= maxAgeDays;
-}
-
 function newsCardsForTab(
   news: RadarNewsV0 | null,
   previewLimit: number,
@@ -342,9 +286,6 @@ function newsCardsForTab(
 ): RadarNewsCardV0[] {
   const day = newsDayForAsOf(news, asOf ?? null);
   if (!day) return [];
-  const asOfKey = String(asOf || day.as_of || news?.as_of || "")
-    .trim()
-    .slice(0, 10);
   const rawPool =
     previewLimit <= 0 && Array.isArray(day.all) && day.all.length > 0
       ? day.all
@@ -353,20 +294,10 @@ function newsCardsForTab(
         : Array.isArray(day.all)
           ? day.all
           : [];
-  // Drop stale leads so home + /radar featured strip don't show week-old cafe guides.
-  const pool = asOfKey
-    ? rawPool.filter((c) => newsCardLeadIsFresh(c, asOfKey))
-    : rawPool;
-  if (previewLimit > 0) return pool.slice(0, previewLimit);
-  // Featured strip (home_limit) keeps bake order among fresh cards; rest date desc.
-  const featured = Math.max(0, Number(news?.home_limit) || HOME_RADAR_PREVIEW_LIMIT);
-  if (pool.length <= featured) return pool;
-  const head = pool.slice(0, featured);
-  const rest = pool
-    .slice(featured)
-    .slice()
-    .sort((a, b) => newsCardLeadTs(b) - newsCardLeadTs(a));
-  return [...head, ...rest];
+  // Preserve publish/bake order (afternoon-first when editorial). Do not re-sort
+  // by lead date — that buried deep cuts and fought the Afternoon break.
+  if (previewLimit > 0) return rawPool.slice(0, previewLimit);
+  return rawPool;
 }
 
 function yearChipLabel(card: { year_suffix?: number | null; name?: string }): string | null {
@@ -612,6 +543,79 @@ function RadarProgressiveGrid({
   );
 }
 
+/** Full `/radar` news: afternoon block → break (only if both) → morning. Home: flat grid. */
+function NewsRadarDayGrid({
+  cards,
+  asOf,
+  companyNames,
+  progressive,
+}: {
+  cards: RadarNewsCardV0[];
+  asOf: string;
+  companyNames?: Record<string, string>;
+  progressive: boolean;
+}) {
+  const asOfKey = String(asOf || "").slice(0, 10);
+  const { afternoon, morning } = progressive
+    ? splitAfternoonMorning(cards, asOfKey)
+    : { afternoon: [] as RadarNewsCardV0[], morning: cards };
+  const showBreak = progressive && afternoon.length > 0 && morning.length > 0;
+  const flat = showBreak ? [...afternoon, ...morning] : cards;
+  const [visible, setVisible] = useState(() =>
+    progressive ? Math.min(flat.length, RADAR_PAGE_INITIAL) : flat.length,
+  );
+
+  useEffect(() => {
+    setVisible(progressive ? Math.min(flat.length, RADAR_PAGE_INITIAL) : flat.length);
+  }, [progressive, flat.length, asOfKey]);
+
+  const shown = flat.slice(0, visible);
+  const shownAfternoon = showBreak ? shown.slice(0, Math.min(visible, afternoon.length)) : [];
+  const shownMorning = showBreak ? shown.slice(afternoon.length) : shown;
+  const showBreakNow = showBreak && shownAfternoon.length === afternoon.length;
+  const hasMore = progressive && visible < flat.length;
+  const nextBatch = Math.min(RADAR_PAGE_BATCH, flat.length - visible);
+
+  const renderCard = (c: RadarNewsCardV0) => (
+    <NewsRadarCard
+      key={`${asOfKey}-${c.slug}-${c.name}-${c.headlines?.[0]?.url || ""}`}
+      card={c}
+      companyNames={companyNames}
+    />
+  );
+
+  return (
+    <div className={styles.newsDaySections}>
+      {showBreak ? (
+        <>
+          <div className={styles.grid}>{shownAfternoon.map(renderCard)}</div>
+          {showBreakNow ? (
+            <div className={styles.afternoonBreak} role="separator">
+              <span className={styles.afternoonBreakLabel}>Afternoon</span>
+            </div>
+          ) : null}
+          {showBreakNow && shownMorning.length > 0 ? (
+            <div className={styles.grid}>{shownMorning.map(renderCard)}</div>
+          ) : null}
+        </>
+      ) : (
+        <div className={styles.grid}>{shown.map(renderCard)}</div>
+      )}
+      {hasMore ? (
+        <div className={styles.showMoreWrap}>
+          <button
+            type="button"
+            className={styles.showMore}
+            onClick={() => setVisible((n) => Math.min(flat.length, n + RADAR_PAGE_BATCH))}
+          >
+            Show more ({nextBatch})
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function NewsRadarCard({
   card,
   companyNames,
@@ -620,7 +624,11 @@ function NewsRadarCard({
   companyNames?: Record<string, string>;
 }) {
   const href = card.slug ? `/themes/${card.slug}` : "/themes";
-  const headline = card.headlines?.[0];
+  const headlines = Array.isArray(card.headlines) ? card.headlines : [];
+  const [slide, setSlide] = useState(0);
+  const slideCount = Math.max(1, headlines.length);
+  const idx = Math.min(slide, slideCount - 1);
+  const headline = headlines[idx] ?? headlines[0];
   const previewItems = normalizeRadarTickersPreview(
     card.tickers_preview,
     // Keep full bake list so RadarLogoRow can compute +N from array overflow;
@@ -640,6 +648,10 @@ function NewsRadarCard({
   const articleDate = fmtArticleDate(headline?.published_at);
   const sourceName = String(headline?.source_name || "").trim();
   const blurb = String(headline?.title || "").trim();
+
+  useEffect(() => {
+    setSlide(0);
+  }, [card.slug, headlines.length]);
 
   return (
     <div className={`${styles.card} ${styles.cardNews}`} style={heat}>
@@ -676,6 +688,31 @@ function NewsRadarCard({
         ) : null}
         {articleDate ? <span>{articleDate}</span> : null}
       </div>
+      {slideCount > 1 ? (
+        <div className={styles.headlinePager} aria-label="More stories for this theme">
+          <button
+            type="button"
+            className={styles.headlinePagerBtn}
+            aria-label="Previous story"
+            disabled={idx <= 0}
+            onClick={() => setSlide((s) => Math.max(0, s - 1))}
+          >
+            ‹
+          </button>
+          <span className={styles.headlinePagerCount}>
+            {idx + 1} / {slideCount}
+          </span>
+          <button
+            type="button"
+            className={styles.headlinePagerBtn}
+            aria-label="Next story"
+            disabled={idx >= slideCount - 1}
+            onClick={() => setSlide((s) => Math.min(slideCount - 1, s + 1))}
+          >
+            ›
+          </button>
+        </div>
+      ) : null}
       {previewItems.length > 0 ? (
         <RadarLogoRow
           items={previewItems}
@@ -949,15 +986,12 @@ export function HomeNarrativeRadar({
       ) : tab === "news" && newsList.length === 0 ? (
         <div className={styles.empty}>No themes in the news yet — check back after the next publish.</div>
       ) : tab === "news" ? (
-        <RadarProgressiveGrid enabled={previewLimit <= 0}>
-          {newsList.map((c) => (
-            <NewsRadarCard
-              key={`${newsAsOf}-${c.slug}-${c.name}`}
-              card={c}
-              companyNames={companyNames}
-            />
-          ))}
-        </RadarProgressiveGrid>
+        <NewsRadarDayGrid
+          cards={newsList}
+          asOf={newsAsOf}
+          companyNames={companyNames}
+          progressive={previewLimit <= 0}
+        />
       ) : radarCards.length === 0 ? (
         <div className={styles.empty}>No themes in this tab yet — check back after the next publish.</div>
       ) : (
