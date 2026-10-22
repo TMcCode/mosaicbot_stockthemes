@@ -24,6 +24,11 @@ export function themeThesisHasContent(tt: ThemeThesisV0 | undefined): boolean {
   return !PLACEHOLDER_THESIS.has(thesis.toLowerCase());
 }
 
+/** Non-placeholder thesis prose, or empty string. */
+export function themeThesisProse(tt: ThemeThesisV0 | undefined): string {
+  return themeThesisHasContent(tt) ? normalizedThesis(tt) : "";
+}
+
 /** Use before rendering ThemeThesisBlock (avoids empty or bull/bear-only payloads). */
 export function shouldShowThemeThesisUi(tt: ThemeThesisV0 | undefined): boolean {
   return themeThesisHasContent(tt);

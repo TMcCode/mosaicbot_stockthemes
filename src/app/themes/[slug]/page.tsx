@@ -18,11 +18,12 @@ import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { LazyThemeNewsPanel } from "@/components/LazyThemeNewsPanel";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { JsonLd } from "@/components/JsonLd";
-import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
+import { shouldShowThemeThesisUi, themeThesisProse } from "@/lib/themeThesis";
 import {
   themeChartPerformanceSeed,
   themeDetailLiveSeed,
 } from "@/lib/themeDetailClientSeed";
+import type { ThemeThesisV0 } from "@/types/theme.detail.v0";
 import styles from "../../page.module.css";
 
 import {
@@ -74,6 +75,67 @@ function clipDescription(s: string, max = 158): string {
   return `${t.slice(0, max - 1).trimEnd()}…`;
 }
 
+const META_DESC_MAX = 158;
+const META_TICKER_PREVIEW = 5;
+
+function sampleTickersFromDetail(
+  detail: { constituents?: Array<{ ticker?: string }> } | null | undefined,
+): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const c of detail?.constituents ?? []) {
+    const t = String(c.ticker || "")
+      .trim()
+      .toUpperCase();
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+    if (out.length >= META_TICKER_PREVIEW) break;
+  }
+  return out;
+}
+
+/**
+ * SERP/OG blurb: theme name + thesis (when present) + sample tickers.
+ * Falls back to seo_intro, then a short default. Not shown in page UI.
+ */
+function themePageDescription(
+  detail:
+    | {
+        seo_intro?: string;
+        theme_thesis?: ThemeThesisV0;
+        constituents?: Array<{ ticker?: string }>;
+      }
+    | null
+    | undefined,
+  themeName: string,
+): string {
+  const tickers = sampleTickersFromDetail(detail);
+  const tickerSuffix = tickers.length ? ` Includes ${tickers.join(", ")}.` : "";
+  const thesis = themeThesisProse(detail?.theme_thesis);
+  if (thesis) {
+    const prefix = `${themeName}: `;
+    const room = META_DESC_MAX - prefix.length - tickerSuffix.length;
+    if (room >= 48) {
+      return `${prefix}${clipDescription(thesis, room)}${tickerSuffix}`;
+    }
+    // Prefer name + thesis when ticker suffix would crush the blurb.
+    return clipDescription(`${prefix}${thesis}`, META_DESC_MAX);
+  }
+  const intro = detail?.seo_intro?.trim() ?? "";
+  if (intro) {
+    // seo_intro already names the theme and sample tickers from ETL.
+    return clipDescription(intro, META_DESC_MAX);
+  }
+  if (tickerSuffix) {
+    return clipDescription(
+      `Stocks and exposure for ${themeName}.${tickerSuffix}`,
+      META_DESC_MAX,
+    );
+  }
+  return `Stocks and exposure for ${themeName} — stockthemes.ai`;
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { manifest } = await getManifestCached();
@@ -82,10 +144,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Theme not found" };
   }
   const loaded = await getThemeDetailCached(slug);
-  const desc =
-    loaded?.detail.seo_intro != null && loaded.detail.seo_intro.trim() !== ""
-      ? clipDescription(loaded.detail.seo_intro)
-      : `Stocks and exposure for ${t.name} — stockthemes.ai`;
+  const desc = themePageDescription(loaded?.detail, t.name);
   const ogImage = openGraphImageAsset();
   return {
     title: t.name,
@@ -153,7 +212,7 @@ export default async function ThemeDetailPage({ params }: Props) {
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const themeUrl = absoluteUrl(`/themes/${slug}`);
   const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
-  const pageDescription = detail?.seo_intro?.trim() || `Stocks and exposure for ${theme.name}.`;
+  const pageDescription = themePageDescription(detail, theme.name);
   const mentions = (detail?.constituents || []).slice(0, 25).map((c) => ({
     "@type": "Thing",
     name: c.name ? `${c.name} (${c.ticker})` : c.ticker,
