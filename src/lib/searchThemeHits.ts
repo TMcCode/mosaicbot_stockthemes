@@ -64,10 +64,28 @@ export function searchThemeHits(
   const tickerish = isTickerishQuery(q);
   const upper = q.replace(/[^a-zA-Z]/g, "").toUpperCase();
 
+  const shortSymbol = tickerish && upper.length > 0 && upper.length <= 2;
+  const themesBySlug = new Map(index.themes.map((t) => [t.slug, t]));
+
+  // Short symbol queries ("AI"): name/alias theme hits before membership from AI*/SI* prefixes.
+  if (shortSymbol) {
+    const directFirst = rankDirectSearchHits(index, q, { kinds: ["theme"] });
+    for (const hit of directFirst) {
+      if (out.length >= limit) return out;
+      if (hit.kind !== "theme") continue;
+      const slug = hit.ref.slug.toLowerCase();
+      if (seen.has(slug)) continue;
+      seen.add(slug);
+      out.push(hit.ref);
+    }
+  }
+
   // Ticker-shaped: themes that actually contain that ticker (membership), then direct name/alias hits.
+  // Short queries: exact ticker only — broad prefixes crowd out AI-named themes.
   if (tickerish && upper.length >= 1) {
-    const themesBySlug = new Map(index.themes.map((t) => [t.slug, t]));
-    const tickers = index.tickers.filter((t) => t.ticker.startsWith(upper));
+    const tickers = index.tickers.filter((t) =>
+      shortSymbol ? t.ticker === upper : t.ticker.startsWith(upper),
+    );
     for (const t of tickers) {
       for (const slug of t.theme_slugs ?? []) {
         if (out.length >= limit) return out;

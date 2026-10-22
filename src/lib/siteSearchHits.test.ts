@@ -172,8 +172,71 @@ test("theme name matches rank above alias-only matches", () => {
 test("short queries match whole-word prefixes, not mid-word substrings", () => {
   const keys = collectSiteSearchHits(sampleIndex, "ai").map((h) => h.key);
   assert.ok(keys.includes("theme:ai-26-gpus"));
+  assert.equal(keys[0], "group:ai", "'AI' should rank the AI group first");
   const retailKeys = collectSiteSearchHits(beautyIndex, "ai").map((h) => h.key);
   assert.ok(!retailKeys.includes("group:retail"), "'ai' must not match inside 'retail'");
+});
+
+test("short symbol query prefers exact group over ticker-prefix flood", () => {
+  const index: SearchIndexV0 = {
+    schema_version: 0,
+    as_of: "2026-10-22T00:00:00Z",
+    tickers: [
+      {
+        ticker: "AI",
+        name: "C3.ai, Inc.",
+        theme_slugs: ["enterprise-soft-26-apps"],
+        aliases: [],
+      },
+      {
+        ticker: "AIG",
+        name: "American International Group",
+        theme_slugs: ["insurance-26-pc"],
+        aliases: [],
+      },
+      {
+        ticker: "AIR",
+        name: "AAR Corp.",
+        theme_slugs: ["airplanes-26-parts"],
+        aliases: [],
+      },
+    ],
+    themes: [
+      {
+        slug: "ai-26-gpus",
+        name: "AI '26: GPUs",
+        group_slug: "ai",
+        group_name: "AI",
+        aliases: [],
+      },
+      {
+        slug: "enterprise-soft-26-apps",
+        name: "Enterprise Soft '26: Apps",
+        group_slug: "enterprise-soft",
+        group_name: "Enterprise Soft",
+        aliases: [],
+      },
+    ],
+    groups: [
+      {
+        slug: "ai",
+        name: "AI",
+        aliases: ["artificial intelligence", "SI", "superintelligence"],
+      },
+      { slug: "ai-bottleneck", name: "AI Bottleneck", aliases: [] },
+      { slug: "enterprise-soft", name: "Enterprise Soft", aliases: [] },
+    ],
+  };
+  const keys = collectSiteSearchHits(index, "AI").map((h) => h.key);
+  assert.equal(keys[0], "group:ai");
+  assert.ok(keys.includes("ticker:AI"));
+  assert.ok(keys.includes("theme:ai-26-gpus"));
+  assert.ok(keys.includes("group:ai-bottleneck"));
+  assert.ok(!keys.includes("ticker:AIG"), "2-letter query must not flood AI* prefixes");
+  assert.ok(!keys.includes("ticker:AIR"));
+
+  assert.equal(collectSiteSearchHits(index, "SI")[0]?.key, "group:ai");
+  assert.equal(collectSiteSearchHits(index, "superintelligence")[0]?.key, "group:ai");
 });
 
 test("typos are spell-corrected against index words", () => {

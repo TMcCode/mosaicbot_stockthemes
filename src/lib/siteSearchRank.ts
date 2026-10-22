@@ -376,6 +376,12 @@ function pushHit(out: SiteSearchHit[], seen: Set<string>, hit: SiteSearchHit, ma
   return out.length >= max;
 }
 
+/**
+ * 1–2 letter symbol queries ("AI", "EV") match dozens of ticker prefixes and used to
+ * fill the hit cap before the matching group (e.g. group:ai) could appear.
+ */
+const SHORT_SYMBOL_MAX_LEN = 2;
+
 export function collectSiteSearchHits(index: SearchIndexV0, query: string): SiteSearchHit[] {
   const q = query.trim();
   if (!q) {
@@ -383,14 +389,33 @@ export function collectSiteSearchHits(index: SearchIndexV0, query: string): Site
   }
   const tickerish = isTickerishQuery(q);
   const upper = q.replace(/[^a-zA-Z]/g, "").toUpperCase();
+  const shortSymbol = tickerish && upper.length > 0 && upper.length <= SHORT_SYMBOL_MAX_LEN;
 
   const seen = new Set<string>();
   const out: SiteSearchHit[] = [];
   const themesBySlug = new Map(index.themes.map((t) => [t.slug, t]));
 
-  // 1) Ticker prefix matches (NVDA, AAPL, …)
+  // 1) Exact group name/slug/alias for symbol-shaped queries
+  // ("AI" → AI group before C3.ai; "SI" / curated synonym → same group).
   if (tickerish && upper.length >= 1) {
-    const matches = index.tickers.filter((t) => t.ticker.startsWith(upper));
+    const qCompact = prepareText(q).compact;
+    for (const g of index.groups) {
+      const name = prepareText(g.name).compact;
+      const slug = prepareText(g.slug).compact;
+      const aliasHit = (g.aliases ?? []).some((a) => prepareText(a).compact === qCompact);
+      if (name === qCompact || slug === qCompact || aliasHit) {
+        if (pushHit(out, seen, { kind: "group", ref: g, key: `group:${g.slug}` })) {
+          return out;
+        }
+      }
+    }
+  }
+
+  // 2) Ticker matches (NVDA, AAPL, …). Short queries: exact symbol only — no AI*/SI* flood.
+  if (tickerish && upper.length >= 1) {
+    const matches = index.tickers.filter((t) =>
+      shortSymbol ? t.ticker === upper : t.ticker.startsWith(upper),
+    );
     matches.sort((a, b) => {
       const ex = a.ticker === upper ? 0 : 1;
       const ey = b.ticker === upper ? 0 : 1;
@@ -419,7 +444,7 @@ export function collectSiteSearchHits(index: SearchIndexV0, query: string): Site
     return out.slice(0, MAX_HITS);
   }
 
-  // 2) Ranked name / alias matches (normalized: "make up" = "make-up" = "makeup").
+  // 3) Ranked name / alias matches (normalized: "make up" = "make-up" = "makeup").
   // Short symbol-shaped queries ("ai", "ev") skip company names, which would flood results;
   // 4–5 letter words ("nike", "apple") still find companies by name.
   const includeTickerNames = !tickerish || upper.length >= 4;
@@ -433,7 +458,7 @@ export function collectSiteSearchHits(index: SearchIndexV0, query: string): Site
     }
   }
 
-  // 3) Spell-corrected query only when direct matching came up short.
+  // 4) Spell-corrected query only when direct matching came up short.
   if (!tickerish && shouldRunTypoFallback(direct.length)) {
     for (const hit of rankTypoCorrectedHits(index, q)) {
       if (pushHit(out, seen, hit)) break;
