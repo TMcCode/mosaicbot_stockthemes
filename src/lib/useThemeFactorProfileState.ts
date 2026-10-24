@@ -52,7 +52,11 @@ export function useThemeFactorProfileState({
   initialProfile = null,
   enabled = true,
 }: Args): ThemeFactorProfileState {
-  const [state, setState] = useState<ThemeFactorProfileState>({ status: "loading" });
+  const [state, setState] = useState<ThemeFactorProfileState>(() => {
+    if (!enabled) return { status: "absent" };
+    if (initialProfile) return resolveThemeFactorProfileState(initialProfile);
+    return { status: "loading" };
+  });
 
   useEffect(() => {
     if (!enabled) {
@@ -67,6 +71,7 @@ export function useThemeFactorProfileState({
       setState(resolveThemeFactorProfileState(profile));
     };
 
+    // Keep state in sync if parent passes a new baked profile; skip redundant set when unchanged.
     if (initialProfile) {
       applyProfile(initialProfile);
     }

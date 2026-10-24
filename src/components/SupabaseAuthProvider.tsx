@@ -5,23 +5,43 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useState,
   type ReactNode,
 } from "react";
-import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
+import type { Session, User } from "@supabase/supabase-js";
 
+import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
+import { readLikelySupabaseSession } from "@/lib/supabase/likelySession";
 
 type SupabaseAuthContextValue = {
   configured: boolean;
   loading: boolean;
   session: Session | null;
   user: User | null;
+  /**
+   * Optimistic: localStorage had a session when checked before paint.
+   * Cleared once getSession settles as guest (so stale tokens don’t keep gated UI up).
+   */
+  presumeSignedIn: boolean;
+  /** Confirmed user, or still loading with a likely persisted session. */
+  showAuthedUi: boolean;
   signOut: () => Promise<void>;
 };
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextValue | null>(null);
+
+const GUEST_FALLBACK: SupabaseAuthContextValue = {
+  configured: false,
+  loading: false,
+  session: null,
+  user: null,
+  presumeSignedIn: false,
+  showAuthedUi: false,
+  signOut: async () => {},
+};
 
 export function useSupabaseAuth(): SupabaseAuthContextValue {
   const ctx = useContext(SupabaseAuthContext);
@@ -33,16 +53,7 @@ export function useSupabaseAuth(): SupabaseAuthContextValue {
 
 export function useOptionalSupabaseAuth(): SupabaseAuthContextValue {
   const ctx = useContext(SupabaseAuthContext);
-  if (!ctx) {
-    return {
-      configured: false,
-      loading: false,
-      session: null,
-      user: null,
-      signOut: async () => {},
-    };
-  }
-  return ctx;
+  return ctx ?? GUEST_FALLBACK;
 }
 
 function posthogIdentify(user: User) {
@@ -95,24 +106,21 @@ function captureAuthPostHog(user: User) {
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const configured = useMemo(() => Boolean(getSupabasePublicConfig()), []);
-  const [client, setClient] = useState<SupabaseClient | null>(null);
+  // Eager client (no dynamic import) so getSession can start on first effect.
+  const client = useMemo(() => (configured ? getBrowserSupabase() : null), [configured]);
   const [loading, setLoading] = useState(configured);
   const [session, setSession] = useState<Session | null>(null);
+  const [presumeSignedIn, setPresumeSignedIn] = useState(false);
 
-  useEffect(() => {
+  // Before paint: unlock gated UI for returning users without waiting on getSession.
+  useLayoutEffect(() => {
     if (!configured) return;
-    let cancelled = false;
-    void import("@/lib/supabase/browserClient").then(({ getBrowserSupabase }) => {
-      if (!cancelled) setClient(getBrowserSupabase());
-    });
-    return () => {
-      cancelled = true;
-    };
+    setPresumeSignedIn(readLikelySupabaseSession());
   }, [configured]);
 
   useEffect(() => {
-    if (!configured) return;
-    if (!client) {
+    if (!configured || !client) {
+      setLoading(false);
       return;
     }
 
@@ -131,11 +139,15 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
       .then(({ data: { session: s } }) => {
         setSession(s);
         if (s?.user) {
+          setPresumeSignedIn(true);
           posthogIdentify(s.user);
+        } else {
+          setPresumeSignedIn(false);
         }
       })
       .catch(() => {
         setSession(null);
+        setPresumeSignedIn(false);
       })
       .finally(() => {
         window.clearTimeout(failSafe);
@@ -144,11 +156,13 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
 
     const { data: unsub } = client.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      setPresumeSignedIn(Boolean(s?.user));
       finishLoading();
       if (_event === "SIGNED_IN" && s?.user) {
         captureAuthPostHog(s.user);
       }
       if (_event === "SIGNED_OUT") {
+        setPresumeSignedIn(false);
         posthogReset();
       }
     });
@@ -163,17 +177,23 @@ export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
     await client.auth.signOut();
     posthogReset();
     setSession(null);
+    setPresumeSignedIn(false);
   }, [client]);
+
+  const user = session?.user ?? null;
+  const showAuthedUi = Boolean(user) || (loading && presumeSignedIn);
 
   const value = useMemo<SupabaseAuthContextValue>(
     () => ({
       configured,
       loading,
       session,
-      user: session?.user ?? null,
+      user,
+      presumeSignedIn,
+      showAuthedUi,
       signOut,
     }),
-    [configured, loading, session, signOut],
+    [configured, loading, session, user, presumeSignedIn, showAuthedUi, signOut],
   );
 
   return <SupabaseAuthContext.Provider value={value}>{children}</SupabaseAuthContext.Provider>;

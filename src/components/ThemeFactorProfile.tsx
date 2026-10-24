@@ -186,16 +186,15 @@ export function ThemeFactorProfile({
   initialProfile = null,
   fillRail = false,
 }: Props) {
-  const { configured, loading: authLoading, user } = useSupabaseAuth();
-  const authed = Boolean(configured && user);
+  const { configured, showAuthedUi } = useSupabaseAuth();
   const state = useThemeFactorProfileState({
     slug,
     dataBaseUrl,
     initialProfile,
-    enabled: authed,
+    enabled: Boolean(configured && showAuthedUi),
   });
 
-  if (!configured || authLoading || !user) {
+  if (!configured || !showAuthedUi) {
     return null;
   }
 

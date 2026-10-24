@@ -1,0 +1,45 @@
+.skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--button-secondary-border, rgba(128, 128, 128, 0.28));
+  border-radius: 10px;
+  background: var(--surface-card, rgba(255, 255, 255, 0.02));
+  padding: 10px 12px;
+  pointer-events: none;
+}
+
+.line {
+  height: 10px;
+  border-radius: 4px;
+  background: rgba(128, 128, 128, 0.16);
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+.lineShort {
+  width: 42%;
+}
+
+.lineMid {
+  width: 78%;
+}
+
+.lineLong {
+  width: 100%;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .line {
+  background: rgba(30, 28, 54, 0.1);
+}

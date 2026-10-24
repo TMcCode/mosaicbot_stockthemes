@@ -1994,10 +1994,6 @@ a.secondary {
     margin-top: -2px;
   }
 
-  /* Factor Profile lives in the thesis mobile deck — hide the standalone card. */
-  .themeHeroAreas > .factorDesktopOnly {
-    display: none;
-  }
 
   .heroTitle {
     font-size: clamp(28px, 7vw, 40px);

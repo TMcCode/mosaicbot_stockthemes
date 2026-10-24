@@ -310,9 +310,8 @@ export default async function ThemeDetailPage({ params }: Props) {
 
             const renderFactor = () => (
               <ThemeHeroFactorSlot
-                className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}${
-                  showThesis && showFactors ? ` ${styles.factorDesktopOnly}` : ""
-                }`}
+                className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}`}
+                desktopOnly={showThesis && showFactors}
               >
                 <ThemeFactorProfile
                   slug={slug}
@@ -432,22 +431,24 @@ export default async function ThemeDetailPage({ params }: Props) {
             />
           ) : null}
           {detail?.constituents?.length && constituentTableModel ? (
-            detail && dataBaseUrl && stockthemesLivePriceReturnsEnabled() ? (
-              <ThemeConstituentsTableLive
-                slug={slug}
-                dataBaseUrl={dataBaseUrl}
-                serverDetail={liveDetailSeed ?? detail}
-                selectedDates={selectedDates}
-              />
-            ) : (
-              <ThemeConstituentsTable
-                detail={detail}
-                model={constituentTableModel}
-                selectedDates={selectedDates}
-                slug={slug}
-                dataBaseUrl={dataBaseUrl ?? undefined}
-              />
-            )
+            <DeferRender minHeight={280} rootMargin="400px 0px">
+              {detail && dataBaseUrl && stockthemesLivePriceReturnsEnabled() ? (
+                <ThemeConstituentsTableLive
+                  slug={slug}
+                  dataBaseUrl={dataBaseUrl}
+                  serverDetail={liveDetailSeed ?? detail}
+                  selectedDates={selectedDates}
+                />
+              ) : (
+                <ThemeConstituentsTable
+                  detail={detail}
+                  model={constituentTableModel}
+                  selectedDates={selectedDates}
+                  slug={slug}
+                  dataBaseUrl={dataBaseUrl ?? undefined}
+                />
+              )}
+            </DeferRender>
           ) : null}
           {detail && !detail.constituents.length ? (
             <p style={{ fontSize: 15, color: "var(--text-secondary)" }}>No constituents in this payload.</p>

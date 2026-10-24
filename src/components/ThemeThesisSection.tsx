@@ -216,7 +216,7 @@ export function ThemeThesisBlock({ themeThesis, fullBleed = false, factorDeck = 
   const thesisText = thesis.thesis?.trim() ?? "";
   const bull = cleanCasePoints(thesis.bull_case);
   const bear = cleanCasePoints(thesis.bear_case);
-  const { configured, loading, user } = useSupabaseAuth();
+  const { configured, showAuthedUi } = useSupabaseAuth();
   const wrapClass = fullBleed ? `${styles.block} ${styles.blockFull}` : styles.block;
 
   if (!configured) {
@@ -232,7 +232,7 @@ export function ThemeThesisBlock({ themeThesis, fullBleed = false, factorDeck = 
     );
   }
 
-  if (loading || !user) {
+  if (!showAuthedUi) {
     return null;
   }
 

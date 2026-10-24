@@ -35,9 +35,10 @@ export function ThemeGuestUnlockHint({
   showThesis = false,
   showFactors = false,
 }: Props) {
-  const { configured, loading, user } = useSupabaseAuth();
+  const { configured, showAuthedUi } = useSupabaseAuth();
 
-  if (!configured || loading || user) {
+  // Guests: show immediately (no getSession wait). Hide while authed or optimistically signed-in.
+  if (!configured || showAuthedUi) {
     return null;
   }
 
