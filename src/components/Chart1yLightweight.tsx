@@ -77,8 +77,18 @@ function fitChartTimeScale(chart: IChartApi): void {
   ts.applyOptions({ rightOffset: 1 });
 }
 
-const CHART_VIEW_HEIGHT = 420;
-/** Shareable plot aspect (~4:3) — full square was too tall; landscape strip too wide. */
+const CHART_VIEW_HEIGHT_DESKTOP = 420;
+/** Phone: slightly shorter so the chart doesn’t dominate the fold. */
+const CHART_VIEW_HEIGHT_MOBILE = 320;
+const CHART_VIEW_HEIGHT_MQ = "(max-width: 640px)";
+
+function chartViewHeight(): number {
+  if (typeof window === "undefined") return CHART_VIEW_HEIGHT_DESKTOP;
+  return window.matchMedia(CHART_VIEW_HEIGHT_MQ).matches
+    ? CHART_VIEW_HEIGHT_MOBILE
+    : CHART_VIEW_HEIGHT_DESKTOP;
+}
+
 /** Shareable plot aspect (~4:3) — full square was too tall; landscape strip too wide. */
 const EXPORT_CHART_W = 1100;
 const EXPORT_CHART_H = 720;
@@ -96,7 +106,7 @@ async function takeSquareChartScreenshot(chart: IChartApi, host: HTMLElement): P
   fitChartTimeScale(chart);
   await nextPaint();
   const shot = chart.takeScreenshot();
-  chart.applyOptions({ width: origW, height: CHART_VIEW_HEIGHT });
+  chart.applyOptions({ width: origW, height: chartViewHeight() });
   fitChartTimeScale(chart);
   return shot;
 }
@@ -320,8 +330,12 @@ type Chart1yCanvasProps = {
   header?: ReactNode;
   /** Performance / Composition toggle — footer on mobile only. */
   viewToggle?: ReactNode;
-  /** Period chips in the footer row (right of logo + note on desktop). */
+  /** Period chips in the footer row (desktop; hidden on mobile). */
   periodControls?: ReactNode;
+  /** Period chips above the plot (mobile only). */
+  periodControlsMobile?: ReactNode;
+  /** Composition legend between chart and footer (mobile only). */
+  legend?: ReactNode;
 };
 
 /**
@@ -342,11 +356,34 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   header,
   viewToggle,
   periodControls,
+  periodControlsMobile,
+  legend,
 }: Chart1yCanvasProps) {
   const { theme } = useStockthemesTheme();
   const themeRef = useRef(theme);
   themeRef.current = theme;
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [viewHeight, setViewHeight] = useState(CHART_VIEW_HEIGHT_DESKTOP);
+
+  useEffect(() => {
+    const mq = window.matchMedia(CHART_VIEW_HEIGHT_MQ);
+    const sync = () => {
+      const next = mq.matches ? CHART_VIEW_HEIGHT_MOBILE : CHART_VIEW_HEIGHT_DESKTOP;
+      setViewHeight(next);
+      const chart = chartRef.current;
+      const host = wrapRef.current;
+      if (chart && host) {
+        chart.applyOptions({
+          width: Math.max(host.clientWidth, 200),
+          height: next,
+        });
+        fitChartTimeScale(chart);
+      }
+    };
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
   const shellRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const indexedBaselineRef = useRef<IPriceLine | null>(null);
@@ -379,7 +416,7 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
     lineApisRef.current.clear();
 
     const width = Math.max(el.clientWidth, 200);
-    const height = CHART_VIEW_HEIGHT;
+    const height = chartViewHeight();
 
     let chart: IChartApi | null = null;
     try {
@@ -703,20 +740,25 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
 
     let resizeFitTimer: ReturnType<typeof setTimeout> | null = null;
     let lastObservedWidth = width;
+    let lastObservedHeight = height;
     const ro =
       typeof ResizeObserver !== "undefined"
         ? new ResizeObserver(() => {
             if (!wrapRef.current || !chartRef.current) return;
             const w = Math.max(wrapRef.current.clientWidth, 200);
-            if (w === lastObservedWidth) return;
+            const h = chartViewHeight();
+            if (w === lastObservedWidth && h === lastObservedHeight) return;
             lastObservedWidth = w;
+            lastObservedHeight = h;
             if (resizeFitTimer !== null) clearTimeout(resizeFitTimer);
             resizeFitTimer = setTimeout(() => {
               resizeFitTimer = null;
               if (!wrapRef.current || !chartRef.current) return;
               const w2 = Math.max(wrapRef.current.clientWidth, 200);
+              const h2 = chartViewHeight();
               lastObservedWidth = w2;
-              chartRef.current.applyOptions({ width: w2 });
+              lastObservedHeight = h2;
+              chartRef.current.applyOptions({ width: w2, height: h2 });
               fitChartTimeScale(chartRef.current);
             }, 120);
           })
@@ -769,7 +811,9 @@ const Chart1yCanvas = memo(function Chart1yCanvas({
   return (
     <div ref={shellRef} className={styles.chartShell}>
       {header}
-      <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: CHART_VIEW_HEIGHT }} />
+      {periodControlsMobile}
+      <div ref={wrapRef} className={styles.chartBox} style={{ minHeight: viewHeight }} />
+      {legend ? <div className={styles.legendSlot}>{legend}</div> : null}
       <div className={styles.chartFooter}>
         <div className={styles.chartFooterMeta}>
           {viewToggle ? <div className={styles.viewToggleBar}>{viewToggle}</div> : null}
@@ -1364,6 +1408,19 @@ export function Chart1yLightweight({
     );
   }, []);
 
+  /** Phone layout (≤640): cadence above chart, wrap legend, etc. Desktop stays pre-mobile. */
+  const [isPhone, setIsPhone] = useState(() =>
+    typeof window !== "undefined" ? window.matchMedia("(max-width: 640px)").matches : false,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    const sync = () => setIsPhone(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
   const handleDownloadPng = useCallback(async () => {
     const chart = chartApiRef.current;
     const host = chartHostRef.current;
@@ -1455,6 +1512,106 @@ export function Chart1yLightweight({
         ? "Equal-weight average of the themes in this group."
         : "Exposure-weighted average of theme constituents."
       : null;
+
+  const compositionSeries =
+    activeView === "composition" && hasComp
+      ? chart1ySorted?.composition_indexed?.series
+      : undefined;
+
+  const renderCompositionLegend = (phone: boolean) => {
+    if (!compositionSeries?.length) return null;
+    return (
+      <div
+        className={phone ? styles.legendInline : styles.legend}
+        role="group"
+        aria-label="Series — click a name to show or hide on the chart"
+      >
+        {compositionSeries.map((s, i) => {
+          if (!s.dates?.length || !s.values?.length) return null;
+          const meta = compositionMetaByTicker?.[s.ticker.toUpperCase()];
+          const name = meta?.name?.trim() || s.name?.trim() || "";
+          const ticker = s.ticker?.trim() || "";
+          const tickersPreview = meta?.tickersPreview?.trim();
+          const tip = [name || ticker, tickersPreview].filter(Boolean).join(" · ");
+          if (phone) {
+            const label = ticker || name || "?";
+            return (
+              <button
+                key={s.ticker}
+                type="button"
+                className={`${styles.legendChip} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
+                aria-pressed={!hiddenSet.has(s.ticker)}
+                title={tip || label}
+                onClick={() => toggleSeries(s.ticker)}
+              >
+                <span
+                  className={styles.swatch}
+                  style={{ background: PALETTE[i % PALETTE.length] }}
+                />
+                <span className={styles.legendChipLabel}>{label}</span>
+              </button>
+            );
+          }
+          const showThirdColumn = Boolean(tickersPreview) || compositionLegendShowMcap;
+          const stackedLegend = Boolean(tickersPreview);
+          return (
+            <button
+              key={s.ticker}
+              type="button"
+              className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${stackedLegend ? styles.legendItemButtonStacked : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
+              aria-pressed={!hiddenSet.has(s.ticker)}
+              title={tip || undefined}
+              onClick={() => toggleSeries(s.ticker)}
+            >
+              <span
+                className={styles.swatch}
+                style={{ background: PALETTE[i % PALETTE.length] }}
+              />
+              <span className={styles.legendNameCell}>
+                {name ? (
+                  <span className={styles.legendLabel}>{name}</span>
+                ) : ticker ? (
+                  <span className={styles.legendLabel}>{ticker}</span>
+                ) : null}
+                {compositionLegendShowSeriesBadge && ticker ? (
+                  <TickerBadge ticker={ticker} />
+                ) : null}
+              </span>
+              {showThirdColumn ? (
+                <span
+                  className={
+                    tickersPreview ? styles.legendTickers : styles.legendMcap
+                  }
+                >
+                  {tickersPreview
+                    ? tickersPreview
+                    : formatMarketCap(meta?.marketCapUsd)}
+                </span>
+              ) : null}
+            </button>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const periodToolbar = showPeriodControls ? (
+    <ChartPeriodToolbar
+      period={period}
+      onPeriodChange={(next) => {
+        startTransition(() => setPeriod(next));
+      }}
+      supportedPeriods={supportedPeriods}
+      supportedCustomPeriodKeys={supportedCustomPeriodKeys}
+      customPeriods={customPeriods}
+      variant="detail"
+      onDownloadPng={() => {
+        void handleDownloadPng();
+      }}
+      downloadBusy={downloadBusy}
+    />
+  ) : null;
+
   return (
     <section className={styles.section} aria-label="Theme performance chart">
       <div
@@ -1476,6 +1633,7 @@ export function Chart1yLightweight({
           chartApiRef={chartApiRef}
           chartHostRef={chartHostRef}
           performanceFootnote={performanceFootnote}
+          legend={isPhone ? renderCompositionLegend(true) : null}
           header={
             <div className={styles.toolbar}>
               <span className={styles.toolbarLabel}>
@@ -1540,8 +1698,11 @@ export function Chart1yLightweight({
             ) : null
           }
           periodControls={
-            showPeriodControls ? (
-              <div className={styles.periodBar}>
+            periodToolbar ? <div className={styles.periodBar}>{periodToolbar}</div> : null
+          }
+          periodControlsMobile={
+            periodToolbar ? (
+              <div className={styles.periodBarMobile}>
                 <ChartPeriodToolbar
                   period={period}
                   onPeriodChange={(next) => {
@@ -1566,54 +1727,7 @@ export function Chart1yLightweight({
           </span>
         ) : null}
       </div>
-      {activeView === "composition" && hasComp && chart1ySorted?.composition_indexed?.series ? (
-        <div
-          className={styles.legend}
-          role="group"
-          aria-label="Series — click a name to show or hide on the chart"
-        >
-          {chart1ySorted.composition_indexed.series.map((s, i) => {
-            if (!s.dates?.length || !s.values?.length) return null;
-            const meta = compositionMetaByTicker?.[s.ticker.toUpperCase()];
-            const name = meta?.name?.trim() || s.name?.trim() || "";
-            const ticker = s.ticker?.trim() || "";
-            const tickersPreview = meta?.tickersPreview?.trim();
-            const showThirdColumn = Boolean(tickersPreview) || compositionLegendShowMcap;
-            const stackedLegend = Boolean(tickersPreview);
-            return (
-              <button
-                key={s.ticker}
-                type="button"
-                className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${stackedLegend ? styles.legendItemButtonStacked : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
-                aria-pressed={!hiddenSet.has(s.ticker)}
-                onClick={() => toggleSeries(s.ticker)}
-              >
-                <span
-                  className={styles.swatch}
-                  style={{ background: PALETTE[i % PALETTE.length] }}
-                />
-                <span className={styles.legendNameCell}>
-                  {name ? <span className={styles.legendLabel}>{name}</span> : null}
-                  {compositionLegendShowSeriesBadge && ticker ? (
-                    <TickerBadge ticker={ticker} />
-                  ) : null}
-                </span>
-                {showThirdColumn ? (
-                  <span
-                    className={
-                      tickersPreview ? styles.legendTickers : styles.legendMcap
-                    }
-                  >
-                    {tickersPreview
-                      ? tickersPreview
-                      : formatMarketCap(meta?.marketCapUsd)}
-                  </span>
-                ) : null}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+      {!isPhone ? renderCompositionLegend(false) : null}
     </section>
   );
 }

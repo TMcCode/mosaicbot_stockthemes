@@ -15,6 +15,20 @@
   padding: 6px 12px 4px;
 }
 
+.chartShell {
+  position: relative;
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #0f1115;
+}
+
+/* Mobile-only slots — hidden on desktop so layout matches pre-mobile polish. */
+.periodBarMobile,
+.legendSlot {
+  display: none;
+}
+
 .chartFooter {
   display: flex;
   flex-wrap: nowrap;
@@ -145,14 +159,58 @@
 }
 
 @media (max-width: 640px) {
-  /* Mobile: chips on top, then toggle + logo on one row. */
+  /* Mobile only: title → cadence → chart → legend → toggle/brand. */
+  .chartShell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "header"
+      "periodMobile"
+      "chart"
+      "legend"
+      "footer";
+  }
+
+  .toolbar {
+    grid-area: header;
+  }
+
+  .periodBarMobile {
+    display: flex;
+    grid-area: periodMobile;
+    width: 100%;
+    max-width: 100%;
+    justify-content: flex-start;
+    min-width: 0;
+    padding: 2px 10px 6px;
+    box-sizing: border-box;
+  }
+
+  .chartBox {
+    grid-area: chart;
+  }
+
+  .legendSlot {
+    display: block;
+    grid-area: legend;
+    min-width: 0;
+    padding: 0 10px 4px;
+    box-sizing: border-box;
+  }
+
   .chartFooter {
-    flex-direction: column;
+    grid-area: footer;
+    flex-direction: row;
     flex-wrap: nowrap;
-    align-items: stretch;
+    align-items: center;
     gap: 8px;
     padding: 8px 10px 10px;
     overflow: visible;
+  }
+
+  /* Desktop period chips stay in the footer markup but are unused on phone. */
+  .chartFooter .periodBar {
+    display: none;
   }
 
   /* Must beat `.toggle { display: inline-flex }` later in this file. */
@@ -160,17 +218,7 @@
     display: none !important;
   }
 
-  .periodBar {
-    order: 1;
-    width: 100%;
-    max-width: 100%;
-    flex: none;
-    justify-content: flex-start;
-    min-width: 0;
-  }
-
   .chartFooterMeta {
-    order: 2;
     width: 100%;
     flex: none;
     justify-content: space-between;
@@ -345,14 +393,6 @@
   color: #d8fff8;
 }
 
-.chartShell {
-  position: relative;
-  width: 100%;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #0f1115;
-}
-
 :global(.st-theme[data-theme="light"]) .chartShell {
   background: #f7f6fc;
 }
@@ -362,6 +402,21 @@
   min-height: 340px;
   overflow: hidden;
   background: #0f1115;
+}
+
+@media (max-width: 640px) {
+  .chartBox {
+    min-height: 300px;
+  }
+
+  .toolbar {
+    padding: 4px 10px 2px;
+  }
+
+  .chartFooter {
+    gap: 6px;
+    padding: 6px 10px 8px;
+  }
 }
 
 :global(.st-theme[data-theme="light"]) .chartBox {
@@ -404,11 +459,52 @@
   color: var(--text-secondary, #9aa8a6);
 }
 
-@media (max-width: 640px) {
-  .legend {
-    grid-template-columns: 1fr;
-    column-gap: 8px;
-  }
+/* Phone: classic wrap legend — swatch + ticker, not tall cards. */
+.legendInline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 10px;
+  margin-top: 0;
+  width: 100%;
+  padding: 0 2px;
+}
+
+.legendChip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-primary, #eaf2f0);
+  cursor: pointer;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.legendChip:hover {
+  opacity: 0.85;
+}
+
+.legendChip:focus-visible {
+  outline: 2px solid var(--text-primary, #eaf2f0);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+.legendChipLabel {
+  letter-spacing: 0.01em;
+}
+
+.legendChip .swatch {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
 }
 
 .legendItem {
@@ -577,18 +673,11 @@
 }
 
 @media (max-width: 600px) {
-  .legendItemButton {
-    grid-template-columns: 10px minmax(0, 1fr) minmax(84px, 30vw);
-    gap: 7px;
-    padding: 7px 9px;
-  }
-
   .legendItemButtonTwoCol {
     grid-template-columns: 10px minmax(0, 1fr);
   }
 
-  .legendTickers,
-  .legendMcap {
+  .legendTickers {
     font-size: 10px;
   }
 }

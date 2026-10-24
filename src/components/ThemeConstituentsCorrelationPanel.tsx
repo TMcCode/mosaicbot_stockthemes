@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 
 import styles from "@/app/page.module.css";
@@ -41,6 +41,123 @@ function matrixDensity(tickerCount: number): "comfortable" | "compact" | "dense"
   return "comfortable";
 }
 
+const MATRIX_FIT_MQ = "(max-width: 560px)";
+
+/** Phone: scale matrix to fit width. */
+function useMatrixPhoneFit(layoutKey: string | number) {
+  const shellRef = useRef<HTMLDivElement>(null);
+  const scaleRef = useRef<HTMLDivElement>(null);
+  const [narrow, setNarrow] = useState(false);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    const mq = window.matchMedia(MATRIX_FIT_MQ);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  useLayoutEffect(() => {
+    const shell = shellRef.current;
+    const inner = scaleRef.current;
+    if (!shell || !inner) return;
+
+    const measure = () => {
+      if (!narrow) {
+        setScale(1);
+        shell.style.height = "";
+        return;
+      }
+      const avail = shell.clientWidth;
+      const need = inner.scrollWidth;
+      const next = avail > 0 && need > avail ? avail / need : 1;
+      setScale(next);
+      shell.style.height = next < 1 ? `${inner.offsetHeight * next}px` : "";
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(shell);
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [narrow, layoutKey]);
+
+  return {
+    shellRef,
+    scaleRef,
+    narrow,
+    scale,
+    fitted: narrow,
+  };
+}
+
+type ConstituentMetaMap = Map<
+  string,
+  { name?: string; logo_url?: string | null }
+>;
+
+function ConstituentCorrTable({
+  tickers,
+  matrix,
+  meta,
+  className,
+}: {
+  tickers: string[];
+  matrix: Array<Array<number | null>>;
+  meta: ConstituentMetaMap;
+  className: string;
+}) {
+  return (
+    <table className={className} data-density={matrixDensity(tickers.length)}>
+      <thead>
+        <tr>
+          <th scope="col" />
+          {tickers.map((ticker) => {
+            const rowMeta = meta.get(ticker);
+            return (
+              <th key={ticker} scope="col" title={rowMeta?.name || ticker}>
+                {ticker}
+              </th>
+            );
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {tickers.map((rowTicker, i) => {
+          const rowMeta = meta.get(rowTicker);
+          return (
+            <tr key={rowTicker}>
+              <th scope="row" title={rowMeta?.name || rowTicker}>
+                {rowTicker}
+              </th>
+              {tickers.map((colTicker, j) => {
+                const raw = matrix[i]?.[j];
+                const value =
+                  typeof raw === "number" && Number.isFinite(raw) ? raw : null;
+                const colMeta = meta.get(colTicker);
+                const tip =
+                  value == null
+                    ? `${rowTicker} · ${colTicker}: n/a`
+                    : `${rowMeta?.name || rowTicker} · ${colMeta?.name || colTicker}: ${formatDecimal(value)}`;
+                return (
+                  <td
+                    key={`${rowTicker}-${colTicker}`}
+                    style={{ background: cellColor(value) }}
+                    title={tip}
+                  >
+                    {value == null ? "—" : formatDecimal(value)}
+                  </td>
+                );
+              })}
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
 function percent(value: number | undefined, digits = 0): string {
   return value == null || !Number.isFinite(value) ? "—" : `${value.toFixed(digits)}%`;
 }
@@ -60,6 +177,22 @@ function percentileLabel(value: number | undefined): string {
             ? "rd"
             : "th";
   return `${rounded}${suffix} percentile`;
+}
+
+/** One-line cohesion footer: "72nd pct · #3/12". */
+function cohesionFootnote(
+  percentile: number | undefined,
+  groupRank: number | undefined,
+  groupCount: number | undefined,
+): string | null {
+  const parts: string[] = [];
+  if (percentile != null && Number.isFinite(percentile)) {
+    parts.push(`${Math.round(percentile)}th pct`);
+  }
+  if (groupRank != null && groupCount != null) {
+    parts.push(`#${groupRank}/${groupCount}`);
+  }
+  return parts.length ? parts.join(" · ") : null;
 }
 
 function cellColor(value: number | null): string | undefined {
@@ -114,12 +247,15 @@ function compactThemeParts(theme: string): { group?: string; primary: string } {
 
 function NeighborList({
   title,
+  mobileTitle,
   titleHint,
   rows,
   empty,
   showGroup,
 }: {
   title: string;
+  /** Shorter label on phone (≤560) when the full title truncates. */
+  mobileTitle?: string;
   titleHint?: string;
   rows: ThemeNeighborRowV0[];
   empty: string;
@@ -132,7 +268,14 @@ function NeighborList({
         className={panelStyles.colTitle}
         title={titleHint ? `${title}. ${titleHint}` : title}
       >
-        {title}
+        {mobileTitle ? (
+          <>
+            <span className={panelStyles.titleDesktop}>{title}</span>
+            <span className={panelStyles.titleMobile}>{mobileTitle}</span>
+          </>
+        ) : (
+          title
+        )}
       </h4>
       {rows.length === 0 ? (
         <p className={panelStyles.moreNote}>{empty}</p>
@@ -197,12 +340,11 @@ export default function ThemeConstituentsCorrelationPanel({
     bundle.status === "ok"
       ? bundle.attribution?.as_of || stock?.as_of || neighbors?.as_of
       : undefined;
-  const sampleSize =
-    bundle.status === "ok"
-      ? bundle.attribution?.horizons?.[COHESION_HORIZON]?.sample_size
-      : undefined;
+  /** Cohesion / matrix window — not attribution sample_size (can be thin for late themes). */
+  const windowLabel = stock?.window?.trim() || COHESION_HORIZON;
 
   const tickers = useMemo(() => stock?.tickers.map((t) => t.ticker) ?? [], [stock]);
+  const matrixFit = useMatrixPhoneFit(tickers.length);
   const { topPairs, bottomPairs, peerAvgs } = useMemo(() => {
     if (!stock || tickers.length < 2) {
       return { topPairs: [] as CorrPair[], bottomPairs: [] as CorrPair[], peerAvgs: [] as PeerAvg[] };
@@ -265,6 +407,21 @@ export default function ThemeConstituentsCorrelationPanel({
     return <p className={styles.muted}>Could not load correlation data.</p>;
   }
 
+  const medianFoot = cohesion
+    ? cohesionFootnote(
+        cohesion.global_percentile,
+        cohesion.group_rank,
+        cohesion.group_theme_count,
+      )
+    : null;
+  const mktAdjFoot = cohesion
+    ? cohesionFootnote(
+        cohesion.market_adjusted_global_percentile,
+        cohesion.market_adjusted_group_rank,
+        cohesion.market_adjusted_group_theme_count,
+      )
+    : null;
+
   return (
     <div className={panelStyles.panel}>
       <div className={panelStyles.toolbar}>
@@ -272,13 +429,10 @@ export default function ThemeConstituentsCorrelationPanel({
           <div className={panelStyles.eyebrow}>Correlation & cohesion</div>
           {asOf ? (
             <div className={panelStyles.asOf}>
-              Through {asOf}
-              {sampleSize != null && Number.isFinite(sampleSize)
-                ? ` · ${sampleSize} trading sessions`
-                : " · 1Y"}
+              Through {asOf} · {windowLabel}
             </div>
           ) : (
-            <div className={panelStyles.asOf}>1Y</div>
+            <div className={panelStyles.asOf}>{windowLabel}</div>
           )}
         </div>
       </div>
@@ -288,52 +442,43 @@ export default function ThemeConstituentsCorrelationPanel({
           <div className={panelStyles.cohesionGrid}>
             <div
               className={panelStyles.metricCard}
-              title="Median correlation between each ticker and the weighted theme return after excluding that ticker from its comparator."
+              title={`Median correlation between each ticker and the weighted theme return after excluding that ticker from its comparator.${
+                cohesion.global_percentile != null
+                  ? ` ${percentileLabel(cohesion.global_percentile)} across all themes.`
+                  : ""
+              }${
+                cohesion.group_rank != null && cohesion.group_theme_count != null
+                  ? ` #${cohesion.group_rank} of ${cohesion.group_theme_count} within its group.`
+                  : ""
+              }`}
             >
-              <div className={panelStyles.metricLabel}>Median correlation</div>
+              <div className={panelStyles.metricLabel}>Median corr</div>
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.median_correlation)}
               </span>
-              {cohesion.global_percentile != null ? (
-                <span className={panelStyles.metricContext}>
-                  {percentileLabel(cohesion.global_percentile)} across all themes
-                  {cohesion.group_rank != null && cohesion.group_theme_count != null ? (
-                    <>
-                      <br />#{cohesion.group_rank} of {cohesion.group_theme_count} within its group
-                    </>
-                  ) : null}
-                </span>
-              ) : cohesion.group_rank != null && cohesion.group_theme_count != null ? (
-                <span className={panelStyles.metricContext}>
-                  #{cohesion.group_rank} of {cohesion.group_theme_count} within its group
-                </span>
+              {medianFoot ? (
+                <span className={panelStyles.metricContext}>{medianFoot}</span>
               ) : null}
             </div>
             <div
               className={panelStyles.metricCard}
-              title="Median leave-one-out correlation after residualizing both the ticker and its leave-one-out theme against the broad market. Helps distinguish theme-specific co-movement from shared equity beta."
+              title={`Median leave-one-out correlation after residualizing both the ticker and its leave-one-out theme against the broad market.${
+                cohesion.market_adjusted_global_percentile != null
+                  ? ` ${percentileLabel(cohesion.market_adjusted_global_percentile)} across all themes.`
+                  : ""
+              }${
+                cohesion.market_adjusted_group_rank != null &&
+                cohesion.market_adjusted_group_theme_count != null
+                  ? ` #${cohesion.market_adjusted_group_rank} of ${cohesion.market_adjusted_group_theme_count} within its group.`
+                  : ""
+              }`}
             >
-              <div className={panelStyles.metricLabel}>Market-adjusted</div>
+              <div className={panelStyles.metricLabel}>Mkt-adj</div>
               <span className={panelStyles.metricValue}>
                 {formatDecimal(cohesion.market_adjusted_median_correlation)}
               </span>
-              {cohesion.market_adjusted_global_percentile != null ? (
-                <span className={panelStyles.metricContext}>
-                  {percentileLabel(cohesion.market_adjusted_global_percentile)} across all themes
-                  {cohesion.market_adjusted_group_rank != null &&
-                  cohesion.market_adjusted_group_theme_count != null ? (
-                    <>
-                      <br />#{cohesion.market_adjusted_group_rank} of{" "}
-                      {cohesion.market_adjusted_group_theme_count} within its group
-                    </>
-                  ) : null}
-                </span>
-              ) : cohesion.market_adjusted_group_rank != null &&
-                cohesion.market_adjusted_group_theme_count != null ? (
-                <span className={panelStyles.metricContext}>
-                  #{cohesion.market_adjusted_group_rank} of{" "}
-                  {cohesion.market_adjusted_group_theme_count} within its group
-                </span>
+              {mktAdjFoot ? (
+                <span className={panelStyles.metricContext}>{mktAdjFoot}</span>
               ) : null}
             </div>
             <div
@@ -354,7 +499,7 @@ export default function ThemeConstituentsCorrelationPanel({
               className={panelStyles.metricCard}
               title="Average share of the 1Y window with overlapping valid returns for each stock, its leave-one-out theme basket, and SPY. Data-confidence measure, not a quality score."
             >
-              <div className={panelStyles.metricLabel}>Fit coverage</div>
+              <div className={panelStyles.metricLabel}>Coverage</div>
               <span className={panelStyles.metricValue}>{percent(cohesion.coverage_pct)}</span>
             </div>
           </div>
@@ -371,6 +516,7 @@ export default function ThemeConstituentsCorrelationPanel({
               title={
                 neighbors.group ? `Closest in ${neighbors.group}` : "Closest in group"
               }
+              mobileTitle="Closest in group"
               titleHint="Highest 1Y theme-return correlations with other themes in the same group."
               rows={neighbors.closest_in_group}
               empty="None"
@@ -379,6 +525,7 @@ export default function ThemeConstituentsCorrelationPanel({
               title={
                 neighbors.group ? `Furthest in ${neighbors.group}` : "Furthest in group"
               }
+              mobileTitle="Furthest in group"
               titleHint="Lowest 1Y theme-return correlations with other themes in the same group."
               rows={neighbors.furthest_in_group}
               empty="None"
@@ -402,7 +549,7 @@ export default function ThemeConstituentsCorrelationPanel({
       ) : null}
 
       {stock && tickers.length >= 2 || fitRows.length > 0 ? (
-        <section className={panelStyles.matrixFitRow} aria-label="Constituent correlation matrix and fit">
+        <section className={panelStyles.matrixFitRow} aria-label="Constituent matrix and fit">
           {stock && tickers.length >= 2 ? (
             <div className={panelStyles.matrixCol}>
               <details className={panelStyles.matrixDetails} open>
@@ -411,62 +558,35 @@ export default function ThemeConstituentsCorrelationPanel({
                   className={panelStyles.sectionTitle}
                   title="Pairwise daily-return correlations among top holdings by theme weight. Teal = positive, red = negative."
                 >
-                  Constituent correlation matrix
+                  Constituent matrix
                 </summary>
                 <div
                   className={panelStyles.corrLayout}
                   data-density={matrixDensity(tickers.length)}
                 >
-                  <div className={panelStyles.matrixScroll}>
-                    <table
-                      className={panelStyles.matrix}
-                      data-density={matrixDensity(tickers.length)}
+                  <div className={panelStyles.matrixScrollBlock}>
+                    <div
+                      ref={matrixFit.shellRef}
+                      className={panelStyles.matrixScroll}
+                      data-mode={matrixFit.fitted ? "fit" : "desktop"}
                     >
-                      <thead>
-                        <tr>
-                          <th scope="col" />
-                          {tickers.map((ticker) => {
-                            const meta = constituentMeta.get(ticker);
-                            return (
-                              <th key={ticker} scope="col" title={meta?.name || ticker}>
-                                {ticker}
-                              </th>
-                            );
-                          })}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {tickers.map((rowTicker, i) => {
-                          const rowMeta = constituentMeta.get(rowTicker);
-                          return (
-                            <tr key={rowTicker}>
-                              <th scope="row" title={rowMeta?.name || rowTicker}>
-                                {rowTicker}
-                              </th>
-                              {tickers.map((colTicker, j) => {
-                                const raw = stock.matrix[i]?.[j];
-                                const value =
-                                  typeof raw === "number" && Number.isFinite(raw) ? raw : null;
-                                const colMeta = constituentMeta.get(colTicker);
-                                const tip =
-                                  value == null
-                                    ? `${rowTicker} · ${colTicker}: n/a`
-                                    : `${rowMeta?.name || rowTicker} · ${colMeta?.name || colTicker}: ${formatDecimal(value)}`;
-                                return (
-                                  <td
-                                    key={`${rowTicker}-${colTicker}`}
-                                    style={{ background: cellColor(value) }}
-                                    title={tip}
-                                  >
-                                    {value == null ? "—" : formatDecimal(value)}
-                                  </td>
-                                );
-                              })}
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
+                      <div
+                        ref={matrixFit.scaleRef}
+                        className={panelStyles.matrixScale}
+                        style={{
+                          transform: matrixFit.fitted
+                            ? `scale(${matrixFit.scale})`
+                            : undefined,
+                        }}
+                      >
+                        <ConstituentCorrTable
+                          tickers={tickers}
+                          matrix={stock.matrix}
+                          meta={constituentMeta}
+                          className={panelStyles.matrix}
+                        />
+                      </div>
+                    </div>
                   </div>
                   <aside className={panelStyles.corrSide}>
                     <div className={panelStyles.pairGrid}>
@@ -555,6 +675,7 @@ export default function ThemeConstituentsCorrelationPanel({
                       </th>
                       <th
                         scope="col"
+                        className={panelStyles.fitCoverageCol}
                         title="Share of the 1Y window with overlapping valid returns for this fit."
                       >
                         Coverage
@@ -587,7 +708,9 @@ export default function ThemeConstituentsCorrelationPanel({
                               ? "—"
                               : percent(row.stock_specific_share * 100)}
                           </td>
-                          <td>{row.coverage_pct == null ? "—" : percent(row.coverage_pct)}</td>
+                          <td className={panelStyles.fitCoverageCol}>
+                            {row.coverage_pct == null ? "—" : percent(row.coverage_pct)}
+                          </td>
                           <td>{formatDecimal(row.avg_to_peers)}</td>
                         </tr>
                       );

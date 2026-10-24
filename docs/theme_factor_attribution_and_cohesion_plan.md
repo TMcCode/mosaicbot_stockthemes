@@ -666,6 +666,13 @@ days and republishes only changed sidecars. If the private daily attribution
 artifact is missing, Fetch 8 exits successfully without starting an accidental
 full-history backfill.
 
+Thin-theme catch-up (themes with fewer than
+`FACTOR_ATTRIBUTION_THIN_MAX_DAYS`, default 200, attribution rows) runs on
+**Sunday ET** during the normal nightly Fetch 8
+(`FACTOR_ATTRIBUTION_THIN_SUNDAY=1`, default on), or any time with
+`FACTOR_ATTRIBUTION_BACKFILL_THIN=1`. It rebuilds only those themes into the
+existing daily parquet; sidecar publish follows as usual.
+
 Optimized daily behavior:
 
 - If the latest complete theme/factor date is already represented in the
