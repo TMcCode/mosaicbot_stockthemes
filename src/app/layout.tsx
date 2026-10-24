@@ -14,6 +14,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
 import { STOCKTHEMES_PUBLIC_BASE_URL } from "@/lib/stockthemesStorageConfig";
+import { STOCKTHEMES_DEFAULT_THEME, THEME_BOOT_SCRIPT } from "@/lib/themeStorage";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -72,10 +73,12 @@ export default async function RootLayout({
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable}`}
-      data-theme="light"
+      data-theme={STOCKTHEMES_DEFAULT_THEME}
       suppressHydrationWarning
     >
       <head>
+        {/* Apply stored theme (default dark) before paint — avoids light flash / wipe. */}
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
         <link rel="preconnect" href={STOCKTHEMES_PUBLIC_BASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={STOCKTHEMES_PUBLIC_BASE_URL} />
       </head>

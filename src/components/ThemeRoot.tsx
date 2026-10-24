@@ -14,6 +14,7 @@ import {
 import {
   applyThemeToDocument,
   resolveThemePreference,
+  STOCKTHEMES_DEFAULT_THEME,
   STOCKTHEMES_THEME_STORAGE_KEY,
   type StockthemesTheme,
 } from "@/lib/themeStorage";
@@ -38,23 +39,26 @@ export function useStockthemesTheme(): ThemeContextValue {
 }
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  // Match SSR default (`data-theme="light"` on <html>); sync from storage before paint.
-  const [theme, setTheme] = useState<StockthemesTheme>("light");
+  // Match SSR / boot-script default (`data-theme="dark"`); sync from storage before paint.
+  const [theme, setTheme] = useState<StockthemesTheme>(STOCKTHEMES_DEFAULT_THEME);
+  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
     const next = resolveThemePreference();
     applyThemeToDocument(next);
     setTheme(next);
+    setReady(true);
   }, []);
 
   useEffect(() => {
+    if (!ready) return;
     applyThemeToDocument(theme);
     try {
       localStorage.setItem(STOCKTHEMES_THEME_STORAGE_KEY, theme);
     } catch {
       /* private mode */
     }
-  }, [theme]);
+  }, [theme, ready]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
