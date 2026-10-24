@@ -1,11 +1,9 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 
 import styles from "@/app/page.module.css";
 import panelStyles from "@/components/ThemeConstituentsFactorDriversPanel.module.css";
-import { ConstituentLogo } from "@/components/ConstituentLogo";
-import { TickerBadge } from "@/components/TickerBadge";
 import { useThemeFactorAttributionSidecar } from "@/hooks/useThemeFactorAttributionSidecar";
 import {
   availableFactorAttributionHorizons,
@@ -30,25 +28,7 @@ function percent(value: number | undefined, digits = 0): string {
   return value == null || !Number.isFinite(value) ? "—" : `${value.toFixed(digits)}%`;
 }
 
-function percentile(value: number | undefined): string {
-  if (value == null || !Number.isFinite(value)) return "—";
-  const rounded = Math.round(value);
-  const mod100 = rounded % 100;
-  const suffix =
-    mod100 >= 11 && mod100 <= 13
-      ? "th"
-      : rounded % 10 === 1
-        ? "st"
-        : rounded % 10 === 2
-          ? "nd"
-          : rounded % 10 === 3
-            ? "rd"
-            : "th";
-  return `${rounded}${suffix} percentile`;
-}
-
 export default function ThemeConstituentsFactorDriversPanel({
-  detail,
   slug,
   dataBaseUrl,
 }: Props) {
@@ -66,21 +46,6 @@ export default function ThemeConstituentsFactorDriversPanel({
       ? "1Y"
       : availableHorizons[0];
 
-  const constituentMeta = useMemo(
-    () =>
-      new Map(
-        detail.constituents.map((row) => [
-          row.ticker.trim().toUpperCase(),
-          {
-            name: row.name?.trim(),
-            weight: row.weight,
-            logo_url: typeof row.logo_url === "string" ? row.logo_url : null,
-          },
-        ]),
-      ),
-    [detail.constituents],
-  );
-
   if (sidecarState.status === "idle" || sidecarState.status === "loading") {
     return <p className={styles.muted}>Loading factor drivers…</p>;
   }
@@ -96,7 +61,6 @@ export default function ThemeConstituentsFactorDriversPanel({
 
   const data = sidecarState.data;
   const attribution = data.horizons[horizon];
-  const cohesion = data.cohesion[horizon];
   if (!attribution) {
     return <p className={styles.muted}>This attribution horizon is not available.</p>;
   }
@@ -104,9 +68,6 @@ export default function ThemeConstituentsFactorDriversPanel({
   const maxContribution = Math.max(
     0.01,
     ...attribution.contributions.map((row) => Math.abs(row.contribution_pct)),
-  );
-  const fitRows = [...(cohesion?.constituents ?? [])].sort(
-    (a, b) => (b.correlation_to_theme ?? -2) - (a.correlation_to_theme ?? -2),
   );
 
   return (
@@ -265,152 +226,11 @@ export default function ThemeConstituentsFactorDriversPanel({
         </div>
       </section>
 
-      {cohesion ? (
-        <section className={panelStyles.section} aria-labelledby="constituent-cohesion">
-          <h3 id="constituent-cohesion" className={panelStyles.sectionTitle}>
-            Constituent cohesion
-          </h3>
-          <div className={panelStyles.cohesionGrid}>
-            <div
-              className={panelStyles.metricCard}
-              title="Median correlation between each ticker and the weighted theme return after excluding that ticker from its comparator."
-            >
-              <div className={panelStyles.metricLabel}>Median correlation</div>
-              <span className={panelStyles.metricValue}>
-                {formatDecimal(cohesion.median_correlation)}
-              </span>
-              {cohesion.global_percentile != null ? (
-                <span className={panelStyles.metricContext}>
-                  {percentile(cohesion.global_percentile)} across all themes
-                  {cohesion.group_rank != null && cohesion.group_theme_count != null ? (
-                    <>
-                      <br />#{cohesion.group_rank} of {cohesion.group_theme_count} within its group
-                    </>
-                  ) : null}
-                </span>
-              ) : null}
-            </div>
-            <div
-              className={panelStyles.metricCard}
-              title="Median leave-one-out correlation after removing each series' relationship with the broad market. This helps distinguish theme-specific co-movement from shared equity beta."
-            >
-              <div className={panelStyles.metricLabel}>Market-adjusted</div>
-              <span className={panelStyles.metricValue}>
-                {formatDecimal(cohesion.market_adjusted_median_correlation)}
-              </span>
-              {cohesion.market_adjusted_global_percentile != null ? (
-                <span className={panelStyles.metricContext}>
-                  {percentile(cohesion.market_adjusted_global_percentile)} across all themes
-                  {cohesion.market_adjusted_group_rank != null &&
-                  cohesion.market_adjusted_group_theme_count != null ? (
-                    <>
-                      <br />#{cohesion.market_adjusted_group_rank} of{" "}
-                      {cohesion.market_adjusted_group_theme_count} within its group
-                    </>
-                  ) : null}
-                </span>
-              ) : null}
-            </div>
-            <div
-              className={panelStyles.metricCard}
-              title="Percentage of valid constituents with leave-one-out theme correlation at or above 0.50."
-            >
-              <div className={panelStyles.metricLabel}>Above 0.50</div>
-              <span className={panelStyles.metricValue}>
-                {percent(cohesion.pct_above_0_50)}
-              </span>
-            </div>
-            <div
-              className={panelStyles.metricCard}
-              title="Percentage of valid constituents moving negatively relative to their leave-one-out theme comparator."
-            >
-              <div className={panelStyles.metricLabel}>Negative</div>
-              <span className={panelStyles.metricValue}>{percent(cohesion.pct_negative)}</span>
-            </div>
-            <div
-              className={panelStyles.metricCard}
-              title={`Average share of the selected ${horizon} period with overlapping valid returns for each stock, its leave-one-out theme basket, and SPY. ${Math.round(cohesion.coverage_pct)}% is approximately ${Math.round((attribution.sample_size * cohesion.coverage_pct) / 100)} of ${attribution.sample_size} sessions per constituent. Foreign-market calendars, newer listings, suspended trading, and missing prices can reduce coverage. This is a data-confidence measure, not a quality score.`}
-            >
-              <div className={panelStyles.metricLabel}>Fit coverage</div>
-              <span className={panelStyles.metricValue}>{percent(cohesion.coverage_pct)}</span>
-            </div>
-          </div>
-
-          <div className={panelStyles.tableScroll}>
-            <table className={panelStyles.fitTable}>
-              <thead>
-                <tr>
-                  <th scope="col">Company</th>
-                  <th
-                    scope="col"
-                    title="Correlation to the manually weighted return of all other theme constituents. The ticker is excluded from its own comparator."
-                  >
-                    Theme correlation
-                  </th>
-                  <th
-                    scope="col"
-                    title="Theme correlation after residualizing both the ticker and its leave-one-out theme against the broad market."
-                  >
-                    Market-adjusted
-                  </th>
-                  <th
-                    scope="col"
-                    title="Sensitivity to a 1% move in the leave-one-out theme return over the selected horizon."
-                  >
-                    Theme beta
-                  </th>
-                  <th
-                    scope="col"
-                    title="One minus correlation squared. Higher values indicate that more of the ticker's movement was stock-specific rather than shared with its theme."
-                  >
-                    Stock-specific
-                  </th>
-                  <th scope="col" title="Share of the requested horizon with valid observations.">
-                    Coverage
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {fitRows.map((row) => {
-                  const meta = constituentMeta.get(row.ticker);
-                  return (
-                    <tr key={row.ticker}>
-                      <td>
-                        <div className={panelStyles.company}>
-                          <ConstituentLogo ticker={row.ticker} logoUrl={meta?.logo_url} />
-                          <span
-                            className={panelStyles.companyName}
-                            title={meta?.name || row.ticker}
-                          >
-                            {meta?.name || row.ticker}
-                          </span>
-                          <TickerBadge ticker={row.ticker} />
-                        </div>
-                      </td>
-                      <td>{formatDecimal(row.correlation_to_theme)}</td>
-                      <td>{formatDecimal(row.market_adjusted_correlation)}</td>
-                      <td>{formatDecimal(row.beta_to_theme)}</td>
-                      <td>
-                        {row.stock_specific_share == null
-                          ? "—"
-                          : percent(row.stock_specific_share * 100)}
-                      </td>
-                      <td>{percent(row.coverage_pct)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      ) : null}
-
       <div className={panelStyles.disclosure}>
         Estimated from daily returns using rolling 252-session ridge exposures known before each
         return. Core contributions plus theme-specific return reconcile to actual return. Long-term
         results use reconstructed history based on current theme membership and are not
-        point-in-time investable portfolio results. Cohesion describes how tightly constituents
-        traded together; low cohesion is not automatically poor quality.
+        point-in-time investable portfolio results.
       </div>
     </div>
   );

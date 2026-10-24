@@ -1,0 +1,506 @@
+.panel {
+  display: grid;
+  gap: 14px;
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px 16px;
+}
+
+.eyebrow,
+.sectionTitle,
+.metricLabel,
+.colTitle {
+  margin: 0;
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.asOf {
+  margin: 4px 0 0;
+  color: var(--text-muted, #788582);
+  font-size: 9px;
+  line-height: 1.25;
+  opacity: 0.72;
+}
+
+.cohesionSection {
+  display: grid;
+  gap: 9px;
+}
+
+.cohesionGrid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.metricCard {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.metricValue {
+  display: block;
+  margin-top: 5px;
+  color: var(--text-primary, #f2f7f6);
+  font-size: 19px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.metricContext {
+  display: block;
+  margin-top: auto;
+  padding-top: 5px;
+  color: var(--text-muted, #788582);
+  font-size: 9px;
+  line-height: 1.35;
+}
+
+.details {
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  padding: 0 10px 10px;
+}
+
+.details > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 10px 2px;
+}
+
+.details > summary::-webkit-details-marker {
+  display: none;
+}
+
+.details[open] > summary {
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+}
+
+.section {
+  display: grid;
+  gap: 9px;
+}
+
+/* Same title→content gap as Theme neighbors; no boxed chrome around the heading. */
+.matrixDetails {
+  display: grid;
+  gap: 9px;
+  flex: 1 1 auto;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  align-content: start;
+}
+
+.matrixDetails > summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.matrixDetails > summary::-webkit-details-marker {
+  display: none;
+}
+
+.matrixDetails[open] > summary {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.tableScroll {
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fitTableWrap {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.fitTable,
+.neighborTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.fitTable th,
+.fitTable td,
+.neighborTable th,
+.neighborTable td {
+  padding: 3px 5px;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  text-align: right;
+  white-space: nowrap;
+}
+
+.fitTable th,
+.neighborTable th {
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.fitTable th:first-child,
+.fitTable td:first-child,
+.neighborTable th:first-child,
+.neighborTable td:first-child {
+  text-align: left;
+  padding-left: 0;
+}
+
+.fitTable td {
+  color: var(--text-primary, #f2f7f6);
+}
+
+.company {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.companyName {
+  max-width: 120px;
+  overflow: hidden;
+  color: var(--text-primary, #f2f7f6);
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+.themeLink {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent, #26fcd6);
+  font-weight: 650;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  line-height: 1.25;
+}
+
+.themeLink:hover {
+  text-decoration: underline;
+}
+
+.neighborCard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+  padding: 8px 9px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.neighborCard .colTitle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.neighborList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.neighborList li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.neighborList .num {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 550;
+  line-height: 1.2;
+  color: var(--text-muted, #788582);
+}
+
+.neighborList li:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.neighborList li:first-child {
+  padding-top: 0;
+}
+
+.neighborMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.neighborGroup {
+  overflow: hidden;
+  color: var(--text-muted, #788582);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.moreNote {
+  margin: 0;
+  color: var(--text-muted, #788582);
+  font-size: 11px;
+}
+
+.moreLink {
+  appearance: none;
+  align-self: flex-start;
+  border: none;
+  background: transparent;
+  padding: 2px 0 0;
+  margin: 0;
+  font: inherit;
+  font-size: 9px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--accent, #26fcd6);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.moreLink:hover {
+  text-decoration: underline;
+}
+
+.matrixFitRow {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 12px 16px;
+  /* Equal card height via grid stretch — no JS measurement. */
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+}
+
+.matrixCol,
+.fitCol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  max-width: 100%;
+  min-height: 100%;
+  padding: 10px 11px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.025);
+  box-sizing: border-box;
+}
+
+.fitCol {
+  gap: 8px;
+}
+
+.fitCol .fitTableWrap {
+  flex: 1 1 auto;
+}
+
+.corrLayout {
+  display: grid;
+  grid-template-columns: minmax(0, max-content);
+  width: max-content;
+  max-width: 100%;
+  gap: 8px;
+  align-items: start;
+}
+
+.matrixScroll {
+  overflow-x: auto;
+  overflow-y: visible;
+  overscroll-behavior: contain;
+  border: none;
+  border-radius: 0;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.matrix {
+  border-collapse: collapse;
+  font-size: 11px;
+  width: max-content;
+  max-width: none;
+}
+
+.matrix th,
+.matrix td {
+  padding: 4px 6px;
+  text-align: center;
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.08));
+  font-variant-numeric: tabular-nums;
+  min-width: 2.4rem;
+  color: var(--text-primary, #f2f7f6);
+}
+
+.matrix[data-density="compact"] {
+  font-size: 10px;
+}
+
+.matrix[data-density="compact"] th,
+.matrix[data-density="compact"] td {
+  padding: 2px 3px;
+  min-width: 1.75rem;
+}
+
+.matrix[data-density="dense"] {
+  font-size: 9px;
+}
+
+.matrix[data-density="dense"] th,
+.matrix[data-density="dense"] td {
+  padding: 1px 2px;
+  min-width: 1.4rem;
+}
+
+.matrix th {
+  color: var(--text-secondary, #9aa8a6);
+  font-weight: 600;
+}
+
+.matrix th:first-child,
+.matrix td:first-child {
+  text-align: left;
+  font-weight: 600;
+}
+
+.corrSide {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.pairGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 12px;
+  width: 100%;
+}
+
+.pairBlock {
+  min-width: 0;
+}
+
+.pairBlock .colTitle {
+  margin: 0 0 2px;
+}
+
+.pairList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border: none;
+}
+
+.pairList li {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 1px 0;
+  font-size: 10px;
+  line-height: 1.3;
+  border-bottom: none;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.pairList li:last-child {
+  border-bottom: none;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #f2f7f6);
+}
+
+.neighborGrid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 1100px) {
+  .neighborGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .matrixFitRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 960px) {
+  .pairGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .neighborGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .cohesionGrid {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .cohesionGrid > .metricCard:nth-child(1),
+  .cohesionGrid > .metricCard:nth-child(2) {
+    grid-column: span 3;
+  }
+
+  .cohesionGrid > .metricCard:nth-child(n + 3) {
+    grid-column: span 2;
+  }
+}

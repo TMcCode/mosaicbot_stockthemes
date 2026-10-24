@@ -38,7 +38,12 @@ type Props = {
 };
 
 type QualityRiskRow = ReturnType<typeof mergeQualityRiskConstituents>[number];
-type QualityRiskPanelMode = QualityRiskDisplayMode | "factor_drivers";
+type QualityRiskPanelMode = QualityRiskDisplayMode | "correlation" | "factor_drivers";
+
+const ThemeConstituentsCorrelationPanel = dynamic(
+  () => import("@/components/ThemeConstituentsCorrelationPanel"),
+  { loading: () => <p className={styles.muted}>Loading correlation…</p> },
+);
 
 const ThemeConstituentsFactorDriversPanel = dynamic(
   () => import("@/components/ThemeConstituentsFactorDriversPanel"),
@@ -114,7 +119,7 @@ export default function ThemeConstituentsQualityRiskPanel({
   }, [detail.constituents, sidecarState]);
 
   const columns = useMemo(() => {
-    if (mode === "factor_drivers") return [];
+    if (mode === "factor_drivers" || mode === "correlation") return [];
     const available = qualityRiskColumns(mode, columnLabels);
     if (mode !== "fiscal_ebitda") return available;
     return available.filter(
@@ -163,7 +168,10 @@ export default function ThemeConstituentsQualityRiskPanel({
 
   const data = sidecarState.data;
   const summary = data.summary ?? {};
-  const stats = mode === "factor_drivers" ? undefined : data.table_stats?.[mode];
+  const stats =
+    mode === "factor_drivers" || mode === "correlation"
+      ? undefined
+      : data.table_stats?.[mode];
 
   return (
     <>
@@ -196,6 +204,14 @@ export default function ThemeConstituentsQualityRiskPanel({
             </button>
             <button
               type="button"
+              className={mode === "correlation" ? tableStyles.active : undefined}
+              aria-pressed={mode === "correlation"}
+              onClick={() => setMode("correlation")}
+            >
+              Correlation
+            </button>
+            <button
+              type="button"
               className={mode === "factor_drivers" ? tableStyles.active : undefined}
               aria-pressed={mode === "factor_drivers"}
               onClick={() => setMode("factor_drivers")}
@@ -205,7 +221,13 @@ export default function ThemeConstituentsQualityRiskPanel({
           </div>
         </div>
       </div>
-      {mode === "factor_drivers" ? (
+      {mode === "correlation" ? (
+        <ThemeConstituentsCorrelationPanel
+          detail={detail}
+          slug={slug}
+          dataBaseUrl={dataBaseUrl}
+        />
+      ) : mode === "factor_drivers" ? (
         <ThemeConstituentsFactorDriversPanel
           detail={detail}
           slug={slug}
