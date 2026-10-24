@@ -310,7 +310,9 @@ export default async function ThemeDetailPage({ params }: Props) {
 
             const renderFactor = () => (
               <ThemeHeroFactorSlot
-                className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}`}
+                className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}${
+                  showThesis && showFactors ? ` ${styles.factorDesktopOnly}` : ""
+                }`}
               >
                 <ThemeFactorProfile
                   slug={slug}
@@ -353,7 +355,19 @@ export default async function ThemeDetailPage({ params }: Props) {
                 <ThemeThesisBleedSlot
                   className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}
                 >
-                  <ThemeThesisBlock fullBleed themeThesis={detail?.theme_thesis} />
+                  <ThemeThesisBlock
+                    fullBleed
+                    themeThesis={detail?.theme_thesis}
+                    factorDeck={
+                      showFactors
+                        ? {
+                            slug,
+                            dataBaseUrl: dataBaseUrl ?? "",
+                            initialProfile: factorProfile,
+                          }
+                        : null
+                    }
+                  />
                 </ThemeThesisBleedSlot>
               ) : null;
 

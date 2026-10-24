@@ -1,27 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
 
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import {
-  enrichFactorProfileRanks,
-  factorLeaderboardsUrl,
-  factorProfileHasContent,
-  factorProfileNeedsLeaderboardEnrich,
-  factorProfileUiAllowed,
   formatThemeFactorDisplayRank,
-  parseFactorLeaderboards,
-  parseThemeFactorProfile,
   themeFactorDisplayScore,
-  themeFactorProfileUrl,
 } from "@/lib/themeFactorProfile";
 import { factorDisplayLabel, factorDisplayLabelShort } from "@/lib/factorDisplayLabel";
+import { buildFactorProfileBlurb } from "@/lib/factorProfileBlurb";
 import { factorTooltipSummaryForId } from "@/lib/factorTooltipSummaries";
 import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
+  useThemeFactorProfileState,
+  type ThemeFactorProfileState,
+} from "@/lib/useThemeFactorProfileState";
 import type { ThemeFactorProfileV0, ThemeFactorScoreEntryV0 } from "@/types/theme.factor_profile.v0";
 
 import styles from "./ThemeFactorProfile.module.css";
@@ -34,23 +26,6 @@ type Props = {
   /** Stretch panel to align bottom with hero treemap rail. */
   fillRail?: boolean;
 };
-
-type ProfileState =
-  | { status: "loading" }
-  | { status: "absent" }
-  | { status: "low_confidence"; profile: ThemeFactorProfileV0 }
-  | { status: "ok"; profile: ThemeFactorProfileV0 }
-  | { status: "error" };
-
-function resolveProfileState(profile: ThemeFactorProfileV0): ProfileState {
-  if (!factorProfileHasContent(profile)) {
-    return { status: "absent" };
-  }
-  if (!factorProfileUiAllowed(profile)) {
-    return { status: "low_confidence", profile };
-  }
-  return { status: "ok", profile };
-}
 
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
   const displayScore = themeFactorDisplayScore(entry);
@@ -118,9 +93,11 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
   const neg = profile.factors_negative ?? [];
   const industry = profile.dominant_sector;
   const industryRank = industry ? formatThemeFactorDisplayRank(industry) : null;
+  const blurb = buildFactorProfileBlurb(profile);
 
   return (
     <div className={styles.panel}>
+      {blurb ? <div className={styles.blurb}>{blurb.text}</div> : null}
       <div className={styles.grid}>
         <div>
           <h3 className={`${styles.colTitle} ${styles.colTitlePos}`}>Higher exposure</h3>
@@ -165,7 +142,7 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
   );
 }
 
-function FactorProfileBody({ state }: { state: ProfileState }) {
+function FactorProfileBody({ state }: { state: ThemeFactorProfileState }) {
   if (state.status === "loading") {
     return (
       <div className={styles.panel}>
@@ -210,86 +187,13 @@ export function ThemeFactorProfile({
   fillRail = false,
 }: Props) {
   const { configured, loading: authLoading, user } = useSupabaseAuth();
-  const [state, setState] = useState<ProfileState>({ status: "loading" });
-
-  useEffect(() => {
-    if (!configured || !user) return;
-
-    let cancelled = false;
-
-    const applyProfile = (profile: ThemeFactorProfileV0) => {
-      if (cancelled) return;
-      setState(resolveProfileState(profile));
-    };
-
-    if (initialProfile) {
-      applyProfile(initialProfile);
-    }
-
-    const shouldLiveFetch =
-      Boolean(dataBaseUrl.trim()) &&
-      (process.env.NODE_ENV === "development" || !initialProfile);
-
-    if (!shouldLiveFetch) {
-      if (!initialProfile) {
-        setState({ status: "absent" });
-      }
-      return;
-    }
-
-    const buster = stockthemesBrowserCacheBusterQuery();
-    const profileUrl = `${themeFactorProfileUrl(dataBaseUrl, slug)}?${buster}`;
-
-    fetch(profileUrl, {
-      credentials: "omit",
-      cache: stockthemesBrowserFetchCache(),
-    })
-      .then((res) => {
-        if (res.status === 404) return null;
-        if (!res.ok) throw new Error(`profile HTTP ${res.status}`);
-        return res.text();
-      })
-      .then(async (profileRaw) => {
-        if (cancelled) return;
-        if (!profileRaw) {
-          if (!initialProfile) setState({ status: "absent" });
-          return;
-        }
-        let profile = parseThemeFactorProfile(profileRaw);
-        if (factorProfileNeedsLeaderboardEnrich(profile)) {
-          const boardsUrl = `${factorLeaderboardsUrl(dataBaseUrl)}?${buster}`;
-          let boardsRaw: string | null = null;
-          try {
-            const boardsRes = await fetch(boardsUrl, {
-              credentials: "omit",
-              cache: stockthemesBrowserFetchCache(),
-            });
-            boardsRaw = boardsRes.ok ? await boardsRes.text() : null;
-          } catch {
-            boardsRaw = null;
-          }
-          if (cancelled) return;
-          let leaderboards = null;
-          if (boardsRaw) {
-            try {
-              leaderboards = parseFactorLeaderboards(boardsRaw);
-            } catch {
-              leaderboards = null;
-            }
-          }
-          profile = enrichFactorProfileRanks(profile, slug, leaderboards);
-        }
-        if (cancelled) return;
-        applyProfile(profile);
-      })
-      .catch(() => {
-        if (!cancelled && !initialProfile) setState({ status: "error" });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [slug, dataBaseUrl, configured, user, initialProfile]);
+  const authed = Boolean(configured && user);
+  const state = useThemeFactorProfileState({
+    slug,
+    dataBaseUrl,
+    initialProfile,
+    enabled: authed,
+  });
 
   if (!configured || authLoading || !user) {
     return null;

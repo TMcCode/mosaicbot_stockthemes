@@ -7,16 +7,67 @@
   width: 100%;
 }
 
-.blockFull .thesis {
-  max-width: none;
+.row {
+  display: grid;
+  gap: 12px;
+  align-items: stretch;
+  width: 100%;
+}
+
+/*
+ * Thesis sets the row height. Bull/Bear use height:0 + min-height:100% so their
+ * long copy does not stretch the row taller than thesis; overflow scrolls inside.
+ */
+
+.rowThree {
+  /* ~32% thesis · ~34% bull · ~34% bear */
+  grid-template-columns: minmax(0, 3fr) minmax(0, 3.25fr) minmax(0, 3.25fr);
+}
+
+.rowTwo {
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+}
+
+.rowOne {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 52rem;
+}
+
+.thesisPanel,
+.casePanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.02);
+  padding: 10px 12px;
+}
+
+.casePanel {
+  gap: 3px;
+  height: 0;
+  min-height: 100%;
+  overflow: hidden;
+  padding-top: 8px;
+}
+
+.caseBull {
+  border-left: 3px solid rgba(38, 252, 214, 0.55);
+}
+
+.caseBear {
+  border-left: 3px solid rgba(255, 120, 120, 0.55);
 }
 
 .head {
   display: flex;
   align-items: baseline;
   flex-wrap: wrap;
-  gap: 8px 10px;
-  margin-bottom: 8px;
+  gap: 6px 10px;
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .title {
@@ -27,44 +78,336 @@
   color: var(--text-primary, #e8edec);
 }
 
+.caseTitle {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.caseBull .caseTitle {
+  color: rgba(38, 252, 214, 0.9);
+}
+
+.caseBear .caseTitle {
+  color: rgba(255, 120, 120, 0.9);
+}
+
+/* Match home radar news `headlineBracket` / `headlinePagerBtn`. */
+.detailBracket {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.detailPagerBtn {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 14px;
+  height: 28px;
+  margin: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-secondary, #9aa8a6);
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.55;
+}
+
+.detailPagerBtn:hover {
+  color: var(--accent, #26fcd6);
+  opacity: 1;
+}
+
+.caseBear .detailPagerBtn:hover {
+  color: rgba(255, 120, 120, 0.95);
+}
+
+.caseCount {
+  margin-top: auto;
+  align-self: flex-end;
+  font-size: 10px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-secondary, #9aa8a6);
+  opacity: 0.75;
+  flex-shrink: 0;
+}
+
+/* div — not p: theme pages wrap this in `.intro`, and `.intro p` forces 16–18px. */
 .thesis {
   margin: 0;
-  max-width: 760px;
-  font-size: 16px;
-  line-height: 1.55;
+  font-size: 12px;
+  line-height: 1.45;
   color: var(--text-secondary, #9aa8a6);
 }
 
-/* Beat `.intro p` / page-level type if a parent still uses a paragraph. */
 :global(.intro) .thesis,
 :global(.intro) .title {
   max-width: none;
 }
 
 .updateBadge {
-  margin: 10px 0 0;
+  margin-top: auto;
+  padding-top: 4px;
+}
+
+.mobileDeckTitle {
+  display: none;
 }
 
 .badge {
   display: inline-block;
-  padding: 4px 10px;
-  border-radius: 12px;
+  padding: 3px 8px;
+  border-radius: 10px;
   border: 1px solid var(--border-subtle, rgba(128, 128, 128, 0.35));
   background: var(--surface-muted, rgba(127, 127, 127, 0.08));
   color: var(--text-secondary, #9aa8a6);
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
   line-height: 1.2;
   white-space: nowrap;
 }
 
-@media (max-width: 640px) {
-  .head {
-    margin-bottom: 4px;
-    gap: 4px 8px;
+/* div — avoid `.intro p` forcing ~16–18px on theme pages. */
+.casePoint {
+  margin: 0;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+:global(.intro) .casePoint {
+  font-size: 12px !important;
+  line-height: 1.45 !important;
+}
+
+/* Mobile: Thesis / Bull / Bear as one deck — switch via tabs. */
+.mobileTabs {
+  display: none;
+}
+
+/* Desktop: factor deck panel is mobile-only (tab lives in thesis card). */
+.factorDeckPanel {
+  display: none;
+}
+
+@media (max-width: 1100px) {
+  .rowMobileDeck [data-mobile-pane="idle"] {
+    display: none !important;
   }
 
-  /* Match ThemeFactorProfile `.heroTitle` (15px) on all breakpoints. */
+  /* In-card title row — top left replaces Thesis/Bull/Bear heading. */
+  .mobileDeckTitle {
+    display: block;
+    flex-shrink: 0;
+  }
+
+  .mobileTabs {
+    display: flex;
+    justify-content: flex-start;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0;
+    margin: 0;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .mobileTab {
+    flex: 0 0 auto;
+    margin: 0;
+    padding: 0 7px 0 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    color: var(--text-secondary, #9aa8a6);
+    font-size: 15px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    text-transform: none;
+    opacity: 0.45;
+    cursor: pointer;
+  }
+
+  .mobileTab + .mobileTab {
+    padding-left: 7px;
+  }
+
+  .mobileTab + .mobileTab::before {
+    content: "·";
+    margin-right: 7px;
+    opacity: 0.35;
+    font-weight: 400;
+    font-size: 13px;
+  }
+
+  .mobileTabActive {
+    background: transparent;
+    color: var(--text-primary, #e8edec);
+    opacity: 1;
+    box-shadow: none;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .mobileTabBull.mobileTabActive {
+    background: transparent;
+    color: rgba(38, 180, 160, 0.95);
+    box-shadow: none;
+  }
+
+  .mobileTabBear.mobileTabActive {
+    background: transparent;
+    color: rgba(200, 80, 80, 0.95);
+    box-shadow: none;
+  }
+
+  :global(.st-theme[data-theme="light"]) .mobileTabActive {
+    background: transparent;
+    color: var(--text-primary, #1a1f2e);
+    box-shadow: none;
+  }
+
+  :global(.st-theme[data-theme="light"]) .mobileTabBull.mobileTabActive {
+    color: #0a6b5c;
+  }
+
+  :global(.st-theme[data-theme="light"]) .mobileTabBear.mobileTabActive {
+    color: #a33a3a;
+  }
+
+  :global(.st-theme[data-theme="dark"]) .mobileTabBull.mobileTabActive {
+    color: rgba(38, 252, 214, 0.9);
+  }
+
+  :global(.st-theme[data-theme="dark"]) .mobileTabBear.mobileTabActive {
+    color: rgba(255, 140, 140, 0.9);
+  }
+
+  .rowThree,
+  .rowTwo,
+  .rowOne {
+    grid-template-columns: 1fr;
+    max-width: none;
+  }
+
+  .rowMobileDeck {
+    gap: 0;
+  }
+
+  .casePanel {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .casePoint {
+    overflow: visible;
+  }
+
+  /* Tabs are the title — hide the static headings. */
+  .rowMobileDeck .caseTitle,
+  .rowMobileDeck .head {
+    display: none;
+  }
+
+  .rowMobileDeck .thesisPanel,
+  .rowMobileDeck .casePanel {
+    padding-top: 8px;
+  }
+
+  .rowMobileDeck .mobileDeckTitle {
+    margin: 0 0 2px;
+  }
+
+  /* Factor Profile as 4th deck tab — blurb + makeup link only. */
+  .factorDeckPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 12px;
+    border: 1px solid var(--button-secondary-border, rgba(128, 128, 128, 0.28));
+    border-radius: 10px;
+    background: var(--surface-card, rgba(255, 255, 255, 0.02));
+    min-width: 0;
+  }
+
+  .factorDeckBlurb {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-secondary, #9aa8a6);
+  }
+
+  :global(.intro) .factorDeckBlurb {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
+  }
+
+  .factorDeckLink {
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    color: var(--accent, #26fcd6);
+    text-decoration: none;
+    width: fit-content;
+  }
+
+  .factorDeckLink:hover {
+    text-decoration: underline;
+  }
+
+  .factorDeckNote {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.4;
+    color: var(--text-secondary, #9aa8a6);
+  }
+
+  .mobileTabFactors.mobileTabActive {
+    background: transparent;
+    color: var(--accent, #26fcd6);
+    box-shadow: none;
+  }
+
+  :global(.st-theme[data-theme="light"]) .mobileTabFactors.mobileTabActive {
+    color: #0a6b5c;
+  }
+
+  /* Keep Factor Profile label readable without crowding Thesis · Bull · Bear. */
+  .mobileTabFactors {
+    font-size: 13px;
+    letter-spacing: -0.015em;
+  }
+}
+
+@media (max-width: 640px) {
+  .thesisPanel,
+  .casePanel {
+    padding: 8px 12px;
+    border-radius: 10px;
+    gap: 3px;
+  }
+
+  .rowMobileDeck .thesisPanel,
+  .rowMobileDeck .casePanel {
+    padding-top: 7px;
+  }
+
   .title,
   :global(.intro) .title {
     font-size: 15px !important;
@@ -75,13 +418,14 @@
 
   .thesis,
   :global(.intro) .thesis {
-    font-size: 12px !important;
+    font-size: 11px !important;
     line-height: 1.4 !important;
-    max-width: none;
   }
 
-  .updateBadge {
-    margin: 6px 0 0;
+  .casePoint,
+  :global(.intro) .casePoint {
+    font-size: 11px !important;
+    line-height: 1.4 !important;
   }
 
   .badge {

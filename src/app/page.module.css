@@ -164,6 +164,7 @@
   display: flex;
   flex-direction: column;
   min-height: 0;
+  height: 100%;
   width: 100%;
   max-width: 720px;
   align-self: stretch;
@@ -1981,10 +1982,21 @@ a.secondary {
       "rail"
       "factor";
     grid-template-rows: none;
+    gap: 10px;
   }
 
   .themeHeroAreas > .themeHeroTitleArea {
     margin-bottom: 0;
+  }
+
+  /* Pull thesis card closer to hero meta chips on mobile. */
+  .themeHeroAreas > .heroThesisBleed {
+    margin-top: -2px;
+  }
+
+  /* Factor Profile lives in the thesis mobile deck — hide the standalone card. */
+  .themeHeroAreas > .factorDesktopOnly {
+    display: none;
   }
 
   .heroTitle {
