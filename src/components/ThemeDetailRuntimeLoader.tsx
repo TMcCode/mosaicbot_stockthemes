@@ -169,11 +169,7 @@ export function ThemeDetailRuntimeLoader({
         </p>
       ) : null}
       {showHero && shouldShowThemeThesisUi(detail.theme_thesis) ? (
-        <ThemeThesisBlock
-          fullBleed
-          themeThesis={detail.theme_thesis}
-          signInNext={`/themes/${slug}`}
-        />
+        <ThemeThesisBlock fullBleed themeThesis={detail.theme_thesis} />
       ) : null}
       {showHero ? (
         <div className={styles.tightChartTop}>

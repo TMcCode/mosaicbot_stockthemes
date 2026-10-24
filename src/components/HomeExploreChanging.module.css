@@ -1,7 +1,8 @@
 .split {
   width: 100%;
-  margin-top: 28px;
-  padding-top: 20px;
+  /* Pull toward Top Movers — .intro gap is 22px. */
+  margin-top: -12px;
+  padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   display: grid;
   /* Desktop DOM: Explore (wider) | What's changing */

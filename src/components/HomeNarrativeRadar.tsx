@@ -653,20 +653,8 @@ function NewsRadarCard({
     setSlide(0);
   }, [card.slug, headlines.length]);
 
-  return (
-    <div className={`${styles.card} ${styles.cardNews}`} style={heat}>
-      <div className={styles.cardTitleRow}>
-        <Link href={href} className={styles.cardTitleLink}>
-          <div className={styles.cardTitle}>{title || card.name}</div>
-        </Link>
-        <RadarCardStar slug={card.slug} name={card.name} />
-      </div>
-      {group || yearChip ? (
-        <div className={styles.cardMeta}>
-          {group ? <span className={styles.cardGroup}>{group}</span> : null}
-          {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
-        </div>
-      ) : null}
+  const storyBody = (
+    <div className={styles.headlineBody}>
       {blurb && headline?.url ? (
         <a
           href={headline.url}
@@ -688,8 +676,29 @@ function NewsRadarCard({
         ) : null}
         {articleDate ? <span>{articleDate}</span> : null}
       </div>
+    </div>
+  );
+
+  return (
+    <div className={`${styles.card} ${styles.cardNews}`} style={heat}>
+      <div className={styles.cardTitleRow}>
+        <Link href={href} className={styles.cardTitleLink}>
+          <div className={styles.cardTitle}>{title || card.name}</div>
+        </Link>
+        <RadarCardStar slug={card.slug} name={card.name} />
+      </div>
+      {group || yearChip ? (
+        <div className={styles.cardMeta}>
+          {group ? <span className={styles.cardGroup}>{group}</span> : null}
+          {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
+        </div>
+      ) : null}
       {slideCount > 1 ? (
-        <div className={styles.headlinePager} aria-label="More stories for this theme">
+        <div
+          className={styles.headlineBracket}
+          role="group"
+          aria-label="More stories for this theme"
+        >
           <button
             type="button"
             className={styles.headlinePagerBtn}
@@ -699,9 +708,7 @@ function NewsRadarCard({
           >
             ‹
           </button>
-          <span className={styles.headlinePagerCount}>
-            {idx + 1} / {slideCount}
-          </span>
+          {storyBody}
           <button
             type="button"
             className={styles.headlinePagerBtn}
@@ -712,7 +719,9 @@ function NewsRadarCard({
             ›
           </button>
         </div>
-      ) : null}
+      ) : (
+        storyBody
+      )}
       {previewItems.length > 0 ? (
         <RadarLogoRow
           items={previewItems}

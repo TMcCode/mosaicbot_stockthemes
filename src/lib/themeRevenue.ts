@@ -446,6 +446,20 @@ export function buildAcceleratingNote(data: ThemeRevenueV0): string | null {
   return parts.join(" · ");
 }
 
+function emptyRevenueConstituent(ticker: string, weight?: number | null): ThemeRevenueConstituentV0 {
+  return {
+    ticker,
+    weight: weight ?? null,
+    growth: {},
+    accel: {},
+    revisions: {},
+  };
+}
+
+/**
+ * Theme membership comes from detail; the revenue sidecar may lag (new IPO / new theme member).
+ * Always keep detail tickers visible — missing sidecar metrics render as dashes, same as Quality & Risk.
+ */
 export function mergeRevenueConstituents(
   detailTickers: { ticker: string; name?: string; weight?: number | null }[],
   revenue: ThemeRevenueV0,
@@ -468,9 +482,13 @@ export function mergeRevenueConstituents(
   for (const c of detailTickers) {
     const key = c.ticker.toUpperCase();
     const rev = byTicker.get(key);
-    if (!rev) continue;
     seen.add(key);
-    rows.push({ ticker: c.ticker, name: c.name, weight: c.weight ?? rev.weight, revenue: rev });
+    rows.push({
+      ticker: c.ticker,
+      name: c.name,
+      weight: c.weight ?? rev?.weight,
+      revenue: rev ?? emptyRevenueConstituent(c.ticker, c.weight),
+    });
   }
   for (const rev of revenue.constituents) {
     const key = rev.ticker.toUpperCase();

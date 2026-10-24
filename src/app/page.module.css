@@ -286,6 +286,12 @@
   justify-self: end;
 }
 
+@media (min-width: 1101px) {
+  .statGridHero {
+    margin-top: 36px;
+  }
+}
+
 .statGridHero .statCard {
   padding: 8px 10px;
 }
@@ -456,8 +462,10 @@
 }
 
 .statCard span {
+  display: block;
   color: var(--text-secondary);
   font-size: 12px;
+  margin-bottom: 2px;
 }
 
 /* Link wraps inner content only — layout unchanged (display: contents). */
@@ -577,7 +585,9 @@
   min-width: 0;
   align-self: stretch;
   overflow-x: clip;
-  --chart-panel-section-margin-top: 0.5rem;
+  /* Pull toward hero/treemap — .intro gap is 22px; chart section used to add more. */
+  margin-top: -10px;
+  --chart-panel-section-margin-top: 0;
 }
 
 /* Desktop / tablet: stretch past flex-start so chart gets full .intro width. */
@@ -633,6 +643,22 @@
   color: var(--text-primary);
 }
 
+.trendingStickyHeader {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--card-surface, var(--background));
+  /* Sit under the fixed desktop nav; mobile nav is in-flow. */
+  padding-bottom: 4px;
+  box-shadow: 0 8px 12px -12px rgba(0, 0, 0, 0.55);
+}
+
+@media (min-width: 601px) {
+  .trendingStickyHeader {
+    top: var(--site-nav-offset, 45px);
+  }
+}
+
 .trendingScrollWrap {
   /* Keep theme names single-line; scroll horizontally for overflow */
   --trending-theme-col: max-content;
@@ -647,6 +673,16 @@
   scrollbar-width: thin;
   cursor: grab;
   padding-bottom: 4px;
+}
+
+.trendingHeaderScroll {
+  /* One scrollbar on the body strip; header stays in sync via scrollLeft. */
+  padding-bottom: 0;
+  scrollbar-width: none;
+}
+
+.trendingHeaderScroll::-webkit-scrollbar {
+  display: none;
 }
 
 .trendingScrollWrap:active {
@@ -2163,5 +2199,9 @@ a.secondary {
 
 :global(.st-theme[data-theme="light"]) .trendingSticky {
   box-shadow: 6px 0 14px -8px rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .trendingStickyHeader {
+  box-shadow: 0 8px 12px -12px rgba(0, 0, 0, 0.12);
 }
 

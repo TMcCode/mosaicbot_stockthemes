@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { forwardRef, useEffect, useRef } from "react";
 
 type Props = {
   className?: string;
@@ -16,7 +16,10 @@ const DRAG_MULTIPLIER = 1.35;
  * Enables drag-to-scroll for horizontally overflowing content, including desktop
  * device emulation where touch gestures are not always forwarded.
  */
-export function HorizontalScrollArea({ className, children, scrollResetKey, ...rest }: Props) {
+export const HorizontalScrollArea = forwardRef<HTMLDivElement, Props>(function HorizontalScrollArea(
+  { className, children, scrollResetKey, onScroll, onPointerDown, onPointerMove, onPointerUp, onPointerCancel, onWheel, ...rest },
+  ref,
+) {
   const hostRef = useRef<HTMLDivElement | null>(null);
   const draggingRef = useRef(false);
   const pointerIdRef = useRef<number | null>(null);
@@ -28,6 +31,12 @@ export function HorizontalScrollArea({ className, children, scrollResetKey, ...r
     const host = hostRef.current;
     if (host) host.scrollLeft = 0;
   }, [scrollResetKey]);
+
+  const setHostRef = (node: HTMLDivElement | null) => {
+    hostRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) ref.current = node;
+  };
 
   const resetDrag = () => {
     const host = hostRef.current;
@@ -45,11 +54,13 @@ export function HorizontalScrollArea({ className, children, scrollResetKey, ...r
 
   return (
     <div
-      ref={hostRef}
+      ref={setHostRef}
       className={className}
       {...rest}
+      onScroll={onScroll}
       onPointerDown={(evt) => {
-        if (evt.button !== 0) return;
+        onPointerDown?.(evt);
+        if (evt.defaultPrevented || evt.button !== 0) return;
         const host = hostRef.current;
         if (!host) return;
         pointerIdRef.current = evt.pointerId;
@@ -58,6 +69,8 @@ export function HorizontalScrollArea({ className, children, scrollResetKey, ...r
         draggingRef.current = false;
       }}
       onPointerMove={(evt) => {
+        onPointerMove?.(evt);
+        if (evt.defaultPrevented) return;
         const host = hostRef.current;
         if (!host || pointerIdRef.current !== evt.pointerId) return;
         const deltaX = evt.clientX - startXRef.current;
@@ -73,13 +86,17 @@ export function HorizontalScrollArea({ className, children, scrollResetKey, ...r
         host.scrollLeft = startScrollLeftRef.current - deltaX * DRAG_MULTIPLIER;
         evt.preventDefault();
       }}
-      onPointerUp={() => {
+      onPointerUp={(evt) => {
+        onPointerUp?.(evt);
         resetDrag();
       }}
-      onPointerCancel={() => {
+      onPointerCancel={(evt) => {
+        onPointerCancel?.(evt);
         resetDrag();
       }}
       onWheel={(evt) => {
+        onWheel?.(evt);
+        if (evt.defaultPrevented) return;
         const host = hostRef.current;
         if (!host) return;
         const canScrollX = host.scrollWidth > host.clientWidth + 1;
@@ -94,4 +111,4 @@ export function HorizontalScrollArea({ className, children, scrollResetKey, ...r
       {children}
     </div>
   );
-}
+});

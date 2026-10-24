@@ -209,8 +209,8 @@ export default async function Home() {
               <ul className={styles.statGridHero} aria-label="Site coverage stats">
                 {stats.total_tickers != null ? (
                   <li className={`${styles.statCard} ${styles.statTickers}`}>
-                    <strong>{stats.total_tickers.toLocaleString()}</strong>
                     <span>Public tickers tracked</span>
+                    <strong>{stats.total_tickers.toLocaleString()}</strong>
                   </li>
                 ) : null}
                 {stats.total_groups != null ? (
@@ -218,8 +218,8 @@ export default async function Home() {
                     className={`${styles.statCard} ${styles.statGroups} ${styles.statCardClickable}`}
                   >
                     <Link href="/groups" className={styles.statCardHit}>
-                      <strong>{stats.total_groups}</strong>
                       <span>Theme groups</span>
+                      <strong>{stats.total_groups}</strong>
                     </Link>
                   </li>
                 ) : null}
@@ -228,13 +228,14 @@ export default async function Home() {
                     className={`${styles.statCard} ${styles.statThemes} ${styles.statCardClickable}`}
                   >
                     <Link href="/themes" className={styles.statCardHit}>
-                      <strong>{stats.total_themes}</strong>
                       <span>Curated themes</span>
+                      <strong>{stats.total_themes}</strong>
                     </Link>
                   </li>
                 ) : null}
                 {manifest.as_of ? (
                   <li className={`${styles.statCard} ${styles.statAsOf}`}>
+                    <span>Data as of</span>
                     <strong>
                       <time
                         dateTime={manifest.as_of}
@@ -243,7 +244,6 @@ export default async function Home() {
                         {formatSiteDataPublished(manifest.as_of, { compact: true })}
                       </time>
                     </strong>
-                    <span>Data as of</span>
                   </li>
                 ) : null}
               </ul>

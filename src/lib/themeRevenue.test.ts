@@ -4,6 +4,7 @@ import test from "node:test";
 // @ts-expect-error Node's type-stripping test runner requires the source extension.
 import {
   filterRevenueColumns,
+  mergeRevenueConstituents,
   REVENUE_GROWTH_COLUMNS,
   REVENUE_VALUATION_COLUMNS,
   revenueSidecarHasSequentialLags,
@@ -71,4 +72,30 @@ test("baked revenue JSON without L5Q/L4Q/L3Q is treated as stale", () => {
   });
   assert.equal(revenueSidecarHasSequentialLags(stale), false);
   assert.equal(revenueSidecarHasSequentialLags(current), true);
+});
+
+test("merge keeps detail members missing from the revenue sidecar", () => {
+  const rows = mergeRevenueConstituents(
+    [
+      { ticker: "RXRX", name: "Recursion", weight: 0.12 },
+      { ticker: "IAM", name: "Iambic", weight: 0.08 },
+    ],
+    {
+      schema_version: 0,
+      slug: "biotech-26-ai-drug-discovery",
+      theme: "Biotech '26: AI Drug Discovery",
+      as_of: "2026-10-24",
+      aggregation: "manual_theme_weights",
+      summary: {},
+      constituents: [{ ticker: "RXRX", weight: 0.12, growth: { ly_rev_act_pct: 10 }, accel: {} }],
+    },
+  );
+  assert.deepEqual(
+    rows.map((r) => r.ticker),
+    ["RXRX", "IAM"],
+  );
+  assert.equal(rows[1].name, "Iambic");
+  assert.equal(rows[1].weight, 0.08);
+  assert.deepEqual(rows[1].revenue.growth, {});
+  assert.deepEqual(rows[1].revenue.accel, {});
 });

@@ -1,9 +1,7 @@
 "use client";
 
-import Link from "next/link";
-
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
-import { shouldShowThemeThesisUi, themeThesisHasContent } from "@/lib/themeThesis";
+import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import type { ThemeThesisV0 } from "@/types/theme.detail.v0";
 
 import styles from "./ThemeThesisSection.module.css";
@@ -25,8 +23,6 @@ function formatThesisUpdateDate(raw: string): string {
 
 type Props = {
   themeThesis?: ThemeThesisV0;
-  /** Return path after sign-in (e.g. `/themes/my-slug`). */
-  signInNext?: string;
   /** Span the theme hero width (below title + treemap) instead of the left rail. */
   fullBleed?: boolean;
 };
@@ -52,34 +48,10 @@ function ThesisUpdateBadge({ themeThesis }: { themeThesis: ThemeThesisV0 }) {
   );
 }
 
-function ThesisSignInPrompt({ signInNext }: { signInNext?: string }) {
-  const signInHref = signInNext
-    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
-    : "/sign-in";
-
-  return (
-    <div className={styles.locked} aria-label="Theme thesis sign-in prompt">
-      <p className={styles.lockedTitle}>Sign in to read the full theme thesis</p>
-      <p className={styles.lockedCopy}>
-        Free account — unlock the investment thesis for this theme, save it to your watchlist, and
-        track performance on My watchlist.
-      </p>
-      <div className={styles.lockedActions}>
-        <Link href={signInHref} className={styles.signInBtn}>
-          Sign in free
-        </Link>
-        <Link href="/my" className={styles.secondaryLink}>
-          What is My watchlist?
-        </Link>
-      </div>
-    </div>
-  );
-}
-
 /**
- * Theme thesis + update badge; guests see a sign-in prompt instead of thesis text.
+ * Theme thesis + update badge. Guests see nothing here — unlock copy lives in the hero hint.
  */
-export function ThemeThesisBlock({ themeThesis, signInNext, fullBleed = false }: Props) {
+export function ThemeThesisBlock({ themeThesis, fullBleed = false }: Props) {
   if (!shouldShowThemeThesisUi(themeThesis)) {
     return null;
   }
@@ -102,24 +74,8 @@ export function ThemeThesisBlock({ themeThesis, signInNext, fullBleed = false }:
     );
   }
 
-  if (loading) {
+  if (loading || !user) {
     return null;
-  }
-
-  if (!user) {
-    if (!themeThesisHasContent(thesis)) {
-      return null;
-    }
-    return (
-      <div className={wrapClass} aria-labelledby="theme-thesis-heading">
-        <div className={styles.head}>
-          <h2 id="theme-thesis-heading" className={styles.title}>
-            Thesis
-          </h2>
-        </div>
-        <ThesisSignInPrompt signInNext={signInNext} />
-      </div>
-    );
   }
 
   return (

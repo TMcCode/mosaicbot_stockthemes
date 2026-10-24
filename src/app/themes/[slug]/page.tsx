@@ -15,10 +15,14 @@ import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
+import { ThemeGuestUnlockHint } from "@/components/ThemeGuestUnlockHint";
+import { ThemeHeroFactorSlot } from "@/components/ThemeHeroFactorSlot";
+import { ThemeThesisBleedSlot } from "@/components/ThemeThesisBleedSlot";
 import { LazyThemeNewsPanel } from "@/components/LazyThemeNewsPanel";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { JsonLd } from "@/components/JsonLd";
 import { shouldShowThemeThesisUi, themeThesisProse } from "@/lib/themeThesis";
+import { factorProfileUiAllowed } from "@/lib/themeFactorProfile";
 import {
   themeChartPerformanceSeed,
   themeDetailLiveSeed,
@@ -258,6 +262,7 @@ export default async function ThemeDetailPage({ params }: Props) {
         <div className={styles.intro}>
           {(() => {
             const showThesis = shouldShowThemeThesisUi(detail?.theme_thesis);
+            const showFactors = Boolean(factorProfile && factorProfileUiAllowed(factorProfile));
             const gridClass = `${styles.heroGrid} ${treemapNodes.length ? styles.heroGridThemeDetail : ""}`;
 
             const renderTitle = () => (
@@ -283,6 +288,11 @@ export default async function ThemeDetailPage({ params }: Props) {
                   groupSlug={theme.group_slug}
                   groupName={group?.name}
                 />
+                <ThemeGuestUnlockHint
+                  signInNext={`/themes/${slug}`}
+                  showThesis={showThesis}
+                  showFactors={showFactors}
+                />
                 {!detail && !dataBaseUrl ? (
                   <StockthemesDetailUnavailable kind="theme" slug={slug} />
                 ) : null}
@@ -299,7 +309,7 @@ export default async function ThemeDetailPage({ params }: Props) {
             );
 
             const renderFactor = () => (
-              <div
+              <ThemeHeroFactorSlot
                 className={`${styles.themeHeroFactorArea}${treemapNodes.length ? ` ${styles.heroFactorSlot}` : ""}`}
               >
                 <ThemeFactorProfile
@@ -307,9 +317,8 @@ export default async function ThemeDetailPage({ params }: Props) {
                   dataBaseUrl={dataBaseUrl ?? ""}
                   initialProfile={factorProfile}
                   fillRail={treemapNodes.length > 0}
-                  signInNext={`/themes/${slug}`}
                 />
-              </div>
+              </ThemeHeroFactorSlot>
             );
 
             const renderTreemap = () => (
@@ -341,13 +350,11 @@ export default async function ThemeDetailPage({ params }: Props) {
 
             const renderThesis = () =>
               showThesis ? (
-                <div className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}>
-                  <ThemeThesisBlock
-                    fullBleed
-                    themeThesis={detail?.theme_thesis}
-                    signInNext={`/themes/${slug}`}
-                  />
-                </div>
+                <ThemeThesisBleedSlot
+                  className={`${styles.heroFullBleed} ${styles.heroThesisBleed}`}
+                >
+                  <ThemeThesisBlock fullBleed themeThesis={detail?.theme_thesis} />
+                </ThemeThesisBleedSlot>
               ) : null;
 
             // DOM is mobile order; `.themeHeroAreas` places desktop as title+factor | treemap, thesis under.

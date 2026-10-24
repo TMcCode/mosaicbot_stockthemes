@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useRef, useState } from "react";
 
 import styles from "@/app/page.module.css";
 
@@ -61,12 +61,29 @@ function compareRows(a: HomeTrendingRow, b: HomeTrendingRow, sorts: SortState[])
 export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSortKey }: Props) {
   const [sorts, setSorts] = useState<SortState[]>([{ key: defaultSortKey, dir: "desc" }]);
   const activeSortKeys = useMemo(() => new Set(sorts.map((s) => s.key)), [sorts]);
+  const headerScrollRef = useRef<HTMLDivElement | null>(null);
+  const bodyScrollRef = useRef<HTMLDivElement | null>(null);
+  const syncingScrollRef = useRef(false);
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
     out.sort((a, b) => compareRows(a, b, sorts));
     return out;
   }, [rows, sorts]);
+
+  const gridTemplateColumns = useMemo(
+    () =>
+      `var(--trending-theme-col) repeat(${columns.length}, minmax(var(--trending-value-col), max-content))`,
+    [columns.length],
+  );
+
+  const syncHorizontalScroll = useCallback((source: HTMLDivElement, target: HTMLDivElement | null) => {
+    if (!target || syncingScrollRef.current) return;
+    if (target.scrollLeft === source.scrollLeft) return;
+    syncingScrollRef.current = true;
+    target.scrollLeft = source.scrollLeft;
+    syncingScrollRef.current = false;
+  }, []);
 
   const onHeaderClick = (key: string, shiftKey: boolean) => {
     setSorts((prev) => {
@@ -96,101 +113,111 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
 
   return (
     <>
-    <HorizontalScrollArea className={styles.trendingScrollWrap}>
-      <div
-        className={styles.trendingTable}
-        style={{
-          gridTemplateColumns: `var(--trending-theme-col) repeat(${columns.length}, minmax(var(--trending-value-col), max-content))`,
-        }}
+      {/* Header outside the body overflow box so sticky top sticks to the page (not killed by overflow-x). */}
+      <div className={styles.trendingStickyHeader}>
+        <HorizontalScrollArea
+          ref={headerScrollRef}
+          className={`${styles.trendingScrollWrap} ${styles.trendingHeaderScroll}`}
+          onScroll={(e) => syncHorizontalScroll(e.currentTarget, bodyScrollRef.current)}
+        >
+          <div className={styles.trendingTable} style={{ gridTemplateColumns }}>
+            {renderSortHead("Theme", "Theme", true)}
+            {columns.map((col) => (
+              <Fragment key={`h-${col}`}>
+                {renderSortHead(
+                  col,
+                  <>
+                    {trendingColumnHeader(col)}
+                    {columnHelp[col] ? (
+                      <span
+                        className={styles.metricInfoAsterisk}
+                        title={columnHelp[col]}
+                        aria-label={`${trendingColumnHeader(col)} explanation`}
+                      >
+                        *
+                      </span>
+                    ) : null}
+                  </>,
+                  false,
+                  columnHelp[col] || col,
+                )}
+              </Fragment>
+            ))}
+          </div>
+        </HorizontalScrollArea>
+      </div>
+      <HorizontalScrollArea
+        ref={bodyScrollRef}
+        className={styles.trendingScrollWrap}
+        onScroll={(e) => syncHorizontalScroll(e.currentTarget, headerScrollRef.current)}
       >
-        {renderSortHead("Theme", "Theme", true)}
-        {columns.map((col) => (
-          <Fragment key={`h-${col}`}>
-            {renderSortHead(
-              col,
-              <>
-                {trendingColumnHeader(col)}
-                {columnHelp[col] ? (
-                  <span
-                    className={styles.metricInfoAsterisk}
-                    title={columnHelp[col]}
-                    aria-label={`${trendingColumnHeader(col)} explanation`}
-                  >
-                    *
-                  </span>
-                ) : null}
-              </>,
-              false,
-              columnHelp[col] || col,
-            )}
-          </Fragment>
-        ))}
-        {sortedRows.flatMap((row) => {
-          const keyBase = row.slug ?? `n-${row.name}`;
-          const { title, groupPrefix } = splitThemeDisplayName(row.name);
-          const nameCell =
-            row.slug != null ? (
-              <div
-                key={`${keyBase}-name`}
-                className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
-              >
-                <div className={styles.trendingThemeRow}>
-                  <WatchlistStar
-                    compact
-                    itemType="theme"
-                    itemKey={row.slug}
-                    label={row.name}
-                    signInNext={`/themes/${row.slug}`}
-                  />
-                  <div className={styles.trendingThemeText}>
-                    <Link
-                      href={`/themes/${row.slug}`}
-                      className={styles.trendingThemeName}
-                      title={row.name}
-                    >
-                      <span className={styles.trendingThemeNameFull}>{row.name}</span>
-                      <span className={styles.trendingThemeNameShort}>{title}</span>
-                    </Link>
-                    {groupPrefix ? (
-                      <div className={styles.trendingThemeGroup}>{groupPrefix}</div>
-                    ) : null}
-                    {row.tickersPreview ? (
-                      <div className={styles.trendingThemeTickers}>{row.tickersPreview}</div>
-                    ) : null}
+        <div className={styles.trendingTable} style={{ gridTemplateColumns }}>
+          {sortedRows.flatMap((row) => {
+            const keyBase = row.slug ?? `n-${row.name}`;
+            const { title, groupPrefix } = splitThemeDisplayName(row.name);
+            const nameCell =
+              row.slug != null ? (
+                <div
+                  key={`${keyBase}-name`}
+                  className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
+                >
+                  <div className={styles.trendingThemeRow}>
+                    <WatchlistStar
+                      compact
+                      itemType="theme"
+                      itemKey={row.slug}
+                      label={row.name}
+                      signInNext={`/themes/${row.slug}`}
+                    />
+                    <div className={styles.trendingThemeText}>
+                      <Link
+                        href={`/themes/${row.slug}`}
+                        className={styles.trendingThemeName}
+                        title={row.name}
+                      >
+                        <span className={styles.trendingThemeNameFull}>{row.name}</span>
+                        <span className={styles.trendingThemeNameShort}>{title}</span>
+                      </Link>
+                      {groupPrefix ? (
+                        <div className={styles.trendingThemeGroup}>{groupPrefix}</div>
+                      ) : null}
+                      {row.tickersPreview ? (
+                        <div className={styles.trendingThemeTickers}>{row.tickersPreview}</div>
+                      ) : null}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div
-                key={`${keyBase}-name`}
-                className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
-              >
-                <span
-                  className={styles.trendingThemeNameMuted}
-                  title={row.name}
-                  style={row.marketBaseline ? { fontWeight: 700 } : undefined}
+              ) : (
+                <div
+                  key={`${keyBase}-name`}
+                  className={`${styles.trendingThemeCell} ${styles.trendingSticky}`}
                 >
-                  {row.name}
-                </span>
-              </div>
-            );
-          const cells = columns.map((col) => {
-            const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf, row.name);
-            const heat =
-              v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
-            return (
-              <div key={`${keyBase}-${col}`} className={styles.trendingValue} style={heat}>
-                {fmtPct(v)}
-              </div>
-            );
-          });
-          return [nameCell, ...cells];
-        })}
-      </div>
-    </HorizontalScrollArea>
-    <p className={styles.trendingSortHint}>
-      Default: {trendingColumnHeader(defaultSortKey)} ↓ · Click headers to sort · Shift+click secondary
-    </p>
+                  <span
+                    className={styles.trendingThemeNameMuted}
+                    title={row.name}
+                    style={row.marketBaseline ? { fontWeight: 700 } : undefined}
+                  >
+                    {row.name}
+                  </span>
+                </div>
+              );
+            const cells = columns.map((col) => {
+              const v = valueForTrendingColumn(col, row.compare_returns, row.chartPerf, row.name);
+              const heat =
+                v != null && Number.isFinite(v) ? trendingReturnHeatStyle(v) : undefined;
+              return (
+                <div key={`${keyBase}-${col}`} className={styles.trendingValue} style={heat}>
+                  {fmtPct(v)}
+                </div>
+              );
+            });
+            return [nameCell, ...cells];
+          })}
+        </div>
+      </HorizontalScrollArea>
+      <p className={styles.trendingSortHint}>
+        Default: {trendingColumnHeader(defaultSortKey)} ↓ · Click headers to sort · Shift+click secondary
+      </p>
     </>
   );
 }

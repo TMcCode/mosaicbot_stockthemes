@@ -33,8 +33,6 @@ type Props = {
   initialProfile?: ThemeFactorProfileV0 | null;
   /** Stretch panel to align bottom with hero treemap rail. */
   fillRail?: boolean;
-  /** Return path after sign-in (e.g. `/themes/my-slug`). */
-  signInNext?: string;
 };
 
 type ProfileState =
@@ -112,30 +110,6 @@ function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant
         />
       </div>
     </li>
-  );
-}
-
-function FactorSignInPrompt({ signInNext }: { signInNext?: string }) {
-  const signInHref = signInNext
-    ? `/sign-in?next=${encodeURIComponent(signInNext)}`
-    : "/sign-in";
-
-  return (
-    <div className={styles.locked} aria-label="Factor profile sign-in prompt">
-      <p className={styles.lockedTitle}>Sign in to view factor exposure</p>
-      <p className={styles.lockedCopy}>
-        Free account — see how this theme ranks on market, sector, and narrative factors, and browse
-        full factor leaderboards.
-      </p>
-      <div className={styles.lockedActions}>
-        <Link href={signInHref} className={styles.signInBtn}>
-          Sign in free
-        </Link>
-        <Link href="/factors" className={styles.secondaryLink}>
-          About factor rankings
-        </Link>
-      </div>
-    </div>
   );
 }
 
@@ -234,7 +208,6 @@ export function ThemeFactorProfile({
   dataBaseUrl,
   initialProfile = null,
   fillRail = false,
-  signInNext,
 }: Props) {
   const { configured, loading: authLoading, user } = useSupabaseAuth();
   const [state, setState] = useState<ProfileState>({ status: "loading" });
@@ -318,24 +291,8 @@ export function ThemeFactorProfile({
     };
   }, [slug, dataBaseUrl, configured, user, initialProfile]);
 
-  const wrapClass = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;
-
-  if (!configured) {
+  if (!configured || authLoading || !user) {
     return null;
-  }
-
-  if (authLoading) {
-    return null;
-  }
-
-  if (!user) {
-    return (
-      <div className={wrapClass}>
-        <div className={styles.block}>
-          <FactorSignInPrompt signInNext={signInNext} />
-        </div>
-      </div>
-    );
   }
 
   const wrapClassAuthed = fillRail ? `${styles.heroWrap} ${styles.heroFillRail}` : styles.heroWrap;

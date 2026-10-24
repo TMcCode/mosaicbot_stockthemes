@@ -1,7 +1,8 @@
 .section {
   width: 100%;
   min-width: 0;
-  margin-top: 0.5rem;
+  /* Pull toward Themes in Motion — .intro gap is 22px. */
+  margin-top: -16px;
 }
 
 /* Desktop: title left | period chips + Sectors/Factors right — one row. */

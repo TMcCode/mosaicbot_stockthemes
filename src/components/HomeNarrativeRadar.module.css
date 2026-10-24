@@ -1,6 +1,6 @@
 .section {
   width: 100%;
-  margin-top: 28px;
+  margin-top: 10px;
   padding-top: 8px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
@@ -177,46 +177,52 @@
   position: relative;
   /* Room for corner credit without colliding with logo row. */
   padding-bottom: 18px;
+  /* Fill grid cell so metrics + logos share a baseline across the row. */
+  height: 100%;
 }
 
-.headlinePager {
+.headlineBracket {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 2px;
+  gap: 4px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.headlineBody {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
 }
 
 .headlinePagerBtn {
   appearance: none;
-  width: 28px;
+  flex: 0 0 auto;
+  width: 14px;
   height: 28px;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.04);
+  border: none;
+  border-radius: 0;
+  background: transparent;
   color: var(--text-secondary);
-  font-size: 16px;
+  font-size: 15px;
   line-height: 1;
   cursor: pointer;
+  opacity: 0.55;
 }
 
 .headlinePagerBtn:hover:not(:disabled) {
-  border-color: rgba(38, 252, 214, 0.45);
-  color: var(--text-primary);
+  color: var(--accent);
+  opacity: 1;
 }
 
 .headlinePagerBtn:disabled {
-  opacity: 0.35;
+  opacity: 0.22;
   cursor: default;
-}
-
-.headlinePagerCount {
-  font-size: 12px;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-secondary);
-  min-width: 3.2em;
-  text-align: center;
 }
 
 .newsDaySections {
@@ -283,7 +289,7 @@
   display: block;
   max-height: 6.75em;
   overflow: hidden;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   max-width: none;
   text-wrap: pretty;
   text-decoration: none;
@@ -416,7 +422,7 @@
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   max-width: none;
   max-height: 6.75em;
   text-wrap: pretty;
@@ -426,6 +432,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
+  margin-top: auto;
+  flex: 0 0 auto;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
@@ -473,6 +481,7 @@
   margin-top: 2px;
   min-height: 28px;
   width: 100%;
+  flex: 0 0 auto;
   /* Long exchange suffixes (.SHG/.SHE) used to blow past the card and hide +N. */
   overflow: hidden;
   position: relative;
@@ -553,8 +562,7 @@
 }
 
 :global(.st-theme[data-theme="light"]) .headlinePagerBtn {
-  border-color: rgba(59, 77, 161, 0.18);
-  background: rgba(255, 255, 255, 0.9);
+  background: transparent;
   color: var(--text-secondary);
 }
 
