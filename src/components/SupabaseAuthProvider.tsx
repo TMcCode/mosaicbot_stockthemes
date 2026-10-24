@@ -10,9 +10,8 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { Session, User } from "@supabase/supabase-js";
+import type { Session, SupabaseClient, User } from "@supabase/supabase-js";
 
-import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 import { getSupabasePublicConfig } from "@/lib/supabase/config";
 import { readLikelySupabaseSession } from "@/lib/supabase/likelySession";
 
@@ -42,6 +41,16 @@ const GUEST_FALLBACK: SupabaseAuthContextValue = {
   showAuthedUi: false,
   signOut: async () => {},
 };
+
+/** Keep supabase-js out of the initial JS budget; start the chunk ASAP on the client. */
+let browserClientPromise: Promise<SupabaseClient | null> | null = null;
+
+function loadBrowserSupabase(): Promise<SupabaseClient | null> {
+  if (!browserClientPromise) {
+    browserClientPromise = import("@/lib/supabase/browserClient").then((m) => m.getBrowserSupabase());
+  }
+  return browserClientPromise;
+}
 
 export function useSupabaseAuth(): SupabaseAuthContextValue {
   const ctx = useContext(SupabaseAuthContext);
@@ -106,21 +115,30 @@ function captureAuthPostHog(user: User) {
 
 export function SupabaseAuthProvider({ children }: { children: ReactNode }) {
   const configured = useMemo(() => Boolean(getSupabasePublicConfig()), []);
-  // Eager client (no dynamic import) so getSession can start on first effect.
-  const client = useMemo(() => (configured ? getBrowserSupabase() : null), [configured]);
+  const [client, setClient] = useState<SupabaseClient | null>(null);
   const [loading, setLoading] = useState(configured);
   const [session, setSession] = useState<Session | null>(null);
   const [presumeSignedIn, setPresumeSignedIn] = useState(false);
 
-  // Before paint: unlock gated UI for returning users without waiting on getSession.
+  // Before paint: unlock gated UI for returning users; kick off supabase chunk immediately.
   useLayoutEffect(() => {
     if (!configured) return;
     setPresumeSignedIn(readLikelySupabaseSession());
+    let cancelled = false;
+    void loadBrowserSupabase().then((c) => {
+      if (!cancelled) setClient(c);
+    });
+    return () => {
+      cancelled = true;
+    };
   }, [configured]);
 
   useEffect(() => {
-    if (!configured || !client) {
+    if (!configured) {
       setLoading(false);
+      return;
+    }
+    if (!client) {
       return;
     }
 
