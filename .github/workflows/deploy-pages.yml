@@ -208,6 +208,16 @@ jobs:
     if: needs.check.outputs.should_build == 'true'
     runs-on: ubuntu-latest
     steps:
+      # Functions + wrangler.toml must sit next to `out/` for `pages deploy`
+      # (Tier B /cdn-app proxy). Artifact is static HTML only.
+      - name: Checkout Functions + wrangler
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            functions
+            wrangler.toml
+          sparse-checkout-cone-mode: false
+
       - name: Download site artifact
         uses: actions/download-artifact@v4
         with:
