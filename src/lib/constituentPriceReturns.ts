@@ -28,7 +28,6 @@ const CONSTITUENT_RETURN_SKIP = new Set<string>([
   CONSTITUENT_PERIOD_COL,
   ...CONSTITUENT_LONG_HORIZON_COLS,
   "1W",
-  "60D",
   "120D",
   "LstRpt %",
   "SinceLstRpt",

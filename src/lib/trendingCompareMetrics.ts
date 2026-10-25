@@ -25,7 +25,7 @@ const DEFAULT_COLUMN_ORDER = [
   "5Y",
 ] as const;
 
-/** /compare page: short horizons → earnings → calendar → custom SelectedDates. */
+/** /compare page: short horizons → earnings → 3M → calendar → custom SelectedDates. */
 const COMPARE_COLUMN_ORDER = [
   "Premarket",
   "Postmarket",
@@ -35,13 +35,20 @@ const COMPARE_COLUMN_ORDER = [
   "MTD",
   "LstRpt %",
   "SinceLstRpt",
+  "3M",
   "YTD",
   "Period",
   "2Y",
   "5Y",
 ] as const;
 
-const STANDARD_METRIC_KEYS = new Set<string>(DEFAULT_COLUMN_ORDER);
+const STANDARD_METRIC_KEYS = new Set<string>([
+  ...DEFAULT_COLUMN_ORDER,
+  // Keep off homepage trending tail; /compare orders these explicitly.
+  "3M",
+  "LstRpt %",
+  "SinceLstRpt",
+]);
 
 const COMPARE_STANDARD_KEYS = new Set<string>([
   ...COMPARE_COLUMN_ORDER,
@@ -93,6 +100,7 @@ export function trendingColumnHeader(key: string): string {
     "1M": "1M %",
     SinceLstRpt: "Since LstRpt %",
     "LstRpt %": "LstRpt %",
+    "3M": "3M %",
     MTD: "MTD %",
     YTD: "YTD %",
     Period: "1Yr %",
@@ -113,6 +121,7 @@ export function compareColumnHeader(key: string): string {
     "1M": "1M",
     SinceLstRpt: "Since LstRpt",
     "LstRpt %": "LstRpt",
+    "3M": "3M",
     MTD: "MTD",
     YTD: "YTD",
     Period: "1Yr",
@@ -133,6 +142,7 @@ const COMPARE_COLUMN_TOOLTIPS: Record<string, string> = {
     "On average return since each ticker's last earnings report date.",
   SinceLstRpt:
     "On average returns for the two days after each ticker's last earnings date.",
+  "3M": "Total return over the trailing three calendar months.",
   Period: "Total return over the trailing 12 months.",
   "2Y": "Total return over the trailing 2 years. Blank when the name has less than ~2 years of price history.",
   "5Y": "Total return over the trailing 5 years. Blank when the name has less than ~5 years of price history.",
