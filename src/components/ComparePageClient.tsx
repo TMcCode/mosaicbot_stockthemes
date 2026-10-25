@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
+import { CompareColumnsDropdown } from "@/components/CompareColumnsDropdown";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
@@ -13,6 +14,10 @@ import {
   availableCompareSummaryPeriods,
   type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
+import {
+  resolveCompareDisplayColumns,
+  type CompareColumnPrefs,
+} from "@/lib/compareColumnPrefs";
 import {
   isCompareSectorFilterInactive,
   normalizeCompareSpySector,
@@ -55,7 +60,6 @@ type Props = {
   /** Group display name → normalized spy_sector (Other / Unmapped / …). */
   groupSectorByName: Record<string, string>;
   sectorOptions: string[];
-  yearOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
 };
 
@@ -68,7 +72,6 @@ export function ComparePageClient({
   groupOptions,
   groupSectorByName,
   sectorOptions,
-  yearOptions,
   selectedDates,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("themes");
@@ -95,7 +98,13 @@ export function ComparePageClient({
       liveCompareBundle?.columns ?? columns,
     );
   }, [rowsWithLiveCompare, liveCompareBundle?.columns, columns]);
-  const visibleColumns = useSessionVisibleColumns(fullColumns);
+  const sessionColumns = useSessionVisibleColumns(fullColumns);
+  /** null = editorial default for this session; not persisted across visits. */
+  const [columnPrefs, setColumnPrefs] = useState<CompareColumnPrefs | null>(null);
+  const visibleColumns = useMemo(
+    () => resolveCompareDisplayColumns(sessionColumns, columnPrefs),
+    [sessionColumns, columnPrefs],
+  );
   const groupRows = useMemo<Row[]>(
     () =>
       (groupBundle?.rows ?? []).map((row) => ({
@@ -109,7 +118,6 @@ export function ComparePageClient({
   );
   const [selectedSectors, setSelectedSectors] = useState<string[]>(() => [...sectorOptions]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
-  const [selectedYears, setSelectedYears] = useState<string[]>(() => [...yearOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
   const [showFactorSpreads, setShowFactorSpreads] = useState(false);
   const [excludeShortThemes, setExcludeShortThemes] = useState(false);
@@ -159,10 +167,10 @@ export function ComparePageClient({
   const filteredThemes = useMemo(() => {
     let base = filterCompareRows(rowsWithLiveCompare, {
       groupOptions: visibleGroupOptions,
-      yearOptions,
+      yearOptions: [],
       sectorOptions,
       selectedGroups: visibleSelectedGroups,
-      selectedYears,
+      selectedYears: [],
       selectedSectors,
     });
     if (excludeShortThemes) {
@@ -175,10 +183,8 @@ export function ComparePageClient({
   }, [
     rowsWithLiveCompare,
     visibleGroupOptions,
-    yearOptions,
     sectorOptions,
     visibleSelectedGroups,
-    selectedYears,
     selectedSectors,
     excludeShortThemes,
     excludeSupportingThemes,
@@ -248,27 +254,22 @@ export function ComparePageClient({
               />
             ) : null}
             {viewMode === "themes" ? (
-              <>
-                <CheckboxMultiSelectDropdown
-                  label="Groups"
-                  options={visibleGroupOptions}
-                  selected={visibleSelectedGroups}
-                  onChange={setSelectedGroups}
-                  emptyLabel="All groups"
-                  layout="inline"
-                  compact
-                />
-                <CheckboxMultiSelectDropdown
-                  label="Years"
-                  options={yearOptions}
-                  selected={selectedYears}
-                  onChange={setSelectedYears}
-                  emptyLabel="All years"
-                  layout="inline"
-                  compact
-                />
-              </>
+              <CheckboxMultiSelectDropdown
+                label="Groups"
+                options={visibleGroupOptions}
+                selected={visibleSelectedGroups}
+                onChange={setSelectedGroups}
+                emptyLabel="All groups"
+                layout="inline"
+                compact
+              />
             ) : null}
+            <CompareColumnsDropdown
+              available={sessionColumns}
+              prefs={columnPrefs}
+              onChange={setColumnPrefs}
+              onReset={() => setColumnPrefs(null)}
+            />
           </div>
         </div>
         {viewMode === "groups" || liveCompareBundle ? (

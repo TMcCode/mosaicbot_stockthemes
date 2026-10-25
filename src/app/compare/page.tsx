@@ -27,11 +27,6 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/compare",
 });
 
-function deriveYearTag(name: string): string | null {
-  const m = String(name || "").match(/'(\d{2})\b/);
-  return m ? m[1] : null;
-}
-
 export default async function ComparePage() {
   const [{ manifest, source }, compareRes, benchmarksRes, factorSpreadsRes, spyPerf] =
     await Promise.all([
@@ -102,9 +97,6 @@ export default async function ComparePage() {
     a.localeCompare(b, undefined, { sensitivity: "base" }),
   );
   const sectorOptions = orderCompareSectorOptions(groupSectorByName.values());
-  const yearOptions = Array.from(
-    new Set(rows.map((r) => deriveYearTag(r.name)).filter((x): x is string => Boolean(x))),
-  ).sort();
 
   return (
     <PageSurface>
@@ -119,7 +111,6 @@ export default async function ComparePage() {
             groupOptions={groupOptions}
             groupSectorByName={Object.fromEntries(groupSectorByName)}
             sectorOptions={sectorOptions}
-            yearOptions={yearOptions}
             selectedDates={manifest.selected_dates}
           />
         </div>
