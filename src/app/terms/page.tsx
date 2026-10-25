@@ -12,7 +12,7 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default function TermsPage() {
-  const updated = "April 7, 2026";
+  const updated = "October 25, 2026";
   return (
     <PageSurface>
       <main className={styles.main}>
@@ -70,6 +70,13 @@ export default function TermsPage() {
             <p className={styles.introCopy}>
               You agree not to misuse the site, interfere with operations, attempt unauthorized
               access, or use automated means in ways that harm service integrity.
+            </p>
+            <p className={styles.introCopy}>
+              You may not scrape, bulk-download, mirror, republish, or resell theme memberships,
+              weights, charts, returns, notes, or other structured data from stockthemes.ai or its
+              public storage endpoints, except for ordinary personal browsing or as expressly
+              permitted in a written license from us. Search-engine indexing of public HTML pages is
+              allowed.
             </p>
 
             <h3>Limitation of liability</h3>

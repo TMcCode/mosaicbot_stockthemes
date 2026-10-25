@@ -48,19 +48,29 @@ export function HomeHighlightedThemeChart({ slug, name, benchmarkPerformance }: 
     if (!base) return;
 
     const controller = new AbortController();
-    const url = `${base}/themes/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
-    fetch(url, {
-      credentials: "omit",
+    const q = stockthemesBrowserCacheBusterQuery();
+    const publicUrl = `${base}/themes/${encodeURIComponent(slug)}.json?${q}`;
+    const appUrl = `${base}/themes/${encodeURIComponent(slug)}.app.v0.json?${q}`;
+    const opts = {
+      credentials: "omit" as const,
       cache: stockthemesBrowserFetchCache(),
       signal: controller.signal,
-    })
-      .then((response) => {
+    };
+    Promise.all([
+      fetch(publicUrl, opts).then((response) => {
         if (!response.ok) throw new Error(`theme chart ${response.status}`);
         return response.json() as Promise<{ chart_1y?: ThemeChart1yV0 }>;
-      })
-      .then((payload) => {
-        if (chartHasRenderableData(payload.chart_1y)) {
-          setFetchedChart({ slug, chart: payload.chart_1y! });
+      }),
+      fetch(appUrl, opts)
+        .then((response) =>
+          response.ok ? (response.json() as Promise<{ chart_1y?: ThemeChart1yV0 }>) : null,
+        )
+        .catch(() => null),
+    ])
+      .then(([payload, app]) => {
+        const chart = app?.chart_1y ?? payload.chart_1y;
+        if (chartHasRenderableData(chart)) {
+          setFetchedChart({ slug, chart: chart! });
         }
       })
       .catch(() => {

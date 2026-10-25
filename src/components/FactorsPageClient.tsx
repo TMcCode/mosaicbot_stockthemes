@@ -560,14 +560,24 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
       missing.map(async (item) => {
         try {
           const base = dataBaseUrl.replace(/\/$/, "");
-          const url = `${base}/themes/${encodeURIComponent(item.slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
-          const res = await fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() });
+          const q = stockthemesBrowserCacheBusterQuery();
+          const opts = { credentials: "omit" as const, cache: stockthemesBrowserFetchCache() };
+          const [res, appRes] = await Promise.all([
+            fetch(`${base}/themes/${encodeURIComponent(item.slug)}.json?${q}`, opts),
+            fetch(`${base}/themes/${encodeURIComponent(item.slug)}.app.v0.json?${q}`, opts).catch(
+              () => null,
+            ),
+          ]);
           if (!res.ok) return [item.slug, null] as const;
           const payload = (await res.json()) as {
             name?: string;
             chart_1y?: { performance?: ChartPerformanceV0 };
           };
-          const perf = payload?.chart_1y?.performance;
+          const app =
+            appRes && appRes.ok
+              ? ((await appRes.json()) as { chart_1y?: { performance?: ChartPerformanceV0 } })
+              : null;
+          const perf = (app?.chart_1y ?? payload?.chart_1y)?.performance;
           const datesRaw = perf?.dates;
           const valuesRaw = perf?.values;
           const dates = Array.isArray(datesRaw) ? datesRaw.filter((v): v is string => typeof v === "string") : [];

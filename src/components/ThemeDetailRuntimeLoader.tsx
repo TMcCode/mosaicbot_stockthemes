@@ -15,6 +15,11 @@ import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import {
+  mergeThemeDetailWithApp,
+  parseThemeAppPayload,
+  themeAppSidecarUrl,
+} from "@/lib/mergeThemeApp";
+import {
   stockthemesBrowserCacheBusterQuery,
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
@@ -66,15 +71,22 @@ function fetchThemeDetail(slug: string, dataBaseUrl: string): Promise<ThemeDetai
   const key = `${dataBaseUrl}::${slug}`;
   const existing = detailFetchCache.get(key);
   if (existing) return existing;
-  const url = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${stockthemesBrowserCacheBusterQuery()}`;
-  const promise = fetch(url, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
-    .then((res) => {
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
-      }
+  const q = stockthemesBrowserCacheBusterQuery();
+  const publicUrl = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${q}`;
+  const appUrl = `${themeAppSidecarUrl(dataBaseUrl, slug)}?${q}`;
+  const fetchOpts = { credentials: "omit" as const, cache: stockthemesBrowserFetchCache() };
+  const promise = Promise.all([
+    fetch(publicUrl, fetchOpts).then((res) => {
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       return res.text();
-    })
-    .then((raw) => parseDetail(raw))
+    }),
+    fetch(appUrl, fetchOpts)
+      .then((res) => (res.ok ? res.json() : null))
+      .catch(() => null),
+  ])
+    .then(([raw, appJson]) =>
+      mergeThemeDetailWithApp(parseDetail(raw), parseThemeAppPayload(appJson)),
+    )
     .catch((err) => {
       detailFetchCache.delete(key);
       throw err;

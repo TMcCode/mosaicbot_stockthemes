@@ -1,6 +1,28 @@
+import {
+  mergeThemeDetailWithApp,
+  parseThemeAppPayload,
+  themeAppSidecarUrl,
+} from "@/lib/mergeThemeApp";
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ThemePriceReturnsSidecarV0 } from "@/types/theme.price_returns.v0";
+
+async function fetchMergedThemeDetailJson(
+  dataBaseUrl: string,
+  encodedSlug: string,
+  slug: string,
+  fetchJson: (url: string) => Promise<unknown>,
+): Promise<ThemeDetailV0> {
+  const publicDetail = parseThemeDetail(
+    await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
+  );
+  try {
+    const appJson = await fetchJson(themeAppSidecarUrl(dataBaseUrl, slug));
+    return mergeThemeDetailWithApp(publicDetail, parseThemeAppPayload(appJson));
+  } catch {
+    return publicDetail;
+  }
+}
 
 export function mergeThemeDetailPriceReturns(
   server: ThemeDetailV0,
@@ -224,8 +246,11 @@ export async function refreshLiveThemeDetail({
       live = sidecarAsThemeDetail(sidecar);
       usedPriceReturnsSidecar = true;
     } catch {
-      live = parseThemeDetail(
-        await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
+      live = await fetchMergedThemeDetailJson(
+        dataBaseUrl,
+        encodedSlug,
+        slug,
+        fetchJson,
       );
     }
     // Slim price_returns sidecars omit chart_1y and earnings schedule dates.
@@ -241,8 +266,11 @@ export async function refreshLiveThemeDetail({
         (needComposition && !live.chart_1y?.composition_indexed);
       if (needFull) {
         try {
-          const full = parseThemeDetail(
-            await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
+          const full = await fetchMergedThemeDetailJson(
+            dataBaseUrl,
+            encodedSlug,
+            slug,
+            fetchJson,
           );
           scheduleSource = full;
           if (full.chart_1y?.composition_indexed) {
