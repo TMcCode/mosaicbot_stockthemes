@@ -24,7 +24,7 @@ import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { isShortThemeName } from "@/lib/shortThemeChart";
 import { isSupportingThemeRankVisibility } from "@/lib/supportingTheme";
-import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
+import { resolveCompareColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
@@ -87,15 +87,14 @@ export function ComparePageClient({
     [rows, liveCompareBundle?.rows],
   );
   const fullColumns = useMemo(() => {
-    const fromLive = resolveTrendingColumnOrder(
+    // Must use compare order (not trending) — trending strips LstRpt / SinceLstRpt / 3M.
+    return resolveCompareColumnOrder(
       rowsWithLiveCompare.map((row) => ({
         compare_returns: row.compareReturns ?? undefined,
       })),
+      liveCompareBundle?.columns ?? columns,
     );
-    const hasLiveCols = rowsWithLiveCompare.some((r) => (r.compareReturns?.columns?.length ?? 0) > 0);
-    // Always re-normalize so CDN order (1D before Post) cannot leak through.
-    return normalizeCompareColumnOrder(hasLiveCols && fromLive.length ? fromLive : columns);
-  }, [rowsWithLiveCompare, columns]);
+  }, [rowsWithLiveCompare, liveCompareBundle?.columns, columns]);
   const visibleColumns = useSessionVisibleColumns(fullColumns);
   const groupRows = useMemo<Row[]>(
     () =>

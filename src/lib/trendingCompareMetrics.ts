@@ -91,6 +91,21 @@ export function resolveTrendingColumnOrder(
   return [...DEFAULT_COLUMN_ORDER];
 }
 
+/** /compare (and watchlist) — keep LstRpt / SinceLstRpt / 3M; do not use trending order. */
+export function resolveCompareColumnOrder(
+  rows: { compare_returns?: ThemeCompareReturnsV0 }[],
+  bundleColumns?: string[] | null,
+): string[] {
+  if (Array.isArray(bundleColumns) && bundleColumns.length > 0) {
+    return normalizeCompareColumnOrder(bundleColumns);
+  }
+  for (const r of rows) {
+    const c = r.compare_returns?.columns;
+    if (c && c.length > 0) return normalizeCompareColumnOrder(c);
+  }
+  return [...COMPARE_COLUMN_ORDER];
+}
+
 export function trendingColumnHeader(key: string): string {
   const labels: Record<string, string> = {
     "1D": "1D %",

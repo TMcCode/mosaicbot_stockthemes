@@ -19,10 +19,7 @@ import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
-import {
-  normalizeCompareColumnOrder,
-  resolveTrendingColumnOrder,
-} from "@/lib/trendingCompareMetrics";
+import { resolveCompareColumnOrder } from "@/lib/trendingCompareMetrics";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "Theme returns table",
@@ -71,16 +68,12 @@ export default async function ComparePage() {
       canonical_theme: r.canonical_theme ?? null,
     };
   });
-  const fallbackColumns = resolveTrendingColumnOrder(
+  const columns = resolveCompareColumnOrder(
     (compareRes?.bundle.rows || []).map((r) => ({
       compare_returns: r.compare_returns ?? undefined,
     })),
+    compareRes?.bundle.columns,
   );
-  const rawColumns =
-    Array.isArray(compareRes?.bundle.columns) && compareRes?.bundle.columns.length
-      ? compareRes.bundle.columns
-      : fallbackColumns;
-  const columns = normalizeCompareColumnOrder(rawColumns);
   const benchmarkRows: CompareBenchmarkRow[] = (() => {
     const fromBundle = mapEtfBenchmarksToCompareRows(benchmarksRes?.bundle);
     if (fromBundle.length > 0) return fromBundle;

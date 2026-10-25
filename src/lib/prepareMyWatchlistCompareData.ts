@@ -1,5 +1,5 @@
 import type { CompareThemesLoadResult } from "@/lib/loadCompareThemes";
-import { normalizeCompareColumnOrder, resolveTrendingColumnOrder } from "@/lib/trendingCompareMetrics";
+import { resolveCompareColumnOrder } from "@/lib/trendingCompareMetrics";
 import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
@@ -36,12 +36,10 @@ function resolveColumns(
   compareColumns: string[] | undefined,
   rows: MyWatchlistCompareRow[],
 ): string[] {
-  const fallbackCols = resolveTrendingColumnOrder(
+  return resolveCompareColumnOrder(
     rows.map((r) => ({ compare_returns: r.compareReturns ?? undefined })),
-  );
-  const cols =
-    Array.isArray(compareColumns) && compareColumns.length ? compareColumns : fallbackCols;
-  return normalizeCompareColumnOrder(cols.filter((c) => !EXCLUDED_COLUMNS.has(c)));
+    compareColumns,
+  ).filter((c) => !EXCLUDED_COLUMNS.has(c));
 }
 
 /** Build-time compare bundle for /my (same source as /compare, no browser fetch). */
