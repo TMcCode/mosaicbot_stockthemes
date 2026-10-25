@@ -17,7 +17,8 @@ async function fetchMergedThemeDetailJson(
     await fetchJson(`${dataBaseUrl}/themes/${encodedSlug}.json`),
   );
   try {
-    const appJson = await fetchJson(themeAppSidecarUrl(dataBaseUrl, slug));
+    // Same-origin gated proxy (private R2). Absolute CDN URLs are not used for Tier B.
+    const appJson = await fetchJson(themeAppSidecarUrl("", slug));
     return mergeThemeDetailWithApp(publicDetail, parseThemeAppPayload(appJson));
   } catch {
     return publicDetail;

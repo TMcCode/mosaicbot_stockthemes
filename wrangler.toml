@@ -1,0 +1,10 @@
+# Cloudflare Pages + Functions (see functions/cdn-app).
+# Deploy: wrangler pages deploy out --project-name=stockthemes
+name = "stockthemes"
+compatibility_date = "2025-03-01"
+pages_build_output_dir = "out"
+
+# Private MosaicBot R2 bucket — Tier B JSON (app / notes / factors / …).
+[[r2_buckets]]
+binding = "MOSAIC_THEMES"
+bucket_name = "mosaic-themes"

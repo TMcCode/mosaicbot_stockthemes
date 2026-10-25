@@ -12,9 +12,10 @@ import crypto from "crypto";
 import fs from "fs";
 import path from "path";
 
-import { STOCKTHEMES_PUBLIC_BUCKET } from "./storageConfig.mjs";
+import { MOSAIC_THEMES_BUCKET, STOCKTHEMES_PUBLIC_BUCKET } from "./storageConfig.mjs";
 
 const DEFAULT_BUCKET = STOCKTHEMES_PUBLIC_BUCKET;
+export const APP_PRIVATE_PREFIX = "stockthemes_app";
 const REGION = "auto";
 const SERVICE = "s3";
 let localEnvLoaded = false;
@@ -84,13 +85,14 @@ function encodeKey(key) {
     .join("/");
 }
 
-function signedRequest(method, objectPath, { body, contentType, cacheControl } = {}) {
+function signedRequest(method, objectPath, { body, contentType, cacheControl, bucket } = {}) {
   const cfg = r2Config();
+  const bucketName = (bucket || cfg.bucket || "").trim() || cfg.bucket;
   const now = new Date();
   const amzDate = now.toISOString().replace(/[:-]|\.\d{3}/g, "");
   const dateStamp = amzDate.slice(0, 8);
   const endpoint = new URL(cfg.endpoint);
-  const pathname = `/${encodeURIComponent(cfg.bucket)}/${encodeKey(objectPath)}`;
+  const pathname = `/${encodeURIComponent(bucketName)}/${encodeKey(objectPath)}`;
   const url = `${endpoint.origin}${pathname}`;
   const host = endpoint.host;
   const payloadBuf =
@@ -139,7 +141,7 @@ function signedRequest(method, objectPath, { body, contentType, cacheControl } =
 
   return {
     url,
-    bucket: cfg.bucket,
+    bucket: bucketName,
     headers,
   };
 }
@@ -217,8 +219,8 @@ export function loadR2Credentials() {
   }
 }
 
-export async function downloadR2Object(objectPath) {
-  const req = signedRequest("GET", objectPath);
+export async function downloadR2Object(objectPath, { bucket } = {}) {
+  const req = signedRequest("GET", objectPath, { bucket });
   let res;
   try {
     res = await fetchWithRetry(req.url, { headers: req.headers }, {
@@ -231,6 +233,12 @@ export async function downloadR2Object(objectPath) {
     throw new Error(`R2 ${res.status} s3://${req.bucket}/${objectPath}`);
   }
   return res.text();
+}
+
+/** Tier B app sidecar from private mosaic-themes (stockthemes_app/themes/…). */
+export async function downloadPrivateThemeApp(slug) {
+  const key = `${APP_PRIVATE_PREFIX}/themes/${slug}.app.v0.json`;
+  return downloadR2Object(key, { bucket: MOSAIC_THEMES_BUCKET });
 }
 
 export async function r2ObjectMetadata(objectPath) {

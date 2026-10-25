@@ -50,7 +50,7 @@ export function HomeHighlightedThemeChart({ slug, name, benchmarkPerformance }: 
     const controller = new AbortController();
     const q = stockthemesBrowserCacheBusterQuery();
     const publicUrl = `${base}/themes/${encodeURIComponent(slug)}.json?${q}`;
-    const appUrl = `${base}/themes/${encodeURIComponent(slug)}.app.v0.json?${q}`;
+    const appUrl = `/cdn-app/themes/${encodeURIComponent(slug)}.app.v0.json?${q}`;
     const opts = {
       credentials: "omit" as const,
       cache: stockthemesBrowserFetchCache(),

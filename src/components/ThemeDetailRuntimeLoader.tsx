@@ -73,7 +73,8 @@ function fetchThemeDetail(slug: string, dataBaseUrl: string): Promise<ThemeDetai
   if (existing) return existing;
   const q = stockthemesBrowserCacheBusterQuery();
   const publicUrl = `${dataBaseUrl}/themes/${encodeURIComponent(slug)}.json?${q}`;
-  const appUrl = `${themeAppSidecarUrl(dataBaseUrl, slug)}?${q}`;
+  // Tier B via same-origin /cdn-app (private R2); ignore dataBaseUrl for app.
+  const appUrl = `${themeAppSidecarUrl("", slug)}?${q}`;
   const fetchOpts = { credentials: "omit" as const, cache: stockthemesBrowserFetchCache() };
   const promise = Promise.all([
     fetch(publicUrl, fetchOpts).then((res) => {

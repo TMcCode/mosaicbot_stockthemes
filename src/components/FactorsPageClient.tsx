@@ -564,7 +564,7 @@ export function FactorsPageClient({ dataBaseUrl, factorMethodology }: Props) {
           const opts = { credentials: "omit" as const, cache: stockthemesBrowserFetchCache() };
           const [res, appRes] = await Promise.all([
             fetch(`${base}/themes/${encodeURIComponent(item.slug)}.json?${q}`, opts),
-            fetch(`${base}/themes/${encodeURIComponent(item.slug)}.app.v0.json?${q}`, opts).catch(
+            fetch(`/cdn-app/themes/${encodeURIComponent(item.slug)}.app.v0.json?${q}`, opts).catch(
               () => null,
             ),
           ]);

@@ -8,7 +8,19 @@ export function themeAppSidecarRel(slug: string): string {
   return `themes/${slug}${THEME_APP_SIDECAR_SUFFIX}`;
 }
 
+/** Same-origin Pages Function — private R2 Tier B (not storage.stockthemes.ai). */
+export function themeAppBrowserPath(slug: string): string {
+  return `/cdn-app/themes/${encodeURIComponent(slug)}${THEME_APP_SIDECAR_SUFFIX}`;
+}
+
+/**
+ * Browser → gated `/cdn-app/...`.
+ * Build/SSR disk cache still uses `themes/<slug>.app.v0.json` under the public data base.
+ */
 export function themeAppSidecarUrl(base: string, slug: string): string {
+  if (typeof window !== "undefined") {
+    return themeAppBrowserPath(slug);
+  }
   const root = base.replace(/\/$/, "");
   return `${root}/themes/${encodeURIComponent(slug)}${THEME_APP_SIDECAR_SUFFIX}`;
 }

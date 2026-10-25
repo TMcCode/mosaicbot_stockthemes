@@ -13,6 +13,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { downloadGcsObject, gcsSyncEnabled, loadGcsServiceAccount } from "./lib/gcsDownload.mjs";
+import { downloadPrivateThemeApp, loadR2Credentials } from "./lib/r2Download.mjs";
 import {
   fetchRemoteObjectMetadata,
   isBundleRel,
@@ -288,6 +289,44 @@ async function syncDailyThemeSidecars(manifestJson, base, objectMeta, { force = 
   await syncRevenueSidecars(manifestJson, base, objectMeta, { force });
   await syncQualityRiskSidecars(manifestJson, base, objectMeta, { force });
   await syncNotesSidecars(manifestJson, base, objectMeta, { force });
+  await syncPrivateThemeAppSidecars(manifestJson, { force });
+}
+
+/** Tier B theme.app.v0 from private mosaic-themes (not public CDN). */
+async function syncPrivateThemeAppSidecars(manifestJson, { force = false } = {}) {
+  if (!loadR2Credentials()) {
+    console.warn("sync-build-cache: skip private theme.app sidecars (no R2 credentials)");
+    return;
+  }
+  const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
+  if (!themeSlugs.length) return;
+  let ok = 0;
+  let missing = 0;
+  const concurrency = Math.max(1, Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)));
+  await pool(themeSlugs, concurrency, async (slug) => {
+    const rel = `themes/${slug}.app.v0.json`;
+    if (!force && cacheFileOk(rel)) {
+      ok += 1;
+      return;
+    }
+    try {
+      const text = await downloadPrivateThemeApp(slug);
+      const dest = cachePath(rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, text, "utf8");
+      ok += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("404")) {
+        missing += 1;
+        return;
+      }
+      console.warn(`sync-build-cache: private app ${rel} failed:`, msg);
+    }
+  });
+  console.log(
+    `sync-build-cache: private theme.app ok=${ok} missing=${missing} total=${themeSlugs.length}`,
+  );
 }
 
 /** Copy daily table sidecars into public/ so theme pages can fetch same-origin (no HTML embed). */
