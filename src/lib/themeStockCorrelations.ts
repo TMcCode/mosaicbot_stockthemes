@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type { ThemeStockCorrelationsV0 } from "@/types/theme.stock_correlations.v0";
 
 export const STOCK_CORRELATIONS_SIDECAR_SUFFIX = ".stock_correlations.v0.json";
@@ -18,7 +19,7 @@ function record(value: unknown): Record<string, unknown> {
 }
 
 export function themeStockCorrelationsUrl(dataBaseUrl: string, slug: string): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${STOCK_CORRELATIONS_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, STOCK_CORRELATIONS_SIDECAR_SUFFIX);
 }
 
 export function parseThemeStockCorrelations(raw: string): ThemeStockCorrelationsV0 | null {

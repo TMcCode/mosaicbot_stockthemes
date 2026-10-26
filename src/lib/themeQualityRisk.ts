@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type {
   ThemeQualityRiskColumnLabelsV0,
   ThemeQualityRiskConstituentV0,
@@ -568,7 +569,7 @@ export function parseThemeQualityRisk(raw: string): ThemeQualityRiskV0 {
 }
 
 export function themeQualityRiskUrl(dataBaseUrl: string, slug: string): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${QUALITY_RISK_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, QUALITY_RISK_SIDECAR_SUFFIX);
 }
 
 export function qualityRiskHasContent(data: ThemeQualityRiskV0 | null | undefined): boolean {

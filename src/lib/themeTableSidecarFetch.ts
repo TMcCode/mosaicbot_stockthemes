@@ -1,5 +1,5 @@
-import { publicAssetPath } from "@/lib/siteUrl";
 import { stockthemesRevalidateSeconds } from "@/lib/stockthemesCache";
+import { themeTierBBrowserPath, themeTierBUrl } from "@/lib/themeTierB";
 import { NOTES_SIDECAR_SUFFIX } from "@/lib/themeNotes";
 import { QUALITY_RISK_SIDECAR_SUFFIX } from "@/lib/themeQualityRisk";
 import { REVENUE_SIDECAR_SUFFIX, revenueSidecarHasSequentialLags } from "@/lib/themeRevenue";
@@ -12,9 +12,9 @@ const SUFFIX: Record<ThemeTableSidecarKind, string> = {
   notes: NOTES_SIDECAR_SUFFIX,
 };
 
-/** Same-origin path under `public/data/themes/` (filled by sync-build-cache). */
+/** @deprecated Prefer gated `/cdn-app` — local public/data copies re-expose Tier B. */
 export function themeTableSidecarLocalUrl(kind: ThemeTableSidecarKind, slug: string): string {
-  return publicAssetPath(`/data/themes/${encodeURIComponent(slug)}${SUFFIX[kind]}`);
+  return themeTierBBrowserPath(slug, SUFFIX[kind]);
 }
 
 export function themeTableSidecarRemoteUrl(
@@ -22,7 +22,7 @@ export function themeTableSidecarRemoteUrl(
   dataBaseUrl: string,
   slug: string,
 ): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${SUFFIX[kind]}`;
+  return themeTierBUrl(dataBaseUrl, slug, SUFFIX[kind]);
 }
 
 /**
@@ -50,9 +50,9 @@ export function themeTableSidecarBrowserFetchCache(): RequestCache {
 }
 
 /**
- * Prefer same-origin build artifact, then fall back to public R2/CDN.
+ * Browser: gated `/cdn-app` only (Tier B). SSR/build uses dataBaseUrl cache path.
  * Revenue sidecars skip a baked copy that predates L5Q/L4Q/L3Q (schema lag).
- * Returns null on 404 from both.
+ * Returns null on 404.
  */
 export async function fetchThemeTableSidecarText(
   kind: ThemeTableSidecarKind,
@@ -62,23 +62,14 @@ export async function fetchThemeTableSidecarText(
 ): Promise<string | null> {
   const q = themeTableSidecarBrowserCacheBusterQuery();
   const cache = themeTableSidecarBrowserFetchCache();
-  const localUrl = `${themeTableSidecarLocalUrl(kind, slug)}?${q}`;
-  const remoteUrl = `${themeTableSidecarRemoteUrl(kind, dataBaseUrl, slug)}?${q}`;
+  const url = `${themeTableSidecarRemoteUrl(kind, dataBaseUrl, slug)}?${q}`;
 
-  try {
-    const localRes = await fetch(localUrl, { credentials: "omit", cache, signal });
-    if (localRes.ok) {
-      const text = await localRes.text();
-      if (kind !== "revenue" || revenueSidecarHasSequentialLags(text)) {
-        return text;
-      }
-    }
-  } catch (err) {
-    if (signal?.aborted) throw err;
+  const res = await fetch(url, { credentials: "omit", cache, signal });
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error(`${kind} sidecar ${res.status}`);
+  const text = await res.text();
+  if (kind === "revenue" && !revenueSidecarHasSequentialLags(text)) {
+    return null;
   }
-
-  const remoteRes = await fetch(remoteUrl, { credentials: "omit", cache, signal });
-  if (remoteRes.status === 404) return null;
-  if (!remoteRes.ok) throw new Error(`${kind} sidecar ${remoteRes.status}`);
-  return remoteRes.text();
+  return text;
 }

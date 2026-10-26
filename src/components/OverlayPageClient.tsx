@@ -67,6 +67,7 @@ import {
   stockthemesPublicDataBase,
 } from "@/lib/stockthemesPublicBase";
 import { parseThemePriceReturnsSidecar } from "@/lib/liveThemeDetailStore";
+import { themeTierBBrowserPath } from "@/lib/themeTierB";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { EtfBenchmarksV0 } from "@/types/etf_benchmarks.v0";
 import type { FactorSpreadsV0 } from "@/types/factor_spreads.v0";
@@ -583,7 +584,7 @@ export function OverlayPageClient({
               [...themesNeeded].map(async (themeSlug) => {
                 try {
                   const res = await fetch(
-                    `${sidecarBase}/themes/${encodeURIComponent(themeSlug)}.price_returns.v0.json?${q}`,
+                    `${themeTierBBrowserPath(themeSlug, ".price_returns.v0.json")}?${q}`,
                     {
                       credentials: "omit",
                       cache: stockthemesBrowserFetchCache(),

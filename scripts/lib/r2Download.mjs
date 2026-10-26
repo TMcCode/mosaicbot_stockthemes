@@ -235,10 +235,15 @@ export async function downloadR2Object(objectPath, { bucket } = {}) {
   return res.text();
 }
 
+/** Tier B theme sidecar from private mosaic-themes (stockthemes_app/themes/…). */
+export async function downloadPrivateThemeSidecar(slug, suffix) {
+  const key = `${APP_PRIVATE_PREFIX}/themes/${slug}${suffix}`;
+  return downloadR2Object(key, { bucket: MOSAIC_THEMES_BUCKET });
+}
+
 /** Tier B app sidecar from private mosaic-themes (stockthemes_app/themes/…). */
 export async function downloadPrivateThemeApp(slug) {
-  const key = `${APP_PRIVATE_PREFIX}/themes/${slug}.app.v0.json`;
-  return downloadR2Object(key, { bucket: MOSAIC_THEMES_BUCKET });
+  return downloadPrivateThemeSidecar(slug, ".app.v0.json");
 }
 
 export async function r2ObjectMetadata(objectPath) {

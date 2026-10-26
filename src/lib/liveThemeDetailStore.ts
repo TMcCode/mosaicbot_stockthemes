@@ -3,6 +3,7 @@ import {
   parseThemeAppPayload,
   themeAppSidecarUrl,
 } from "@/lib/mergeThemeApp";
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ThemeChart1yV0 } from "@/types/chart.v0";
 import type { ThemePriceReturnsSidecarV0 } from "@/types/theme.price_returns.v0";
@@ -240,9 +241,7 @@ export async function refreshLiveThemeDetail({
     let usedPriceReturnsSidecar = false;
     try {
       const sidecar = parseThemePriceReturnsSidecar(
-        await fetchJson(
-          `${dataBaseUrl}/themes/${encodedSlug}.price_returns.v0.json`,
-        ),
+        await fetchJson(themeTierBUrl(dataBaseUrl, slug, ".price_returns.v0.json")),
       );
       live = sidecarAsThemeDetail(sidecar);
       usedPriceReturnsSidecar = true;

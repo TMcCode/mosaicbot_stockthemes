@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type {
   ThemeNeighborRowV0,
   ThemeThemeNeighborsV0,
@@ -42,7 +43,7 @@ function neighborList(value: unknown): ThemeNeighborRowV0[] {
 }
 
 export function themeNeighborsUrl(dataBaseUrl: string, slug: string): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${THEME_NEIGHBORS_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, THEME_NEIGHBORS_SIDECAR_SUFFIX);
 }
 
 const OUTSIDE_TILE_LIMIT = 3;

@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type { FactorLeaderboardsV0 } from "@/types/factor_leaderboards.v0";
 import type { ThemeFactorProfileV0, ThemeFactorScoreEntryV0 } from "@/types/theme.factor_profile.v0";
 
@@ -7,8 +8,7 @@ export const FACTOR_CONFIDENCE_UI_FLOOR = 0.35;
 export const FACTOR_PROFILE_SIDECAR_SUFFIX = ".factor_profile.v0.json";
 
 export function themeFactorProfileUrl(dataBaseUrl: string, slug: string): string {
-  const base = dataBaseUrl.replace(/\/$/, "");
-  return `${base}/themes/${encodeURIComponent(slug)}${FACTOR_PROFILE_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, FACTOR_PROFILE_SIDECAR_SUFFIX);
 }
 
 export function parseThemeFactorProfile(raw: string): ThemeFactorProfileV0 {

@@ -50,7 +50,7 @@ Objective: detect and throttle abuse while preserving SEO.
 Controls:
 
 - Put site behind an edge/WAF layer (Cloudflare or equivalent).
-- Add rate limits by path:
+- Add rate limits by path (stockthemes: `/cdn-app/*` — see `docs/CDN_APP_TIER_B.md`):
   - stricter on JSON artifact endpoints
   - looser on HTML pages
 - Enable bot management rules:

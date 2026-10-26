@@ -19,6 +19,8 @@ const PROTECTED_SUFFIXES = [
   ".composition.v0.json",
   ".chart.v0.json",
   ".correlation_bundle.v0.json",
+  ".stock_correlations.v0.json",
+  ".theme_neighbors.v0.json",
 ];
 
 const PRIVATE_PREFIX = "stockthemes_app/";

@@ -13,7 +13,11 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { downloadGcsObject, gcsSyncEnabled, loadGcsServiceAccount } from "./lib/gcsDownload.mjs";
-import { downloadPrivateThemeApp, loadR2Credentials } from "./lib/r2Download.mjs";
+import {
+  downloadPrivateThemeApp,
+  downloadPrivateThemeSidecar,
+  loadR2Credentials,
+} from "./lib/r2Download.mjs";
 import {
   fetchRemoteObjectMetadata,
   isBundleRel,
@@ -199,60 +203,63 @@ function seedThemeSlugRedirectsFromFixture() {
   );
 }
 
-async function syncFactorProfileSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+async function syncFactorProfileSidecars(manifestJson, _base, _objectMeta, { force = false } = {}) {
   return syncThemeSidecarFiles({
     manifestJson,
-    base,
-    objectMeta,
     force,
     suffix: ".factor_profile.v0.json",
     label: "factor profiles",
   });
 }
 
-async function syncRevenueSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+async function syncRevenueSidecars(manifestJson, _base, _objectMeta, { force = false } = {}) {
   return syncThemeSidecarFiles({
     manifestJson,
-    base,
-    objectMeta,
     force,
     suffix: ".revenue.v0.json",
     label: "revenue sidecars",
   });
 }
 
-async function syncQualityRiskSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+async function syncQualityRiskSidecars(manifestJson, _base, _objectMeta, { force = false } = {}) {
   return syncThemeSidecarFiles({
     manifestJson,
-    base,
-    objectMeta,
     force,
     suffix: ".quality_risk.v0.json",
     label: "quality/risk sidecars",
   });
 }
 
-async function syncNotesSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
+async function syncNotesSidecars(manifestJson, _base, _objectMeta, { force = false } = {}) {
   return syncThemeSidecarFiles({
     manifestJson,
-    base,
-    objectMeta,
     force,
     suffix: ".notes.v0.json",
     label: "notes sidecars",
   });
 }
 
+const TIER_B_BUILD_CACHE_SUFFIXES = [
+  ".app.v0.json",
+  ".factor_profile.v0.json",
+  ".revenue.v0.json",
+  ".quality_risk.v0.json",
+  ".notes.v0.json",
+];
+
 async function syncThemeSidecarFiles({
   manifestJson,
-  base,
-  objectMeta,
   force = false,
   suffix,
   label,
 }) {
   const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
   if (!themeSlugs.length) return;
+
+  if (!loadR2Credentials()) {
+    console.warn(`sync-build-cache: skip private ${label} (no R2 credentials)`);
+    return;
+  }
 
   let ok = 0;
   let missing = 0;
@@ -264,11 +271,13 @@ async function syncThemeSidecarFiles({
       return;
     }
     try {
-      await fetchToCache(
-        `${base}/themes/${encodeURIComponent(slug)}${suffix}`,
-        rel,
-        objectMeta,
-      );
+      const text =
+        suffix === ".app.v0.json"
+          ? await downloadPrivateThemeApp(slug)
+          : await downloadPrivateThemeSidecar(slug, suffix);
+      const dest = cachePath(rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, text, "utf8");
       ok += 1;
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -280,93 +289,38 @@ async function syncThemeSidecarFiles({
     }
   });
   console.log(
-    `sync-build-cache: ${label} ok=${ok} missing=${missing} total=${themeSlugs.length}`,
+    `sync-build-cache: private ${label} ok=${ok} missing=${missing} total=${themeSlugs.length}`,
   );
 }
 
-async function syncDailyThemeSidecars(manifestJson, base, objectMeta, { force = false } = {}) {
-  await syncFactorProfileSidecars(manifestJson, base, objectMeta, { force });
-  await syncRevenueSidecars(manifestJson, base, objectMeta, { force });
-  await syncQualityRiskSidecars(manifestJson, base, objectMeta, { force });
-  await syncNotesSidecars(manifestJson, base, objectMeta, { force });
-  await syncPrivateThemeAppSidecars(manifestJson, { force });
-}
-
-/** Tier B theme.app.v0 from private mosaic-themes (not public CDN). */
-async function syncPrivateThemeAppSidecars(manifestJson, { force = false } = {}) {
-  if (!loadR2Credentials()) {
-    console.warn("sync-build-cache: skip private theme.app sidecars (no R2 credentials)");
-    return;
-  }
-  const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
-  if (!themeSlugs.length) return;
-  let ok = 0;
-  let missing = 0;
-  const concurrency = Math.max(1, Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)));
-  await pool(themeSlugs, concurrency, async (slug) => {
-    const rel = `themes/${slug}.app.v0.json`;
-    if (!force && cacheFileOk(rel)) {
-      ok += 1;
-      return;
-    }
-    try {
-      const text = await downloadPrivateThemeApp(slug);
-      const dest = cachePath(rel);
-      fs.mkdirSync(path.dirname(dest), { recursive: true });
-      fs.writeFileSync(dest, text, "utf8");
-      ok += 1;
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      if (msg.includes("404")) {
-        missing += 1;
-        return;
-      }
-      console.warn(`sync-build-cache: private app ${rel} failed:`, msg);
-    }
+async function syncDailyThemeSidecars(manifestJson, _base, _objectMeta, { force = false } = {}) {
+  await syncFactorProfileSidecars(manifestJson, null, null, { force });
+  await syncRevenueSidecars(manifestJson, null, null, { force });
+  await syncQualityRiskSidecars(manifestJson, null, null, { force });
+  await syncNotesSidecars(manifestJson, null, null, { force });
+  await syncThemeSidecarFiles({
+    manifestJson,
+    force,
+    suffix: ".app.v0.json",
+    label: "theme.app",
   });
-  console.log(
-    `sync-build-cache: private theme.app ok=${ok} missing=${missing} total=${themeSlugs.length}`,
-  );
 }
 
-/** Copy daily table sidecars into public/ so theme pages can fetch same-origin (no HTML embed). */
-function publishThemeTableSidecarsToPublic(manifestJson) {
-  const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
-  const suffixes = [".revenue.v0.json", ".quality_risk.v0.json", ".notes.v0.json"];
+/** Remove any previously baked Tier B copies under public/data/themes (world-readable). */
+function prunePublicThemeTableSidecars() {
   const outDir = path.join(root, "public", "data", "themes");
-  fs.mkdirSync(outDir, { recursive: true });
-
-  const keep = new Set();
-  let copied = 0;
-  let missing = 0;
-  for (const slug of themeSlugs) {
-    for (const suffix of suffixes) {
-      const fileName = `${slug}${suffix}`;
-      keep.add(fileName);
-      const src = cachePath(`themes/${slug}${suffix}`);
-      const dest = path.join(outDir, fileName);
-      if (!fs.existsSync(src)) {
-        missing += 1;
-        if (fs.existsSync(dest)) fs.unlinkSync(dest);
-        continue;
-      }
-      fs.copyFileSync(src, dest);
-      copied += 1;
-    }
-  }
-
+  if (!fs.existsSync(outDir)) return;
   let pruned = 0;
   for (const file of fs.readdirSync(outDir)) {
     if (!file.endsWith(".json")) continue;
-    if (keep.has(file)) continue;
+    const isTierB = TIER_B_BUILD_CACHE_SUFFIXES.some((s) => file.endsWith(s));
+    if (!isTierB) continue;
     fs.unlinkSync(path.join(outDir, file));
     pruned += 1;
   }
-
-  console.log(
-    `sync-build-cache: published table sidecars → public/data/themes/ ` +
-      `copied=${copied} missing=${missing} pruned=${pruned}`,
-  );
+  if (pruned) {
+    console.log(`sync-build-cache: pruned Tier B from public/data/themes/ count=${pruned}`);
+  }
 }
 
 async function syncOptionalBundles(base, objectMeta, { force = false } = {}) {
@@ -635,7 +589,7 @@ async function main() {
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta);
     await syncDailyThemeSidecars(manifestJson, base, objectMeta);
-    publishThemeTableSidecarsToPublic(manifestJson);
+    prunePublicThemeTableSidecars();
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   } else {
     if (!force && prev && prev.as_of === asOf && prev.manifestUrl === manifest && missing.length > 0) {
@@ -734,7 +688,7 @@ async function main() {
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta, { force });
     await syncDailyThemeSidecars(manifestJson, base, objectMeta, { force });
-    publishThemeTableSidecarsToPublic(manifestJson);
+    prunePublicThemeTableSidecars();
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   }
 

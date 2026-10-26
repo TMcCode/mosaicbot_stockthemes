@@ -1,9 +1,10 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type { ThemeNotesV0 } from "@/types/theme.notes.v0";
 
 export const NOTES_SIDECAR_SUFFIX = ".notes.v0.json";
 
 export function themeNotesUrl(dataBaseUrl: string, slug: string): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${NOTES_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, NOTES_SIDECAR_SUFFIX);
 }
 
 export function parseThemeNotes(raw: string | ThemeNotesV0): ThemeNotesV0 {

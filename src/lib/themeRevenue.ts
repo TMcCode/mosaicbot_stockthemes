@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type {
   ThemeRevenueConstituentV0,
   ThemeRevenueMetricMapV0,
@@ -304,8 +305,7 @@ export const REVENUE_STAT_ROW_LABELS: Record<RevenueStatRowKey, string> = {
 };
 
 export function themeRevenueUrl(dataBaseUrl: string, slug: string): string {
-  const base = dataBaseUrl.replace(/\/$/, "");
-  return `${base}/themes/${encodeURIComponent(slug)}${REVENUE_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, REVENUE_SIDECAR_SUFFIX);
 }
 
 export function parseThemeRevenue(raw: string): ThemeRevenueV0 {

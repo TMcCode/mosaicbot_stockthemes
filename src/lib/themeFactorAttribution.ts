@@ -1,3 +1,4 @@
+import { themeTierBUrl } from "@/lib/themeTierB";
 import type {
   ThemeCohesionHorizonV0,
   ThemeConstituentFitV0,
@@ -150,7 +151,7 @@ function cohesionHorizon(value: unknown): ThemeCohesionHorizonV0 | null {
 }
 
 export function themeFactorAttributionUrl(dataBaseUrl: string, slug: string): string {
-  return `${dataBaseUrl.replace(/\/$/, "")}/themes/${encodeURIComponent(slug)}${FACTOR_ATTRIBUTION_SIDECAR_SUFFIX}`;
+  return themeTierBUrl(dataBaseUrl, slug, FACTOR_ATTRIBUTION_SIDECAR_SUFFIX);
 }
 
 export function parseThemeFactorAttribution(raw: string): ThemeFactorAttributionV0 {

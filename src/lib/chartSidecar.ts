@@ -10,6 +10,7 @@ import {
   stockthemesBrowserSidecarFetchBase,
   stockthemesPublicDataBase,
 } from "@/lib/stockthemesPublicBase";
+import { themeTierBBrowserPath } from "@/lib/themeTierB";
 import type { ChartPerformanceSidecarV0 } from "@/types/chart_performance.v0";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
@@ -155,6 +156,13 @@ export async function fetchChartSidecar(
     };
 
     const tryCdnSidecar = async (): Promise<ChartPerformanceSidecarV0 | null> => {
+      // Theme chart sidecars are Tier B (private R2 via /cdn-app).
+      if (kind === "theme") {
+        const sidecarUrl = `${themeTierBBrowserPath(normalizedSlug, CHART_SIDECAR_SUFFIX)}?${q}`;
+        const raw = await fetchSidecarText(sidecarUrl, signal);
+        if (!raw) return null;
+        return parseChartPerformanceSidecar(raw);
+      }
       if (!sidecarBase) return null;
       const sidecarUrl = `${sidecarBase}/${sidecarPath}?${q}`;
       const raw = await fetchSidecarText(sidecarUrl, signal);
