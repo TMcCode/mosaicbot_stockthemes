@@ -20,8 +20,8 @@
  */
 
 .rowThree {
-  /* ~32% thesis · ~34% bull · ~34% bear */
-  grid-template-columns: minmax(0, 3fr) minmax(0, 3.25fr) minmax(0, 3.25fr);
+  /* ~43% thesis · ~28.5% bull · ~28.5% bear — thesis is the dense prose column */
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .rowTwo {
@@ -49,6 +49,7 @@
   gap: 3px;
   height: 0;
   min-height: 100%;
+  /* Clip to thesis row height; the point text scrolls inside if needed. */
   overflow: hidden;
   padding-top: 8px;
 }
@@ -103,6 +104,7 @@
   flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
+  overflow: hidden;
 }
 
 .detailPagerBtn {
@@ -181,11 +183,40 @@
 .casePoint {
   margin: 0;
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   font-size: 12px;
   line-height: 1.45;
   color: var(--text-secondary, #9aa8a6);
+  /* Scrollbar only when overflowing; stay invisible until hover/focus. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.casePoint:hover,
+.casePoint:focus-within {
+  scrollbar-color: rgba(128, 128, 128, 0.45) transparent;
+}
+
+.casePoint::-webkit-scrollbar {
+  width: 5px;
+}
+
+.casePoint::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.casePoint::-webkit-scrollbar-thumb {
+  background: transparent;
+  border-radius: 4px;
+}
+
+.casePoint:hover::-webkit-scrollbar-thumb,
+.casePoint:focus-within::-webkit-scrollbar-thumb {
+  background: rgba(128, 128, 128, 0.45);
 }
 
 :global(.intro) .casePoint {

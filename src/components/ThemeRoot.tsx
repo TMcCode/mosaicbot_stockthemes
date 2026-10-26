@@ -13,7 +13,7 @@ import {
 
 import {
   applyThemeToDocument,
-  resolveThemePreference,
+  readStoredTheme,
   STOCKTHEMES_DEFAULT_THEME,
   STOCKTHEMES_THEME_STORAGE_KEY,
   type StockthemesTheme,
@@ -30,6 +30,21 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
+/**
+ * Survives React Strict Mode remounts in dev so we don’t re-read storage as a
+ * conflicting value and flash the wrong theme.
+ */
+let clientThemeCache: StockthemesTheme | null = null;
+
+function readClientTheme(): StockthemesTheme {
+  if (clientThemeCache) return clientThemeCache;
+  if (typeof window === "undefined") return STOCKTHEMES_DEFAULT_THEME;
+  // Storage only — never prefer <html data-theme>, which can lag or fight React.
+  const next = readStoredTheme();
+  clientThemeCache = next;
+  return next;
+}
+
 export function useStockthemesTheme(): ThemeContextValue {
   const ctx = useContext(ThemeContext);
   if (!ctx) {
@@ -39,40 +54,39 @@ export function useStockthemesTheme(): ThemeContextValue {
 }
 
 export function ThemeRoot({ children }: { children: ReactNode }) {
-  // Match SSR / boot-script default (`data-theme="dark"`); sync from storage before paint.
+  // Always start with the SSR default so server HTML matches the first client render.
   const [theme, setTheme] = useState<StockthemesTheme>(STOCKTHEMES_DEFAULT_THEME);
-  const [ready, setReady] = useState(false);
 
   useLayoutEffect(() => {
-    const next = resolveThemePreference();
+    const next = readClientTheme();
     applyThemeToDocument(next);
-    setTheme(next);
-    setReady(true);
+    setTheme((prev) => (prev === next ? prev : next));
   }, []);
-
-  useEffect(() => {
-    if (!ready) return;
-    applyThemeToDocument(theme);
-    try {
-      localStorage.setItem(STOCKTHEMES_THEME_STORAGE_KEY, theme);
-    } catch {
-      /* private mode */
-    }
-  }, [theme, ready]);
 
   useEffect(() => {
     const onStorage = (e: StorageEvent) => {
       if (e.key !== STOCKTHEMES_THEME_STORAGE_KEY) return;
-      if (e.newValue === "light" || e.newValue === "dark") {
-        setTheme(e.newValue);
-      }
+      if (e.newValue !== "light" && e.newValue !== "dark") return;
+      clientThemeCache = e.newValue;
+      applyThemeToDocument(e.newValue);
+      setTheme(e.newValue);
     };
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setTheme((prev) => (prev === "dark" ? "light" : "dark"));
+    setTheme((prev) => {
+      const next: StockthemesTheme = prev === "dark" ? "light" : "dark";
+      clientThemeCache = next;
+      applyThemeToDocument(next);
+      try {
+        localStorage.setItem(STOCKTHEMES_THEME_STORAGE_KEY, next);
+      } catch {
+        /* private mode */
+      }
+      return next;
+    });
   }, []);
 
   const value = useMemo(() => ({ theme, toggleTheme }), [theme, toggleTheme]);

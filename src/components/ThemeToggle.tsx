@@ -48,6 +48,7 @@ export function ThemeToggle() {
       onClick={handleToggle}
       aria-label={isDark ? "Switch to light theme" : "Switch to dark theme"}
       aria-pressed={!isDark}
+      suppressHydrationWarning
     >
       {isDark ? <SunIcon /> : <MoonIcon />}
     </button>

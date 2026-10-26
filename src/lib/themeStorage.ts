@@ -1,5 +1,5 @@
 /** localStorage key for light/dark preference. */
-export const STOCKTHEMES_THEME_STORAGE_KEY = "stockthemes-theme";
+export const STOCKTHEMES_THEME_STORAGE_KEY = "stockthemes-color-mode";
 
 /** Site default when nothing is stored yet (mobile + desktop). */
 export const STOCKTHEMES_DEFAULT_THEME: StockthemesTheme = "dark";
@@ -31,10 +31,7 @@ export function applyThemeToDocument(theme: StockthemesTheme): void {
   document.documentElement.style.colorScheme = theme;
 }
 
-/**
- * localStorage is source of truth. Do not prefer the SSR `data-theme` on `<html>` —
- * that used to force light on every full load and overwrite a saved dark preference.
- */
+/** localStorage is the only source of truth (never the SSR/boot `data-theme` attribute). */
 export function resolveThemePreference(): StockthemesTheme {
   return readStoredTheme();
 }

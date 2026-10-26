@@ -189,8 +189,6 @@
   position: relative;
   /* Room for corner credit without colliding with logo row. */
   padding-bottom: 18px;
-  /* Fill grid cell so metrics + logos share a baseline across the row. */
-  height: 100%;
 }
 
 .headlineBracket {
@@ -301,7 +299,7 @@
   display: block;
   max-height: 6.75em;
   overflow: hidden;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   max-width: none;
   text-wrap: pretty;
   text-decoration: none;
@@ -434,7 +432,7 @@
   -webkit-line-clamp: 5;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  flex: 0 1 auto;
+  flex: 1 1 auto;
   max-width: none;
   max-height: 6.75em;
   text-wrap: pretty;
@@ -444,8 +442,6 @@
   display: flex;
   flex-wrap: wrap;
   gap: 8px 12px;
-  margin-top: auto;
-  flex: 0 0 auto;
   font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: var(--accent);
@@ -493,7 +489,6 @@
   margin-top: 2px;
   min-height: 28px;
   width: 100%;
-  flex: 0 0 auto;
   /* Long exchange suffixes (.SHG/.SHE) used to blow past the card and hide +N. */
   overflow: hidden;
   position: relative;
