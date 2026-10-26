@@ -30,6 +30,7 @@ import {
   writeObjectMetaSidecar,
 } from "./lib/objectMeta.mjs";
 import { normalizePublicJsonUrl, publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { waitForPublishIdle } from "./lib/publishStatus.mjs";
 import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -546,6 +547,13 @@ async function main() {
   const prev = readMeta();
   const force = process.env.STOCKTHEMES_BUILD_CACHE_REFRESH === "1";
 
+  // Overnight full publish marks running until theme/group JSON + final catalog land.
+  const publishGate = await waitForPublishIdle({ base, label: "sync-build-cache" });
+  if (publishGate === "timeout") {
+    console.error("sync-build-cache: refusing to sync while Contabo publish is still running");
+    process.exit(1);
+  }
+
   const manifestText = await fetchToCache(`${base}/manifest.json`, "manifest.json", objectMeta);
   const manifestJson = JSON.parse(manifestText);
   const asOf = String(manifestJson.as_of || "");
@@ -633,21 +641,34 @@ async function main() {
       }
     });
     if (failedJobs.length > 0) {
-      console.warn(`sync-build-cache: retrying ${failedJobs.length} failed object(s) (sequential)`);
-      for (const { job, err: firstErr } of failedJobs) {
-        try {
-          await fetchToCache(job.url, job.rel, objectMeta);
-          ok += 1;
-          console.log(`sync-build-cache: retry ok ${job.rel}`);
-        } catch (e) {
-          console.warn(
-            `sync-build-cache: retry failed ${job.rel}:`,
-            e instanceof Error ? e.message : e,
-          );
-          if (firstErr !== e) {
-            console.warn(`sync-build-cache: first error ${job.rel}:`, firstErr instanceof Error ? firstErr.message : firstErr);
+      // Brief backoff: overnight publish can still be finishing a few objects even after
+      // publish_status flips complete (CDN/R2 edge lag).
+      const retryPasses = Math.max(1, Number(process.env.STOCKTHEMES_SYNC_404_RETRIES || 3));
+      const retryDelayMs = Math.max(1000, Number(process.env.STOCKTHEMES_SYNC_404_DELAY_MS || 8000));
+      let pending = failedJobs;
+      for (let pass = 1; pass <= retryPasses && pending.length; pass += 1) {
+        console.warn(
+          `sync-build-cache: retrying ${pending.length} failed object(s) ` +
+            `(pass ${pass}/${retryPasses}, sequential)`,
+        );
+        if (pass > 1) {
+          await new Promise((r) => setTimeout(r, retryDelayMs));
+        }
+        const still = [];
+        for (const { job, err: firstErr } of pending) {
+          try {
+            await fetchToCache(job.url, job.rel, objectMeta);
+            ok += 1;
+            console.log(`sync-build-cache: retry ok ${job.rel}`);
+          } catch (e) {
+            still.push({ job, err: firstErr || e });
+            console.warn(
+              `sync-build-cache: retry failed ${job.rel}:`,
+              e instanceof Error ? e.message : e,
+            );
           }
         }
+        pending = still;
       }
     }
     const fail = jobs.length - ok;

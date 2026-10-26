@@ -11,6 +11,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
+import { fetchPublishStatus, waitForPublishIdle } from "./lib/publishStatus.mjs";
 import { downloadR2Object, r2SyncEnabled } from "./lib/r2Download.mjs";
 import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
@@ -96,6 +97,30 @@ async function main() {
     manifestAsOf: String(deployedRaw.as_of || ""),
     homeTrendingAsOf: String(deployedRaw.home_trending_as_of || ""),
   };
+
+  const base = publicDataBaseFromManifest(MANIFEST_URL);
+  const pub = await fetchPublishStatus(base);
+  if (pub?.status === "running") {
+    if (forceBuild || manualRefresh) {
+      const gate = await waitForPublishIdle({ base, label: "ci-should-build" });
+      if (gate === "timeout") {
+        writeOutputs({
+          shouldBuild: false,
+          fullCacheRefresh: false,
+          reason: "publish_in_progress_timeout",
+        });
+        return;
+      }
+    } else {
+      // Contabo will dispatch again when the full publish finishes.
+      writeOutputs({
+        shouldBuild: false,
+        fullCacheRefresh: false,
+        reason: `publish_in_progress build_id=${pub.build_id || "?"}`,
+      });
+      return;
+    }
+  }
 
   const live = await fetchLivePublishAsOf();
   const dataChanged = publishDataChanged(live, deployed);
