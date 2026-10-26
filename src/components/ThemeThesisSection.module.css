@@ -15,8 +15,9 @@
 }
 
 /*
- * Thesis sets the row height. Bull/Bear use height:0 + min-height:100% so their
- * long copy does not stretch the row taller than thesis; overflow scrolls inside.
+ * Row height = tallest of Thesis / Bull / Bear. Case panels stretch to match.
+ * Inside Bull/Bear, all carousel slides stack in one grid cell so height =
+ * the longest point (stable while paging; no ResizeObserver).
  */
 
 .rowThree {
@@ -47,10 +48,6 @@
 
 .casePanel {
   gap: 3px;
-  height: 0;
-  min-height: 100%;
-  /* Clip to thesis row height; the point text scrolls inside if needed. */
-  overflow: hidden;
   padding-top: 8px;
 }
 
@@ -103,8 +100,21 @@
   gap: 4px;
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 0;
-  overflow: hidden;
+}
+
+.casePointStack {
+  display: grid;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.casePointStack .casePoint {
+  grid-area: 1 / 1;
+}
+
+.casePointStack .casePoint:not([data-active="true"]) {
+  visibility: hidden;
+  pointer-events: none;
 }
 
 .detailPagerBtn {
@@ -182,41 +192,10 @@
 /* div — avoid `.intro p` forcing ~16–18px on theme pages. */
 .casePoint {
   margin: 0;
-  flex: 1 1 auto;
   min-width: 0;
-  min-height: 0;
-  overflow-x: hidden;
-  overflow-y: auto;
-  overscroll-behavior: contain;
   font-size: 12px;
   line-height: 1.45;
   color: var(--text-secondary, #9aa8a6);
-  /* Scrollbar only when overflowing; stay invisible until hover/focus. */
-  scrollbar-width: thin;
-  scrollbar-color: transparent transparent;
-}
-
-.casePoint:hover,
-.casePoint:focus-within {
-  scrollbar-color: rgba(128, 128, 128, 0.45) transparent;
-}
-
-.casePoint::-webkit-scrollbar {
-  width: 5px;
-}
-
-.casePoint::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.casePoint::-webkit-scrollbar-thumb {
-  background: transparent;
-  border-radius: 4px;
-}
-
-.casePoint:hover::-webkit-scrollbar-thumb,
-.casePoint:focus-within::-webkit-scrollbar-thumb {
-  background: rgba(128, 128, 128, 0.45);
 }
 
 :global(.intro) .casePoint {
@@ -338,16 +317,6 @@
 
   .rowMobileDeck {
     gap: 0;
-  }
-
-  .casePanel {
-    height: auto;
-    min-height: 0;
-    overflow: visible;
-  }
-
-  .casePoint {
-    overflow: visible;
   }
 
   /* Tabs are the title — hide the static headings. */

@@ -92,7 +92,6 @@ function CasePanel({
 }) {
   const [index, setIndex] = useState(0);
   const safeIndex = Math.min(Math.max(0, index), points.length - 1);
-  const point = points[safeIndex] ?? "";
   const canToggle = points.length > 1;
 
   const go = (dir: -1 | 1) => {
@@ -104,7 +103,21 @@ function CasePanel({
     });
   };
 
-  const detail = <div className={styles.casePoint}>{point}</div>;
+  // Stack every slide in one grid cell so height = tallest point (no measure JS; no pager jump).
+  const detail = (
+    <div className={styles.casePointStack}>
+      {points.map((p, i) => (
+        <div
+          key={i}
+          className={styles.casePoint}
+          data-active={i === safeIndex ? "true" : undefined}
+          aria-hidden={i === safeIndex ? undefined : true}
+        >
+          {p}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <section
