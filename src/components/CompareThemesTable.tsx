@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import {
+  startTransition,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 import pageStyles from "@/app/page.module.css";
 import {
@@ -72,27 +79,41 @@ export function CompareThemesTable({
 
   const displayRows = useMemo(() => {
     const out: DisplayRow[] = [...benchmarkRows, ...rows];
-    out.sort((a, b) => {
-      for (const s of sorts) {
+    // Precompute sort keys once — Array.sort comparisons call the comparator
+    // O(n log n) times; valueForTrendingColumn can invert short-theme metrics.
+    const sortVals = out.map((row) =>
+      sorts.map((s) =>
+        s.key === "Theme"
+          ? undefined
+          : valueForTrendingColumn(s.key, row.compareReturns ?? undefined, {}, row.name),
+      ),
+    );
+    const order = out.map((_, i) => i);
+    order.sort((ia, ib) => {
+      for (let si = 0; si < sorts.length; si++) {
+        const s = sorts[si];
         if (s.key === "Theme") {
-          const cmp = a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+          const cmp = out[ia].name.localeCompare(out[ib].name, undefined, {
+            sensitivity: "base",
+          });
           if (cmp !== 0) return s.dir === "asc" ? cmp : -cmp;
           continue;
         }
-        const va = valueForTrendingColumn(s.key, a.compareReturns ?? undefined, {}, a.name);
-        const vb = valueForTrendingColumn(s.key, b.compareReturns ?? undefined, {}, b.name);
+        const va = sortVals[ia][si];
+        const vb = sortVals[ib][si];
         const aOk = va != null && Number.isFinite(va);
         const bOk = vb != null && Number.isFinite(vb);
         if (aOk && bOk && va !== vb) return s.dir === "asc" ? va - vb : vb - va;
         if (aOk !== bOk) return aOk ? -1 : 1;
       }
-      return a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      return out[ia].name.localeCompare(out[ib].name, undefined, { sensitivity: "base" });
     });
-    return out;
+    return order.map((i) => out[i]);
   }, [benchmarkRows, rows, sorts]);
 
   const [renderLimit, setRenderLimit] = useState(ROWS_INITIAL);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const scrollWrapRef = useRef<HTMLDivElement | null>(null);
   const hasMore = renderLimit < displayRows.length;
   const renderedRows = hasMore ? displayRows.slice(0, renderLimit) : displayRows;
 
@@ -112,16 +133,22 @@ export function CompareThemesTable({
   const gridTemplateColumns = `var(--compare-theme-col) repeat(${columns.length}, minmax(76px, max-content))`;
 
   const onHeaderClick = (key: string, shiftKey: boolean) => {
-    setSorts((prev) => {
-      const idx = prev.findIndex((s) => s.key === key);
-      const nextDir = idx >= 0 && prev[idx].dir === "desc" ? "asc" : "desc";
-      if (!shiftKey) return [{ key, dir: nextDir }];
-      if (idx >= 0) {
-        const copy = [...prev];
-        copy[idx] = { key, dir: nextDir };
-        return copy;
-      }
-      return [...prev, { key, dir: nextDir }];
+    // After scroll-loading hundreds of rows, re-sorting remounts ~N×cols heat cells.
+    // Collapse back to the first window + defer the React commit so the click stays snappy.
+    scrollWrapRef.current?.scrollTo({ top: 0 });
+    startTransition(() => {
+      setRenderLimit(ROWS_INITIAL);
+      setSorts((prev) => {
+        const idx = prev.findIndex((s) => s.key === key);
+        const nextDir = idx >= 0 && prev[idx].dir === "desc" ? "asc" : "desc";
+        if (!shiftKey) return [{ key, dir: nextDir }];
+        if (idx >= 0) {
+          const copy = [...prev];
+          copy[idx] = { key, dir: nextDir };
+          return copy;
+        }
+        return [...prev, { key, dir: nextDir }];
+      });
     });
   };
 
@@ -164,7 +191,7 @@ export function CompareThemesTable({
         </button>
       </div>
 
-      <div className={styles.scrollWrap}>
+      <div className={styles.scrollWrap} ref={scrollWrapRef}>
         <div className={styles.table} style={{ gridTemplateColumns }}>
           <button
             type="button"
