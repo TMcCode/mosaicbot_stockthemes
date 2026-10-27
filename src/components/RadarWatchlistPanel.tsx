@@ -6,8 +6,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import { WatchlistThemeAddCombobox } from "@/components/WatchlistThemeAddCombobox";
+import { subscribeSearchIndex } from "@/lib/searchIndexBrowser";
 import { loadSearchIndexClient } from "@/lib/searchThemeHits";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
+import type { SearchIndexV0 } from "@/types/search_index.v0";
 import {
   HOME_RADAR_HOME_CARD_LIMIT,
   homeRadarPinCountLabel,
@@ -26,19 +28,24 @@ export function RadarWatchlistPanel() {
 
   useEffect(() => {
     let cancelled = false;
+    const apply = (index: SearchIndexV0) => {
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const t of index.themes || []) {
+        const slug = normalizeWatchlistKey("theme", t.slug || "");
+        if (slug) map[slug] = t.name || slug;
+      }
+      setNamesBySlug(map);
+    };
+    const unsub = subscribeSearchIndex(apply);
     void loadSearchIndexClient()
       .then((index) => {
-        if (!index || cancelled) return;
-        const map: Record<string, string> = {};
-        for (const t of index.themes || []) {
-          const slug = normalizeWatchlistKey("theme", t.slug || "");
-          if (slug) map[slug] = t.name || slug;
-        }
-        setNamesBySlug(map);
+        if (index) apply(index);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
+      unsub();
     };
   }, []);
 

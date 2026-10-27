@@ -5,11 +5,10 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import type { OverlayEntityKind } from "@/lib/chartSidecar";
 import {
   collectSiteSearchHits,
-  loadSiteSearchEngine,
   overlaySeriesKeyFromHit,
-  type SiteSearchEngine,
   type SiteSearchHit,
 } from "@/lib/siteSearchHits";
+import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 
 import searchStyles from "./SiteSearch.module.css";
 import styles from "./OverlayAddCombobox.module.css";
@@ -93,13 +92,10 @@ type Props = {
 export function OverlayAddCombobox({ selectedKeys, atLimit, onAdd }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const loadInflight = useRef(false);
+  const { engine, loadBusy, loadError, ensureLoaded: beginLoad } = useSiteSearchEngine();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [engine, setEngine] = useState<SiteSearchEngine | null>(null);
-  const [loadBusy, setLoadBusy] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
@@ -110,25 +106,6 @@ export function OverlayAddCombobox({ selectedKeys, atLimit, onAdd }: Props) {
     }, 200);
     return () => window.clearTimeout(t);
   }, [query]);
-
-  const beginLoad = useCallback(() => {
-    if (loadInflight.current || engine) {
-      return;
-    }
-    loadInflight.current = true;
-    setLoadBusy(true);
-    setLoadError(null);
-    void loadSiteSearchEngine()
-      .then(setEngine)
-      .catch((e: unknown) => {
-        setLoadError(e instanceof Error ? e.message : "Failed to load search index");
-        setEngine(null);
-      })
-      .finally(() => {
-        loadInflight.current = false;
-        setLoadBusy(false);
-      });
-  }, [engine]);
 
   const hits = useMemo(() => {
     if (!engine || !debounced.trim()) {

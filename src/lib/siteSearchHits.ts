@@ -1,16 +1,9 @@
 import { formatTickersPreviewFromParts } from "@/lib/constituentMeta";
-import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
-import { parseJsonPayload } from "@/lib/parseJsonPayload";
-import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
 import {
-  warmSiteSearchIndex,
-  type SiteSearchEngine,
-  type SiteSearchHit,
-} from "@/lib/siteSearchRank";
-import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
+  loadSearchIndexBrowser,
+  parseBrowserSearchIndex,
+} from "@/lib/searchIndexBrowser";
+import type { SiteSearchEngine, SiteSearchHit } from "@/lib/siteSearchRank";
 import type { SearchIndexV0 } from "@/types/search_index.v0";
 
 export type { SiteSearchEngine, SiteSearchHit };
@@ -21,14 +14,7 @@ export {
 } from "@/lib/siteSearchRank";
 
 export function parseSiteSearchIndex(raw: string): SearchIndexV0 {
-  const data = parseJsonPayload<SearchIndexV0>(raw);
-  if (data.schema_version !== 0) {
-    throw new Error(`Unsupported search index schema_version: ${data.schema_version}`);
-  }
-  if (!Array.isArray(data.tickers) || !Array.isArray(data.themes) || !Array.isArray(data.groups)) {
-    throw new Error("Invalid search index JSON");
-  }
-  return hydrateSearchIndex(data);
+  return parseBrowserSearchIndex(raw);
 }
 
 /** Theme slug → comma-separated tickers for legend previews (from search index, no group JSON). */
@@ -54,36 +40,7 @@ export function buildThemeTickersPreviewMapFromSearchIndex(index: SearchIndexV0)
 }
 
 export async function loadSiteSearchEngine(): Promise<SiteSearchEngine> {
-  const urls = searchIndexFetchUrls();
-  const buster = stockthemesBrowserCacheBusterQuery();
-  let lastErr: unknown;
-  let raw: string | null = null;
-
-  for (const baseUrl of urls) {
-    const url = baseUrl.includes("?") ? `${baseUrl}&${buster}` : `${baseUrl}?${buster}`;
-    try {
-      const res = await fetch(url, {
-        credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
-        ...(process.env.NODE_ENV === "development" ? { cache: "no-store" as const } : {}),
-      });
-      if (!res.ok) {
-        lastErr = new Error(`HTTP ${res.status}`);
-        continue;
-      }
-      raw = await res.text();
-      break;
-    } catch (e) {
-      lastErr = e;
-    }
-  }
-
-  if (!raw) {
-    throw lastErr instanceof Error ? lastErr : new Error("Failed to load search index");
-  }
-
-  const parsed = parseSiteSearchIndex(raw);
-  warmSiteSearchIndex(parsed);
+  const parsed = await loadSearchIndexBrowser();
   return { index: parsed };
 }
 

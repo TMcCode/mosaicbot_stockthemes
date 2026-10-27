@@ -2,12 +2,8 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
-import {
-  loadSearchIndexClient,
-  searchThemeHits,
-  warmSiteSearchIndex,
-} from "@/lib/searchThemeHits";
-import type { SearchIndexV0 } from "@/types/search_index.v0";
+import { searchThemeHits } from "@/lib/searchThemeHits";
+import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 
 import searchStyles from "./SiteSearch.module.css";
 import styles from "./OverlayAddCombobox.module.css";
@@ -24,10 +20,6 @@ type Props = {
   onAdd: (pick: FactorMakeupThemePick) => void;
 };
 
-type SearchEngine = {
-  index: SearchIndexV0;
-};
-
 export function FactorMakeupThemeCombobox({
   selectedSlugs,
   atLimit,
@@ -36,13 +28,10 @@ export function FactorMakeupThemeCombobox({
 }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const loadInflight = useRef(false);
+  const { engine, loadBusy, loadError, ensureLoaded: beginLoad } = useSiteSearchEngine();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [engine, setEngine] = useState<SearchEngine | null>(null);
-  const [loadBusy, setLoadBusy] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
@@ -53,30 +42,6 @@ export function FactorMakeupThemeCombobox({
     }, 200);
     return () => window.clearTimeout(t);
   }, [query]);
-
-  const beginLoad = useCallback(() => {
-    if (loadInflight.current || engine) return;
-    loadInflight.current = true;
-    setLoadBusy(true);
-    setLoadError(null);
-    void loadSearchIndexClient()
-      .then((index) => {
-        if (!index) {
-          setLoadError("Theme search is unavailable.");
-          return;
-        }
-        warmSiteSearchIndex(index);
-        setEngine({ index });
-      })
-      .catch((e: unknown) => {
-        setLoadError(e instanceof Error ? e.message : "Failed to load search index");
-        setEngine(null);
-      })
-      .finally(() => {
-        loadInflight.current = false;
-        setLoadBusy(false);
-      });
-  }, [engine]);
 
   const candidates = useMemo(() => {
     if (!engine || !debounced.trim()) return [];

@@ -12,11 +12,8 @@ import {
   watchlistFullPlaceholder,
   watchlistLimitInterestMailto,
 } from "@/lib/watchlist/limitsCopy";
-import {
-  collectSiteSearchThemeHits,
-  loadSiteSearchEngine,
-  type SiteSearchEngine,
-} from "@/lib/siteSearchHits";
+import { collectSiteSearchThemeHits } from "@/lib/siteSearchHits";
+import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import type { SearchIndexThemeRowV0 } from "@/types/search_index.v0";
 
 import styles from "./WatchlistThemeAddCombobox.module.css";
@@ -29,16 +26,13 @@ type Props = {
 export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const loadInflight = useRef(false);
   const watchlist = useWatchlist();
+  const { engine, loadBusy, loadError, ensureLoaded: ensureEngine } = useSiteSearchEngine();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
-  const [engine, setEngine] = useState<SiteSearchEngine | null>(null);
-  const [loadBusy, setLoadBusy] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
   const [addMessage, setAddMessage] = useState<string | null>(null);
   const [addingSlug, setAddingSlug] = useState<string | null>(null);
 
@@ -53,23 +47,6 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
     }, 200);
     return () => window.clearTimeout(t);
   }, [query]);
-
-  const ensureEngine = useCallback(() => {
-    if (engine || loadInflight.current) return;
-    loadInflight.current = true;
-    setLoadBusy(true);
-    setLoadError(null);
-    void loadSiteSearchEngine()
-      .then(setEngine)
-      .catch(() => {
-        setLoadError("Could not load theme search.");
-        setEngine(null);
-      })
-      .finally(() => {
-        loadInflight.current = false;
-        setLoadBusy(false);
-      });
-  }, [engine]);
 
   const candidates = useMemo(() => {
     if (!engine || !debounced.trim()) return [];

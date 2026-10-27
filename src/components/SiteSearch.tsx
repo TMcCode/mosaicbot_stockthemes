@@ -6,13 +6,9 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { capturePostHog } from "@/lib/posthogClient";
+import { collectSiteSearchHits, type SiteSearchHit } from "@/lib/siteSearchHits";
+import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
-import {
-  collectSiteSearchHits,
-  loadSiteSearchEngine,
-  type SiteSearchEngine,
-  type SiteSearchHit,
-} from "@/lib/siteSearchHits";
 
 import styles from "./SiteSearch.module.css";
 
@@ -37,14 +33,11 @@ export function SiteSearch({
   const router = useRouter();
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
-  const loadInflight = useRef(false);
   const prefetchedHrefsRef = useRef<Set<string>>(new Set());
+  const { engine, loadBusy, loadError, ensureLoaded: beginLoad } = useSiteSearchEngine();
 
   const [query, setQuery] = useState("");
   const [debounced, setDebounced] = useState("");
-  const [engine, setEngine] = useState<SiteSearchEngine | null>(null);
-  const [loadError, setLoadError] = useState<string | null>(null);
-  const [loadBusy, setLoadBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
 
@@ -55,25 +48,6 @@ export function SiteSearch({
     }, 200);
     return () => window.clearTimeout(t);
   }, [query]);
-
-  const beginLoad = useCallback(() => {
-    if (loadInflight.current || engine) {
-      return;
-    }
-    loadInflight.current = true;
-    setLoadBusy(true);
-    setLoadError(null);
-    void loadSiteSearchEngine()
-      .then(setEngine)
-      .catch((e: unknown) => {
-        setLoadError(e instanceof Error ? e.message : "Failed to load search index");
-        setEngine(null);
-      })
-      .finally(() => {
-        loadInflight.current = false;
-        setLoadBusy(false);
-      });
-  }, [engine]);
 
   const hits = useMemo(() => {
     if (!engine || !debounced.trim()) {

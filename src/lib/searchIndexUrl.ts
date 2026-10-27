@@ -12,8 +12,13 @@ function clientBasePath(): string {
 }
 
 /**
- * Ordered URLs for browser `fetch`: same-origin file first (written at build by
- * `scripts/fetch-search-index.mjs`), then upstream GCS if the bundle is missing or stale locally.
+ * Ordered URLs for browser `fetch` (primary load).
+ *
+ * Prod: same-origin baked file first (fast), then CDN fallback.
+ * Dev: CDN first (avoid stale public/ leftovers), then same-origin.
+ *
+ * Freshness after primary load is handled by `loadSearchIndexBrowser`
+ * (Range-peek CDN `as_of`, full download only when newer).
  */
 export function searchIndexFetchUrls(): string[] {
   const override = process.env.NEXT_PUBLIC_STOCKTHEMES_SEARCH_INDEX_URL?.trim();

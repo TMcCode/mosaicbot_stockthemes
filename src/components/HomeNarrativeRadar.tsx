@@ -14,7 +14,9 @@ import {
   normalizeRadarTickersPreview,
   type RadarTickerPreview,
 } from "@/lib/normalizeRadarTickers";
+import { subscribeSearchIndex } from "@/lib/searchIndexBrowser";
 import { loadSearchIndexClient } from "@/lib/searchThemeHits";
+import type { SearchIndexV0 } from "@/types/search_index.v0";
 import {
   applyWatchlistRadarEnrich,
   type WatchlistRadarEnrichV0,
@@ -777,19 +779,24 @@ export function HomeNarrativeRadar({
   useEffect(() => {
     if (tab !== "watchlist") return;
     let cancelled = false;
+    const apply = (index: SearchIndexV0) => {
+      if (cancelled) return;
+      const map: Record<string, string> = {};
+      for (const t of index.themes || []) {
+        const slug = normalizeWatchlistKey("theme", t.slug || "");
+        if (slug) map[slug] = t.name || slug;
+      }
+      setThemeNamesBySlug(map);
+    };
+    const unsub = subscribeSearchIndex(apply);
     void loadSearchIndexClient()
       .then((index) => {
-        if (!index || cancelled) return;
-        const map: Record<string, string> = {};
-        for (const t of index.themes || []) {
-          const slug = normalizeWatchlistKey("theme", t.slug || "");
-          if (slug) map[slug] = t.name || slug;
-        }
-        setThemeNamesBySlug(map);
+        if (index) apply(index);
       })
       .catch(() => {});
     return () => {
       cancelled = true;
+      unsub();
     };
   }, [tab]);
 

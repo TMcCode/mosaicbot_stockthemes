@@ -13,6 +13,7 @@ const CACHE_DIR = path.join(root, ".cache", "stockthemes-public");
 const META_PATH = path.join(CACHE_DIR, "_pages_deploy_meta.json");
 const MANIFEST_CACHE = path.join(CACHE_DIR, "manifest.json");
 const HOME_TRENDING_CACHE = path.join(CACHE_DIR, "home_trending.v0.json");
+const SEARCH_INDEX_CACHE = path.join(CACHE_DIR, "search_index.v0.json");
 
 function readAsOf(filePath) {
   try {
@@ -26,6 +27,7 @@ function readAsOf(filePath) {
 function main() {
   const asOf = readAsOf(MANIFEST_CACHE);
   const homeTrendingAsOf = readAsOf(HOME_TRENDING_CACHE);
+  const searchIndexAsOf = readAsOf(SEARCH_INDEX_CACHE);
   let buildId = "";
   let themeSlugFp = "";
   try {
@@ -43,6 +45,7 @@ function main() {
       {
         as_of: asOf,
         home_trending_as_of: homeTrendingAsOf,
+        search_index_as_of: searchIndexAsOf,
         build_id: buildId,
         theme_slug_fingerprint: themeSlugFp,
         deployed_at: new Date().toISOString(),
@@ -52,7 +55,9 @@ function main() {
     ),
     "utf8",
   );
-  console.log(`write-pages-deploy-meta: as_of=${asOf} home_trending_as_of=${homeTrendingAsOf}`);
+  console.log(
+    `write-pages-deploy-meta: as_of=${asOf} home_trending_as_of=${homeTrendingAsOf} search_index_as_of=${searchIndexAsOf}`,
+  );
 }
 
 main();

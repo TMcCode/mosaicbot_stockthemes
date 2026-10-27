@@ -13,6 +13,7 @@ import { fileURLToPath } from "url";
 import { publicDataBaseFromManifest } from "./lib/publicDataBase.mjs";
 import { fetchPublishStatus, waitForPublishIdle } from "./lib/publishStatus.mjs";
 import { downloadR2Object, r2SyncEnabled } from "./lib/r2Download.mjs";
+import { fetchSearchIndexAsOf } from "./lib/searchIndexAsOf.mjs";
 import { STOCKTHEMES_PUBLIC_MANIFEST_URL } from "./lib/storageConfig.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -63,24 +64,34 @@ async function fetchLivePublishAsOf() {
   const manifestAsOf = await fetchJsonAsOf(MANIFEST_URL, "manifest");
   const base = publicDataBaseFromManifest(MANIFEST_URL);
   let homeTrendingAsOf = "";
+  let searchIndexAsOf = "";
   if (base) {
     try {
       homeTrendingAsOf = await fetchJsonAsOf(`${base}/home_trending.v0.json`, "home_trending");
     } catch (e) {
       console.warn(`ci-should-build: home_trending fetch failed (${e?.message || e})`);
     }
+    try {
+      // Range-peek only — search_index alone can move after a repair without a manifest bump.
+      searchIndexAsOf = await fetchSearchIndexAsOf(base);
+    } catch (e) {
+      console.warn(`ci-should-build: search_index as_of peek failed (${e?.message || e})`);
+    }
   }
-  return { manifestAsOf, homeTrendingAsOf };
+  return { manifestAsOf, homeTrendingAsOf, searchIndexAsOf };
 }
 
 function publishDataChanged(live, deployed) {
-  if (!deployed.manifestAsOf && !deployed.homeTrendingAsOf) {
+  if (!deployed.manifestAsOf && !deployed.homeTrendingAsOf && !deployed.searchIndexAsOf) {
     return true;
   }
   if (live.manifestAsOf && live.manifestAsOf !== deployed.manifestAsOf) {
     return true;
   }
   if (live.homeTrendingAsOf && live.homeTrendingAsOf !== deployed.homeTrendingAsOf) {
+    return true;
+  }
+  if (live.searchIndexAsOf && live.searchIndexAsOf !== deployed.searchIndexAsOf) {
     return true;
   }
   return false;
@@ -96,6 +107,7 @@ async function main() {
   const deployed = {
     manifestAsOf: String(deployedRaw.as_of || ""),
     homeTrendingAsOf: String(deployedRaw.home_trending_as_of || ""),
+    searchIndexAsOf: String(deployedRaw.search_index_as_of || ""),
   };
 
   const base = publicDataBaseFromManifest(MANIFEST_URL);
@@ -178,7 +190,7 @@ async function main() {
     return;
   }
 
-  if (!deployed.manifestAsOf && !deployed.homeTrendingAsOf) {
+  if (!deployed.manifestAsOf && !deployed.homeTrendingAsOf && !deployed.searchIndexAsOf) {
     writeOutputs({
       shouldBuild: true,
       fullCacheRefresh: true,
@@ -191,15 +203,25 @@ async function main() {
     writeOutputs({
       shouldBuild: false,
       fullCacheRefresh: false,
-      reason: `publish_unchanged manifest=${live.manifestAsOf}`,
+      reason: `publish_unchanged manifest=${live.manifestAsOf} search=${live.searchIndexAsOf}`,
     });
     return;
   }
 
+  const parts = [];
+  if (live.manifestAsOf !== deployed.manifestAsOf) {
+    parts.push(`manifest ${deployed.manifestAsOf} -> ${live.manifestAsOf}`);
+  }
+  if (live.homeTrendingAsOf && live.homeTrendingAsOf !== deployed.homeTrendingAsOf) {
+    parts.push(`home_trending ${deployed.homeTrendingAsOf} -> ${live.homeTrendingAsOf}`);
+  }
+  if (live.searchIndexAsOf && live.searchIndexAsOf !== deployed.searchIndexAsOf) {
+    parts.push(`search_index ${deployed.searchIndexAsOf} -> ${live.searchIndexAsOf}`);
+  }
   writeOutputs({
     shouldBuild: true,
     fullCacheRefresh: false,
-    reason: `publish_changed manifest ${deployed.manifestAsOf} -> ${live.manifestAsOf}`,
+    reason: `publish_changed ${parts.join("; ") || "unknown"}`,
   });
 }
 

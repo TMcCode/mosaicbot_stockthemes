@@ -1,55 +1,27 @@
-import { hydrateSearchIndex } from "@/lib/hydrateSearchIndex";
-import { parseJsonPayload } from "@/lib/parseJsonPayload";
-import { searchIndexFetchUrls } from "@/lib/searchIndexUrl";
+import {
+  loadSearchIndexBrowser,
+  parseBrowserSearchIndex,
+} from "@/lib/searchIndexBrowser";
 import {
   isTickerishQuery,
   rankDirectSearchHits,
   rankTypoCorrectedHits,
   shouldRunTypoFallback,
 } from "@/lib/siteSearchRank";
-import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
 import type { SearchIndexThemeRowV0, SearchIndexV0 } from "@/types/search_index.v0";
 
 export { warmSiteSearchIndex } from "@/lib/siteSearchRank";
 
 export function parseSearchIndex(raw: string): SearchIndexV0 {
-  const data = parseJsonPayload<SearchIndexV0>(raw);
-  if (data.schema_version !== 0) {
-    throw new Error(`Unsupported search index schema_version: ${data.schema_version}`);
-  }
-  if (!Array.isArray(data.themes)) {
-    throw new Error("Invalid search index JSON");
-  }
-  return hydrateSearchIndex(data);
+  return parseBrowserSearchIndex(raw);
 }
 
 export async function loadSearchIndexClient(): Promise<SearchIndexV0 | null> {
-  const urls = searchIndexFetchUrls();
-  const buster = stockthemesBrowserCacheBusterQuery();
-  let lastErr: unknown;
-  for (const baseUrl of urls) {
-    const url = baseUrl.includes("?") ? `${baseUrl}&${buster}` : `${baseUrl}?${buster}`;
-    try {
-      const res = await fetch(url, {
-        credentials: "omit",
-        cache: stockthemesBrowserFetchCache(),
-      });
-      if (!res.ok) {
-        lastErr = new Error(`HTTP ${res.status}`);
-        continue;
-      }
-      return parseSearchIndex(await res.text());
-    } catch (e) {
-      lastErr = e;
-    }
+  try {
+    return await loadSearchIndexBrowser();
+  } catch {
+    return null;
   }
-  if (lastErr instanceof Error) {
-    throw lastErr;
-  }
-  return null;
 }
 
 export function searchThemeHits(
