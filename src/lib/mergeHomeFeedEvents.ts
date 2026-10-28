@@ -31,14 +31,22 @@ function isGroupOverviewTextTableNoise(e: ManifestHomeFeedEventV0): boolean {
   return blob.includes("group overview");
 }
 
-/** Thesis feed rows: BullBearDetails, or legacy consolidated theme ``text tables updated``. */
-function isThesisTextTableEvent(e: ManifestHomeFeedEventV0): boolean {
+/**
+ * Theme thesis feed only. Ticker BullBear / ticker text-table rows must not
+ * appear as "Thesis Updated" (they share "bullbeardetails" in activity titles
+ * and were previously titled with the ticker).
+ */
+export function isThesisTextTableEvent(e: ManifestHomeFeedEventV0): boolean {
   if (e.kind !== "text_table_update") return false;
+  // Already-baked ticker-entity cards (ticker set on the event) — drop.
+  if (String(e.ticker || "").trim()) return false;
   const title = String(e.title || "").trim();
   const summary = String(e.summary || "").trim();
   const blob = `${title} ${summary}`.toLowerCase().replace(/_/g, " ");
+  const compact = blob.replace(/\s+/g, "");
+  if (compact.includes("tickerbullbeardetails")) return false;
   if (blob.includes("thesis updated")) return true;
-  if (blob.replace(/\s+/g, "").includes("bullbeardetails") || blob.includes("bull bear details")) {
+  if (compact.includes("themebullbeardetails") || (blob.includes("theme") && blob.includes("bull bear details"))) {
     return true;
   }
   // After ETL consolidate, table name is stripped → ``Theme — text tables updated``.
