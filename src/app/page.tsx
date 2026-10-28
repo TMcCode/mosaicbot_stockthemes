@@ -5,6 +5,7 @@ import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
+import { HomeDataAsOfLive } from "@/components/HomeDataAsOfLive";
 import { HomeTopMoversTickerLive } from "@/components/HomeTopMoversTickerLive";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
@@ -234,17 +235,10 @@ export default async function Home() {
                   </li>
                 ) : null}
                 {manifest.as_of ? (
-                  <li className={`${styles.statCard} ${styles.statAsOf}`}>
-                    <span>Data as of</span>
-                    <strong>
-                      <time
-                        dateTime={manifest.as_of}
-                        title={formatSiteDataPublished(manifest.as_of)}
-                      >
-                        {formatSiteDataPublished(manifest.as_of, { compact: true })}
-                      </time>
-                    </strong>
-                  </li>
+                  <HomeDataAsOfLive
+                    serverAsOf={manifest.as_of}
+                    serverTickerPerformanceAsOf={manifest.ticker_performance_as_of}
+                  />
                 ) : null}
               </ul>
             ) : null}
