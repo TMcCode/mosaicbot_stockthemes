@@ -7,15 +7,21 @@ function withoutSiblings(card: HomeRadarCardV0): HomeRadarCardV0 {
   return rest;
 }
 
-function return1mSortKey(card: HomeRadarCardV0): [number, number] {
-  const v = card.return_1m;
-  if (v == null || Number.isNaN(Number(v))) return [1, 0];
-  return [0, -Number(v)];
+/** ISO created_at then name — newest first when sorting descending. */
+function recencySortKey(card: HomeRadarCardV0): [string, string] {
+  return [String(card.created_at || ""), String(card.name || "")];
+}
+
+function cmpRecencyDesc(a: HomeRadarCardV0, b: HomeRadarCardV0): number {
+  const [ca, na] = recencySortKey(a);
+  const [cb, nb] = recencySortKey(b);
+  if (ca !== cb) return cb.localeCompare(ca);
+  return na.localeCompare(nb);
 }
 
 /**
  * New-tab only: ≥minGroup themes sharing `group_name` → one flipper card.
- * Lead = best 1M; `siblings` = members by 1M desc; card list sorted by lead 1M.
+ * Lead = newest created_at; `siblings` by recency desc; card list by lead recency.
  * Idempotent. Tiny N (≤~30) — bake already sorts; this only mirrors publish order.
  */
 export function collapseNewTabGroupFlippers(
@@ -51,25 +57,13 @@ export function collapseNewTabGroupFlippers(
     const members = byGroup.get(key) || [];
     const g = String(members[0]?.group_name || "").trim();
     if (g && members.length >= threshold) {
-      const ordered = [...members].sort((a, b) => {
-        const ka = return1mSortKey(a);
-        const kb = return1mSortKey(b);
-        if (ka[0] !== kb[0]) return ka[0] - kb[0];
-        if (ka[1] !== kb[1]) return ka[1] - kb[1];
-        return String(a.name || "").localeCompare(String(b.name || ""));
-      });
+      const ordered = [...members].sort(cmpRecencyDesc);
       const siblings = ordered.map(withoutSiblings);
       out.push({ ...siblings[0], siblings });
     } else {
       out.push(...members);
     }
   }
-  out.sort((a, b) => {
-    const ka = return1mSortKey(a);
-    const kb = return1mSortKey(b);
-    if (ka[0] !== kb[0]) return ka[0] - kb[0];
-    if (ka[1] !== kb[1]) return ka[1] - kb[1];
-    return String(a.name || "").localeCompare(String(b.name || ""));
-  });
+  out.sort(cmpRecencyDesc);
   return out;
 }
