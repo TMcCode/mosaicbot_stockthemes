@@ -7,21 +7,25 @@ function withoutSiblings(card: HomeRadarCardV0): HomeRadarCardV0 {
   return rest;
 }
 
-/** ISO created_at then name — newest first when sorting descending. */
-function recencySortKey(card: HomeRadarCardV0): [string, string] {
-  return [String(card.created_at || ""), String(card.name || "")];
-}
+/** Newest calendar day first, then higher 1M, then name. */
+function cmpNewTabOrder(a: HomeRadarCardV0, b: HomeRadarCardV0): number {
+  const dayA = String(a.created_at || "").slice(0, 10);
+  const dayB = String(b.created_at || "").slice(0, 10);
+  if (dayA !== dayB) return dayB.localeCompare(dayA);
 
-function cmpRecencyDesc(a: HomeRadarCardV0, b: HomeRadarCardV0): number {
-  const [ca, na] = recencySortKey(a);
-  const [cb, nb] = recencySortKey(b);
-  if (ca !== cb) return cb.localeCompare(ca);
-  return na.localeCompare(nb);
+  const ra = a.return_1m;
+  const rb = b.return_1m;
+  const aMiss = ra == null || Number.isNaN(Number(ra));
+  const bMiss = rb == null || Number.isNaN(Number(rb));
+  if (aMiss !== bMiss) return aMiss ? 1 : -1;
+  if (!aMiss && !bMiss && Number(ra) !== Number(rb)) return Number(rb) - Number(ra);
+
+  return String(a.name || "").localeCompare(String(b.name || ""));
 }
 
 /**
  * New-tab only: ≥minGroup themes sharing `group_name` → one flipper card.
- * Lead = newest created_at; `siblings` by recency desc; card list by lead recency.
+ * Lead / siblings / list: newest day, then higher 1M.
  * Idempotent. Tiny N (≤~30) — bake already sorts; this only mirrors publish order.
  */
 export function collapseNewTabGroupFlippers(
@@ -57,13 +61,13 @@ export function collapseNewTabGroupFlippers(
     const members = byGroup.get(key) || [];
     const g = String(members[0]?.group_name || "").trim();
     if (g && members.length >= threshold) {
-      const ordered = [...members].sort(cmpRecencyDesc);
+      const ordered = [...members].sort(cmpNewTabOrder);
       const siblings = ordered.map(withoutSiblings);
       out.push({ ...siblings[0], siblings });
     } else {
       out.push(...members);
     }
   }
-  out.sort(cmpRecencyDesc);
+  out.sort(cmpNewTabOrder);
   return out;
 }
