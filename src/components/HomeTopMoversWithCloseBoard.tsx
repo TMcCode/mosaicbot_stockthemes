@@ -7,6 +7,7 @@ import {
   buildCloseMoversBoard,
   type CloseMoversBoardPayload,
 } from "@/lib/buildCloseMoversBoard";
+import { isCloseMoversBoardWindow } from "@/lib/closeMoversBoardWindow";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import type { ServerCompareSeed } from "@/hooks/useLiveCompareBundles";
 import { fetchRadarNewsBrowser } from "@/lib/fetchRadarNewsBrowser";
@@ -19,7 +20,7 @@ type Props = {
   tickerPerformanceAsOf?: string;
   serverCompare?: ServerCompareSeed;
   serverTopMovers?: HomeTopMoversV0 | null;
-  /** Prebuilt when the close window is open; null = marquee only (unless preview). */
+  /** SSR weekday 1D payload; client shows only in close→4a window (or preview). */
   closeBoard: CloseMoversBoardPayload | null;
 };
 
@@ -34,7 +35,7 @@ function wantsCloseLeadersPreview(): boolean {
 
 /**
  * Top movers shell with optional post-close top/bottom board (same card).
- * Preview anytime: ``/?close_leaders=1``.
+ * Visibility is client-gated (static export). Preview: ``/?close_leaders=1``.
  */
 export function HomeTopMoversWithCloseBoard({
   items,
@@ -46,6 +47,14 @@ export function HomeTopMoversWithCloseBoard({
   closeBoard,
 }: Props) {
   const [previewBoard, setPreviewBoard] = useState<CloseMoversBoardPayload | null>(null);
+  const [inCloseWindow, setInCloseWindow] = useState(false);
+
+  useEffect(() => {
+    const sync = () => setInCloseWindow(isCloseMoversBoardWindow());
+    sync();
+    const id = window.setInterval(sync, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
 
   useEffect(() => {
     if (closeBoard || !wantsCloseLeadersPreview()) return;
@@ -62,6 +71,10 @@ export function HomeTopMoversWithCloseBoard({
     };
   }, [closeBoard, items]);
 
+  const preview = wantsCloseLeadersPreview();
+  const activeBoard =
+    inCloseWindow || preview ? (closeBoard ?? previewBoard) : null;
+
   return (
     <HomeTopMoversTickerLive
       items={items}
@@ -70,7 +83,7 @@ export function HomeTopMoversWithCloseBoard({
       tickerPerformanceAsOf={tickerPerformanceAsOf}
       serverCompare={serverCompare}
       serverTopMovers={serverTopMovers}
-      closeBoard={closeBoard ?? previewBoard}
+      closeBoard={activeBoard}
     />
   );
 }
