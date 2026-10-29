@@ -288,7 +288,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
           {asOfLabel ? ` · ${asOfLabel}` : ""}
           {" · "}
           <Link href="/compare" className={styles.metaLink}>
-            Theme returns
+            All theme returns →
           </Link>
         </span>
       </div>

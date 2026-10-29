@@ -256,13 +256,6 @@ export default async function Home() {
             previewDays={commentaryRes?.commentary.preview_days ?? 7}
           />
 
-          <LazyHomeNarrativeRadar
-            radar={homeRadar}
-            news={homeNews}
-            companyNames={radarCompanyNamesFilled}
-            watchlistEnrichBySlug={watchlistEnrichBySlug}
-          />
-
           <HomeTopMoversTickerLive
             items={topMoversTicker}
             period={topMoversPeriod}
@@ -274,6 +267,13 @@ export default async function Home() {
               compareRes?.bundle?.as_of ? { as_of: compareRes.bundle.as_of } : null
             }
             serverTopMovers={topMoversRes?.bundle ?? null}
+          />
+
+          <LazyHomeNarrativeRadar
+            radar={homeRadar}
+            news={homeNews}
+            companyNames={radarCompanyNamesFilled}
+            watchlistEnrichBySlug={watchlistEnrichBySlug}
           />
 
           <DeferRender minHeight={420} rootMargin="400px 0px">
