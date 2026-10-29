@@ -9,13 +9,20 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
-import { HomeCloseMoversBoard } from "@/components/HomeCloseMoversBoard";
+import dynamic from "next/dynamic";
+
 import type { CloseMoversBoardPayload } from "@/lib/buildCloseMoversBoard";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeTopMoversTicker.module.css";
+
+const HomeCloseMoversBoard = dynamic(
+  () =>
+    import("@/components/HomeCloseMoversBoard").then((m) => m.HomeCloseMoversBoard),
+  { ssr: false },
+);
 
 const CLOSE_BOARD_STORAGE_KEY = "st-home-close-movers-expanded";
 

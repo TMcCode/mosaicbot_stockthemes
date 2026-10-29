@@ -7,7 +7,6 @@ import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeDataAsOfLive } from "@/components/HomeDataAsOfLive";
 import { HomeTopMoversWithCloseBoard } from "@/components/HomeTopMoversWithCloseBoard";
-import { buildCloseMoversBoard } from "@/lib/buildCloseMoversBoard";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
 
@@ -160,17 +159,6 @@ export default async function Home() {
     fromCompare.length > 0
       ? fromCompare
       : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
-  // Close leaders payload is always built for weekday 1D (static export can't know
-  // wall-clock at request time). Client gates visibility to post-close→4a ET.
-  // Preview anytime: /?close_leaders=1
-  const closeBoard =
-    topMoversPeriod === "1D"
-      ? buildCloseMoversBoard(topMoversTicker, newsRes?.bundle ?? null, {
-          n: 10,
-          maxHeadlines: 2,
-        })
-      : null;
-
   const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
   const feedThemeSlugs = homeFeedDisplay.flatMap((slot) => {
     const events = [slot.lead, ...(slot.siblings || [])];
@@ -278,7 +266,6 @@ export default async function Home() {
               compareRes?.bundle?.as_of ? { as_of: compareRes.bundle.as_of } : null
             }
             serverTopMovers={topMoversRes?.bundle ?? null}
-            closeBoard={closeBoard}
           />
 
           <LazyHomeNarrativeRadar

@@ -20,8 +20,6 @@ type Props = {
   tickerPerformanceAsOf?: string;
   serverCompare?: ServerCompareSeed;
   serverTopMovers?: HomeTopMoversV0 | null;
-  /** SSR weekday 1D payload; client shows only in close→4a window (or preview). */
-  closeBoard: CloseMoversBoardPayload | null;
 };
 
 function wantsCloseLeadersPreview(): boolean {
@@ -34,8 +32,8 @@ function wantsCloseLeadersPreview(): boolean {
 }
 
 /**
- * Top movers shell with optional post-close top/bottom board (same card).
- * Visibility is client-gated (static export). Preview: ``/?close_leaders=1``.
+ * Top movers + optional post-close board. Board data/JS load only when the
+ * close→4a window is open (or ``/?close_leaders=1``) — nothing in SSR HTML.
  */
 export function HomeTopMoversWithCloseBoard({
   items,
@@ -44,36 +42,33 @@ export function HomeTopMoversWithCloseBoard({
   tickerPerformanceAsOf,
   serverCompare = null,
   serverTopMovers = null,
-  closeBoard,
 }: Props) {
-  const [previewBoard, setPreviewBoard] = useState<CloseMoversBoardPayload | null>(null);
-  const [inCloseWindow, setInCloseWindow] = useState(false);
+  const [board, setBoard] = useState<CloseMoversBoardPayload | null>(null);
+  const [wantBoard, setWantBoard] = useState(false);
 
   useEffect(() => {
-    const sync = () => setInCloseWindow(isCloseMoversBoardWindow());
+    const sync = () => {
+      setWantBoard(isCloseMoversBoardWindow() || wantsCloseLeadersPreview());
+    };
     sync();
     const id = window.setInterval(sync, 60_000);
     return () => window.clearInterval(id);
   }, []);
 
   useEffect(() => {
-    if (closeBoard || !wantsCloseLeadersPreview()) return;
+    if (!wantBoard || period === "10D") return;
     let cancelled = false;
     void (async () => {
       const news = await fetchRadarNewsBrowser();
       if (cancelled) return;
-      setPreviewBoard(
-        buildCloseMoversBoard(items, news, { n: 10, maxHeadlines: 2 }),
-      );
+      setBoard(buildCloseMoversBoard(items, news, { n: 10, maxHeadlines: 2 }));
     })();
     return () => {
       cancelled = true;
     };
-  }, [closeBoard, items]);
+  }, [wantBoard, period, items]);
 
-  const preview = wantsCloseLeadersPreview();
-  const activeBoard =
-    inCloseWindow || preview ? (closeBoard ?? previewBoard) : null;
+  const activeBoard = wantBoard && period !== "10D" ? board : null;
 
   return (
     <HomeTopMoversTickerLive
