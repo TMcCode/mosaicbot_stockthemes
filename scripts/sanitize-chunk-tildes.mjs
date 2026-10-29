@@ -16,8 +16,10 @@ const OUT = path.join(ROOT, "out");
 const TILDE = "~";
 const SAFE = "_";
 const BUST = "-st"; // stockthemes tilde-sanitize cache bust marker
-/** Per-deploy salt so apex cannot keep a year-long 404 HIT on a reused -st hash. */
+/** Per-deploy salt so apex cannot keep a year-long 404 HIT on a reused -st hash.
+ * Prefer GITHUB_RUN_ID so workflow_dispatch / same-SHA redeploys still escape poison. */
 const DEPLOY_SALT = (
+  process.env.GITHUB_RUN_ID ||
   process.env.GITHUB_SHA ||
   process.env.CF_PAGES_COMMIT_SHA ||
   process.env.VERCEL_GIT_COMMIT_SHA ||
