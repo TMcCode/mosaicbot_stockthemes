@@ -9,11 +9,15 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 
+import { HomeCloseMoversBoard } from "@/components/HomeCloseMoversBoard";
+import type { CloseMoversBoardPayload } from "@/lib/buildCloseMoversBoard";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeTopMoversTicker.module.css";
+
+const CLOSE_BOARD_STORAGE_KEY = "st-home-close-movers-expanded";
 
 /** Wall-clock seconds for one full marquee loop (higher = slower). */
 const LOOP_SECONDS_DESKTOP = 340;
@@ -33,6 +37,11 @@ type Props = {
   period?: TopMoverTickerPeriod;
   /** Pre-formatted on the server to avoid locale hydration mismatches. */
   asOfLabel?: string;
+  /**
+   * Post-close top/bottom 10 (+ news). Same “Top movers today” shell:
+   * expanded = board, collapsed = marquee ticker.
+   */
+  closeBoard?: CloseMoversBoardPayload | null;
 };
 
 const KEY_STEP_PX = 120;
@@ -80,7 +89,12 @@ function TickerChip({
 }
 
 /** Auto-scroll marquee with hover pause, wheel/drag scrub, and theme links. */
-export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) {
+export function HomeTopMoversTicker({
+  items,
+  period = "1D",
+  asOfLabel,
+  closeBoard = null,
+}: Props) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const suppressClickUntil = useRef(0);
@@ -89,6 +103,15 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
   /** Fractional px; transforms keep sub-pixel steps that Safari drops from `scrollLeft`. */
   const offsetRef = useRef(0);
   const halfRef = useRef(0);
+  const hasCloseBoard = Boolean(closeBoard?.top.length || closeBoard?.bottom.length);
+  const [boardExpanded, setBoardExpanded] = useState(() => {
+    if (typeof window === "undefined") return true;
+    try {
+      return window.localStorage.getItem(CLOSE_BOARD_STORAGE_KEY) !== "0";
+    } catch {
+      return true;
+    }
+  });
 
   const setOffset = useCallback((next: number) => {
     const track = trackRef.current;
@@ -259,6 +282,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
     .join(" ");
 
   const periodLabel = trendingColumnHeader(period);
+  const showBoard = hasCloseBoard && boardExpanded && closeBoard;
 
   return (
     <section
@@ -268,6 +292,33 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
       <div className={styles.header}>
         <div className={styles.headerStart}>
           <span className={styles.label}>Top movers today</span>
+          {hasCloseBoard ? (
+            <button
+              type="button"
+              className={styles.pauseBtn}
+              onClick={() => {
+                setBoardExpanded((v) => {
+                  const next = !v;
+                  try {
+                    window.localStorage.setItem(
+                      CLOSE_BOARD_STORAGE_KEY,
+                      next ? "1" : "0",
+                    );
+                  } catch {
+                    /* ignore */
+                  }
+                  return next;
+                });
+              }}
+              aria-expanded={boardExpanded}
+              aria-controls={boardExpanded ? "home-close-movers-board" : undefined}
+              title={boardExpanded ? "Hide top & bottom 10" : "Show top & bottom 10"}
+            >
+              <span className={styles.pauseIcon} aria-hidden>
+                {boardExpanded ? "▾" : "▸"}
+              </span>
+            </button>
+          ) : null}
           {!reducedMotion ? (
             <button
               type="button"
@@ -284,7 +335,9 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
           ) : null}
         </div>
         <span className={styles.meta}>
-          {periodLabel} · {topCount} gainers · {bottomCount} losers
+          {showBoard
+            ? `1D close · top ${closeBoard?.top.length ?? 0} · bottom ${closeBoard?.bottom.length ?? 0}`
+            : `${periodLabel} · ${topCount} gainers · ${bottomCount} losers`}
           {asOfLabel ? ` · ${asOfLabel}` : ""}
           {" · "}
           <Link href="/compare" className={styles.metaLink}>
@@ -292,6 +345,7 @@ export function HomeTopMoversTicker({ items, period = "1D", asOfLabel }: Props) 
           </Link>
         </span>
       </div>
+      {showBoard && closeBoard ? <HomeCloseMoversBoard board={closeBoard} /> : null}
       <div
         ref={viewportRef}
         className={viewportClass}

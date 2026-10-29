@@ -6,7 +6,9 @@ import { DeferRender } from "@/components/DeferRender";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeDataAsOfLive } from "@/components/HomeDataAsOfLive";
-import { HomeTopMoversTickerLive } from "@/components/HomeTopMoversTickerLive";
+import { HomeTopMoversWithCloseBoard } from "@/components/HomeTopMoversWithCloseBoard";
+import { buildCloseMoversBoard } from "@/lib/buildCloseMoversBoard";
+import { isCloseMoversBoardWindow } from "@/lib/closeMoversBoardWindow";
 import { PageSurface } from "@/components/PageSurface";
 import styles from "./page.module.css";
 
@@ -159,6 +161,17 @@ export default async function Home() {
     fromCompare.length > 0
       ? fromCompare
       : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
+  // Close leaders board: only ship payload post-close→4a (zero cost when hidden).
+  // Headlines come from full radar_news (today + prior day) before home slim.
+  // Preview before 4pm: /?close_leaders=1 (client) or NEXT_PUBLIC_FORCE_CLOSE_LEADERS=1.
+  const forceCloseLeaders = process.env.NEXT_PUBLIC_FORCE_CLOSE_LEADERS === "1";
+  const closeBoard =
+    (isCloseMoversBoardWindow() || forceCloseLeaders) && topMoversPeriod === "1D"
+      ? buildCloseMoversBoard(topMoversTicker, newsRes?.bundle ?? null, {
+          n: 10,
+          maxHeadlines: 2,
+        })
+      : null;
 
   const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
   const feedThemeSlugs = homeFeedDisplay.flatMap((slot) => {
@@ -256,7 +269,7 @@ export default async function Home() {
             previewDays={commentaryRes?.commentary.preview_days ?? 7}
           />
 
-          <HomeTopMoversTickerLive
+          <HomeTopMoversWithCloseBoard
             items={topMoversTicker}
             period={topMoversPeriod}
             asOfLabel={
@@ -267,6 +280,7 @@ export default async function Home() {
               compareRes?.bundle?.as_of ? { as_of: compareRes.bundle.as_of } : null
             }
             serverTopMovers={topMoversRes?.bundle ?? null}
+            closeBoard={closeBoard}
           />
 
           <LazyHomeNarrativeRadar

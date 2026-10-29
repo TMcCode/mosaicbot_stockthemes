@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 
 import { HomeTopMoversTicker } from "@/components/HomeTopMoversTicker";
+import type { CloseMoversBoardPayload } from "@/lib/buildCloseMoversBoard";
 import {
   useLiveCompareBundles,
   type ServerCompareSeed,
@@ -23,6 +24,7 @@ type Props = {
    */
   serverCompare?: ServerCompareSeed;
   serverTopMovers?: HomeTopMoversV0 | null;
+  closeBoard?: CloseMoversBoardPayload | null;
 };
 
 export function HomeTopMoversTickerLive({
@@ -32,6 +34,7 @@ export function HomeTopMoversTickerLive({
   tickerPerformanceAsOf,
   serverCompare = null,
   serverTopMovers = null,
+  closeBoard = null,
 }: Props) {
   const { topMoversBundle, compareBundle, liveTickerPerformanceAsOf } = useLiveCompareBundles(
     serverCompare,
@@ -62,6 +65,11 @@ export function HomeTopMoversTickerLive({
   ]);
 
   return (
-    <HomeTopMoversTicker items={liveItems} period={period} asOfLabel={liveAsOfLabel} />
+    <HomeTopMoversTicker
+      items={liveItems}
+      period={period}
+      asOfLabel={liveAsOfLabel}
+      closeBoard={closeBoard}
+    />
   );
 }
