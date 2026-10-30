@@ -276,11 +276,7 @@ export function StockRevisionsPanel({ ticker, membershipThemes, sidecarState }: 
         const va = rowSortValue(a, s.key, ticker, revColumns);
         const vb = rowSortValue(b, s.key, ticker, revColumns);
         if (typeof va === "string" || typeof vb === "string") {
-          const c = compareText(
-            typeof va === "string" ? va : null,
-            typeof vb === "string" ? vb : null,
-            s.dir,
-          );
+          const c = compareText(String(va ?? ""), String(vb ?? ""), s.dir);
           if (c !== 0) return c;
           continue;
         }

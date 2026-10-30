@@ -58,7 +58,7 @@ export function StockNotesPanel({ ticker, membershipThemes, notesState }: Props)
           continue;
         }
         if (s.key === "ticker_note") {
-          const c = compareText(bySlug[a.slug] ?? null, bySlug[b.slug] ?? null, s.dir);
+          const c = compareText(bySlug[a.slug] ?? "", bySlug[b.slug] ?? "", s.dir);
           if (c !== 0) return c;
         }
       }

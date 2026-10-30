@@ -223,11 +223,7 @@ export function StockRevenuePanel({ ticker, membershipThemes, sidecarState }: Pr
         const va = rowSortValue(a, s.key, ticker, columns, mode);
         const vb = rowSortValue(b, s.key, ticker, columns, mode);
         if (typeof va === "string" || typeof vb === "string") {
-          const c = compareText(
-            typeof va === "string" ? va : null,
-            typeof vb === "string" ? vb : null,
-            s.dir,
-          );
+          const c = compareText(String(va ?? ""), String(vb ?? ""), s.dir);
           if (c !== 0) return c;
           continue;
         }
