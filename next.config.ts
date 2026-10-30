@@ -16,11 +16,16 @@ const nextConfig: NextConfig = {
   ...(isDev ? {} : { output: "export" }),
   async rewrites() {
     if (!isDev) return [];
-    // Browser overlay chart sidecars fetch same-origin in dev (CDN CORS only whitelists :3000).
+    // Same-origin proxies for local UI work (CDN CORS / Pages Function gate allow localhost).
     return [
       {
         source: "/stockthemes-data/:path*",
         destination: "https://storage.stockthemes.ai/:path*",
+      },
+      {
+        // Tier B (themes + stocks) — production Function; Origin: localhost is allowlisted.
+        source: "/cdn-app/:path*",
+        destination: "https://stockthemes.ai/cdn-app/:path*",
       },
     ];
   },

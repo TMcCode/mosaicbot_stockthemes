@@ -1,3 +1,15 @@
+.link {
+  display: inline-flex;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link:hover .badge,
+.link:focus-visible .badge {
+  border-color: rgba(38, 252, 214, 0.45);
+  color: #26fcd6;
+}
+
 .badge {
   flex-shrink: 0;
   display: inline-block;
@@ -18,6 +30,12 @@
   color: rgba(12, 24, 22, 0.88);
   background: rgba(0, 0, 0, 0.06);
   border-color: rgba(0, 0, 0, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .link:hover .badge,
+:global(.st-theme[data-theme="light"]) .link:focus-visible .badge {
+  border-color: rgba(42, 152, 147, 0.55);
+  color: var(--accent, #2a9893);
 }
 
 @media (max-width: 600px) {

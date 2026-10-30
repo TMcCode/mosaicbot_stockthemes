@@ -20,6 +20,12 @@ This defines earnings columns on `/themes/[slug]` constituent rows for stockthem
   - post anchor: pre anchor + 2 calendar days
   - before post anchor is available in market data, EarningsPerf stays provisional.
 
+## Theme return row
+
+- Manual ``ThemeWgt`` mean of the **same cells the table shows**, not compare ``LstRpt %`` / ``SinceLstRpt``.
+- When only some names have a value (e.g. two reporters for Ern Move %), renormalize over those weights.
+- Prefers ETL ``constituent_table_stats.theme_return`` (``precomputed_from_constituents_v3``); client falls back to the same math from live rows.
+
 ## Display Columns
 
 - `Qtr Earnings Date`

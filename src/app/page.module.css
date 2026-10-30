@@ -204,6 +204,41 @@
   color: var(--text-primary);
 }
 
+.stockHeroTitle {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-wrap: wrap;
+}
+
+.stockHeroTitleText {
+  min-width: 0;
+  text-wrap: balance;
+}
+
+.stockHeroLogo {
+  flex: 0 0 40px;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+:global(.st-theme[data-theme="light"]) .stockHeroLogo {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Stock hero: title left, membership treemap right (same rail as theme pages). */
+.stockHeroAreas {
+  width: 100%;
+  min-width: 0;
+}
+
+.stockHeroTitleArea {
+  min-width: 0;
+}
+
 @media (min-width: 1101px) {
   .heroTitle.heroTitleOneLine {
     white-space: nowrap;
@@ -1407,6 +1442,23 @@ a.feedTitle:hover {
   white-space: nowrap;
 }
 
+.companyNameLink {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 auto;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--text-primary);
+}
+
+.companyNameLink:hover,
+.companyNameLink:focus-visible {
+  color: var(--accent, #26fcd6);
+}
+
 .list {
   margin: 0;
   padding-left: 1.25rem;
@@ -1825,7 +1877,8 @@ a.secondary {
     height: 14px;
   }
 
-  .companyName {
+  .companyName,
+  .companyNameLink {
     grid-column: 2;
     grid-row: 1;
     min-width: 0;
@@ -1997,6 +2050,17 @@ a.secondary {
 
   .heroTitle {
     font-size: clamp(28px, 7vw, 40px);
+  }
+
+  .stockHeroTitle {
+    gap: 10px;
+  }
+
+  .stockHeroLogo {
+    flex-basis: 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
   }
 
   .directoryGrid {

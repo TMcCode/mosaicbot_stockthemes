@@ -1,5 +1,6 @@
 import {
   GROUP_DETAIL_UNAVAILABLE_COPY,
+  STOCK_DETAIL_UNAVAILABLE_COPY,
   stockthemesDevBuildHintsEnabled,
   THEME_DETAIL_UNAVAILABLE_COPY,
 } from "@/lib/stockthemesBuildHints";
@@ -13,7 +14,7 @@ const bodyStyle = {
 } as const;
 
 type Props = {
-  kind: "theme" | "group";
+  kind: "theme" | "group" | "stock";
   slug: string;
 };
 
@@ -21,7 +22,11 @@ export function StockthemesDetailUnavailable({ kind, slug }: Props) {
   if (!stockthemesDevBuildHintsEnabled()) {
     return (
       <p style={bodyStyle}>
-        {kind === "theme" ? THEME_DETAIL_UNAVAILABLE_COPY : GROUP_DETAIL_UNAVAILABLE_COPY}
+        {kind === "theme"
+          ? THEME_DETAIL_UNAVAILABLE_COPY
+          : kind === "group"
+            ? GROUP_DETAIL_UNAVAILABLE_COPY
+            : STOCK_DETAIL_UNAVAILABLE_COPY}
       </p>
     );
   }
@@ -33,6 +38,17 @@ export function StockthemesDetailUnavailable({ kind, slug }: Props) {
         <code className={styles.code}>NEXT_PUBLIC_STOCKTHEMES_MANIFEST_URL</code> — set it in CI so the app
         can load <code className={styles.code}>themes/{slug}.json</code> from the bucket, or add{" "}
         <code className={styles.code}>public/fixtures/themes/{slug}.json</code> for offline builds.
+      </p>
+    );
+  }
+
+  if (kind === "stock") {
+    return (
+      <p style={bodyStyle}>
+        No stock detail JSON at <code className={styles.code}>stocks/{slug}.json</code>. Run MosaicBot{" "}
+        <code className={styles.code}>stockthemes_manifest.py</code> (or a{" "}
+        <code className={styles.code}>STOCKTHEMES_STOCK_UPLOAD_TICKERS</code> smoke), or add{" "}
+        <code className={styles.code}>public/fixtures/stocks/{slug}.json</code> for offline builds.
       </p>
     );
   }

@@ -77,6 +77,15 @@ export type ThemeDetailConstituentV0 = {
 
 export type ThemeDetailConstituentTableStatsV0 = {
   source?: string;
+  /**
+   * Manual ThemeWgt mean per metric, renormalized over constituents with a value
+   * (partial reporters OK). Used for the Earnings Returns "Theme return" row.
+   */
+  theme_return?: Record<string, number | null>;
+  /** Share of constituents with an effective current-quarter report (0–100). */
+  reported_tickers_pct?: number | null;
+  reported_count?: number;
+  constituent_count?: number;
   average?: Record<string, number | null>;
   std_dev?: Record<string, number | null>;
   positive_tickers_pct?: Record<string, number | null>;

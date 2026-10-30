@@ -4,9 +4,9 @@ Charts, weights, notes, price returns, factors, revenue/quality-risk, and correl
 
 | Layer | Role |
 |-------|------|
-| Private R2 | `r2://mosaic-themes/stockthemes_app/themes/<slug>.<sidecar>.json` |
-| Pages Function | `https://stockthemes.ai/cdn-app/themes/<slug>.<sidecar>.json` |
-| Public CDN | Slim `themes/<slug>.json` (SEO) + site-wide bundles (e.g. factor leaderboards) |
+| Private R2 | `r2://mosaic-themes/stockthemes_app/themes/<slug>.<sidecar>.json` and `…/stocks/<TICKER>.<sidecar>.json` |
+| Pages Function | `https://stockthemes.ai/cdn-app/themes/<slug>.…` and `/cdn-app/stocks/<TICKER>.…` |
+| Public CDN | Slim `themes/<slug>.json` / `stocks/<TICKER>.json` (SEO) + site-wide bundles |
 
 Protected suffixes (Function allowlist): `.app`, `.notes`, `.price_returns`, `.factor_profile`, `.factor_attribution`, `.revenue`, `.quality_risk`, `.composition`, `.chart`, `.correlation_bundle`, `.stock_correlations`, `.theme_neighbors`.
 
@@ -31,9 +31,18 @@ Protected suffixes (Function allowlist): `.app`, `.notes`, `.price_returns`, `.f
 ```bash
 # Should 403 without browser Origin
 curl -sI "https://stockthemes.ai/cdn-app/themes/<slug>.notes.v0.json"
+curl -sI "https://stockthemes.ai/cdn-app/stocks/AAPL.price_returns.v0.json"
+curl -sI "https://stockthemes.ai/cdn-app/stocks/AAPL.app.v0.json"
+
+# With Origin (browser) → 200 when object exists
+curl -sI -H "Origin: https://stockthemes.ai" \
+  "https://stockthemes.ai/cdn-app/stocks/AAPL.price_returns.v0.json"
 
 # Should 404 on public CDN after migrate
 curl -sI "https://storage.stockthemes.ai/themes/<slug>.notes.v0.json"
 curl -sI "https://storage.stockthemes.ai/themes/<slug>.price_returns.v0.json"
 curl -sI "https://storage.stockthemes.ai/themes/<slug>.factor_profile.v0.json"
+curl -sI "https://storage.stockthemes.ai/stocks/AAPL.price_returns.v0.json"
 ```
+
+Automated: `npm run verify:tier-b` (report-only; set `STOCKTHEMES_ENFORCE_TIER_B=1` to fail CI).

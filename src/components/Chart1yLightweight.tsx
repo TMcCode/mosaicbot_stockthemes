@@ -62,6 +62,12 @@ import { TickerBadge } from "@/components/TickerBadge";
 import { ChartPeriodToolbar } from "@/components/ChartPeriodToolbar";
 import type { ChartExportLegendItem } from "@/lib/exportChartPng";
 import { brandAssetPath } from "@/lib/siteUrl";
+import {
+  CHART_VIEW_HEIGHT_DESKTOP,
+  CHART_VIEW_HEIGHT_MOBILE,
+  CHART_VIEW_HEIGHT_MQ,
+  chartViewHeight,
+} from "@/lib/chartViewHeight";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
 
 import styles from "./Chart1yPanel.module.css";
@@ -75,18 +81,6 @@ function fitChartTimeScale(chart: IChartApi): void {
   const ts = chart.timeScale();
   ts.fitContent();
   ts.applyOptions({ rightOffset: 1 });
-}
-
-const CHART_VIEW_HEIGHT_DESKTOP = 420;
-/** Phone: slightly shorter so the chart doesn’t dominate the fold. */
-const CHART_VIEW_HEIGHT_MOBILE = 320;
-const CHART_VIEW_HEIGHT_MQ = "(max-width: 640px)";
-
-function chartViewHeight(): number {
-  if (typeof window === "undefined") return CHART_VIEW_HEIGHT_DESKTOP;
-  return window.matchMedia(CHART_VIEW_HEIGHT_MQ).matches
-    ? CHART_VIEW_HEIGHT_MOBILE
-    : CHART_VIEW_HEIGHT_DESKTOP;
 }
 
 /** Shareable plot aspect (~4:3) — full square was too tall; landscape strip too wide. */
@@ -1555,13 +1549,20 @@ export function Chart1yLightweight({
           const showThirdColumn = Boolean(tickersPreview) || compositionLegendShowMcap;
           const stackedLegend = Boolean(tickersPreview);
           return (
-            <button
+            <div
               key={s.ticker}
-              type="button"
+              role="button"
+              tabIndex={0}
               className={`${styles.legendItemButton} ${!showThirdColumn ? styles.legendItemButtonTwoCol : ""} ${stackedLegend ? styles.legendItemButtonStacked : ""} ${hiddenSet.has(s.ticker) ? styles.legendItemMuted : ""}`}
               aria-pressed={!hiddenSet.has(s.ticker)}
               title={tip || undefined}
               onClick={() => toggleSeries(s.ticker)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  toggleSeries(s.ticker);
+                }
+              }}
             >
               <span
                 className={styles.swatch}
@@ -1574,7 +1575,13 @@ export function Chart1yLightweight({
                   <span className={styles.legendLabel}>{ticker}</span>
                 ) : null}
                 {compositionLegendShowSeriesBadge && ticker ? (
-                  <TickerBadge ticker={ticker} />
+                  <span
+                    className={styles.legendBadgeHit}
+                    onClick={(e) => e.stopPropagation()}
+                    onKeyDown={(e) => e.stopPropagation()}
+                  >
+                    <TickerBadge ticker={ticker} />
+                  </span>
                 ) : null}
               </span>
               {showThirdColumn ? (
@@ -1588,7 +1595,7 @@ export function Chart1yLightweight({
                     : formatMarketCap(meta?.marketCapUsd)}
                 </span>
               ) : null}
-            </button>
+            </div>
           );
         })}
       </div>

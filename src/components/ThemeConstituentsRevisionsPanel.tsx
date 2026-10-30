@@ -6,6 +6,7 @@ import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { ConstituentLogo } from "@/components/ConstituentLogo";
+import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import type { ThemeRevenueSidecarState } from "@/hooks/useThemeRevenueSidecar";
 import {
@@ -204,9 +205,7 @@ export function ThemeConstituentsRevisionsPanel({ detail, sidecarState }: Props)
                   <td className={`${tableStyles.companyCol} ${tableStyles.companySticky}`}>
                     <div className={styles.companyCell}>
                       <ConstituentLogo ticker={row.ticker} />
-                      <span className={styles.companyName} title={row.name?.trim() || undefined}>
-                        {row.name?.trim() || "—"}
-                      </span>
+                      <CompanyNameLink ticker={row.ticker} name={row.name} />
                       <TickerBadge ticker={row.ticker} />
                     </div>
                   </td>

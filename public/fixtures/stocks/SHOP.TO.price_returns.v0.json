@@ -1,0 +1,70 @@
+{
+  "schema_version": "stock.price_returns.v0",
+  "ticker": "SHOP.TO",
+  "name": "Shopify Inc.",
+  "as_of": "2026-10-30T18:00:00Z",
+  "ticker_performance_as_of": "2026-10-30T17:50:00Z",
+  "build_id": "fixture-stock-price-returns-v0",
+  "price_returns": {
+    "source": "fixture::ticker_performance_latest",
+    "columns": [
+      "1D",
+      "10D",
+      "1W",
+      "1M",
+      "3M",
+      "MTD",
+      "YTD",
+      "Period",
+      "SinceLstRpt",
+      "LstRpt %",
+      "IranWar",
+      "LibDay"
+    ],
+    "metrics": {
+      "1D": 0.9,
+      "10D": 2.7,
+      "1W": 1.5,
+      "1M": 4.8,
+      "3M": 11.0,
+      "MTD": 3.1,
+      "YTD": 24.0,
+      "Period": 27.5,
+      "SinceLstRpt": 5.2,
+      "LstRpt %": 1.1,
+      "IranWar": null,
+      "LibDay": null
+    }
+  },
+  "compare_returns": {
+    "source": "fixture::ticker_performance_latest",
+    "columns": [
+      "1D",
+      "10D",
+      "1W",
+      "1M",
+      "3M",
+      "MTD",
+      "YTD",
+      "Period",
+      "SinceLstRpt",
+      "LstRpt %",
+      "IranWar",
+      "LibDay"
+    ],
+    "metrics": {
+      "1D": 0.9,
+      "10D": 2.7,
+      "1W": 1.5,
+      "1M": 4.8,
+      "3M": 11.0,
+      "MTD": 3.1,
+      "YTD": 24.0,
+      "Period": 27.5,
+      "SinceLstRpt": 5.2,
+      "LstRpt %": 1.1,
+      "IranWar": null,
+      "LibDay": null
+    }
+  }
+}

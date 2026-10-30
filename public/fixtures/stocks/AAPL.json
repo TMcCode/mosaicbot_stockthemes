@@ -1,0 +1,31 @@
+{
+  "schema_version": 0,
+  "ticker": "AAPL",
+  "name": "Apple Inc.",
+  "as_of": "2026-10-30T18:00:00Z",
+  "build_id": "fixture-stock-detail-v0",
+  "ticker_performance_as_of": "2026-10-30T17:50:00Z",
+  "logo_url": null,
+  "seo_intro": "Apple Inc. appears across consumer hardware, services, and mega-cap tech themes on stockthemes.",
+  "theme_count": 3,
+  "themes": [
+    {
+      "slug": "megatech-25-big-tech-platforms",
+      "name": "MegaTech '25: Big Tech Platforms",
+      "group_slug": "megatech",
+      "group_name": "MegaTech"
+    },
+    {
+      "slug": "consumer-attention-24-devices",
+      "name": "Consumer Attention '24: Devices",
+      "group_slug": "consumer-attention",
+      "group_name": "Consumer Attention"
+    },
+    {
+      "slug": "ai-25-distribution-monetization",
+      "name": "AI '25: Distribution & Monetization",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence"
+    }
+  ]
+}

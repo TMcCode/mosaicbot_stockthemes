@@ -13,6 +13,8 @@ const budgets = {
   feedHtml: 1_200_000,
   maxThemeHtml: 200_000,
   maxGroupHtml: 350_000,
+  /** Slim stock shell (Tier B client-only); tune after first allowlist bake. */
+  maxStockHtml: 220_000,
   initialJs: 750_000,
 };
 
@@ -21,11 +23,18 @@ function size(file) {
 }
 
 function maxHtml(directory) {
-  return fs
+  if (!fs.existsSync(directory)) return null;
+  const rows = fs
     .readdirSync(directory)
     .filter((name) => name.endsWith(".html") && name !== "index.html")
     .map((name) => ({ name, bytes: size(path.join(directory, name)) }))
-    .sort((a, b) => b.bytes - a.bytes)[0];
+    .sort((a, b) => b.bytes - a.bytes);
+  return rows[0] || null;
+}
+
+function countHtml(directory) {
+  if (!fs.existsSync(directory)) return 0;
+  return fs.readdirSync(directory).filter((name) => name.endsWith(".html")).length;
 }
 
 function initialJsBytes(htmlFile) {
@@ -45,18 +54,31 @@ if (!fs.existsSync(out)) {
 
 const largestTheme = maxHtml(path.join(out, "themes"));
 const largestGroup = maxHtml(path.join(out, "groups"));
+const largestStock = maxHtml(path.join(out, "stocks"));
+const stockHtmlCount = countHtml(path.join(out, "stocks"));
+const stockSampleHtml = (() => {
+  const aapl = path.join(out, "stocks", "AAPL.html");
+  if (fs.existsSync(aapl)) return aapl;
+  if (largestStock) return path.join(out, "stocks", largestStock.name);
+  return null;
+})();
 const actual = {
   homeHtml: size(path.join(out, "index.html")),
   compareHtml: size(path.join(out, "compare.html")),
   themesInMotionHtml: size(path.join(out, "themes-in-motion.html")),
   feedHtml: size(path.join(out, "feed.html")),
-  maxThemeHtml: largestTheme.bytes,
-  maxGroupHtml: largestGroup.bytes,
+  maxThemeHtml: largestTheme?.bytes ?? 0,
+  maxGroupHtml: largestGroup?.bytes ?? 0,
+  maxStockHtml: largestStock?.bytes ?? 0,
   initialJs: initialJsBytes(path.join(out, "privacy.html")),
 };
 
 const failures = [];
 for (const [key, limit] of Object.entries(budgets)) {
+  if (key === "maxStockHtml" && !largestStock) {
+    console.log(`verify-build-budgets: ${key} skipped (no out/stocks/*.html)`);
+    continue;
+  }
   const value = actual[key];
   const ok = value <= limit;
   console.log(
@@ -64,8 +86,21 @@ for (const [key, limit] of Object.entries(budgets)) {
   );
   if (!ok) failures.push(`${key}: ${value} > ${limit}`);
 }
-console.log(`verify-build-budgets: largest theme ${largestTheme.name}`);
-console.log(`verify-build-budgets: largest group ${largestGroup.name}`);
+console.log(`verify-build-budgets: largest theme ${largestTheme?.name || "(none)"}`);
+console.log(`verify-build-budgets: largest group ${largestGroup?.name || "(none)"}`);
+if (largestStock) {
+  console.log(
+    `verify-build-budgets: largest stock ${largestStock.name} (${stockHtmlCount} stock html page(s))`,
+  );
+  if (stockSampleHtml) {
+    const stockJs = initialJsBytes(stockSampleHtml);
+    console.log(
+      `verify-build-budgets: stockInitialJs ${(stockJs / 1000).toFixed(1)} KB (report-only from ${path.basename(stockSampleHtml)})`,
+    );
+  }
+} else {
+  console.log("verify-build-budgets: no stock html pages in out/stocks/");
+}
 
 // Cloudflare custom domains 404 paths with literal `~` (see sanitize-chunk-tildes.mjs).
 function walkFiles(dir, acc = []) {

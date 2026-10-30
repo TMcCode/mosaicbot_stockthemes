@@ -29,6 +29,8 @@ type Props = {
   tileMode?: "constituent" | "theme";
   /** Initial color-by period (compute on server with `pickDefaultTreemapPeriod`). */
   defaultReturnPeriod?: TreemapReturnColumn;
+  /** Shorter panel (e.g. stock page above full-width chart). */
+  compact?: boolean;
 };
 
 function weightLabel(weight: number): string {
@@ -41,6 +43,7 @@ export function ThemeHeroTreemap({
   asOfLabel,
   tileMode = "constituent",
   defaultReturnPeriod,
+  compact = false,
 }: Props) {
   const availablePeriods = useMemo(() => {
     return TREEMAP_RETURN_PERIODS.filter(({ key }) =>
@@ -78,7 +81,7 @@ export function ThemeHeroTreemap({
   }
 
   return (
-    <div className={styles.panel}>
+    <div className={`${styles.panel}${compact ? ` ${styles.panelCompact}` : ""}`}>
       {availablePeriods.length > 1 ? (
         <div className={styles.toolbar}>
           <span className={styles.toolbarLabel}>Color by</span>

@@ -246,6 +246,16 @@ export async function downloadPrivateThemeApp(slug) {
   return downloadPrivateThemeSidecar(slug, ".app.v0.json");
 }
 
+/** Tier B stock sidecar from private mosaic-themes (stockthemes_app/stocks/…). */
+export async function downloadPrivateStockSidecar(ticker, suffix) {
+  const key = `${APP_PRIVATE_PREFIX}/stocks/${ticker}${suffix}`;
+  return downloadR2Object(key, { bucket: MOSAIC_THEMES_BUCKET });
+}
+
+export async function downloadPrivateStockApp(ticker) {
+  return downloadPrivateStockSidecar(ticker, ".app.v0.json");
+}
+
 export async function r2ObjectMetadata(objectPath) {
   const req = signedRequest("HEAD", objectPath);
   const res = await fetchWithRetry(

@@ -38,6 +38,16 @@ function main() {
     console.warn("write-pages-deploy-meta: no cached manifest.json");
   }
 
+  const outStocks = path.join(root, "out", "stocks");
+  let stockPageCount = 0;
+  try {
+    stockPageCount = fs
+      .readdirSync(outStocks)
+      .filter((n) => n.endsWith(".html")).length;
+  } catch {
+    /* no out/stocks yet */
+  }
+
   fs.mkdirSync(CACHE_DIR, { recursive: true });
   fs.writeFileSync(
     META_PATH,
@@ -48,6 +58,9 @@ function main() {
         search_index_as_of: searchIndexAsOf,
         build_id: buildId,
         theme_slug_fingerprint: themeSlugFp,
+        stock_page_count: stockPageCount,
+        stock_sync_stocks: process.env.STOCKTHEMES_SYNC_STOCKS || "0",
+        stock_sync_tickers: process.env.STOCKTHEMES_SYNC_STOCK_TICKERS || "",
         deployed_at: new Date().toISOString(),
       },
       null,
@@ -56,7 +69,7 @@ function main() {
     "utf8",
   );
   console.log(
-    `write-pages-deploy-meta: as_of=${asOf} home_trending_as_of=${homeTrendingAsOf} search_index_as_of=${searchIndexAsOf}`,
+    `write-pages-deploy-meta: as_of=${asOf} home_trending_as_of=${homeTrendingAsOf} search_index_as_of=${searchIndexAsOf} stock_pages=${stockPageCount}`,
   );
 }
 

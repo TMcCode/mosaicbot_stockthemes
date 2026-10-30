@@ -399,14 +399,14 @@
 
 .chartBox {
   width: 100%;
-  min-height: 340px;
+  min-height: 420px;
   overflow: hidden;
   background: #0f1115;
 }
 
 @media (max-width: 640px) {
   .chartBox {
-    min-height: 300px;
+    min-height: 320px;
   }
 
   .toolbar {
@@ -538,6 +538,14 @@
 .legendItemButton > .legendTickers,
 .legendItemButton > .legendMcap {
   min-width: 0;
+}
+
+.legendBadgeHit {
+  display: inline-flex;
+  flex-shrink: 0;
+  /* Keep stock-page link clickable inside the series toggle row. */
+  position: relative;
+  z-index: 1;
 }
 
 .legendItemButtonTwoCol {

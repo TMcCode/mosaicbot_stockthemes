@@ -1,0 +1,173 @@
+{
+  "schema_version": "stock.app.v0",
+  "ticker": "AAPL",
+  "name": "Apple Inc.",
+  "as_of": "2026-10-30T18:00:00Z",
+  "build_id": "fixture-stock-app-v0",
+  "ticker_performance_as_of": "2026-10-30T17:50:00Z",
+  "theme_heatmap_columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+  "earnings_table_stats": {
+    "source": "membership_earnings_returns_v1",
+    "weights_basis": "current_membership",
+    "note": "Σ (membership ThemeWgt / Σw) × theme earnings metric (renormalized over themes with a value).",
+    "weighted": {
+      "last_quarter_earnings_move_pct": 2.4,
+      "earnings_move_pct": 3.4,
+      "intra_quarter_move_pct": 5.0,
+      "since_last_report_pct": 2.0,
+      "avg_abs_rpt_pct": 5.4,
+      "reported_tickers_pct": 18.0,
+      "pct_positive": 62.0
+    },
+    "average": {
+      "weight": 0.078,
+      "last_quarter_earnings_move_pct": 3.13,
+      "earnings_move_pct": 3.4,
+      "intra_quarter_move_pct": 5.77,
+      "since_last_report_pct": 2.0,
+      "avg_abs_rpt_pct": 5.7,
+      "reported_tickers_pct": 20.83,
+      "pct_positive": 61.25
+    },
+    "median": {
+      "weight": 0.084,
+      "last_quarter_earnings_move_pct": 2.5,
+      "earnings_move_pct": 3.4,
+      "intra_quarter_move_pct": 6.1,
+      "since_last_report_pct": 2.0,
+      "avg_abs_rpt_pct": 5.2,
+      "reported_tickers_pct": 12.5,
+      "pct_positive": 62.5
+    }
+  },
+  "earnings": {
+    "last_report_date": "2026-07-31",
+    "next_report_date": "2026-10-30",
+    "last_before_after_market": "AMC",
+    "next_before_after_market": "AMC",
+    "last_rpt_percent": 4.2,
+    "since_last_rpt_percent": 8.5,
+    "pre_earnings_percent_last_report": 2.1,
+    "earnings_percent_last_report": 4.2,
+    "earnings_percent_prev_report": 1.8,
+    "avg_abs_rpt_percent": 3.6,
+    "last_rpt_live_percent": 4.2,
+    "last_rpt_is_final": true,
+    "last_rpt_final_percent": 4.2
+  },
+  "themes": [
+    {
+      "slug": "consumer-attention-24-devices",
+      "name": "Consumer Attention '24: Devices",
+      "group_slug": "consumer-attention",
+      "group_name": "Consumer Attention",
+      "weight": 0.12,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+        "metrics": {
+          "1D": -0.2,
+          "10D": 1.0,
+          "MTD": 1.5,
+          "YTD": 11.2,
+          "1M": 2.2,
+          "3M": 5.4,
+          "Period": 14.0
+        }
+      },
+      "earnings_returns": {
+        "theme_return": {
+          "last_quarter_earnings_move_pct": 2.5,
+          "earnings_move_pct": null,
+          "intra_quarter_move_pct": 6.1,
+          "since_last_report_pct": null,
+          "avg_abs_rpt_pct": 5.2
+        },
+        "positive_tickers_pct": {
+          "last_quarter_earnings_move_pct": 62.5,
+          "intra_quarter_move_pct": 55.0,
+          "avg_abs_rpt_pct": 100.0
+        },
+        "reported_tickers_pct": 12.5,
+        "reported_count": 1,
+        "constituent_count": 8
+      }
+    },
+    {
+      "slug": "megatech-25-big-tech-platforms",
+      "name": "MegaTech '25: Big Tech Platforms",
+      "group_slug": "megatech",
+      "group_name": "MegaTech",
+      "weight": 0.084,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+        "metrics": {
+          "1D": 0.4,
+          "10D": 2.1,
+          "MTD": 3.2,
+          "YTD": 18.5,
+          "1M": 4.0,
+          "3M": 9.1,
+          "Period": 22.0
+        }
+      },
+      "earnings_returns": {
+        "theme_return": {
+          "last_quarter_earnings_move_pct": 1.1,
+          "earnings_move_pct": 3.4,
+          "intra_quarter_move_pct": -1.2,
+          "since_last_report_pct": 2.0,
+          "avg_abs_rpt_pct": 4.8
+        },
+        "positive_tickers_pct": {
+          "last_quarter_earnings_move_pct": 50.0,
+          "earnings_move_pct": 66.7,
+          "intra_quarter_move_pct": 40.0,
+          "since_last_report_pct": 66.7,
+          "avg_abs_rpt_pct": 100.0
+        },
+        "reported_tickers_pct": 50.0,
+        "reported_count": 3,
+        "constituent_count": 6
+      }
+    },
+    {
+      "slug": "ai-25-distribution-monetization",
+      "name": "AI '25: Distribution & Monetization",
+      "group_slug": "artificial-intelligence",
+      "group_name": "Artificial Intelligence",
+      "weight": 0.031,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+        "metrics": {
+          "1D": 0.8,
+          "10D": 3.5,
+          "MTD": 5.0,
+          "YTD": 28.0,
+          "1M": 6.2,
+          "3M": 12.0,
+          "Period": 31.0
+        }
+      },
+      "earnings_returns": {
+        "theme_return": {
+          "last_quarter_earnings_move_pct": 5.8,
+          "earnings_move_pct": null,
+          "intra_quarter_move_pct": 12.4,
+          "since_last_report_pct": null,
+          "avg_abs_rpt_pct": 7.1
+        },
+        "positive_tickers_pct": {
+          "last_quarter_earnings_move_pct": 70.0,
+          "intra_quarter_move_pct": 80.0,
+          "avg_abs_rpt_pct": 100.0
+        },
+        "reported_tickers_pct": 0.0,
+        "reported_count": 0,
+        "constituent_count": 10
+      }
+    }
+  ]
+}

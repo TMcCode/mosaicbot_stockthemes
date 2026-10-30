@@ -1,0 +1,51 @@
+{
+  "schema_version": "stock.app.v0",
+  "ticker": "SHOP.TO",
+  "name": "Shopify Inc.",
+  "as_of": "2026-10-30T18:00:00Z",
+  "build_id": "fixture-stock-app-v0",
+  "ticker_performance_as_of": "2026-10-30T17:50:00Z",
+  "theme_heatmap_columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+  "themes": [
+    {
+      "slug": "ecommerce-25-platforms",
+      "name": "Ecommerce '25: Platforms",
+      "group_slug": "ecommerce",
+      "group_name": "Ecommerce",
+      "weight": 0.095,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+        "metrics": {
+          "1D": 0.6,
+          "10D": 2.4,
+          "MTD": 3.0,
+          "YTD": 21.0,
+          "1M": 5.1,
+          "3M": 10.2,
+          "Period": 25.0
+        }
+      }
+    },
+    {
+      "slug": "fintech-25-payments",
+      "name": "Fintech '25: Payments",
+      "group_slug": "fintech",
+      "group_name": "Fintech",
+      "weight": 0.042,
+      "compare_returns": {
+        "source": "fixture",
+        "columns": ["1D", "10D", "MTD", "YTD", "1M", "3M", "Period"],
+        "metrics": {
+          "1D": 0.3,
+          "10D": 1.1,
+          "MTD": 1.8,
+          "YTD": 14.0,
+          "1M": 2.5,
+          "3M": 6.0,
+          "Period": 16.5
+        }
+      }
+    }
+  ]
+}

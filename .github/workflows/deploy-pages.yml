@@ -144,11 +144,16 @@ jobs:
           FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
 
       - name: Build static export
-        run: npm run build && npm run verify:budgets && node scripts/write-pages-deploy-meta.mjs
+        # Stock pages: default fixtures-only SSG. Full ~8k bake needs Contabo stocks/ publish then
+        # STOCKTHEMES_SYNC_STOCKS=1 (or STOCKTHEMES_SYNC_STOCK_TICKERS=…) via repo vars / dispatch.
+        # After build: verify:budgets (maxStockHtml), report:export (file counts), write-pages-deploy-meta.
+        run: npm run build && npm run verify:budgets && npm run report:export && node scripts/write-pages-deploy-meta.mjs
         env:
           # Code pushes fail on page-size regressions; scheduled data refreshes only warn so a
           # data-driven spike never blocks fresh numbers. Repo var overrides both.
           STOCKTHEMES_ENFORCE_BUNDLE_BUDGET: ${{ vars.STOCKTHEMES_ENFORCE_BUNDLE_BUDGET || (github.event_name == 'push' && '1' || '0') }}
+          STOCKTHEMES_SYNC_STOCKS: ${{ vars.STOCKTHEMES_SYNC_STOCKS || '0' }}
+          STOCKTHEMES_SYNC_STOCK_TICKERS: ${{ vars.STOCKTHEMES_SYNC_STOCK_TICKERS || '' }}
           STOCKTHEMES_STATIC_PAGES: "1"
           STOCKTHEMES_BUILD_CACHE: "1"
           STOCKTHEMES_SYNC_VIA_R2: "1"
@@ -252,6 +257,22 @@ jobs:
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           wranglerVersion: "4.14.1"
           command: pages deploy out --project-name=stockthemes --commit-dirty=true
+
+      - name: Verify Tier B /cdn-app gate (stocks + themes)
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          anon=$(curl -sS -o /dev/null -w "%{http_code}" "https://stockthemes.ai/cdn-app/stocks/AAPL.price_returns.v0.json")
+          with_origin=$(curl -sS -o /dev/null -w "%{http_code}" -H "Origin: https://stockthemes.ai" \
+            "https://stockthemes.ai/cdn-app/stocks/AAPL.price_returns.v0.json")
+          public=$(curl -sS -o /dev/null -w "%{http_code}" \
+            "https://storage.stockthemes.ai/stocks/AAPL.price_returns.v0.json")
+          echo "anon=/cdn-app stock price_returns → $anon (expect 403)"
+          echo "origin=/cdn-app stock price_returns → $with_origin (expect 200 or 404)"
+          echo "public CDN stock price_returns → $public (expect 404)"
+          test "$anon" = "403" || test "$anon" = "401"
+          test "$with_origin" = "200" || test "$with_origin" = "404"
+          test "$public" = "404" || test "$public" = "403"
 
       # Record what is live only after Pages accepted it — the next gated run compares against this.
       - name: Download deploy meta

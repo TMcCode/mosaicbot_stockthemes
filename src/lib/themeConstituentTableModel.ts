@@ -7,6 +7,8 @@ import {
 import { inferMarketCapUsd, sortConstituentsByMarketCapDesc } from "@/lib/constituentMeta";
 import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.detail.v0";
 
+export { weightedMeanRenormalized } from "@/lib/weightedMeanRenormalized";
+
 const ET_TIMEZONE = "America/New_York";
 const ET_YMD_FORMATTER = new Intl.DateTimeFormat("en-CA", { timeZone: ET_TIMEZONE });
 const ET_MONTH_FORMATTER = new Intl.DateTimeFormat("en-US", { timeZone: ET_TIMEZONE, month: "numeric" });

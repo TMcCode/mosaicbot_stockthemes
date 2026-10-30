@@ -1,0 +1,100 @@
+.section {
+  margin-top: 28px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 18px;
+  margin: 0;
+  font-weight: 600;
+  color: var(--text-primary, #eaf2f0);
+}
+
+.sectionHeader {
+  margin-bottom: 12px;
+}
+
+.sectionLogo {
+  width: 22px;
+  height: 22px;
+  border-radius: 5px;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.sectionTitleText {
+  display: inline;
+  min-width: 0;
+}
+
+.sectionCompany {
+  font-weight: 700;
+  color: var(--text-primary, #e8eaed);
+}
+
+.sectionTicker {
+  font-weight: 500;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.sectionThemesWord {
+  font-weight: 700;
+  color: var(--text-primary, #e8eaed);
+}
+
+:global(.st-theme[data-theme="light"]) .sectionLogo {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.liveHint {
+  font-size: 11px;
+  color: var(--text-muted, #6e7d7b);
+  margin: 0 0 8px;
+}
+
+.tickerHeatRow td {
+  font-weight: 700;
+}
+
+.tickerHeatLabel {
+  font-family: var(--font-geist-mono, ui-monospace, monospace);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: var(--text-primary, #eaf2f0);
+}
+
+.wgtCell {
+  color: var(--accent, #26fcd6);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.summaryHeatRow td {
+  font-weight: 600;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.summaryHeatRow + .summaryHeatRow td {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.summaryHeatLabel {
+  font-weight: 700;
+  color: var(--text-secondary, #9aa8a6);
+  cursor: help;
+}
+
+:global(.st-theme[data-theme="light"]) .wgtCell {
+  color: var(--accent, #2a9893);
+}
+
+:global(.st-theme[data-theme="light"]) .summaryHeatRow td {
+  border-top-color: rgba(0, 0, 0, 0.1);
+}
+
+:global(.st-theme[data-theme="light"]) .summaryHeatRow + .summaryHeatRow td {
+  border-top-color: rgba(0, 0, 0, 0.06);
+}

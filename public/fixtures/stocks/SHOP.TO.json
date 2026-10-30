@@ -1,0 +1,25 @@
+{
+  "schema_version": 0,
+  "ticker": "SHOP.TO",
+  "name": "Shopify Inc.",
+  "as_of": "2026-10-30T18:00:00Z",
+  "build_id": "fixture-stock-detail-v0",
+  "ticker_performance_as_of": "2026-10-30T17:50:00Z",
+  "logo_url": null,
+  "seo_intro": "Shopify Inc. (Toronto: SHOP.TO) — intl suffix preserved in the stock URL and object key.",
+  "theme_count": 2,
+  "themes": [
+    {
+      "slug": "ecommerce-25-platforms",
+      "name": "Ecommerce '25: Platforms",
+      "group_slug": "ecommerce",
+      "group_name": "Ecommerce"
+    },
+    {
+      "slug": "fintech-25-payments",
+      "name": "Fintech '25: Payments",
+      "group_slug": "fintech",
+      "group_name": "Fintech"
+    }
+  ]
+}

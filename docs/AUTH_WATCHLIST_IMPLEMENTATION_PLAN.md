@@ -84,7 +84,7 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 | **Hosting** | GitHub Pages + `output: 'export'` + **Supabase** (browser client + RLS) |
 | **Product scope** | stockthemes watchlist only — **not** MosaicBot Dash |
 | **Public content** | All theme/group (and future stock) pages stay public |
-| **Watchlist** | Sign-in required; max **20 themes** per user (**ticker saves deferred** until `/stocks/[ticker]`) |
+| **Watchlist** | Sign-in required; max **20 themes** per user (**ticker ★ / `/my` ticker tab still off** — public `/stocks/[ticker]` shipped; enable `WATCHLIST_TICKERS_UI_ENABLED` after `compare_tickers.v0.json`) |
 | **Newsletter** | **Beehiiv iframe** on production (no API route on Pages) |
 | **v1 personalized UI** | `/my` theme performance table; links to public theme pages |
 
@@ -98,7 +98,7 @@ Use this section when you are **not** editing repos — dashboards, DNS, deploy 
 | `/my` | Signed in | Theme watchlist performance table |
 | `/my` | Anonymous | CTA: sign in to save a watchlist |
 | `/themes/[slug]`, `/groups/...` | Public | Unchanged + **★ Save to watchlist** when signed in |
-| `/stocks/[ticker]` | Public | Stock lens (after ETL publishes stock JSON) |
+| `/stocks/[ticker]` | Public | Stock lens (v0 shipped — see `STOCK_PAGES_IMPLEMENTATION_PLAN.md`) |
 | `/compare` | Public | Unchanged; optional “save selection” later |
 
 No separate `/my/stocks/...` or `/my/themes/...` in v1 — link from `/my` to public pages.
@@ -257,9 +257,10 @@ create index watchlist_items_user_idx on public.watchlist_items (user_id, item_t
 
 ### Stock pages (public `/stocks/[ticker]`)
 
-- [ ] Define `stocks/<ticker>.json` schema (chart, themes list, core stats)
-- [ ] Publish from ETL; add Next route `src/app/stocks/[ticker]/page.tsx`
-- [ ] Extend `search_index` / manifest if needed
+- [x] Define `stocks/<ticker>.json` + Tier B `.app` / `.price_returns` schemas
+- [x] Publish from ETL (`stockthemes_manifest.py`); Next route `src/app/stocks/[ticker]/page.tsx`
+- [x] Params/sitemap from `search_index` (no stocks[] on `manifest.json`); gated SSG via `STOCKTHEMES_SYNC_STOCKS`
+- [ ] **Still out of stock-pages v0 / this watchlist Phase 4:** enable `WATCHLIST_TICKERS_UI_ENABLED`, ship `compare_tickers.v0.json`, thesis/bull/bear, theme-fit panel
 
 ### Later (not v1)
 
@@ -293,13 +294,13 @@ Supabase Dashboard: add **Redirect URLs** for `/auth/callback` (apex + localhost
 - [ ] Join to watchlist; render full column set
 - [ ] Footnotes for custom date columns (IRANWAR, LIBDAY)
 
-### Phase 4 — Ticker watchlist + public stocks (deferred)
+### Phase 4 — Ticker watchlist (public stocks done; ★ still deferred)
 
-**Gate:** ship public `/stocks/[ticker]` first, then enable `WATCHLIST_TICKERS_UI_ENABLED` in `src/lib/watchlist/features.ts`.
+**Gate status:** public `/stocks/[ticker]` **shipped** (stockthemes plan Phases 0–5). Next: ship `compare_tickers.v0.json`, then flip `WATCHLIST_TICKERS_UI_ENABLED` in `src/lib/watchlist/features.ts`.
 
-- [ ] Public `/stocks/[ticker]` minimal page
+- [x] Public `/stocks/[ticker]` v0 lens (chart + SPY/theme overlays, heatmap, returns, live hydrate, search/TickerBadge links)
 - [ ] Ship `compare_tickers.v0.json` from ETL
-- [ ] Ticker tab on `/my` + ☆ on ticker rows in site search
+- [ ] Ticker tab on `/my` + ☆ on ticker rows in site search (`WATCHLIST_TICKERS_UI_ENABLED`)
 
 ### Phase 5 — Polish
 

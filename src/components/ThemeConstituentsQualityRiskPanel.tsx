@@ -7,6 +7,7 @@ import styles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { ConstituentLogo } from "@/components/ConstituentLogo";
+import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import type { ThemeQualityRiskSidecarState } from "@/hooks/useThemeQualityRiskSidecar";
 import {
@@ -129,6 +130,21 @@ export default function ThemeConstituentsQualityRiskPanel({
         rows.some((row) => column.getValue(row.metrics) != null),
     );
   }, [columnLabels, mode, rows, summaryMetrics]);
+
+  /** Mint divider before EBITDA block (Gross | EBITDA). */
+  const groupStartIds = useMemo(() => {
+    const ids = new Set<string>();
+    if (mode === "quarterly") {
+      ids.add("ttm_ebitda_pct");
+    } else if (mode === "fiscal_ebitda") {
+      const firstEbitda = columns.find((c) => c.id.endsWith("_ebitda_pct"));
+      if (firstEbitda) ids.add(firstEbitda.id);
+    }
+    return ids;
+  }, [mode, columns]);
+
+  const metricCellClass = (colId: string) =>
+    groupStartIds.has(colId) ? tableStyles.metricGroupStart : undefined;
 
   const sortedRows = useMemo(() => {
     const out = [...rows];
@@ -253,7 +269,7 @@ export default function ThemeConstituentsQualityRiskPanel({
                   {columns.map((column) => {
                     const tooltip = headerTooltip(column, rows, summary);
                     return (
-                      <th key={column.id} scope="col" title={tooltip}>
+                      <th key={column.id} scope="col" className={metricCellClass(column.id)} title={tooltip}>
                         {renderSortHead(
                           column.id,
                           column.label.split("\n").map((line, index) => (
@@ -275,9 +291,7 @@ export default function ThemeConstituentsQualityRiskPanel({
                     <td>
                       <div className={styles.companyCell}>
                         <ConstituentLogo ticker={row.ticker} />
-                        <span className={styles.companyName} title={row.name?.trim() || undefined}>
-                          {row.name?.trim() || "—"}
-                        </span>
+                        <CompanyNameLink ticker={row.ticker} name={row.name} />
                         <TickerBadge ticker={row.ticker} />
                       </div>
                     </td>
@@ -288,6 +302,7 @@ export default function ThemeConstituentsQualityRiskPanel({
                       return (
                         <td
                           key={column.id}
+                          className={metricCellClass(column.id)}
                           title={[
                             periodEnd ? `Period end ${periodEnd}` : "",
                             kind === "estimate" ? "Estimate" : kind === "actual" ? "Actual" : "",
@@ -310,7 +325,7 @@ export default function ThemeConstituentsQualityRiskPanel({
                   </td>
                   {hasWeight ? <td>—</td> : null}
                   {columns.map((column) => (
-                    <td key={column.id}>
+                    <td key={column.id} className={metricCellClass(column.id)}>
                       <strong>
                         {formatQualityRiskValue(column.getValue(summary), column.format)}
                         {column.getKind?.(summary) === "estimate" ? " E" : ""}
@@ -327,7 +342,7 @@ export default function ThemeConstituentsQualityRiskPanel({
                     {columns.map((column) => {
                       const value = stats?.[rowKey]?.[column.id];
                       return (
-                        <td key={column.id}>
+                        <td key={column.id} className={metricCellClass(column.id)}>
                           <strong>
                             {rowKey === "positive_tickers_pct" && value != null
                               ? `${Math.round(value)}%`

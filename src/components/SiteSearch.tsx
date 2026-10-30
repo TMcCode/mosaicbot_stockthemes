@@ -86,7 +86,12 @@ export function SiteSearch({
 
   const goToHit = useCallback(
     (h: SiteSearchHit) => {
-      const slug = h.kind === "ticker" ? h.ref.theme_slugs[0] ?? null : h.ref.slug;
+      const slug =
+        h.kind === "ticker"
+          ? h.ref.ticker
+          : h.kind === "theme" || h.kind === "group"
+            ? h.ref.slug
+            : null;
       capturePostHog("search_result_clicked", {
         query: query.trim(),
         result_kind: h.kind,
@@ -97,8 +102,8 @@ export function SiteSearch({
         router.push(`/themes/${encodeURIComponent(h.ref.slug)}`);
       } else if (h.kind === "group") {
         router.push(`/groups/${encodeURIComponent(h.ref.slug)}`);
-      } else if (h.ref.theme_slugs[0]) {
-        router.push(`/themes/${encodeURIComponent(h.ref.theme_slugs[0])}`);
+      } else if (h.kind === "ticker") {
+        router.push(`/stocks/${encodeURIComponent(h.ref.ticker)}`);
       }
       setOpen(false);
       setQuery("");
@@ -230,11 +235,25 @@ export function SiteSearch({
                         aria-selected={i === cursor}
                       >
                         <div className={styles.rowBody}>
-                          <div className={styles.rowTitle}>
+                          <Link
+                            href={`/stocks/${encodeURIComponent(h.ref.ticker)}`}
+                            className={styles.rowTitle}
+                            prefetch={false}
+                            onMouseEnter={() =>
+                              prefetchHref(`/stocks/${encodeURIComponent(h.ref.ticker)}`)
+                            }
+                            onFocus={() =>
+                              prefetchHref(`/stocks/${encodeURIComponent(h.ref.ticker)}`)
+                            }
+                            onClick={() => {
+                              setOpen(false);
+                              setQuery("");
+                            }}
+                          >
                             <span className={styles.badge}>Ticker</span>
                             {h.ref.ticker}
                             {h.ref.name ? ` · ${h.ref.name}` : ""}
-                          </div>
+                          </Link>
                           <div className={styles.rowSub}>
                             {h.ref.theme_slugs.length === 0 ? (
                               "No theme links"

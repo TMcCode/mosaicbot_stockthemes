@@ -21,7 +21,9 @@ const BUNDLE_RELS = new Set([
 ]);
 
 export function isDetailJsonRel(rel) {
-  return rel.startsWith("themes/") || rel.startsWith("groups/");
+  return (
+    rel.startsWith("themes/") || rel.startsWith("groups/") || rel.startsWith("stocks/")
+  );
 }
 
 export function isBundleRel(rel) {

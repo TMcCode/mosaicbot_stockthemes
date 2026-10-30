@@ -9,12 +9,11 @@ function manifestSourceLabel(source: DataSource): string {
   return source === "live" ? "live manifest" : "local fixture";
 }
 
-function detailSourceLabel(source: DataSource, kind: "theme" | "group"): string {
-  return source === "live"
-    ? kind === "theme"
-      ? "live theme JSON"
-      : "live group JSON"
-    : "local fixture";
+function detailSourceLabel(source: DataSource, kind: "theme" | "group" | "stock"): string {
+  if (source !== "live") return "local fixture";
+  if (kind === "group") return "live group JSON";
+  if (kind === "stock") return "live stock JSON";
+  return "live theme JSON";
 }
 
 /** Index/compare eyebrows — production shows prefix only (AdSense §6). */
@@ -23,14 +22,14 @@ export function catalogEyebrowText(prefix: string, manifestSource: DataSource): 
   return `${prefix} · ${manifestSourceLabel(manifestSource)}`;
 }
 
-/** Theme/group detail eyebrows — production shows “Theme” or “Group” only. */
+/** Theme/group/stock detail eyebrows — production shows the prefix only. */
 export function detailEyebrowText(
-  prefix: "Theme" | "Group",
+  prefix: "Theme" | "Group" | "Stock",
   manifestSource: DataSource,
   detailSource?: DataSource | null,
 ): string {
   if (!stockthemesDevBuildHintsEnabled()) return prefix;
-  const kind = prefix === "Theme" ? "theme" : "group";
+  const kind = prefix === "Theme" ? "theme" : prefix === "Group" ? "group" : "stock";
   const base = `${prefix} · ${manifestSourceLabel(manifestSource)}`;
   if (!detailSource) return base;
   return `${base} · ${detailSourceLabel(detailSource, kind)}`;
@@ -49,6 +48,9 @@ export const THEME_DETAIL_UNAVAILABLE_COPY =
 
 export const GROUP_DETAIL_UNAVAILABLE_COPY =
   "We’re refreshing this group page. Theme lists and charts should appear shortly—try again later or browse other groups.";
+
+export const STOCK_DETAIL_UNAVAILABLE_COPY =
+  "We’re refreshing this stock page. Theme membership and charts should appear shortly—try again later or browse themes.";
 
 export const THEME_RUNTIME_LOADING_COPY = "Loading latest theme data…";
 

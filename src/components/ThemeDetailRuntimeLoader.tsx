@@ -7,6 +7,7 @@ import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { shouldShowThemeThesisUi } from "@/lib/themeThesis";
 import { buildCompositionMetaMap, sortConstituentsByWeightDesc } from "@/lib/constituentMeta";
 import { ConstituentLogo } from "@/components/ConstituentLogo";
+import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
 import { capturePostHog, capturePostHogException } from "@/lib/posthogClient";
@@ -219,9 +220,7 @@ export function ThemeDetailRuntimeLoader({
                           ticker={c.ticker}
                           logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
                         />
-                        <span className={styles.companyName} title={c.name?.trim() || undefined}>
-                          {c.name?.trim() || "—"}
-                        </span>
+                        <CompanyNameLink ticker={c.ticker} name={c.name} />
                         <TickerBadge ticker={c.ticker} />
                       </div>
                     </td>

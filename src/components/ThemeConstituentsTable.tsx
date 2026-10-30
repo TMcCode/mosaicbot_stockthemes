@@ -10,6 +10,7 @@ import tableStyles from "@/components/ThemeConstituentsTable.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import {
@@ -37,7 +38,7 @@ import {
 } from "@/lib/themeConstituentTableModel";
 import {
   hasThemeManualWeightReturns,
-  THEME_EARNINGS_COMPARE_METRIC,
+  themeEarningsWeightReturnPct,
   themeManualWeightReturnPct,
 } from "@/lib/themeConstituentThemeReturn";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -87,7 +88,8 @@ function ProtectedTablePrompt({ signInHref }: { signInHref: string }) {
     <div className={tableStyles.protectedPrompt} aria-label="Sign in required">
       <p className={tableStyles.protectedTitle}>Sign in to view this analysis</p>
       <p className={tableStyles.protectedCopy}>
-        Revenue, revenue revisions, and quality and risk metrics are available with a free account.
+        Revenue, revenue revisions, quality and risk, and membership notes are available with a free
+        account.
       </p>
       <Link href={signInHref} className={tableStyles.protectedSignIn}>
         Sign in free
@@ -197,7 +199,8 @@ export function ThemeConstituentsTable({
   const { configured, loading: authLoading, user } = useSupabaseAuth();
   const hasProtectedAccess = configured && !authLoading && Boolean(user);
   const protectedLocked = !authLoading && !hasProtectedAccess;
-  const isProtectedView = view === "revenue" || view === "revisions" || view === "quality_risk";
+  const isProtectedView =
+    view === "revenue" || view === "revisions" || view === "quality_risk" || view === "notes";
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
@@ -219,7 +222,7 @@ export function ThemeConstituentsTable({
   const notesState = useThemeNotesSidecar(
     slug,
     dataBaseUrl,
-    Boolean(model.hasTickerNotes) && keepNotesMounted,
+    hasProtectedAccess && Boolean(model.hasTickerNotes) && keepNotesMounted,
   );
   const noteLookup = useMemo(
     () => (notesState.status === "ok" ? notesByTicker(notesState.data) : new Map<string, string>()),
@@ -233,23 +236,19 @@ export function ThemeConstituentsTable({
         revenue: prev.revenue || showRevenue,
         revisions: prev.revisions || showRevisions,
         quality_risk: prev.quality_risk || showQualityRisk,
-        notes: prev.notes,
+        notes: prev.notes || showNotes,
       };
       if (
         next.revenue === prev.revenue &&
         next.revisions === prev.revisions &&
-        next.quality_risk === prev.quality_risk
+        next.quality_risk === prev.quality_risk &&
+        next.notes === prev.notes
       ) {
         return prev;
       }
       return next;
     });
-  }, [hasProtectedAccess, showRevenue, showRevisions, showQualityRisk]);
-
-  useEffect(() => {
-    if (!showNotes) return;
-    setMountedPanels((prev) => (prev.notes ? prev : { ...prev, notes: true }));
-  }, [showNotes]);
+  }, [hasProtectedAccess, showRevenue, showRevisions, showQualityRisk, showNotes]);
 
   // Warm revenue sidecar after sign-in so the first Revenue click skips the cold fetch.
   useEffect(() => {
@@ -396,10 +395,16 @@ export function ThemeConstituentsTable({
   const themeCompare = detail.compare_returns;
   const showThemeReturnRow =
     (view === "returns" || view === "earnings") &&
-    hasThemeManualWeightReturns(themeCompare, priceReturnColumns, view);
+    hasThemeManualWeightReturns(themeCompare, priceReturnColumns, view, {
+      detail,
+      constituentRows,
+    });
 
   const themeReturnPct = (columnKey: string) =>
     formatConstituentPct(themeManualWeightReturnPct(columnKey, themeCompare, detail.name));
+
+  const earningsThemeReturnPct = (columnId: ConstituentEarningsColumnId) =>
+    formatConstituentPct(themeEarningsWeightReturnPct(detail, columnId, constituentRows));
 
   const priceStat = (
     rowKey: Parameters<typeof priceReturnStat>[1],
@@ -495,10 +500,14 @@ export function ThemeConstituentsTable({
                 type="button"
                 className={showNotes ? tableStyles.active : undefined}
                 aria-pressed={showNotes}
-                title="Why each name is in this theme"
+                title={
+                  protectedLocked
+                    ? "Sign in to view membership notes"
+                    : "Why each name is in this theme"
+                }
                 onClick={() => setView("notes")}
               >
-                Notes
+                Notes {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
               </button>
             ) : null}
           </div>
@@ -544,12 +553,15 @@ export function ThemeConstituentsTable({
           Quality and risk data is not available in this build.
         </p>
       ) : null}
-      {!showRevenue && !showRevisions && !showQualityRisk ? (
+      {(showReturns || showEarnings || (showNotes && hasProtectedAccess)) ? (
       <div className={styles.tableWrap}>
-        {showNotes && (!slug || !dataBaseUrl) ? (
+        {showNotes && hasProtectedAccess && (!slug || !dataBaseUrl) ? (
           <p className={styles.muted}>Notes are not available in this build.</p>
         ) : null}
-        {showNotes && notesState.status === "absent" && !hasVisibleNotes ? (
+        {showNotes &&
+        hasProtectedAccess &&
+        notesState.status === "absent" &&
+        !hasVisibleNotes ? (
           <p className={styles.muted}>No membership notes published for this theme yet.</p>
         ) : null}
         <HorizontalScrollArea
@@ -601,9 +613,7 @@ export function ThemeConstituentsTable({
                             ticker={c.ticker}
                             logoUrl={typeof c.logo_url === "string" ? c.logo_url : null}
                           />
-                          <span className={styles.companyName} title={c.name?.trim() || undefined}>
-                            {c.name?.trim() || "—"}
-                          </span>
+                          <CompanyNameLink ticker={c.ticker} name={c.name} />
                           <TickerBadge ticker={c.ticker} />
                         </div>
                       </td>
@@ -662,7 +672,11 @@ export function ThemeConstituentsTable({
                     <td>
                       <strong
                         className={tableStyles.themeReturnLabel}
-                        title="Manual theme-weight return — same as Theme returns table and the performance chart"
+                        title={
+                          showEarnings
+                            ? "Manual ThemeWgt mean of available constituent values (weights renormalized when some names are blank)"
+                            : "Manual theme-weight return — same as Theme returns table and the performance chart"
+                        }
                       >
                         Theme return
                       </strong>
@@ -676,16 +690,11 @@ export function ThemeConstituentsTable({
                         ))
                       : null}
                     {showEarnings
-                      ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => {
-                          const compareKey = THEME_EARNINGS_COMPARE_METRIC[col.id];
-                          return (
-                            <td key={col.id}>
-                              <strong>
-                                {compareKey ? themeReturnPct(compareKey) : "—"}
-                              </strong>
-                            </td>
-                          );
-                        })
+                      ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
+                          <td key={col.id}>
+                            <strong>{earningsThemeReturnPct(col.id)}</strong>
+                          </td>
+                        ))
                       : null}
                     {showReturns && hasMcap ? <td>—</td> : null}
                   </tr>

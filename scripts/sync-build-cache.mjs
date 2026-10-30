@@ -14,6 +14,8 @@ import { fileURLToPath } from "url";
 
 import { downloadGcsObject, gcsSyncEnabled, loadGcsServiceAccount } from "./lib/gcsDownload.mjs";
 import {
+  downloadPrivateStockApp,
+  downloadPrivateStockSidecar,
   downloadPrivateThemeApp,
   downloadPrivateThemeSidecar,
   loadR2Credentials,
@@ -120,10 +122,56 @@ function cacheFileOk(rel) {
   }
 }
 
-/** Objects required for static export (home table, theme pages, search). */
-function listWarmJobs(manifestJson, base) {
+/**
+ * Warm/build stock JSON. Default off until full Contabo stock publish (avoids ~8k 404s).
+ * STOCKTHEMES_SYNC_STOCKS=1 → all search_index tickers.
+ * STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK → allowlist only (limited smoke).
+ */
+function syncStocksEnabled() {
+  if (stockTickerAllowlist().length > 0) return true;
+  const raw = (process.env.STOCKTHEMES_SYNC_STOCKS || "0").trim().toLowerCase();
+  return raw === "1" || raw === "true" || raw === "yes";
+}
+
+function stockTickerAllowlist() {
+  const raw = (process.env.STOCKTHEMES_SYNC_STOCK_TICKERS || "").trim();
+  if (!raw) return [];
+  const out = [];
+  const seen = new Set();
+  for (const part of raw.split(/[,;\s]+/)) {
+    const t = part.trim();
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+  }
+  return out;
+}
+
+function tickersFromSearchIndex(searchIndexJson) {
+  if (!searchIndexJson || !Array.isArray(searchIndexJson.tickers)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const row of searchIndexJson.tickers) {
+    const t = String(row?.ticker || "").trim();
+    if (!t || seen.has(t)) continue;
+    seen.add(t);
+    out.push(t);
+  }
+  return out;
+}
+
+function stockTickersToWarm(searchIndexJson) {
+  if (!syncStocksEnabled()) return [];
+  const allow = stockTickerAllowlist();
+  if (allow.length > 0) return allow;
+  return tickersFromSearchIndex(searchIndexJson);
+}
+
+/** Objects required for static export (home table, theme/stock pages, search). */
+function listWarmJobs(manifestJson, base, searchIndexJson) {
   const themeSlugs = (manifestJson.themes || []).map((t) => t?.slug).filter(Boolean);
   const groupSlugs = (manifestJson.groups || []).map((g) => g?.slug).filter(Boolean);
+  const stockTickers = stockTickersToWarm(searchIndexJson);
   return [
     ...themeSlugs.map((slug) => ({
       rel: `themes/${slug}.json`,
@@ -132,6 +180,10 @@ function listWarmJobs(manifestJson, base) {
     ...groupSlugs.map((slug) => ({
       rel: `groups/${slug}.json`,
       url: `${base}/groups/${encodeURIComponent(slug)}.json`,
+    })),
+    ...stockTickers.map((ticker) => ({
+      rel: `stocks/${ticker}.json`,
+      url: `${base}/stocks/${encodeURIComponent(ticker)}.json`,
     })),
     ...BUNDLE_FILES.map((name) => ({
       rel: name,
@@ -304,6 +356,61 @@ async function syncDailyThemeSidecars(manifestJson, _base, _objectMeta, { force 
     force,
     suffix: ".app.v0.json",
     label: "theme.app",
+  });
+}
+
+async function syncStockSidecarFiles({ tickers, force = false, suffix, label }) {
+  if (!tickers?.length) return;
+  if (!loadR2Credentials()) {
+    console.warn(`sync-build-cache: skip private ${label} (no R2 credentials)`);
+    return;
+  }
+  let ok = 0;
+  let missing = 0;
+  const concurrency = Math.max(1, Math.min(16, Number(process.env.STOCKTHEMES_SYNC_CONCURRENCY || 12)));
+  await pool(tickers, concurrency, async (ticker) => {
+    const rel = `stocks/${ticker}${suffix}`;
+    if (!force && cacheFileOk(rel)) {
+      ok += 1;
+      return;
+    }
+    try {
+      const text =
+        suffix === ".app.v0.json"
+          ? await downloadPrivateStockApp(ticker)
+          : await downloadPrivateStockSidecar(ticker, suffix);
+      const dest = cachePath(rel);
+      fs.mkdirSync(path.dirname(dest), { recursive: true });
+      fs.writeFileSync(dest, text, "utf8");
+      ok += 1;
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (msg.includes("404")) {
+        missing += 1;
+        return;
+      }
+      console.warn(`sync-build-cache: ${label} ${rel} failed:`, msg);
+    }
+  });
+  console.log(
+    `sync-build-cache: private ${label} ok=${ok} missing=${missing} total=${tickers.length}`,
+  );
+}
+
+async function syncDailyStockSidecars(searchIndexJson, { force = false } = {}) {
+  const tickers = stockTickersToWarm(searchIndexJson);
+  if (!tickers.length) return;
+  await syncStockSidecarFiles({
+    tickers,
+    force,
+    suffix: ".app.v0.json",
+    label: "stock.app",
+  });
+  await syncStockSidecarFiles({
+    tickers,
+    force,
+    suffix: ".price_returns.v0.json",
+    label: "stock.price_returns",
   });
 }
 
@@ -556,6 +663,21 @@ async function main() {
 
   const manifestText = await fetchToCache(`${base}/manifest.json`, "manifest.json", objectMeta);
   const manifestJson = JSON.parse(manifestText);
+  // Need search_index tickers before listing stock warm jobs (may 404 until full stock publish).
+  let searchIndexJson = null;
+  try {
+    const searchText = await fetchToCache(
+      `${base}/search_index.v0.json`,
+      "search_index.v0.json",
+      objectMeta,
+    );
+    searchIndexJson = JSON.parse(searchText);
+  } catch (e) {
+    console.warn(
+      "sync-build-cache: search_index warm failed — stock pages skipped this run:",
+      e instanceof Error ? e.message : e,
+    );
+  }
   const asOf = String(manifestJson.as_of || "");
   const buildId = String(manifestJson.build_id || "");
   const slugFp = themeSlugFingerprint(manifestJson);
@@ -568,7 +690,7 @@ async function main() {
 
   pruneOrphanDetailFiles(manifestJson);
 
-  const allJobs = listWarmJobs(manifestJson, base);
+  const allJobs = listWarmJobs(manifestJson, base, searchIndexJson);
   const themeCount = (manifestJson.themes || []).filter((t) => t?.slug).length;
   const missing = missingCacheRels(allJobs);
   const unchanged =
@@ -597,6 +719,7 @@ async function main() {
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta);
     await syncDailyThemeSidecars(manifestJson, base, objectMeta);
+    await syncDailyStockSidecars(searchIndexJson);
     prunePublicThemeTableSidecars();
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   } else {
@@ -622,6 +745,7 @@ async function main() {
         `(skipped_unchanged=${skipped} meta_checks=${metaChecks} ` +
         `themes=${detailJobs.filter((j) => j.rel.startsWith("themes/")).length} ` +
         `groups=${detailJobs.filter((j) => j.rel.startsWith("groups/")).length} ` +
+        `stocks=${detailJobs.filter((j) => j.rel.startsWith("stocks/")).length} ` +
         `bundles=${bundleJobs.length} publish_changed=${publishChanged} slug_fp_changed=${slugCatalogChanged})`,
     );
 
@@ -676,12 +800,21 @@ async function main() {
 
     const stillMissing = missingCacheRels(allJobs);
     const missingThemes = stillMissing.filter((r) => r.startsWith("themes/")).length;
-    if (fail > 0 || missingThemes > 0) {
-      console.error(
-        `sync-build-cache: incomplete — failed=${fail} missing_themes=${missingThemes}/${themeCount}`,
+    const missingStocks = stillMissing.filter((r) => r.startsWith("stocks/")).length;
+    const hardMissing = stillMissing.filter((r) => !r.startsWith("stocks/"));
+    // Stock objects may be sparse until full Contabo publish — soft-miss only.
+    if (missingStocks > 0) {
+      console.warn(
+        `sync-build-cache: missing ${missingStocks} stock object(s) (soft; enable after full stocks publish)`,
       );
-      if (stillMissing.length <= 8) {
-        console.error(`missing: ${stillMissing.join(", ")}`);
+    }
+    if (hardMissing.length > 0 || missingThemes > 0) {
+      console.error(
+        `sync-build-cache: incomplete — failed_non_stock=${hardMissing.length} ` +
+          `download_fail=${fail} missing_themes=${missingThemes}/${themeCount}`,
+      );
+      if (hardMissing.length <= 8) {
+        console.error(`missing: ${hardMissing.join(", ")}`);
       }
       process.exit(1);
     }
@@ -709,6 +842,7 @@ async function main() {
     await syncIntradayBundles(base, objectMeta, { force });
     await syncOptionalBundles(base, objectMeta, { force });
     await syncDailyThemeSidecars(manifestJson, base, objectMeta, { force });
+    await syncDailyStockSidecars(searchIndexJson, { force });
     prunePublicThemeTableSidecars();
     writeObjectMetaSidecar(OBJECT_META_PATH, objectMeta);
   }
