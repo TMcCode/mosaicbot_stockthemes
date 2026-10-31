@@ -25,6 +25,9 @@ const GROUP_COMPARE_SKIP = new Set<string>([
   ...GROUP_RETURN_HEAD,
   ...GROUP_EARNINGS_TAIL,
   "1W",
+  // Motions-private — keep out of public theme/stock metric tables.
+  "120D",
+  "60D",
 ]);
 
 /** Column order for group child-theme metrics (calendar returns → custom dates → earnings). */

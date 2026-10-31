@@ -130,8 +130,9 @@ type Props = {
   hydrateTierB?: boolean;
 };
 
-/** Earnings horizons live on the Earnings Returns tab — omit from Period Returns. */
-const PERIOD_RETURNS_SKIP = new Set(["LstRpt %", "SinceLstRpt"]);
+/** Earnings horizons live on the Earnings Returns tab — omit from Period Returns.
+ * 120D/60D are Motions-private (stripped from theme metrics; never show empty cols). */
+const PERIOD_RETURNS_SKIP = new Set(["LstRpt %", "SinceLstRpt", "120D", "60D"]);
 
 /**
  * Same order as group/theme metric tables: Pre/Post → calendar (3M after MTD) →
@@ -560,6 +561,9 @@ export function StockLensPanels({
                   }}
                 >
                   Revenue
+                  {!hasProtectedAccess && !authLoading ? (
+                    <span aria-hidden="true"> 🔒</span>
+                  ) : null}
                 </button>
                 <button
                   type="button"
@@ -576,6 +580,9 @@ export function StockLensPanels({
                   }}
                 >
                   Rev Revisions
+                  {!hasProtectedAccess && !authLoading ? (
+                    <span aria-hidden="true"> 🔒</span>
+                  ) : null}
                 </button>
                 <button
                   type="button"
@@ -592,6 +599,9 @@ export function StockLensPanels({
                   }}
                 >
                   Quality & Risk
+                  {!hasProtectedAccess && !authLoading ? (
+                    <span aria-hidden="true"> 🔒</span>
+                  ) : null}
                 </button>
                 <button
                   type="button"

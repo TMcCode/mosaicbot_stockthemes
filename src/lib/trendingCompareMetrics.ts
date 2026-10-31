@@ -54,30 +54,40 @@ const COMPARE_STANDARD_KEYS = new Set<string>([
   ...COMPARE_COLUMN_ORDER,
   "1W",
   "Premarket",
+  // Motions-private — never surface as a public table column.
+  "120D",
+  "60D",
 ]);
+
+/** Drop Motions-private horizons if they leak into column lists. */
+export function withoutPrivateCompareHorizons(cols: string[]): string[] {
+  return cols.filter((c) => c !== "120D" && c !== "60D");
+}
 
 /**
  * Parquet row column order can put ``Period`` (1Yr) first; homepage should show
  * Pre/Post (when active) → 1D → 10D → 1M → MTD → YTD → 1Yr, then custom SelectedDates.
  */
 export function normalizeTrendingColumnOrder(cols: string[]): string[] {
-  if (!cols.length) return [...DEFAULT_COLUMN_ORDER];
+  const cleaned = withoutPrivateCompareHorizons(cols);
+  if (!cleaned.length) return [...DEFAULT_COLUMN_ORDER];
   const head: string[] = [];
   for (const k of DEFAULT_COLUMN_ORDER) {
-    if (cols.includes(k)) head.push(k);
+    if (cleaned.includes(k)) head.push(k);
   }
-  const tail = cols.filter((c) => !STANDARD_METRIC_KEYS.has(c));
+  const tail = cleaned.filter((c) => !STANDARD_METRIC_KEYS.has(c));
   return [...head, ...tail];
 }
 
 /** Column order for the full /compare table (includes LstRpt / SinceLstRpt). */
 export function normalizeCompareColumnOrder(cols: string[]): string[] {
-  if (!cols.length) return [...COMPARE_COLUMN_ORDER];
+  const cleaned = withoutPrivateCompareHorizons(cols);
+  if (!cleaned.length) return [...COMPARE_COLUMN_ORDER];
   const head: string[] = [];
   for (const k of COMPARE_COLUMN_ORDER) {
-    if (cols.includes(k)) head.push(k);
+    if (cleaned.includes(k)) head.push(k);
   }
-  const tail = cols.filter((c) => !COMPARE_STANDARD_KEYS.has(c) && !head.includes(c));
+  const tail = cleaned.filter((c) => !COMPARE_STANDARD_KEYS.has(c) && !head.includes(c));
   return [...head, ...tail];
 }
 
