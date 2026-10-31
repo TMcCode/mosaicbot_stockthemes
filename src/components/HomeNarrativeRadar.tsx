@@ -649,7 +649,9 @@ function NewsRadarCard({
   const group = String(card.group_name || "").trim();
   const articleDate = fmtArticleDate(headline?.published_at);
   const sourceName = String(headline?.source_name || "").trim();
-  const blurb = String(headline?.title || "").trim();
+  // Prefer baked lead snippet (fuller deck blurb); title is the fallback.
+  const blurb =
+    String(headline?.snippet || "").trim() || String(headline?.title || "").trim();
 
   useEffect(() => {
     setSlide(0);
