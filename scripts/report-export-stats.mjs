@@ -69,8 +69,17 @@ console.log(
 );
 
 const warnFileLimit = Number(process.env.STOCKTHEMES_EXPORT_FILE_WARN || 18000);
+/** Cloudflare Pages hard cap — fail before wrangler upload wastes ~20m. */
+const failFileLimit = Number(process.env.STOCKTHEMES_EXPORT_FILE_FAIL || 20000);
 if (allFiles.length >= warnFileLimit) {
   console.warn(
     `report-export-stats: file count ${allFiles.length} near CF Pages pressure (warn@${warnFileLimit}) — consider universe cap / Worker-split`,
   );
+}
+if (allFiles.length >= failFileLimit) {
+  console.error(
+    `report-export-stats: file count ${allFiles.length} exceeds Cloudflare Pages limit (${failFileLimit}). ` +
+      `Set STOCKTHEMES_SYNC_STOCKS=0 (or a small STOCKTHEMES_SYNC_STOCK_TICKERS allowlist) and rebuild.`,
+  );
+  process.exit(1);
 }
