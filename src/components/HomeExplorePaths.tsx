@@ -2,7 +2,13 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type PointerEvent as ReactPointerEvent,
+} from "react";
 
 import { fetchChartSidecar, parseOverlayItemKey } from "@/lib/chartSidecar";
 import { capturePostHog } from "@/lib/posthogClient";
@@ -16,6 +22,7 @@ const DEFAULT_VISIBLE = 3;
 const MOBILE_VISIBLE = 2;
 const MOBILE_MAX_WIDTH = 600;
 const DEFAULT_ROTATE_MS = 10_000;
+const DRAG_CLICK_SUPPRESS_MS = 280;
 
 type Props = {
   paths: HomeExplorePathV0[];
@@ -48,8 +55,8 @@ function chunkPaths(paths: HomeExplorePathV0[], size: number): HomeExplorePathV0
 }
 
 /**
- * Viewport is unknown until mount — keep SSR + first client paint identical
- * (desktop row) to avoid hydration mismatches, then upgrade to mobile scroller.
+ * Viewport unknown until mount — SSR + first paint use desktop page size (3) so
+ * markup matches, then phones drop to 2.
  */
 function useNarrowExploreViewport(): boolean | null {
   const [narrow, setNarrow] = useState<boolean | null>(null);
@@ -97,20 +104,24 @@ function prefetchOverlaySidecars(href: string, warmed: Set<string>) {
 
 function ChipLink({
   path,
-  fading,
   onPrefetch,
+  suppressClickUntil,
 }: {
   path: HomeExplorePathV0;
-  fading?: boolean;
   onPrefetch: (href: string) => void;
+  suppressClickUntil: React.MutableRefObject<number>;
 }) {
   return (
     <Link
       href={path.href}
       prefetch={false}
-      className={`${styles.chip}${fading ? ` ${styles.chipExit}` : ""}`}
+      className={styles.chip}
       onMouseEnter={() => onPrefetch(path.href)}
-      onClick={() => {
+      onClick={(e) => {
+        if (Date.now() < suppressClickUntil.current) {
+          e.preventDefault();
+          return;
+        }
         capturePostHog("home_path_chip_clicked", {
           path_id: path.id,
           path_kind: path.kind,
@@ -132,7 +143,6 @@ export function HomeExplorePaths({
 }: Props) {
   const router = useRouter();
   const narrow = useNarrowExploreViewport();
-  // Until viewport is known, mirror desktop markup for hydration safety.
   const isMobile = narrow === true;
   const cleaned = useMemo(
     () =>
@@ -149,15 +159,23 @@ export function HomeExplorePaths({
   );
 
   const desktopVisible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
+  // Until mount: desktop page size so SSR === first client paint.
   const visible = isMobile ? MOBILE_VISIBLE : desktopVisible;
   const chunks = useMemo(() => chunkPaths(cleaned, visible), [cleaned, visible]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [fading, setFading] = useState(false);
+  const [dragging, setDragging] = useState(false);
   const impressedRef = useRef<Set<string>>(new Set());
   const prefetchedRef = useRef<Set<string>>(new Set());
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const scrollPauseTimer = useRef<number | null>(null);
+  const suppressClickUntil = useRef(0);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startScroll: number;
+    moved: boolean;
+  } | null>(null);
   const rotateMs = Math.max(5, Math.min(rotateSeconds || 8, 12)) * 1000 || DEFAULT_ROTATE_MS;
 
   useEffect(() => {
@@ -174,6 +192,23 @@ export function HomeExplorePaths({
     prefetchedRef.current.add(target);
     void router.prefetch(target);
     prefetchOverlaySidecars(target, prefetchedRef.current);
+  };
+
+  const scrollToPage = (page: number, behavior: ScrollBehavior = "smooth") => {
+    const el = scrollerRef.current;
+    const n = chunks.length;
+    if (!el || !el.clientWidth || n <= 0) return;
+    const next = ((page % n) + n) % n;
+    // Wrapping last→first (or first→last) via smooth scroll races through every
+    // page; jump so the carousel feels cyclic instead of hitting a wall.
+    const wrapping =
+      n > 1 &&
+      ((index === n - 1 && next === 0) || (index === 0 && next === n - 1));
+    el.scrollTo({
+      left: next * el.clientWidth,
+      behavior: wrapping ? "auto" : behavior,
+    });
+    setIndex(next);
   };
 
   useEffect(() => {
@@ -203,46 +238,120 @@ export function HomeExplorePaths({
     }
   }, [active, chunks, index, router]);
 
-  // Desktop (and pre-mount): fade-rotate through chunk sets.
+  // Auto-advance; wraps with an instant jump so it doesn't scrub backward.
   useEffect(() => {
-    if (isMobile || paused || chunks.length <= 1 || typeof window === "undefined") return;
-    let fadeTimer: number | null = null;
+    if (paused || dragging || chunks.length <= 1 || typeof window === "undefined") return;
     const t = window.setInterval(() => {
-      setFading(true);
-      fadeTimer = window.setTimeout(() => {
-        setIndex((i) => (i + 1) % chunks.length);
-        setFading(false);
-      }, 180);
-    }, rotateMs);
-    return () => {
-      window.clearInterval(t);
-      if (fadeTimer != null) window.clearTimeout(fadeTimer);
-    };
-  }, [isMobile, paused, chunks.length, rotateMs]);
-
-  // Mobile: auto-advance via native scroll (swipe uses the same scroller).
-  useEffect(() => {
-    if (!isMobile || paused || chunks.length <= 1 || typeof window === "undefined") return;
-    const t = window.setInterval(() => {
-      const el = scrollerRef.current;
-      if (!el || !el.clientWidth) return;
-      const page = Math.round(el.scrollLeft / el.clientWidth);
-      const next = (page + 1) % chunks.length;
-      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+      scrollToPage(index + 1, "smooth");
     }, rotateMs);
     return () => window.clearInterval(t);
-  }, [isMobile, paused, chunks.length, rotateMs]);
+    // scrollToPage closes over index/chunks; re-arm each tick source change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional: pause/drag/rotate only
+  }, [paused, dragging, chunks.length, rotateMs, index]);
 
-  const onMobileScroll = () => {
+  const pauseAutoRotateBriefly = () => {
+    setPaused(true);
+    if (scrollPauseTimer.current != null) window.clearTimeout(scrollPauseTimer.current);
+    scrollPauseTimer.current = window.setTimeout(() => setPaused(false), 2800);
+  };
+
+  const onScroll = () => {
     const el = scrollerRef.current;
     if (!el || !el.clientWidth) return;
     const page = Math.round(el.scrollLeft / el.clientWidth);
     if (page !== index && page >= 0 && page < chunks.length) {
       setIndex(page);
     }
+    pauseAutoRotateBriefly();
+  };
+
+  // Trackpad / mouse wheel: wrap at the ends (native overflow can't).
+  useEffect(() => {
+    const el = scrollerRef.current;
+    if (!el || chunks.length <= 1) return;
+    let guardUntil = 0;
+    const onWheel = (e: WheelEvent) => {
+      const dx = e.deltaX !== 0 ? e.deltaX : e.shiftKey ? e.deltaY : 0;
+      if (Math.abs(dx) < 8) return;
+      const now = Date.now();
+      if (now < guardUntil) {
+        e.preventDefault();
+        return;
+      }
+      const atStart = el.scrollLeft <= 2;
+      const atEnd = el.scrollLeft + el.clientWidth >= el.scrollWidth - 2;
+      if (dx > 0 && atEnd) {
+        e.preventDefault();
+        guardUntil = now + 420;
+        scrollToPage(index + 1, "smooth");
+        pauseAutoRotateBriefly();
+      } else if (dx < 0 && atStart) {
+        e.preventDefault();
+        guardUntil = now + 420;
+        scrollToPage(index - 1, "smooth");
+        pauseAutoRotateBriefly();
+      }
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- bind to scroller + page count
+  }, [chunks.length, index]);
+
+  const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    const el = scrollerRef.current;
+    if (!el || chunks.length <= 1) return;
+    dragRef.current = {
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startScroll: el.scrollLeft,
+      moved: false,
+    };
+    setDragging(true);
     setPaused(true);
-    if (scrollPauseTimer.current != null) window.clearTimeout(scrollPauseTimer.current);
-    scrollPauseTimer.current = window.setTimeout(() => setPaused(false), 2800);
+    el.setPointerCapture(e.pointerId);
+  };
+
+  const onPointerMove = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const el = scrollerRef.current;
+    if (!drag || !el || drag.pointerId !== e.pointerId) return;
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 6) drag.moved = true;
+    // Allow rubber-band past ends so wrap intent is readable; snap/wrap on release.
+    el.scrollLeft = drag.startScroll - dx;
+  };
+
+  const endPointerDrag = (e: ReactPointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    const el = scrollerRef.current;
+    if (!drag || drag.pointerId !== e.pointerId) return;
+    dragRef.current = null;
+    setDragging(false);
+    try {
+      el?.releasePointerCapture(e.pointerId);
+    } catch {
+      /* already released */
+    }
+    if (drag.moved) {
+      suppressClickUntil.current = Date.now() + DRAG_CLICK_SUPPRESS_MS;
+      const dx = e.clientX - drag.startX;
+      const direction = dx < 0 ? "next" : "prev";
+      capturePostHog("home_path_chip_swiped", {
+        direction,
+        path_set: index,
+      });
+      // Direction-based page step so last→first / first→last cycle (scroll can't).
+      if (el && el.clientWidth) {
+        const threshold = Math.min(56, el.clientWidth * 0.18);
+        if (Math.abs(dx) >= threshold) {
+          scrollToPage(direction === "next" ? index + 1 : index - 1, "smooth");
+        } else {
+          scrollToPage(index, "smooth");
+        }
+      }
+    }
+    pauseAutoRotateBriefly();
   };
 
   if (!cleaned.length || !chunks.length) {
@@ -252,49 +361,37 @@ export function HomeExplorePaths({
   return (
     <div className={styles.strip}>
       <span className={styles.label}>Trending themes</span>
-      {isMobile ? (
-        <div
-          ref={scrollerRef}
-          className={styles.scroller}
-          aria-live="polite"
-          onScroll={onMobileScroll}
-          onTouchStart={() => setPaused(true)}
-        >
-          {chunks.map((chunk, page) => (
-            <div key={`page-${page}`} className={styles.page}>
-              {chunk.map((p) => (
-                <ChipLink key={`${page}-${p.id}`} path={p} onPrefetch={prefetchHref} />
-              ))}
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div
-          className={styles.row}
-          aria-live="polite"
-          onMouseEnter={() => setPaused(true)}
-          onMouseLeave={() => setPaused(false)}
-          onFocusCapture={() => setPaused(true)}
-          onBlurCapture={(e) => {
-            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-              setPaused(false);
-            }
-          }}
-        >
-          {active.map((p) => (
-            <ChipLink
-              key={`${index}-${p.id}`}
-              path={p}
-              fading={fading}
-              onPrefetch={prefetchHref}
-            />
-          ))}
-        </div>
-      )}
+      <div
+        ref={scrollerRef}
+        className={`${styles.scroller}${dragging ? ` ${styles.scrollerDragging}` : ""}`}
+        aria-live="polite"
+        onScroll={onScroll}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={endPointerDrag}
+        onPointerCancel={endPointerDrag}
+        onMouseEnter={() => setPaused(true)}
+        onMouseLeave={() => {
+          if (!dragging) setPaused(false);
+        }}
+      >
+        {chunks.map((chunk, page) => (
+          <div key={`page-${page}`} className={styles.page}>
+            {chunk.map((p) => (
+              <ChipLink
+                key={`${page}-${p.id}`}
+                path={p}
+                onPrefetch={prefetchHref}
+                suppressClickUntil={suppressClickUntil}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
       {chunks.length > 1 ? (
         <div
           className={`${styles.dots}${isMobile ? ` ${styles.dotsPassive}` : ""}`}
-          aria-hidden
+          aria-hidden={isMobile || undefined}
         >
           {chunks.map((_, i) =>
             isMobile ? (
@@ -307,7 +404,10 @@ export function HomeExplorePaths({
                 key={i}
                 type="button"
                 className={`${styles.dot}${i === index ? ` ${styles.dotActive}` : ""}`}
-                onClick={() => setIndex(i)}
+                onClick={() => {
+                  scrollToPage(i);
+                  pauseAutoRotateBriefly();
+                }}
                 aria-label={`Show explore set ${i + 1}`}
               />
             ),

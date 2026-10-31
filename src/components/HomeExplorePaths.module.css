@@ -13,16 +13,7 @@
   color: color-mix(in srgb, var(--accent) 75%, var(--muted, #8a93a3));
 }
 
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  align-items: stretch;
-  gap: 12px 14px;
-  width: 100%;
-}
-
-/* Mobile: native horizontal paging (swipe) — one set of chips per page. */
+/* Native horizontal paging — swipe / trackpad / click-drag on all viewports. */
 .scroller {
   display: flex;
   width: 100%;
@@ -34,10 +25,17 @@
   overscroll-behavior-x: contain;
   touch-action: pan-x;
   scrollbar-width: none;
+  cursor: grab;
 }
 
 .scroller::-webkit-scrollbar {
   display: none;
+}
+
+.scrollerDragging {
+  cursor: grabbing;
+  scroll-behavior: auto;
+  user-select: none;
 }
 
 .page {
@@ -48,8 +46,11 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
+  flex-wrap: wrap;
+  flex-direction: row;
+  justify-content: center;
+  align-items: stretch;
+  gap: 12px 14px;
   padding: 0 1px;
 }
 
@@ -77,8 +78,9 @@
   hyphens: auto;
   transition:
     background 140ms ease,
-    border-color 140ms ease,
-    opacity 220ms ease;
+    border-color 140ms ease;
+  /* Keep chip taps working; strip handles horizontal drag. */
+  touch-action: manipulation;
 }
 
 .chip:hover,
@@ -86,10 +88,6 @@
   background: rgba(38, 252, 214, 0.16);
   border-color: rgba(38, 252, 214, 0.5);
   outline: none;
-}
-
-.chipExit {
-  opacity: 0.35;
 }
 
 .dots {
@@ -148,6 +146,11 @@
     font-size: 9px;
     letter-spacing: 0.05em;
     opacity: 0.85;
+  }
+
+  .page {
+    flex-direction: column;
+    gap: 6px;
   }
 
   .page .chip {
