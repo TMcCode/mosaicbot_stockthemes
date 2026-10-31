@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { fetchChartSidecar, parseOverlayItemKey } from "@/lib/chartSidecar";
 import { capturePostHog } from "@/lib/posthogClient";
 import type { HomeExplorePathV0 } from "@/types/home_explore_paths.v0";
 
@@ -32,6 +33,28 @@ function chunkPaths(paths: HomeExplorePathV0[], size: number): HomeExplorePathV0
 function prefetchTarget(href: string): string {
   // Overlay/compare URLs keep their query string; hash is never needed for RSC prefetch.
   return String(href || "").split("#")[0].trim();
+}
+
+/** Warm public CDN chart sidecars for compare chips (groups/tickers; themes are Tier B). */
+function prefetchOverlaySidecars(href: string, warmed: Set<string>) {
+  const path = prefetchTarget(href);
+  if (!path.startsWith("/overlay")) return;
+  let items = "";
+  try {
+    items = new URL(path, "https://stockthemes.local").searchParams.get("items") || "";
+  } catch {
+    return;
+  }
+  for (const raw of items.split(",")) {
+    const parsed = parseOverlayItemKey(raw.trim());
+    if (!parsed) continue;
+    // Theme Tier B needs auth cookie path — skip warm from homepage to avoid noise.
+    if (parsed.kind === "theme") continue;
+    const key = `${parsed.kind}:${parsed.slug}`;
+    if (warmed.has(key)) continue;
+    warmed.add(key);
+    void fetchChartSidecar(parsed.kind, parsed.slug, undefined, { live: true });
+  }
 }
 
 export function HomeExplorePaths({
@@ -88,13 +111,15 @@ export function HomeExplorePaths({
   useEffect(() => {
     if (typeof window === "undefined" || !chunks.length) return;
     const next = chunks[(index + 1) % chunks.length] ?? [];
-    const targets = [...active, ...next]
-      .map((p) => prefetchTarget(p.href))
-      .filter(Boolean);
-    for (const href of targets) {
-      if (prefetchedRef.current.has(href)) continue;
-      prefetchedRef.current.add(href);
-      void router.prefetch(href);
+    const batch = [...active, ...next];
+    for (const p of batch) {
+      const href = prefetchTarget(p.href);
+      if (!href) continue;
+      if (!prefetchedRef.current.has(href)) {
+        prefetchedRef.current.add(href);
+        void router.prefetch(href);
+      }
+      prefetchOverlaySidecars(href, prefetchedRef.current);
     }
   }, [active, chunks, index, router]);
 
