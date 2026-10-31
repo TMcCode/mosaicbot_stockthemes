@@ -1,5 +1,6 @@
-import Link from "next/link";
+"use client";
 
+import { prefetchStockDetail } from "@/lib/prefetchStockDetail";
 import { stockPagePath } from "@/lib/stockPagePath";
 
 import styles from "./TickerBadge.module.css";
@@ -15,9 +16,16 @@ export function TickerBadge({ ticker, link = true }: Props) {
   if (!t) return null;
   const badge = <span className={styles.badge}>{t}</span>;
   if (!link) return badge;
+  // Hard <a>: most stock HTML is on-demand (Pages Function), not in the static export.
   return (
-    <Link href={stockPagePath(t)} className={styles.link} prefetch={false} title={`${t} stock page`}>
+    <a
+      href={stockPagePath(t)}
+      className={styles.link}
+      title={`${t} stock page`}
+      onMouseEnter={() => prefetchStockDetail(t)}
+      onFocus={() => prefetchStockDetail(t)}
+    >
       {badge}
-    </Link>
+    </a>
   );
 }

@@ -4,7 +4,7 @@
   "name": "Apple Inc.",
   "as_of": "2026-10-30",
   "aggregation": "membership_theme_weights",
-  "note": "Weighted = Σ (membership ThemeWgt / Σw) × theme revenue metric (renormalized over themes with a value). Average / median are equal-weight across membership themes.",
+  "note": "Weighted = \u03a3 (membership ThemeWgt / \u03a3w) \u00d7 theme revenue metric (renormalized over themes with a value). Average / median are equal-weight across membership themes.",
   "ticker_revisions": {
     "revenue_est_analysts": 28,
     "growth_est_latest_pct": 7.1,
@@ -43,7 +43,7 @@
     {
       "slug": "consumer-ai-devices",
       "name": "Consumer AI Devices",
-      "weight": 0.12,
+      "weight": 12.0,
       "metrics": {
         "cq_rev_est_pct": 18.0,
         "cy_rev_est_pct": 14.0,
@@ -66,7 +66,7 @@
     {
       "slug": "smartphone-ecosystem",
       "name": "Smartphone Ecosystem",
-      "weight": 0.08,
+      "weight": 8.0,
       "metrics": {
         "cq_rev_est_pct": 6.0,
         "cy_rev_est_pct": 4.0,
@@ -98,7 +98,7 @@
       "pos_ny_growth_delta_bps": 38.8
     },
     "average": {
-      "weight": 0.1,
+      "weight": 10.0,
       "growth_delta_bps": 25,
       "cy_growth_delta_bps": 15,
       "ny_growth_delta_bps": 12.5,
@@ -107,7 +107,7 @@
       "pos_ny_growth_delta_bps": 36.5
     },
     "median": {
-      "weight": 0.1,
+      "weight": 10.0,
       "growth_delta_bps": 25,
       "cy_growth_delta_bps": 15,
       "ny_growth_delta_bps": 12.5,
@@ -126,7 +126,7 @@
       "ps_ratio_ntm": 7.78
     },
     "average": {
-      "weight": 0.1,
+      "weight": 10.0,
       "cq_rev_est_pct": 12.0,
       "cy_rev_est_pct": 9.0,
       "ny_rev_est_pct": 10.5,
@@ -134,7 +134,7 @@
       "ps_ratio_ntm": 7.35
     },
     "median": {
-      "weight": 0.1,
+      "weight": 10.0,
       "cq_rev_est_pct": 12.0,
       "cy_rev_est_pct": 9.0,
       "ny_rev_est_pct": 10.5,

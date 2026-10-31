@@ -8,6 +8,11 @@ import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import { medianFinite } from "@/lib/compareReturnPlausible";
 import { CONSTITUENT_EARNINGS_COLUMNS } from "@/lib/constituentEarningsColumnHelp";
+
+/** Stock lens: skip Prev/Next Rpt (ticker-only; theme rows are always —). */
+const STOCK_EARNINGS_COLUMNS = CONSTITUENT_EARNINGS_COLUMNS.filter(
+  (col) => col.id !== "prev_report_date" && col.id !== "current_quarter_report_date",
+);
 import {
   compareNullableNumbers,
   compareText,
@@ -116,12 +121,6 @@ function earnRowSortValue(
     return row.kind === "theme" && row.theme.weight != null && Number.isFinite(row.theme.weight)
       ? row.theme.weight
       : null;
-  }
-  if (key === "prev_report_date") {
-    return row.kind === "ticker" ? row.earnings.lastReportDateCell : null;
-  }
-  if (key === "current_quarter_report_date") {
-    return row.kind === "ticker" ? row.earnings.reportDateCell : null;
   }
   if (key === "last_quarter_earnings_move") {
     return row.kind === "ticker"
@@ -284,8 +283,6 @@ export function StockEarningsReturnsPanel({
           {bucket.weight != null ? formatWeight(bucket.weight) : "—"}
         </td>
       ) : null}
-      <td>—</td>
-      <td>—</td>
       <td style={{ textAlign: "right" }}>
         {formatConstituentPct(bucket.last_quarter_earnings_move_pct)}
       </td>
@@ -309,6 +306,7 @@ export function StockEarningsReturnsPanel({
       <HorizontalScrollArea
         className={pageStyles.constituentsScrollWrap}
         data-constituents-view="earnings"
+        style={{ ["--constituents-company-col-width" as string]: "400px" }}
         tabIndex={0}
         role="region"
         aria-label="Theme earnings returns — scroll horizontally to see all columns"
@@ -323,16 +321,12 @@ export function StockEarningsReturnsPanel({
                     {renderSortHead("weight", "Wgt")}
                   </th>
                 ) : null}
-                {CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
+                {STOCK_EARNINGS_COLUMNS.map((col) => (
                   <th
                     key={col.id}
                     scope="col"
                     title={col.tooltip}
-                    style={
-                      col.id === "prev_report_date" || col.id === "current_quarter_report_date"
-                        ? undefined
-                        : { textAlign: "right" }
-                    }
+                    style={{ textAlign: "right" }}
                   >
                     {renderSortHead(col.id, col.label, col.tooltip)}
                   </th>
@@ -355,8 +349,6 @@ export function StockEarningsReturnsPanel({
                         <span className={styles.tickerHeatLabel}>{ticker}</span>
                       </td>
                       {hasWeight ? <td style={{ textAlign: "right" }}>—</td> : null}
-                      <td>{e.lastReportDateCell}</td>
-                      <td>{e.reportDateCell}</td>
                       <td style={{ textAlign: "right" }}>{e.lastQuarterEarningsMoveCell}</td>
                       <td style={{ textAlign: "right" }}>
                         {e.earningsPerfCell}
@@ -381,8 +373,6 @@ export function StockEarningsReturnsPanel({
                         {t.weight != null && Number.isFinite(t.weight) ? formatWeight(t.weight) : "—"}
                       </td>
                     ) : null}
-                    <td>—</td>
-                    <td>—</td>
                     <td style={{ textAlign: "right" }}>
                       {formatConstituentPct(themeReturnMetric(t, "last_quarter_earnings_move_pct"))}
                     </td>

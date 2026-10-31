@@ -10,7 +10,7 @@
 | Tier B `stocks/<T>.price_returns.v0.json` | **Price-only** + full | **No** — browser hydrates via `/cdn-app` (~5 min); HTML bake unchanged |
 | Ticker charts `tickers/<T>.chart.v0.json` | Full / chart-sidecars job | No (client fetch) |
 
-**Site sync:** `STOCKTHEMES_SYNC_STOCKS` defaults **off** in `sync-build-cache.mjs` (and static params/sitemap) until the full stocks tree is on R2; use `STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK` for a limited warm. CI wires the same vars (`deploy-pages.yml`). After a full bake, check GHA job duration + `npm run report:export` (file count); if export regularly **>20 min** or near CF file limits, cap the universe or Worker-split.
+**Site sync:** `STOCKTHEMES_SYNC_STOCKS` stays **off** (CF Pages 20k file cap). Bake fixtures/allowlist only; long-tail `/stocks/[ticker]` is on-demand (`functions/stocks/[ticker].js` → `/stocks/__shell`). Sitemap still lists the full search_index universe. Optional warm: `STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK`.
 
 | Step | Weekdays (ET) |
 |------|----------------|

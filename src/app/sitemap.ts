@@ -41,12 +41,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     });
   }
 
+  // Sitemap lists the full search_index universe. HTML for the long tail is
+  // on-demand (Pages Function → /stocks/__shell); only fixtures/allowlist are baked.
   const fixtureTickers = await listStockFixtureTickers();
-  const stockTickers = mergeStockStaticTickers(
-    (index.tickers || []).map((row) => String(row.ticker || "").trim()).filter(Boolean),
-    fixtureTickers,
-  );
-  for (const ticker of stockTickers) {
+  const fromIndex = (index.tickers || [])
+    .map((row) => String(row.ticker || "").trim())
+    .filter(Boolean);
+  const stockTickers = mergeStockStaticTickers(fromIndex, fixtureTickers);
+  // Always include every search_index ticker (on-demand pages), not only baked HTML.
+  const sitemapTickers = Array.from(
+    new Set([...fromIndex, ...stockTickers, ...fixtureTickers]),
+  ).sort();
+  for (const ticker of sitemapTickers) {
     entries.push({
       url: `${base}/stocks/${encodeURIComponent(ticker)}`,
       lastModified: stockLastModified,

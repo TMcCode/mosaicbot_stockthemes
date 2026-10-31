@@ -1,5 +1,3 @@
-import Link from "next/link";
-
 import { stockPagePath } from "@/lib/stockPagePath";
 
 import pageStyles from "@/app/page.module.css";
@@ -21,14 +19,14 @@ export function CompanyNameLink({ ticker, name, className }: Props) {
       </span>
     );
   }
+  // Hard <a>: long-tail stocks are served on-demand, not via Next soft-nav.
   return (
-    <Link
+    <a
       href={stockPagePath(t)}
       className={className ?? pageStyles.companyNameLink}
-      prefetch={false}
       title={name?.trim() ? `${label} stock page` : `${t} stock page`}
     >
       {label}
-    </Link>
+    </a>
   );
 }

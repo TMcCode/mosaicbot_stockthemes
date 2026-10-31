@@ -144,9 +144,10 @@ jobs:
           FULL_CACHE_REFRESH: ${{ needs.check.outputs.full_cache_refresh }}
 
       - name: Build static export
-        # Stock pages: default fixtures-only SSG. Full ~8k bake exceeds CF Pages' 20k-file limit
-        # (~89k files) — keep STOCKTHEMES_SYNC_STOCKS=0 until Worker-split / capped universe.
-        # Optional smoke: STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,MSFT. report:export fails if files≥20k.
+        # Stock pages: fixtures/allowlist SSG only. Long tail = Pages Function
+        # (functions/stocks/[ticker].js → /stocks/__shell). Keep STOCKTHEMES_SYNC_STOCKS=0
+        # (full ~8k bake ≈89k files > CF Pages 20k). Optional: STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,MSFT.
+        # report:export fails if files≥20k.
         run: npm run build && npm run verify:budgets && npm run report:export && node scripts/write-pages-deploy-meta.mjs
         env:
           # Code pushes fail on page-size regressions; scheduled data refreshes only warn so a

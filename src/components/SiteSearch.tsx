@@ -7,6 +7,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { capturePostHog } from "@/lib/posthogClient";
 import { collectSiteSearchHits, type SiteSearchHit } from "@/lib/siteSearchHits";
+import { navigateToStockPage } from "@/lib/stockPageNavigate";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
 
@@ -103,7 +104,8 @@ export function SiteSearch({
       } else if (h.kind === "group") {
         router.push(`/groups/${encodeURIComponent(h.ref.slug)}`);
       } else if (h.kind === "ticker") {
-        router.push(`/stocks/${encodeURIComponent(h.ref.ticker)}`);
+        // Hard nav — long-tail stock HTML is on-demand (not in the static export).
+        navigateToStockPage(h.ref.ticker);
       }
       setOpen(false);
       setQuery("");
@@ -235,16 +237,9 @@ export function SiteSearch({
                         aria-selected={i === cursor}
                       >
                         <div className={styles.rowBody}>
-                          <Link
+                          <a
                             href={`/stocks/${encodeURIComponent(h.ref.ticker)}`}
                             className={styles.rowTitle}
-                            prefetch={false}
-                            onMouseEnter={() =>
-                              prefetchHref(`/stocks/${encodeURIComponent(h.ref.ticker)}`)
-                            }
-                            onFocus={() =>
-                              prefetchHref(`/stocks/${encodeURIComponent(h.ref.ticker)}`)
-                            }
                             onClick={() => {
                               setOpen(false);
                               setQuery("");
@@ -253,7 +248,7 @@ export function SiteSearch({
                             <span className={styles.badge}>Ticker</span>
                             {h.ref.ticker}
                             {h.ref.name ? ` · ${h.ref.name}` : ""}
-                          </Link>
+                          </a>
                           <div className={styles.rowSub}>
                             {h.ref.theme_slugs.length === 0 ? (
                               "No theme links"

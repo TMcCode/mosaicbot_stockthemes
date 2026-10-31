@@ -1,9 +1,12 @@
 /**
- * Gates which `/stocks/[ticker]` HTML pages are pre-rendered / listed in sitemap.
+ * Gates which `/stocks/[ticker]` HTML pages are pre-rendered (static export).
  *
- * Default: fixtures only (avoids ~8k Pages until Contabo publishes the full stocks/ tree).
+ * Default: fixtures only — CF Pages free cap is 20k files; full ~8k stock SSG is ~89k.
+ * Long-tail tickers are served on-demand via `functions/stocks/[ticker].js` → `/stocks/__shell`.
  * STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK — allowlist (limited smoke).
- * STOCKTHEMES_SYNC_STOCKS=1 — all search_index tickers.
+ * STOCKTHEMES_SYNC_STOCKS=1 — all search_index tickers (avoid on free Pages).
+ *
+ * Sitemap lists the full search_index universe separately (see `src/app/sitemap.ts`).
  */
 
 export function stockTickerAllowlistFromEnv(): string[] {
