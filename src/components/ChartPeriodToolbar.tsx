@@ -18,6 +18,11 @@ type Props = {
   customPeriods: ChartCustomPeriod[];
   /** Use compact set (no 5Y) for theme/group detail charts. */
   variant?: "detail" | "overlay";
+  /**
+   * When true, omit unsupported chips instead of showing them disabled.
+   * Stock charts use this — theme overlays rarely reach 2Y/5Y/LibDay.
+   */
+  hideUnsupported?: boolean;
   /** Download PNG chip — placed after custom event dates (or after standards if none). */
   onDownloadPng?: () => void;
   downloadBusy?: boolean;
@@ -30,11 +35,15 @@ export function ChartPeriodToolbar({
   supportedCustomPeriodKeys,
   customPeriods,
   variant = "detail",
+  hideUnsupported = false,
   onDownloadPng,
   downloadBusy = false,
 }: Props) {
   const standardPeriods =
     variant === "detail" ? DETAIL_CHART_STANDARD_PERIODS : OVERLAY_STANDARD_PERIODS;
+  const visibleCustomPeriods = hideUnsupported
+    ? customPeriods.filter((c) => supportedCustomPeriodKeys.has(c.key) || period === c.key)
+    : customPeriods;
 
   const downloadBtn =
     onDownloadPng != null ? (
@@ -67,6 +76,7 @@ export function ChartPeriodToolbar({
       <div className={styles.periodRow}>
         {standardPeriods.map((p) => {
           const disabled = !supportedPeriods.has(p);
+          if (hideUnsupported && disabled && period !== p) return null;
           return (
             <button
               key={p}
@@ -84,11 +94,11 @@ export function ChartPeriodToolbar({
             </button>
           );
         })}
-        {customPeriods.length === 0 ? downloadBtn : null}
+        {visibleCustomPeriods.length === 0 ? downloadBtn : null}
       </div>
-      {customPeriods.length > 0 ? (
+      {visibleCustomPeriods.length > 0 ? (
         <div className={styles.periodRowCustom} role="group" aria-label="Custom event dates">
-          {customPeriods.map((c) => {
+          {visibleCustomPeriods.map((c) => {
             const disabled = !supportedCustomPeriodKeys.has(c.key);
             return (
               <button

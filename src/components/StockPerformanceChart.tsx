@@ -269,19 +269,34 @@ export function StockPerformanceChart({
     return out;
   }, [tickerPerf, themeIndexPerf, checkedSlugs, themePerfBySlug]);
 
+  /**
+   * Period chips: gate on ticker + checked theme overlays only.
+   * Weighted theme-index is usually ~1Y and must not grey out 2Y/5Y/LibDay
+   * the way SPY is excluded on theme detail charts.
+   */
+  const periodSupportPerformances = useMemo(() => {
+    const out: ChartPerformanceV0[] = [];
+    if (tickerPerf) out.push(tickerPerf);
+    for (const slug of checkedSlugs) {
+      const perf = themePerfBySlug[slug];
+      if (perf) out.push(perf);
+    }
+    return out;
+  }, [tickerPerf, checkedSlugs, themePerfBySlug]);
+
   const referenceLastIso = useMemo(
     () => referenceLastIsoFromPerformances(rawPerformances),
     [rawPerformances],
   );
 
   const supportedPeriods = useMemo(
-    () => computeOverlaySupportedPeriods(referenceLastIso, rawPerformances),
-    [referenceLastIso, rawPerformances],
+    () => computeOverlaySupportedPeriods(referenceLastIso, periodSupportPerformances),
+    [referenceLastIso, periodSupportPerformances],
   );
 
   const supportedCustomPeriodKeys = useMemo(
-    () => computeOverlaySupportedCustomPeriodKeys(rawPerformances, customPeriods),
-    [rawPerformances, customPeriods],
+    () => computeOverlaySupportedCustomPeriodKeys(periodSupportPerformances, customPeriods),
+    [periodSupportPerformances, customPeriods],
   );
 
   useEffect(() => {
@@ -563,6 +578,7 @@ export function StockPerformanceChart({
             supportedCustomPeriodKeys={supportedCustomPeriodKeys}
             customPeriods={customPeriods}
             variant="detail"
+            hideUnsupported
           />
         </div>
       ) : null}
