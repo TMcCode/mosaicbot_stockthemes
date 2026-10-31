@@ -10,7 +10,7 @@
 | Tier B `stocks/<T>.price_returns.v0.json` | **Price-only** + full | **No** — browser hydrates via `/cdn-app` (~5 min); HTML bake unchanged |
 | Ticker charts `tickers/<T>.chart.v0.json` | Full / chart-sidecars job | No (client fetch) |
 
-**Site sync:** `STOCKTHEMES_SYNC_STOCKS` stays **off** (CF Pages 20k file cap). Bake fixtures/allowlist only; long-tail `/stocks/[ticker]` is on-demand (`functions/stocks/[ticker].js` → `/stocks/__shell`). Sitemap still lists the full search_index universe. Optional warm: `STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK`.
+**Site sync:** `STOCKTHEMES_SYNC_STOCKS` stays **off** (CF Pages 20k file cap). Bake fixtures/allowlist only; long-tail `/stocks/[ticker]` is on-demand (`functions/stocks/[ticker].js` → `/stocks/ondemand`). Sitemap still lists the full search_index universe. Optional warm: `STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK`.
 
 | Step | Weekdays (ET) |
 |------|----------------|

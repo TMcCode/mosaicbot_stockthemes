@@ -2,11 +2,14 @@
  * On-demand stock pages (CF Pages 20k file cap — do not bake ~8k stock HTML).
  *
  * - Baked fixtures / allowlist: serve static asset when present.
- * - Long tail: one response = `__shell` HTML + injected ticker (no second navigation).
+ * - Long tail: one response = `/stocks/ondemand` HTML + injected ticker (no second navigation).
+ *
+ * Note: do not name the shell route `__shell` — Next treats `_`-prefixed folders as private.
  */
 
 const PUBLIC_DATA_BASE = "https://storage.stockthemes.ai";
 const SITE_ORIGIN = "https://stockthemes.ai";
+const SHELL_PATH = "/stocks/ondemand";
 
 function escapeHtml(s) {
   return String(s || "")
@@ -42,7 +45,7 @@ export async function onRequestGet(context) {
   const raw = params?.ticker;
   const ticker = decodeURIComponent(String(Array.isArray(raw) ? raw[0] : raw || "").trim());
 
-  if (!ticker || ticker === "__shell" || ticker.includes("..")) {
+  if (!ticker || ticker === "ondemand" || ticker.includes("..")) {
     return env.ASSETS.fetch(request);
   }
 
@@ -52,7 +55,7 @@ export async function onRequestGet(context) {
     return asset;
   }
 
-  const shellUrl = new URL("/stocks/__shell", request.url);
+  const shellUrl = new URL(SHELL_PATH, request.url);
   // Fetch shell + public meta in parallel (meta is SEO-only; don't block on failure).
   const [shellRes, detail] = await Promise.all([
     env.ASSETS.fetch(shellUrl),
@@ -74,11 +77,11 @@ export async function onRequestGet(context) {
   );
   const prettyPath = `/stocks/${encodeURIComponent(ticker)}`;
   const canonical = `${SITE_ORIGIN}${prettyPath}`;
-  const shellPath = `/stocks/__shell?ticker=${encodeURIComponent(ticker)}`;
+  const shellPath = `${SHELL_PATH}?ticker=${encodeURIComponent(ticker)}`;
 
   let html = await shellRes.text();
 
-  // Boot before Next hydrates: park on __shell so the static export matches, then
+  // Boot before Next hydrates: park on /stocks/ondemand so the static export matches, then
   // StockShellClient restoreState's the pretty URL after mount.
   const boot = `<script>
 window.__STOCKTHEMES_ONDEMAND_TICKER__=${JSON.stringify(ticker)};

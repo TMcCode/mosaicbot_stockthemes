@@ -130,7 +130,7 @@ async function loadStockDetailBrowser(
 }
 
 /**
- * Client-only stock lens for on-demand `/stocks/[ticker]` (Pages Function → `__shell`).
+ * Client-only stock lens for on-demand `/stocks/[ticker]` (Pages Function → `/stocks/ondemand`).
  * Same panels as the SSG stock page; Tier A/B come from CDN + `/cdn-app`.
  */
 export function StockPageRuntime({ ticker: rawTicker }: Props) {

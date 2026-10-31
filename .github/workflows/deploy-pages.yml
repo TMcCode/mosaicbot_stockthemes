@@ -145,7 +145,7 @@ jobs:
 
       - name: Build static export
         # Stock pages: fixtures/allowlist SSG only. Long tail = Pages Function
-        # (functions/stocks/[ticker].js → /stocks/__shell). Keep STOCKTHEMES_SYNC_STOCKS=0
+        # (functions/stocks/[ticker].js → /stocks/ondemand). Keep STOCKTHEMES_SYNC_STOCKS=0
         # (full ~8k bake ≈89k files > CF Pages 20k). Optional: STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,MSFT.
         # report:export fails if files≥20k.
         run: npm run build && npm run verify:budgets && npm run report:export && node scripts/write-pages-deploy-meta.mjs

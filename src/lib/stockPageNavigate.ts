@@ -5,7 +5,7 @@ import { stockPagePath } from "@/lib/stockPagePath";
  *
  * Required for the long-tail universe: most `/stocks/[ticker]` HTML is not
  * pre-baked (CF Pages 20k file cap). Soft Next.js routing 404s those paths;
- * a hard navigation hits the Pages Function → `__shell` runtime.
+ * a hard navigation hits the Pages Function → `/stocks/ondemand` runtime.
  */
 export function navigateToStockPage(ticker: string): void {
   const t = String(ticker || "").trim();

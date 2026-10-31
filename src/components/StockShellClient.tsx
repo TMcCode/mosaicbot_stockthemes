@@ -28,7 +28,7 @@ function readTicker(searchParams: URLSearchParams): string {
 }
 
 /**
- * On-demand stock entry (`/stocks/__shell?ticker=` or Function-injected boot).
+ * On-demand stock entry (`/stocks/ondemand?ticker=` or Function-injected boot).
  * Pretty URL restored via history.replaceState after mount.
  */
 export function StockShellClient() {

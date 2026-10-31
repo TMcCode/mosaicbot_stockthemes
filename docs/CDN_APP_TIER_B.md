@@ -6,7 +6,7 @@ Charts, weights, notes, price returns, factors, revenue/quality-risk, and correl
 |-------|------|
 | Private R2 | `r2://mosaic-themes/stockthemes_app/themes/<slug>.<sidecar>.json` and `…/stocks/<TICKER>.<sidecar>.json` |
 | Pages Function | `https://stockthemes.ai/cdn-app/themes/<slug>.…` and `/cdn-app/stocks/<TICKER>.…` |
-| Stock HTML (long tail) | `functions/stocks/[ticker].js` → `/stocks/__shell` (not baked; same Tier A/B hydrate) |
+| Stock HTML (long tail) | `functions/stocks/[ticker].js` → `/stocks/ondemand` (not baked; same Tier A/B hydrate) |
 | Public CDN | Slim `themes/<slug>.json` / `stocks/<TICKER>.json` (SEO) + site-wide bundles |
 
 Protected suffixes (Function allowlist): `.app`, `.notes`, `.price_returns`, `.factor_profile`, `.factor_attribution`, `.revenue`, `.quality_risk`, `.composition`, `.chart`, `.correlation_bundle`, `.stock_correlations`, `.theme_neighbors`.

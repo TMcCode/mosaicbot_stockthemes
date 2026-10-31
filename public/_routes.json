@@ -1,5 +1,5 @@
 {
   "version": 1,
   "include": ["/cdn-app/*", "/stocks/*"],
-  "exclude": ["/stocks/__shell", "/stocks/__shell/", "/stocks/__shell.html"]
+  "exclude": ["/stocks/ondemand", "/stocks/ondemand/", "/stocks/ondemand.html"]
 }

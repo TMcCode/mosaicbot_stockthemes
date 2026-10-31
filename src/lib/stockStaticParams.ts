@@ -2,7 +2,7 @@
  * Gates which `/stocks/[ticker]` HTML pages are pre-rendered (static export).
  *
  * Default: fixtures only — CF Pages free cap is 20k files; full ~8k stock SSG is ~89k.
- * Long-tail tickers are served on-demand via `functions/stocks/[ticker].js` → `/stocks/__shell`.
+ * Long-tail tickers are served on-demand via `functions/stocks/[ticker].js` → `/stocks/ondemand`.
  * STOCKTHEMES_SYNC_STOCK_TICKERS=AAPL,0700.HK — allowlist (limited smoke).
  * STOCKTHEMES_SYNC_STOCKS=1 — all search_index tickers (avoid on free Pages).
  *

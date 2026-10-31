@@ -22,7 +22,7 @@
 | URL keys | Preserve exchange suffix for intl (`XXX.TO`, etc.); US can stay bare `AAPL` as today in search_index |
 | Anti-scrape | Same Tier A/B as themes; numeric feeds via `/cdn-app` |
 | Pages rebuilds | Same app; Contabo stays chatty on **JSON**, Pages stays **occasional bake** (price-only already 3h-throttled). No second Pages project unless measured build pain |
-| CI | Keep `STOCKTHEMES_SYNC_STOCKS=0` (20k file cap). Long-tail stocks = Pages Function → `/stocks/__shell` (not full SSG) |
+| CI | Keep `STOCKTHEMES_SYNC_STOCKS=0` (20k file cap). Long-tail stocks = Pages Function → `/stocks/ondemand` (not full SSG) |
 
 ---
 
@@ -43,7 +43,7 @@ Price-only (~10 min)
 
 Site
   → SSG fixtures/allowlist only (`STOCKTHEMES_SYNC_STOCKS=0`)
-  → Long tail: `functions/stocks/[ticker].js` (SEO meta) → `/stocks/__shell` client runtime (same lens UI)
+  → Long tail: `functions/stocks/[ticker].js` (SEO meta) → `/stocks/ondemand` client runtime (same lens UI)
   → Hard <a> / location.assign for stock links (Next soft-nav cannot reach unbaked paths)
   → HTML: name, theme list (slugs/names; weights only if not scrapable in view-source — prefer client merge from Tier B)
   → Client: /cdn-app price_returns + chart; theme overlay lines fetch themes/<slug>.chart.v0.json on check
@@ -153,7 +153,7 @@ Site
 - [x] Manifest size unchanged (no stocks array)
 - [x] Price-only runtime stays sidecar-bound; Pages not rebuilt every 10 min
 - [x] Same anti-scrape posture as themes (`verify:tier-b`)
-- [x] On-demand long-tail stocks via Pages Function + `/stocks/__shell` (replaces full SSG under 20k file cap)
+- [x] On-demand long-tail stocks via Pages Function + `/stocks/ondemand` (replaces full SSG under 20k file cap)
 - [ ] Cancelled: full stock SSG (`STOCKTHEMES_SYNC_STOCKS=1`) — exceeds CF Pages free file limit (~89k)
 
 ---

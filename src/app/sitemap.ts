@@ -42,7 +42,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   // Sitemap lists the full search_index universe. HTML for the long tail is
-  // on-demand (Pages Function → /stocks/__shell); only fixtures/allowlist are baked.
+  // on-demand (Pages Function → /stocks/ondemand); only fixtures/allowlist are baked.
   const fixtureTickers = await listStockFixtureTickers();
   const fromIndex = (index.tickers || [])
     .map((row) => String(row.ticker || "").trim())
