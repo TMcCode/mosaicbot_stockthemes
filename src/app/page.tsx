@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import { AdPlacement } from "@/components/AdPlacement";
 import { DeferRender } from "@/components/DeferRender";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
+import { HomeExplorePaths } from "@/components/HomeExplorePaths";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { HomeDataAsOfLive } from "@/components/HomeDataAsOfLive";
 import { HomeTopMoversWithCloseBoard } from "@/components/HomeTopMoversWithCloseBoard";
@@ -33,6 +34,7 @@ import { LazyHomeThemesInMotionTable } from "@/components/LazyHomeThemesInMotion
 import { LazyThemesInMotionMacroChart } from "@/components/LazyThemesInMotionMacroChart";
 import { JsonLd } from "@/components/JsonLd";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
+import { getHomeExplorePathsCached } from "@/lib/getHomeExplorePathsCached";
 import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
 import { getRadarNewsCached } from "@/lib/getRadarNewsCached";
 import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
@@ -87,6 +89,7 @@ export default async function Home() {
     motionsRes,
     newsRes,
     newsletterRes,
+    explorePathsRes,
   ] = await Promise.all([
     getManifestCached(),
     getHomeFeedCached().catch(() => null),
@@ -96,6 +99,7 @@ export default async function Home() {
     getThemesInMotionCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
     loadNewsletterPosts().catch(() => null),
+    getHomeExplorePathsCached().catch(() => null),
   ]);
   const motionsHomepage = slimMotionsRows(motionsRes?.bundle?.homepage, 10);
   // Motions sector/factor chart lazy-fetches etf_benchmarks + spy_snapshot + factor
@@ -247,6 +251,13 @@ export default async function Home() {
                 variant="hero"
                 placeholder="Type a theme, industry, idea, or ticker…"
               />
+              {explorePathsRes?.bundle?.paths?.length ? (
+                <HomeExplorePaths
+                  paths={explorePathsRes.bundle.paths}
+                  rotateSeconds={explorePathsRes.bundle.rotate_seconds ?? 10}
+                  visibleCount={explorePathsRes.bundle.visible_count ?? 3}
+                />
+              ) : null}
             </div>
           </div>
 

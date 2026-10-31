@@ -1,0 +1,127 @@
+.strip {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.label {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: color-mix(in srgb, var(--accent) 75%, var(--muted, #8a93a3));
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  gap: 12px 14px;
+  width: 100%;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 220px;
+  max-width: min(360px, 100%);
+  min-width: min(220px, 100%);
+  box-sizing: border-box;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(38, 252, 214, 0.28);
+  background: rgba(38, 252, 214, 0.08);
+  color: var(--fg, #e8eef7);
+  font-size: 13.5px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  text-decoration: none;
+  /* Allow the label itself to wrap inside the chip */
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: normal;
+  hyphens: auto;
+  transition:
+    background 140ms ease,
+    border-color 140ms ease,
+    opacity 220ms ease;
+}
+
+.chip:hover,
+.chip:focus-visible {
+  background: rgba(38, 252, 214, 0.16);
+  border-color: rgba(38, 252, 214, 0.5);
+  outline: none;
+}
+
+.chipExit {
+  opacity: 0.35;
+}
+
+.dots {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+.dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(38, 252, 214, 0.25);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.dotActive {
+  background: rgba(38, 252, 214, 0.85);
+}
+
+:global(.st-theme[data-theme="light"]) .chip {
+  border-color: rgba(42, 152, 147, 0.35);
+  background: rgba(42, 207, 200, 0.1);
+  color: #1a2433;
+}
+
+:global(.st-theme[data-theme="light"]) .chip:hover,
+:global(.st-theme[data-theme="light"]) .chip:focus-visible {
+  background: rgba(42, 207, 200, 0.2);
+  border-color: rgba(42, 152, 147, 0.55);
+}
+
+:global(.st-theme[data-theme="light"]) .dot {
+  background: rgba(42, 152, 147, 0.25);
+}
+
+:global(.st-theme[data-theme="light"]) .dotActive {
+  background: rgba(42, 152, 147, 0.85);
+}
+
+:global(.st-theme[data-theme="light"]) .label {
+  color: color-mix(in srgb, #2a9893 70%, #5a6472);
+}
+
+@media (max-width: 600px) {
+  .strip {
+    margin-top: 10px;
+  }
+
+  .row {
+    gap: 10px;
+  }
+
+  .chip {
+    flex: 1 1 100%;
+    max-width: 100%;
+    min-width: 0;
+    font-size: 13px;
+    padding: 10px 12px;
+  }
+}

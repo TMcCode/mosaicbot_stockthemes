@@ -158,6 +158,7 @@ export function OverlayPageClient({
   const router = useRouter();
   const searchParams = useSearchParams();
   const abortRef = useRef<Map<string, AbortController>>(new Map());
+  const itemsRef = useRef<LoadedSeries[]>([]);
 
   const availableSectorTickers = useMemo(
     () => new Set(Object.keys(sectorEtfCatalog)),
@@ -169,6 +170,8 @@ export function OverlayPageClient({
   );
 
   const [items, setItems] = useState<LoadedSeries[]>([]);
+  itemsRef.current = items;
+  const itemsQuery = searchParams.get("items") ?? "";
   const [themeTickersPreviewBySlug, setThemeTickersPreviewBySlug] = useState<Record<string, string>>(
     {},
   );
@@ -266,8 +269,19 @@ export function OverlayPageClient({
     [router, searchParams],
   );
 
-  const loadOne = useCallback(async (pick: OverlayPick) => {
+  const loadOne = useCallback(async (pick: OverlayPick, opts?: { force?: boolean }) => {
     const key = overlayItemKey(pick.kind, pick.slug);
+    const existing = itemsRef.current.find((p) => p.key === key);
+    // Soft-nav / URL re-sync: keep a good or in-flight series instead of abort+restart.
+    if (
+      !opts?.force &&
+      existing &&
+      !existing.error &&
+      (existing.loading || (existing.rawPerformance?.dates?.length ?? 0) > 0)
+    ) {
+      return;
+    }
+
     abortRef.current.get(key)?.abort();
     const ac = new AbortController();
     abortRef.current.set(key, ac);
@@ -280,7 +294,7 @@ export function OverlayPageClient({
           key,
           kind: pick.kind,
           slug: pick.slug,
-          name: pick.name,
+          name: pick.name || existing?.name || pick.slug,
           rawPerformance: { dates: [], values: [] },
           loading: true,
         },
@@ -289,6 +303,7 @@ export function OverlayPageClient({
 
     try {
       const sidecar = await fetchChartSidecar(pick.kind, pick.slug, ac.signal, { live: true });
+      if (ac.signal.aborted) return;
       if (!sidecar) {
         setItems((prev) =>
           prev.map((p) =>
@@ -323,23 +338,41 @@ export function OverlayPageClient({
         ),
       );
     } finally {
-      abortRef.current.delete(key);
+      if (abortRef.current.get(key) === ac) abortRef.current.delete(key);
     }
   }, []);
 
+  // Keep series in sync with ?items= — Soft nav to /overlay?items=… must re-hydrate
+  // (mount-only [] missed searchParams that arrive after first paint / remount).
   useEffect(() => {
-    const keys = itemsFromSearchParams(searchParams);
-    for (const key of keys) {
+    const wantedKeys = itemsFromSearchParams(new URLSearchParams({ items: itemsQuery }));
+    const wanted = new Set(wantedKeys);
+
+    for (const [key, ac] of abortRef.current) {
+      if (!wanted.has(key)) {
+        ac.abort();
+        abortRef.current.delete(key);
+      }
+    }
+
+    setItems((prev) => prev.filter((p) => wanted.has(p.key)));
+
+    for (const key of wantedKeys) {
       const parsed = parseOverlayItemKey(key);
       if (!parsed) continue;
       void loadOne({
         kind: parsed.kind,
         slug: parsed.slug,
-        name: parsed.kind === "ticker" ? parsed.slug : parsed.slug,
+        name: parsed.slug,
       });
     }
-    // Initial URL hydration only.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [itemsQuery, loadOne]);
+
+  useEffect(() => {
+    return () => {
+      for (const ac of abortRef.current.values()) ac.abort();
+      abortRef.current.clear();
+    };
   }, []);
 
   /** One slim etf_benchmarks + spy_snapshot refresh (shared ~5 min bucket). No per-series polls. */

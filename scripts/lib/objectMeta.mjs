@@ -11,6 +11,7 @@ const BUNDLE_RELS = new Set([
   "search_index.v0.json",
   "home_trending.v0.json",
   "home_top_movers.v0.json",
+  "home_explore_paths.v0.json",
   "compare_themes.v0.json",
   "spy_snapshot.v0.json",
   "etf_benchmarks.v0.json",

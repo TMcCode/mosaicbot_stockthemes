@@ -119,6 +119,33 @@ async function fetchSidecarText(url: string, signal?: AbortSignal): Promise<stri
   }
 }
 
+function abortError(): DOMException {
+  return new DOMException("Aborted", "AbortError");
+}
+
+/**
+ * Await a shared promise but let this caller's AbortSignal bail without cancelling
+ * the shared work (avoids Soft-nav / Strict-mode remounts poisoning inflight fetches).
+ */
+async function awaitUnlessAborted<T>(promise: Promise<T>, signal?: AbortSignal): Promise<T> {
+  if (!signal) return promise;
+  if (signal.aborted) throw abortError();
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(abortError());
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (err) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(err);
+      },
+    );
+  });
+}
+
 /** Fetch slim chart sidecar; fall back to chart_1y embedded in full detail JSON (themes/groups only). */
 export async function fetchChartSidecar(
   kind: OverlayEntityKind,
@@ -138,69 +165,73 @@ export async function fetchChartSidecar(
     if (hit) return hit.value;
   }
 
-  const inflight = sidecarInflight.get(key);
-  if (inflight) return inflight;
+  if (signal?.aborted) throw abortError();
 
-  const promise = (async () => {
-    const base = stockthemesPublicDataBase();
-    const sidecarBase = stockthemesBrowserSidecarFetchBase();
-    const useOverlayFixtures = stockthemesBrowserOverlayFixtures();
-    const q = live ? priceReturnsBrowserCacheBusterQuery() : stockthemesBrowserCacheBusterQuery();
-    const sidecarPath = sidecarRelPath(kind, normalizedSlug);
+  let promise = sidecarInflight.get(key);
+  if (!promise) {
+    // Shared fetch is intentionally unabortable — callers race their own signal via
+    // awaitUnlessAborted so a remount abort cannot leave a null/poisoned cache entry.
+    promise = (async () => {
+      const base = stockthemesPublicDataBase();
+      const sidecarBase = stockthemesBrowserSidecarFetchBase();
+      const useOverlayFixtures = stockthemesBrowserOverlayFixtures();
+      const q = live ? priceReturnsBrowserCacheBusterQuery() : stockthemesBrowserCacheBusterQuery();
+      const sidecarPath = sidecarRelPath(kind, normalizedSlug);
 
-    const tryFixture = async (): Promise<ChartPerformanceSidecarV0 | null> => {
-      const fixtureUrl = publicAssetPath(`/fixtures/${sidecarPath}`);
-      const raw = await fetchSidecarText(fixtureUrl, signal);
-      if (!raw) return null;
-      return parseChartPerformanceSidecar(raw);
-    };
-
-    const tryCdnSidecar = async (): Promise<ChartPerformanceSidecarV0 | null> => {
-      // Theme chart sidecars are Tier B (private R2 via /cdn-app).
-      if (kind === "theme") {
-        const sidecarUrl = `${themeTierBBrowserPath(normalizedSlug, CHART_SIDECAR_SUFFIX)}?${q}`;
-        const raw = await fetchSidecarText(sidecarUrl, signal);
+      const tryFixture = async (): Promise<ChartPerformanceSidecarV0 | null> => {
+        const fixtureUrl = publicAssetPath(`/fixtures/${sidecarPath}`);
+        const raw = await fetchSidecarText(fixtureUrl);
         if (!raw) return null;
         return parseChartPerformanceSidecar(raw);
-      }
-      if (!sidecarBase) return null;
-      const sidecarUrl = `${sidecarBase}/${sidecarPath}?${q}`;
-      const raw = await fetchSidecarText(sidecarUrl, signal);
-      if (!raw) return null;
-      return parseChartPerformanceSidecar(raw);
-    };
+      };
 
-    // Tickers: live CDN first; fixtures only when offline or CDN miss.
-    if (kind === "ticker") {
-      const fromCdn = await tryCdnSidecar();
-      if (fromCdn) return fromCdn;
-      if (useOverlayFixtures || !base) {
+      const tryCdnSidecar = async (): Promise<ChartPerformanceSidecarV0 | null> => {
+        // Theme chart sidecars are Tier B (private R2 via /cdn-app).
+        if (kind === "theme") {
+          const sidecarUrl = `${themeTierBBrowserPath(normalizedSlug, CHART_SIDECAR_SUFFIX)}?${q}`;
+          const raw = await fetchSidecarText(sidecarUrl);
+          if (!raw) return null;
+          return parseChartPerformanceSidecar(raw);
+        }
+        if (!sidecarBase) return null;
+        const sidecarUrl = `${sidecarBase}/${sidecarPath}?${q}`;
+        const raw = await fetchSidecarText(sidecarUrl);
+        if (!raw) return null;
+        return parseChartPerformanceSidecar(raw);
+      };
+
+      // Tickers: live CDN first; fixtures only when offline or CDN miss.
+      if (kind === "ticker") {
+        const fromCdn = await tryCdnSidecar();
+        if (fromCdn) return fromCdn;
+        if (useOverlayFixtures || !base) {
+          return await tryFixture();
+        }
+        return null;
+      }
+
+      // Full offline (no manifest URL): fixtures only.
+      if (!base) {
         return await tryFixture();
       }
-      return null;
-    }
 
-    // Full offline (no manifest URL): fixtures only.
-    if (!base) {
-      return await tryFixture();
-    }
+      const fromCdn = await tryCdnSidecar();
+      if (fromCdn) return fromCdn;
 
-    const fromCdn = await tryCdnSidecar();
-    if (fromCdn) return fromCdn;
+      const detailUrl = `${base}/${detailRelPath(kind, normalizedSlug)}?${q}`;
+      const detailRaw = await fetchSidecarText(detailUrl);
+      if (!detailRaw) return null;
+      return performanceFromDetailJson(detailRaw, kind, normalizedSlug);
+    })();
 
-    const detailUrl = `${base}/${detailRelPath(kind, normalizedSlug)}?${q}`;
-    const detailRaw = await fetchSidecarText(detailUrl, signal);
-    if (!detailRaw) return null;
-    return performanceFromDetailJson(detailRaw, kind, normalizedSlug);
-  })();
-
-  sidecarInflight.set(key, promise);
-  try {
-    const result = await promise;
-    if (result && cacheEnabled) sidecarResultCache.set(key, result);
-    if (result && liveCacheEnabled) liveSidecarCache.set(key, { at: Date.now(), value: result });
-    return result;
-  } finally {
-    sidecarInflight.delete(key);
+    sidecarInflight.set(key, promise);
+    void promise.finally(() => {
+      if (sidecarInflight.get(key) === promise) sidecarInflight.delete(key);
+    });
   }
+
+  const result = await awaitUnlessAborted(promise, signal);
+  if (result && cacheEnabled) sidecarResultCache.set(key, result);
+  if (result && liveCacheEnabled) liveSidecarCache.set(key, { at: Date.now(), value: result });
+  return result;
 }

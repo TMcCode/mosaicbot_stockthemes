@@ -2139,7 +2139,7 @@ a.secondary {
   position: relative;
   z-index: 3;
   box-sizing: border-box;
-  padding: 14px 16px;
+  padding: 16px 18px 18px;
   border-radius: 14px;
   border: 1px solid rgba(38, 252, 214, 0.35);
   background:
@@ -2186,8 +2186,9 @@ a.secondary {
   padding-top: 4px;
 }
 
-/* Force SiteSearch wrap/input to fill the hero block (nav search caps at 360px). */
-.heroSearch > div {
+/* Force SiteSearch wrap/input to fill the hero block (nav search caps at 360px).
+   Explore-path strip is a sibling div — leave it alone. */
+.heroSearch > div:first-of-type {
   width: 100% !important;
   max-width: none !important;
   min-width: 0 !important;
