@@ -2176,6 +2176,17 @@ a.secondary {
   max-width: none !important;
 }
 
+/* Quiet space while Suspense islands stream in (dev). */
+.explorePathsFallback {
+  margin-top: 12px;
+  min-height: 108px;
+}
+
+.homeMoversFallback {
+  margin-top: 16px;
+  min-height: 140px;
+}
+
 .heroGrid > .heroSearch.heroFullBleed {
   margin-top: 14px;
 }
@@ -2203,19 +2214,47 @@ a.secondary {
 }
 
 @media (max-width: 600px) {
+  /* Phones: title/punchline above search; drop the stats cards only. */
+  .heroGrid > .statGridHero {
+    display: none;
+  }
+
+  .heroGrid > .heroSearch.heroFullBleed {
+    margin-top: 12px;
+  }
+
   .heroSearch {
-    padding: 10px 12px;
+    padding: 12px 12px 10px;
+    border-color: rgba(38, 252, 214, 0.48);
+    box-shadow:
+      0 0 0 1px rgba(255, 255, 255, 0.05) inset,
+      0 0 0 1px rgba(38, 252, 214, 0.12),
+      0 12px 28px rgba(0, 0, 0, 0.32);
   }
 
   .heroSearchLabel {
-    margin-bottom: 6px;
-    font-size: 10px;
+    margin-bottom: 8px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
   }
 
+  /* Keep search the visual primary — don't shrink to nav-field size. */
   .heroSearch input[type="search"] {
-    height: 40px !important;
-    font-size: 13px !important;
-    padding: 0 12px !important;
+    height: 50px !important;
+    font-size: 16px !important;
+    padding: 0 14px !important;
+    border-radius: 12px !important;
+    border-color: rgba(38, 252, 214, 0.55) !important;
+    box-shadow: 0 0 0 2px rgba(38, 252, 214, 0.12) !important;
+  }
+
+  :global(.st-theme[data-theme="light"]) .heroSearch {
+    border-color: rgba(42, 152, 147, 0.5);
+  }
+
+  :global(.st-theme[data-theme="light"]) .heroSearch input[type="search"] {
+    border-color: rgba(42, 152, 147, 0.55) !important;
+    box-shadow: 0 0 0 2px rgba(42, 152, 147, 0.12) !important;
   }
 }
 

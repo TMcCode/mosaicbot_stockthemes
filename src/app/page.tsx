@@ -1,76 +1,19 @@
-import Link from "next/link";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 
-import { AdPlacement } from "@/components/AdPlacement";
-import { DeferRender } from "@/components/DeferRender";
+import { HomeDeferredBand } from "@/components/HomeDeferredBand";
+import { HomeExplorePathsSlot } from "@/components/HomeExplorePathsSlot";
+import { HomeHeroStats } from "@/components/HomeHeroStats";
+import { HomeMoversBand } from "@/components/HomeMoversBand";
+import { JsonLd } from "@/components/JsonLd";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
-import { HomeExplorePaths } from "@/components/HomeExplorePaths";
-import { HomePublisherIntro } from "@/components/HomePublisherIntro";
-import { HomeDataAsOfLive } from "@/components/HomeDataAsOfLive";
-import { HomeTopMoversWithCloseBoard } from "@/components/HomeTopMoversWithCloseBoard";
 import { PageSurface } from "@/components/PageSurface";
-import styles from "./page.module.css";
-
-import {
-  buildTopMoversTickerItems,
-  homeTopMoversTickerPeriod,
-} from "@/lib/buildTopMoversTicker";
-import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
-import { getHomeTopMoversCached } from "@/lib/getHomeTopMoversCached";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
-import { loadHomeCommentary } from "@/lib/loadHomeCommentary";
-import { getManifestCached } from "@/lib/getManifestCached";
-import { pickHomeTopMovers } from "@/lib/pickHomeTopMovers";
-import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { brandAssetPath } from "@/lib/siteUrl";
-import { HomeExploreChanging } from "@/components/HomeExploreChanging";
-import { pickExploreGroups } from "@/lib/pickExploreGroups";
-import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
-import { LazyHomeCommentaryPreview } from "@/components/LazyHomeCommentaryPreview";
-import { LazyHomeNewsletterPostsLive } from "@/components/LazyHomeNewsletterPostsLive";
-import { LazyHomeThemesInMotionTable } from "@/components/LazyHomeThemesInMotionTable";
-import { LazyThemesInMotionMacroChart } from "@/components/LazyThemesInMotionMacroChart";
-import { JsonLd } from "@/components/JsonLd";
-import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
-import { getHomeExplorePathsCached } from "@/lib/getHomeExplorePathsCached";
-import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
-import { getRadarNewsCached } from "@/lib/getRadarNewsCached";
-import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
-import { slimMotionsRows } from "@/lib/slimMotionsRows";
-import { loadNewsletterPosts } from "@/lib/loadNewsletterPosts";
-import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
-import { buildTickerCompanyNameMap } from "@/lib/loadSearchIndex";
-import { mergeHomeFeedEvents, prioritizeLifecycleHomeFeed } from "@/lib/mergeHomeFeedEvents";
-import { collapseFeedGroupFlippers } from "@/lib/collapseFeedGroupFlippers";
-import { slimFeedSlotsForClient } from "@/lib/slimFeedSlots";
-import {
-  buildFeedThemeMetaBySlug,
-  slimFeedThemeMetaForSlots,
-} from "@/lib/buildFeedThemeMeta";
-import {
-  buildTickersByThemeSlug,
-  feedSlotsNeedingTickerFallback,
-} from "@/lib/buildTickersByThemeSlug";
-import { buildThesisBySlugFromBundles } from "@/lib/buildThesisBySlug";
-import {
-  filterFeedEventsWithThesisText,
-} from "@/lib/hydrateFeedThesis";
-import {
-  companyNamesFromRadarBundles,
-  slimCompanyNamesForRadar,
-  slimNewsForHome,
-  slimRadarForHome,
-} from "@/lib/slimRadarPayload";
-import {
-  buildWatchlistRadarEnrichBySlug,
-  collectHomeWatchlistEnrichSlugs,
-} from "@/lib/buildWatchlistRadarEnrich";
 
-/** Homepage Feed strip: at most this many rows, each within the last `HOME_FEED_MAX_DAYS` days. */
-const HOME_FEED_RENDER_LIMIT = 7;
-const HOME_FEED_MAX_DAYS = 10;
+import styles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
   title: "stockthemes.ai",
@@ -79,108 +22,20 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/",
 });
 
-export default async function Home() {
-  const [
-    { manifest },
-    homeFeedRes,
-    compareRes,
-    commentaryRes,
-    radarRes,
-    motionsRes,
-    newsRes,
-    newsletterRes,
-    explorePathsRes,
-  ] = await Promise.all([
-    getManifestCached(),
-    getHomeFeedCached().catch(() => null),
-    getCompareThemesCached(),
-    loadHomeCommentary(),
-    getHomeRadarCached().catch(() => null),
-    getThemesInMotionCached().catch(() => null),
-    getRadarNewsCached().catch(() => null),
-    loadNewsletterPosts().catch(() => null),
-    getHomeExplorePathsCached().catch(() => null),
-  ]);
-  const motionsHomepage = slimMotionsRows(motionsRes?.bundle?.homepage, 10);
-  // Motions sector/factor chart lazy-fetches etf_benchmarks + spy_snapshot + factor
-  // series from the CDN on mount — keep that out of home RSC HTML (~320KB+).
-  const topMoversPeriod = homeTopMoversTickerPeriod();
+function HomeExplorePathsFallback() {
+  return <div className={styles.explorePathsFallback} aria-hidden />;
+}
+
+function HomeMoversFallback() {
+  return <div className={styles.homeMoversFallback} aria-hidden />;
+}
+
+/**
+ * Sync hero first; parallel Suspense islands for trending / movers / deferred body.
+ * Movers no longer wait on radar+feed+motions.
+ */
+export default function Home() {
   const homeJsonLd = buildHomePageJsonLd(homeSiteJsonDescription());
-  const stats = manifest.stats;
-  const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
-  const etlFeed =
-    homeFeedRes?.bundle?.events ??
-    (Array.isArray(manifest.home_feed_events) ? manifest.home_feed_events : []);
-  const homeRadar = slimRadarForHome(radarRes?.bundle ?? null);
-  const homeNews = slimNewsForHome(newsRes?.bundle ?? null);
-  // Prefer company names baked on radar/news tickers — avoid loading search_index (~1.4MB).
-  const radarCompanyNames = companyNamesFromRadarBundles(homeRadar, homeNews);
-  const homeFeedEvents = mergeHomeFeedEvents(manifest, themeByName, etlFeed);
-  const homeThesisBySlug = buildThesisBySlugFromBundles(
-    radarRes?.bundle ?? null,
-    motionsRes?.bundle ?? null,
-  );
-  // No theme-detail hydrate on home — that was multi-second lag in next dev.
-  // Thesis blurbs come from radar/motions; chips from ETL / changes_preview.
-  const homeFeedWindowCandidates = prioritizeLifecycleHomeFeed(
-    homeFeedEvents,
-    40,
-    HOME_FEED_MAX_DAYS,
-  );
-  const homeFeedDisplay = collapseFeedGroupFlippers(
-    filterFeedEventsWithThesisText(homeFeedWindowCandidates, homeThesisBySlug),
-    manifest,
-  ).slice(0, HOME_FEED_RENDER_LIMIT);
-  const themeMetaBySlug = slimFeedThemeMetaForSlots(
-    buildFeedThemeMetaBySlug(manifest),
-    homeFeedDisplay,
-  );
-  // Logo fallbacks only when a card still lacks ETL holdings/membership chips.
-  const needTickerFallback = feedSlotsNeedingTickerFallback(homeFeedDisplay);
-  const searchIndexRes =
-    needTickerFallback.size > 0
-      ? await getSearchIndexCached().catch(() => null)
-      : null;
-  const tickersByThemeSlug = searchIndexRes
-    ? buildTickersByThemeSlug(searchIndexRes.index, 6, needTickerFallback)
-    : undefined;
-  // Fill any radar tickers still missing names from search index (rare).
-  const radarCompanyNamesFilled =
-    searchIndexRes && radarCompanyNames
-      ? slimCompanyNamesForRadar(
-          { ...buildTickerCompanyNameMap(searchIndexRes.index), ...radarCompanyNames },
-          homeRadar,
-          homeNews,
-        )
-      : radarCompanyNames;
-  // Prefer compare_themes re-rank; only fetch home_top_movers if compare is empty.
-  const fromCompare = buildTopMoversTickerItems(compareRes?.bundle?.rows ?? [], {
-    period: topMoversPeriod,
-  });
-  const topMoversRes =
-    fromCompare.length > 0 ? null : await getHomeTopMoversCached().catch(() => null);
-  const topMoversTicker =
-    fromCompare.length > 0
-      ? fromCompare
-      : pickHomeTopMovers(topMoversRes?.bundle, topMoversPeriod);
-  const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
-  const feedThemeSlugs = homeFeedDisplay.flatMap((slot) => {
-    const events = [slot.lead, ...(slot.siblings || [])];
-    return events
-      .map((e) => String(e.theme_slug || "").trim())
-      .filter(Boolean);
-  });
-  const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(
-    compareRes?.bundle ?? null,
-    homeThesisBySlug,
-    {
-      slugAllowlist: collectHomeWatchlistEnrichSlugs({
-        radar: homeRadar,
-        feedThemeSlugs,
-        thesisBySlug: homeThesisBySlug,
-      }),
-    },
-  );
 
   return (
     <PageSurface>
@@ -197,6 +52,7 @@ export default async function Home() {
                   width={56}
                   height={56}
                   decoding="async"
+                  fetchPriority="high"
                   aria-hidden
                 />
                 <span className={styles.heroBrandLabel}>stockthemes.ai</span>
@@ -209,119 +65,30 @@ export default async function Home() {
                 commentary — then drill into the companies behind each story.
               </p>
             </div>
-            {stats ? (
-              <ul className={styles.statGridHero} aria-label="Site coverage stats">
-                {stats.total_tickers != null ? (
-                  <li className={`${styles.statCard} ${styles.statTickers}`}>
-                    <span>Public tickers tracked</span>
-                    <strong>{stats.total_tickers.toLocaleString()}</strong>
-                  </li>
-                ) : null}
-                {stats.total_groups != null ? (
-                  <li
-                    className={`${styles.statCard} ${styles.statGroups} ${styles.statCardClickable}`}
-                  >
-                    <Link href="/groups" className={styles.statCardHit}>
-                      <span>Theme groups</span>
-                      <strong>{stats.total_groups}</strong>
-                    </Link>
-                  </li>
-                ) : null}
-                {stats.total_themes != null ? (
-                  <li
-                    className={`${styles.statCard} ${styles.statThemes} ${styles.statCardClickable}`}
-                  >
-                    <Link href="/themes" className={styles.statCardHit}>
-                      <span>Curated themes</span>
-                      <strong>{stats.total_themes}</strong>
-                    </Link>
-                  </li>
-                ) : null}
-                {manifest.as_of ? (
-                  <HomeDataAsOfLive
-                    serverAsOf={manifest.as_of}
-                    serverTickerPerformanceAsOf={manifest.ticker_performance_as_of}
-                  />
-                ) : null}
-              </ul>
-            ) : null}
+
+            <Suspense fallback={null}>
+              <HomeHeroStats />
+            </Suspense>
+
             <div className={`${styles.heroSearch} ${styles.heroFullBleed}`}>
               <span className={styles.heroSearchLabel}>Search narratives</span>
               <LazySiteSearch
                 variant="hero"
                 placeholder="Type a theme, industry, idea, or ticker…"
               />
-              {explorePathsRes?.bundle?.paths?.length ? (
-                <HomeExplorePaths
-                  paths={explorePathsRes.bundle.paths}
-                  rotateSeconds={explorePathsRes.bundle.rotate_seconds ?? 10}
-                  visibleCount={explorePathsRes.bundle.visible_count ?? 3}
-                />
-              ) : null}
+              <Suspense fallback={<HomeExplorePathsFallback />}>
+                <HomeExplorePathsSlot />
+              </Suspense>
             </div>
           </div>
 
-          <LazyHomeCommentaryPreview
-            initialItems={commentaryRes?.commentary.items ?? []}
-            previewDays={commentaryRes?.commentary.preview_days ?? 7}
-          />
+          <Suspense fallback={<HomeMoversFallback />}>
+            <HomeMoversBand />
+          </Suspense>
 
-          <HomeTopMoversWithCloseBoard
-            items={topMoversTicker}
-            period={topMoversPeriod}
-            asOfLabel={
-              manifest.as_of ? formatSiteDataPublished(manifest.as_of) : undefined
-            }
-            tickerPerformanceAsOf={manifest.ticker_performance_as_of}
-            serverCompare={
-              compareRes?.bundle?.as_of ? { as_of: compareRes.bundle.as_of } : null
-            }
-            serverTopMovers={topMoversRes?.bundle ?? null}
-          />
-
-          <LazyHomeNarrativeRadar
-            radar={homeRadar}
-            news={homeNews}
-            companyNames={radarCompanyNamesFilled}
-            watchlistEnrichBySlug={watchlistEnrichBySlug}
-          />
-
-          <DeferRender minHeight={420} rootMargin="400px 0px">
-            <HomeExploreChanging
-              groups={exploreGroups}
-              feedSlots={slimFeedSlotsForClient(homeFeedDisplay)}
-              tickersByThemeSlug={tickersByThemeSlug}
-              themeMetaBySlug={themeMetaBySlug}
-            />
-          </DeferRender>
-
-          <LazyHomeThemesInMotionTable
-            rows={motionsHomepage}
-            asOf={motionsRes?.bundle?.as_of ?? motionsRes?.bundle?.calc_as_of}
-          />
-
-          <div className={styles.homeFeedStack}>
-            <div className={styles.directoryGrid}>
-              <DeferRender minHeight={480} rootMargin="420px 0px">
-                <LazyThemesInMotionMacroChart
-                  selectedDates={
-                    Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
-                  }
-                />
-              </DeferRender>
-
-              <LazyHomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
-
-              <AdPlacement
-                placement="homeDiscoveryMid"
-                className={`${styles.adSlot} ${styles.adHomeWide}`}
-                classNameWhenActive={`${styles.adSlot} ${styles.adHomeWide}`}
-                placeholderLabel="Ad Slot · Discovery"
-              />
-            </div>
-          </div>
-
-          <HomePublisherIntro />
+          <Suspense fallback={null}>
+            <HomeDeferredBand />
+          </Suspense>
         </div>
       </main>
     </PageSurface>

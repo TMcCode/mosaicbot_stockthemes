@@ -42,11 +42,7 @@ export default async function ThemesInMotionPage() {
             move is, with a few editor picks held in place. Home shows the top 10; this page has
             the full list.
           </p>
-          <HomeThemesInMotionTable
-            rows={pool}
-            maxRows={Number.POSITIVE_INFINITY}
-            asOf={motionsRes?.bundle?.as_of ?? motionsRes?.bundle?.calc_as_of}
-          />
+          <HomeThemesInMotionTable rows={pool} maxRows={Number.POSITIVE_INFINITY} />
           <DeferRender minHeight={460} rootMargin="200px 0px">
             <HomeHighlightedThemes
               items={pool

@@ -22,6 +22,37 @@
   width: 100%;
 }
 
+/* Mobile: native horizontal paging (swipe) — one set of chips per page. */
+.scroller {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  touch-action: pan-x;
+  scrollbar-width: none;
+}
+
+.scroller::-webkit-scrollbar {
+  display: none;
+}
+
+.page {
+  flex: 0 0 100%;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0 1px;
+}
+
 .chip {
   display: inline-flex;
   align-items: center;
@@ -40,7 +71,6 @@
   line-height: 1.4;
   text-align: center;
   text-decoration: none;
-  /* Allow the label itself to wrap inside the chip */
   white-space: normal;
   overflow-wrap: anywhere;
   word-break: normal;
@@ -110,18 +140,60 @@
 
 @media (max-width: 600px) {
   .strip {
-    margin-top: 10px;
+    margin-top: 8px;
   }
 
-  .row {
-    gap: 10px;
+  .label {
+    margin-bottom: 6px;
+    font-size: 9px;
+    letter-spacing: 0.05em;
+    opacity: 0.85;
   }
 
-  .chip {
+  .page .chip {
     flex: 1 1 100%;
     max-width: 100%;
     min-width: 0;
-    font-size: 13px;
-    padding: 10px 12px;
+    font-size: 11.5px;
+    font-weight: 400;
+    line-height: 1.35;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border-color: rgba(38, 252, 214, 0.16);
+    background: rgba(38, 252, 214, 0.04);
+    color: color-mix(in srgb, var(--fg, #e8eef7) 78%, var(--muted, #8a93a3));
+  }
+
+  .page .chip:hover,
+  .page .chip:focus-visible {
+    background: rgba(38, 252, 214, 0.1);
+    border-color: rgba(38, 252, 214, 0.32);
+  }
+
+  .dots {
+    margin-top: 7px;
+    gap: 4px;
+  }
+
+  .dotsPassive {
+    pointer-events: none;
+  }
+
+  .dot {
+    width: 4px;
+    height: 4px;
+    cursor: default;
+  }
+
+  :global(.st-theme[data-theme="light"]) .page .chip {
+    border-color: rgba(42, 152, 147, 0.22);
+    background: rgba(42, 207, 200, 0.05);
+    color: color-mix(in srgb, #1a2433 72%, #5a6472);
+  }
+
+  :global(.st-theme[data-theme="light"]) .page .chip:hover,
+  :global(.st-theme[data-theme="light"]) .page .chip:focus-visible {
+    background: rgba(42, 207, 200, 0.12);
+    border-color: rgba(42, 152, 147, 0.4);
   }
 }

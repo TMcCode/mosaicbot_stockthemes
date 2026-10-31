@@ -3,7 +3,6 @@
 import Link from "next/link";
 
 import { WatchlistStar } from "@/components/WatchlistStar";
-import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import type { ThemesInMotionRowV0 } from "@/types/themes_in_motion.v0";
 
 import styles from "./HomeThemesInMotionTable.module.css";
@@ -30,13 +29,10 @@ type Props = {
   rows: ThemesInMotionRowV0[];
   /** Homepage shows 10; view-all can pass a larger cap (or Infinity). */
   maxRows?: number;
-  /** Motions bake `as_of` (ISO) — shown lightly; cadence is not price-only. */
-  asOf?: string | null;
 };
 
-export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
+export function HomeThemesInMotionTable({ rows, maxRows = 10 }: Props) {
   const shown = maxRows === Number.POSITIVE_INFINITY ? rows : rows.slice(0, maxRows);
-  const asOfLabel = asOf?.trim() ? formatSiteDataPublished(asOf.trim()) : null;
   return (
     <section className={styles.section} aria-labelledby="themes-in-motion-heading">
       <div className={styles.head}>
@@ -116,11 +112,6 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10, asOf }: Props) {
           </tbody>
         </table>
       </div>
-      {asOfLabel ? (
-        <div className={styles.asOf}>
-          As of <time dateTime={asOf!.trim()}>{asOfLabel}</time>
-        </div>
-      ) : null}
     </section>
   );
 }

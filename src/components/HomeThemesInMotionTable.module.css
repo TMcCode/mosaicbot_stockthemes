@@ -22,29 +22,6 @@
   color: var(--text-primary);
 }
 
-/* Beat `.intro p` (18px / max-width 760) — Motions sits inside home/page intro. */
-:global(.intro) .asOf,
-.asOf {
-  margin: 4px 0 0;
-  padding: 0 8px 0 0;
-  max-width: none;
-  width: 100%;
-  box-sizing: border-box;
-  font-size: 9px;
-  font-weight: 400;
-  font-style: italic;
-  line-height: 1.25;
-  letter-spacing: 0.01em;
-  color: #a8a5b5;
-  text-align: right;
-  text-wrap: unset;
-}
-
-:global(.st-theme[data-theme="dark"]) .asOf,
-:global(.st-theme[data-theme="dark"] .intro) .asOf {
-  color: #6e7682;
-}
-
 :global(.st-theme[data-theme="light"]) .section {
   border-top-color: rgba(59, 77, 161, 0.12);
 }

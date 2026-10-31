@@ -6,11 +6,15 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { fetchChartSidecar, parseOverlayItemKey } from "@/lib/chartSidecar";
 import { capturePostHog } from "@/lib/posthogClient";
+import { isShortThemeName } from "@/lib/shortThemeChart";
 import type { HomeExplorePathV0 } from "@/types/home_explore_paths.v0";
 
 import styles from "./HomeExplorePaths.module.css";
 
 const DEFAULT_VISIBLE = 3;
+/** A couple chips on phone — enough to scan without burying search. */
+const MOBILE_VISIBLE = 2;
+const MOBILE_MAX_WIDTH = 600;
 const DEFAULT_ROTATE_MS = 10_000;
 
 type Props = {
@@ -19,6 +23,20 @@ type Props = {
   visibleCount?: number;
 };
 
+/** Short books strip "Short" in chip labels — hide them so PnL isn't confusing. */
+function pathTargetsShortTheme(path: HomeExplorePathV0): boolean {
+  const href = String(path.href || "");
+  if (!href.startsWith("/themes/")) return false;
+  const slug = href.split("/").pop()?.trim() || "";
+  if (slug && isShortThemeName(slug.replace(/-/g, " "))) return true;
+  for (const ent of path.entities || []) {
+    if (ent?.kind !== "theme") continue;
+    const entSlug = String(ent.slug || "").trim();
+    if (entSlug && isShortThemeName(entSlug.replace(/-/g, " "))) return true;
+  }
+  return false;
+}
+
 function chunkPaths(paths: HomeExplorePathV0[], size: number): HomeExplorePathV0[][] {
   if (!paths.length || size < 1) return [];
   const chunks: HomeExplorePathV0[][] = [];
@@ -26,16 +44,37 @@ function chunkPaths(paths: HomeExplorePathV0[], size: number): HomeExplorePathV0
     const slice = paths.slice(i, i + size);
     if (slice.length) chunks.push(slice);
   }
-  // If the last chunk is short, leave it — still valid navigation.
   return chunks;
 }
 
+/**
+ * Viewport is unknown until mount — keep SSR + first client paint identical
+ * (desktop row) to avoid hydration mismatches, then upgrade to mobile scroller.
+ */
+function useNarrowExploreViewport(): boolean | null {
+  const [narrow, setNarrow] = useState<boolean | null>(null);
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      setNarrow(false);
+      return;
+    }
+    const mq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
+    const sync = () => setNarrow(mq.matches);
+    sync();
+    if (typeof mq.addEventListener === "function") {
+      mq.addEventListener("change", sync);
+      return () => mq.removeEventListener("change", sync);
+    }
+    mq.addListener(sync);
+    return () => mq.removeListener(sync);
+  }, []);
+  return narrow;
+}
+
 function prefetchTarget(href: string): string {
-  // Overlay/compare URLs keep their query string; hash is never needed for RSC prefetch.
   return String(href || "").split("#")[0].trim();
 }
 
-/** Warm public CDN chart sidecars for compare chips (groups/tickers; themes are Tier B). */
 function prefetchOverlaySidecars(href: string, warmed: Set<string>) {
   const path = prefetchTarget(href);
   if (!path.startsWith("/overlay")) return;
@@ -48,7 +87,6 @@ function prefetchOverlaySidecars(href: string, warmed: Set<string>) {
   for (const raw of items.split(",")) {
     const parsed = parseOverlayItemKey(raw.trim());
     if (!parsed) continue;
-    // Theme Tier B needs auth cookie path — skip warm from homepage to avoid noise.
     if (parsed.kind === "theme") continue;
     const key = `${parsed.kind}:${parsed.slug}`;
     if (warmed.has(key)) continue;
@@ -57,12 +95,45 @@ function prefetchOverlaySidecars(href: string, warmed: Set<string>) {
   }
 }
 
+function ChipLink({
+  path,
+  fading,
+  onPrefetch,
+}: {
+  path: HomeExplorePathV0;
+  fading?: boolean;
+  onPrefetch: (href: string) => void;
+}) {
+  return (
+    <Link
+      href={path.href}
+      prefetch={false}
+      className={`${styles.chip}${fading ? ` ${styles.chipExit}` : ""}`}
+      onMouseEnter={() => onPrefetch(path.href)}
+      onClick={() => {
+        capturePostHog("home_path_chip_clicked", {
+          path_id: path.id,
+          path_kind: path.kind,
+          href: path.href,
+          label: path.label,
+          source: path.source ?? null,
+        });
+      }}
+    >
+      {path.label}
+    </Link>
+  );
+}
+
 export function HomeExplorePaths({
   paths,
   rotateSeconds = 10,
   visibleCount = DEFAULT_VISIBLE,
 }: Props) {
   const router = useRouter();
+  const narrow = useNarrowExploreViewport();
+  // Until viewport is known, mirror desktop markup for hydration safety.
+  const isMobile = narrow === true;
   const cleaned = useMemo(
     () =>
       paths.filter(
@@ -71,26 +142,39 @@ export function HomeExplorePaths({
           typeof p.label === "string" &&
           p.label.trim() &&
           typeof p.href === "string" &&
-          p.href.startsWith("/"),
+          p.href.startsWith("/") &&
+          !pathTargetsShortTheme(p),
       ),
     [paths],
   );
 
-  const visible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
+  const desktopVisible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
+  const visible = isMobile ? MOBILE_VISIBLE : desktopVisible;
   const chunks = useMemo(() => chunkPaths(cleaned, visible), [cleaned, visible]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [fading, setFading] = useState(false);
   const impressedRef = useRef<Set<string>>(new Set());
   const prefetchedRef = useRef<Set<string>>(new Set());
-  // Slightly snappier than the published default so rotation is obvious on first visit.
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const scrollPauseTimer = useRef<number | null>(null);
   const rotateMs = Math.max(5, Math.min(rotateSeconds || 8, 12)) * 1000 || DEFAULT_ROTATE_MS;
 
   useEffect(() => {
     setIndex(0);
-  }, [chunks.length]);
+    const el = scrollerRef.current;
+    if (el) el.scrollLeft = 0;
+  }, [chunks.length, visible]);
 
   const active = chunks[index] ?? chunks[0] ?? [];
+
+  const prefetchHref = (href: string) => {
+    const target = prefetchTarget(href);
+    if (!target || prefetchedRef.current.has(target)) return;
+    prefetchedRef.current.add(target);
+    void router.prefetch(target);
+    prefetchOverlaySidecars(target, prefetchedRef.current);
+  };
 
   useEffect(() => {
     if (!active.length) return;
@@ -107,24 +191,21 @@ export function HomeExplorePaths({
     }
   }, [active]);
 
-  // Prefetch the visible set + next rotation (mobile has no hover). Cap keeps homepage light.
   useEffect(() => {
     if (typeof window === "undefined" || !chunks.length) return;
     const next = chunks[(index + 1) % chunks.length] ?? [];
-    const batch = [...active, ...next];
-    for (const p of batch) {
-      const href = prefetchTarget(p.href);
-      if (!href) continue;
-      if (!prefetchedRef.current.has(href)) {
-        prefetchedRef.current.add(href);
-        void router.prefetch(href);
-      }
-      prefetchOverlaySidecars(href, prefetchedRef.current);
+    for (const p of [...active, ...next]) {
+      const target = prefetchTarget(p.href);
+      if (!target || prefetchedRef.current.has(target)) continue;
+      prefetchedRef.current.add(target);
+      void router.prefetch(target);
+      prefetchOverlaySidecars(target, prefetchedRef.current);
     }
   }, [active, chunks, index, router]);
 
+  // Desktop (and pre-mount): fade-rotate through chunk sets.
   useEffect(() => {
-    if (paused || chunks.length <= 1 || typeof window === "undefined") return;
+    if (isMobile || paused || chunks.length <= 1 || typeof window === "undefined") return;
     let fadeTimer: number | null = null;
     const t = window.setInterval(() => {
       setFading(true);
@@ -137,64 +218,100 @@ export function HomeExplorePaths({
       window.clearInterval(t);
       if (fadeTimer != null) window.clearTimeout(fadeTimer);
     };
-  }, [paused, chunks.length, rotateMs]);
+  }, [isMobile, paused, chunks.length, rotateMs]);
 
-  if (!cleaned.length || !active.length) {
+  // Mobile: auto-advance via native scroll (swipe uses the same scroller).
+  useEffect(() => {
+    if (!isMobile || paused || chunks.length <= 1 || typeof window === "undefined") return;
+    const t = window.setInterval(() => {
+      const el = scrollerRef.current;
+      if (!el || !el.clientWidth) return;
+      const page = Math.round(el.scrollLeft / el.clientWidth);
+      const next = (page + 1) % chunks.length;
+      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+    }, rotateMs);
+    return () => window.clearInterval(t);
+  }, [isMobile, paused, chunks.length, rotateMs]);
+
+  const onMobileScroll = () => {
+    const el = scrollerRef.current;
+    if (!el || !el.clientWidth) return;
+    const page = Math.round(el.scrollLeft / el.clientWidth);
+    if (page !== index && page >= 0 && page < chunks.length) {
+      setIndex(page);
+    }
+    setPaused(true);
+    if (scrollPauseTimer.current != null) window.clearTimeout(scrollPauseTimer.current);
+    scrollPauseTimer.current = window.setTimeout(() => setPaused(false), 2800);
+  };
+
+  if (!cleaned.length || !chunks.length) {
     return null;
   }
 
   return (
     <div className={styles.strip}>
       <span className={styles.label}>Trending themes</span>
-      <div
-        className={styles.row}
-        aria-live="polite"
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        onFocusCapture={() => setPaused(true)}
-        onBlurCapture={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
-            setPaused(false);
-          }
-        }}
-      >
-        {active.map((p) => (
-          <Link
-            key={`${index}-${p.id}`}
-            href={p.href}
-            prefetch={false}
-            className={`${styles.chip}${fading ? ` ${styles.chipExit}` : ""}`}
-            onMouseEnter={() => {
-              const href = prefetchTarget(p.href);
-              if (!href || prefetchedRef.current.has(href)) return;
-              prefetchedRef.current.add(href);
-              void router.prefetch(href);
-            }}
-            onClick={() => {
-              capturePostHog("home_path_chip_clicked", {
-                path_id: p.id,
-                path_kind: p.kind,
-                href: p.href,
-                label: p.label,
-                source: p.source ?? null,
-              });
-            }}
-          >
-            {p.label}
-          </Link>
-        ))}
-      </div>
-      {chunks.length > 1 ? (
-        <div className={styles.dots} aria-hidden>
-          {chunks.map((_, i) => (
-            <button
-              key={i}
-              type="button"
-              className={`${styles.dot}${i === index ? ` ${styles.dotActive}` : ""}`}
-              onClick={() => setIndex(i)}
-              aria-label={`Show explore set ${i + 1}`}
+      {isMobile ? (
+        <div
+          ref={scrollerRef}
+          className={styles.scroller}
+          aria-live="polite"
+          onScroll={onMobileScroll}
+          onTouchStart={() => setPaused(true)}
+        >
+          {chunks.map((chunk, page) => (
+            <div key={`page-${page}`} className={styles.page}>
+              {chunk.map((p) => (
+                <ChipLink key={`${page}-${p.id}`} path={p} onPrefetch={prefetchHref} />
+              ))}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div
+          className={styles.row}
+          aria-live="polite"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          onFocusCapture={() => setPaused(true)}
+          onBlurCapture={(e) => {
+            if (!e.currentTarget.contains(e.relatedTarget as Node | null)) {
+              setPaused(false);
+            }
+          }}
+        >
+          {active.map((p) => (
+            <ChipLink
+              key={`${index}-${p.id}`}
+              path={p}
+              fading={fading}
+              onPrefetch={prefetchHref}
             />
           ))}
+        </div>
+      )}
+      {chunks.length > 1 ? (
+        <div
+          className={`${styles.dots}${isMobile ? ` ${styles.dotsPassive}` : ""}`}
+          aria-hidden
+        >
+          {chunks.map((_, i) =>
+            isMobile ? (
+              <span
+                key={i}
+                className={`${styles.dot}${i === index ? ` ${styles.dotActive}` : ""}`}
+              />
+            ) : (
+              <button
+                key={i}
+                type="button"
+                className={`${styles.dot}${i === index ? ` ${styles.dotActive}` : ""}`}
+                onClick={() => setIndex(i)}
+                aria-label={`Show explore set ${i + 1}`}
+              />
+            ),
+          )}
         </div>
       ) : null}
     </div>

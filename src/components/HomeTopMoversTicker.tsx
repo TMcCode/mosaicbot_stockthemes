@@ -277,9 +277,6 @@ export function HomeTopMoversTicker({
     </div>
   );
 
-  const topCount = safeItems.filter((i) => i.tier === "top").length;
-  const bottomCount = safeItems.filter((i) => i.tier === "bottom").length;
-
   const viewportClass = [
     styles.viewport,
     scrubbing ? styles.viewportDragging : "",
@@ -288,8 +285,8 @@ export function HomeTopMoversTicker({
     .filter(Boolean)
     .join(" ");
 
-  const periodLabel = trendingColumnHeader(period);
   const showBoard = hasCloseBoard && boardExpanded && closeBoard;
+  const periodLabel = showBoard ? "1D close" : trendingColumnHeader(period);
 
   return (
     <section
@@ -342,10 +339,8 @@ export function HomeTopMoversTicker({
           ) : null}
         </div>
         <span className={styles.meta}>
-          {showBoard
-            ? `1D close · top ${closeBoard?.top.length ?? 0} · bottom ${closeBoard?.bottom.length ?? 0}`
-            : `${periodLabel} · ${topCount} gainers · ${bottomCount} losers`}
-          {asOfLabel ? ` · ${asOfLabel}` : ""}
+          {periodLabel}
+          {asOfLabel ? <> · Last updated: {asOfLabel}</> : null}
           {" · "}
           <Link href="/compare" className={styles.metaLink}>
             All theme returns →

@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import Script from "next/script";
 import "./globals.css";
 
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
@@ -80,14 +79,13 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href={STOCKTHEMES_PUBLIC_BASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={STOCKTHEMES_PUBLIC_BASE_URL} />
-      </head>
-      <body>
-        {/* Apply stored theme (default dark) before hydration — next/script, not raw <script>. */}
-        <Script
+        {/* Blocking theme boot in <head> — avoid next/script in <body> (React 19 client script warning). */}
+        <script
           id="stockthemes-theme-boot"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }}
         />
+      </head>
+      <body>
         {/* <AdSenseGlobalScript /> */}
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>

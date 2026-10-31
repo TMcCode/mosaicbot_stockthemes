@@ -80,7 +80,8 @@
 }
 
 .toggleBtnActive {
-  color: var(--text-primary, #04120f);
+  /* Must not use --text-primary (light on dark theme) — mint chip needs dark ink. */
+  color: #04120f;
   background: var(--accent, #26fcd6);
 }
 
