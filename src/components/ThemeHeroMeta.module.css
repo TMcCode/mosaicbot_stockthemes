@@ -82,10 +82,10 @@
   white-space: nowrap;
 }
 
-/* Group chip can eat leftover width; long names ellipsis instead of wrapping the row. */
+/* Keep pills content-sized — long group names ellipsis inside the chip, no stretch. */
 .rankPill:last-child {
-  flex: 1 1 auto;
-  justify-content: flex-start;
+  flex: 0 1 auto;
+  max-width: 100%;
   overflow: hidden;
 }
 
