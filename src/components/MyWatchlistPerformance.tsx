@@ -11,6 +11,7 @@ import { WatchlistThemeAddCombobox } from "@/components/WatchlistThemeAddCombobo
 import { WatchlistLimitInterestNote } from "@/components/WatchlistLimitInterestNote";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import { buildSelectedDateLookup, customDateHelpText } from "@/lib/customDateColumnHelp";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type {
   MyWatchlistCompareData,
   MyWatchlistCompareRow,
@@ -202,7 +203,7 @@ export function MyWatchlistPerformance({ email, compareData }: Props) {
                         Remove
                       </button>
                       <Link href={`/themes/${row.slug}`} className={tableStyles.themeName}>
-                        {row.name}
+                        {themeDisplayLabel(row.name)}
                       </Link>
                     </div>
                     {row.groupName ? (

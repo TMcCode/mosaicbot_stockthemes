@@ -13,6 +13,7 @@ import dynamic from "next/dynamic";
 
 import type { CloseMoversBoardPayload } from "@/lib/buildCloseMoversBoard";
 import type { TopMoverTickerItem, TopMoverTickerPeriod } from "@/lib/buildTopMoversTicker";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { trendingColumnHeader } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
@@ -89,7 +90,7 @@ function TickerChip({
       <span className={styles.chipRank}>
         {item.tier === "top" ? `#${item.rank}` : `▼${item.rank}`}
       </span>
-      <span className={styles.chipName}>{item.name}</span>
+      <span className={styles.chipName}>{themeDisplayLabel(item.name)}</span>
       <span className={styles.chipPct}>{fmtPct(item.returnPct)}</span>
     </Link>
   );

@@ -11,6 +11,7 @@ import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatWeight } from "@/lib/formatWeight";
 import { capturePostHog, capturePostHogException } from "@/lib/posthogClient";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -190,7 +191,7 @@ export function ThemeDetailRuntimeLoader({
           <Chart1yPanel
             chart1y={detail.chart_1y}
             compositionMetaByTicker={compositionMetaByTicker}
-            performanceTitle={detail.name}
+            performanceTitle={themeDisplayLabel(detail.name)}
             benchmarkPerformance={benchmarkPerformance}
             selectedDates={selectedDates}
             sidecarEntity={{ kind: "theme", slug }}

@@ -14,6 +14,7 @@ import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
 import { getStockDetailCached } from "@/lib/getStockDetailCached";
 import { listStockFixtureTickers } from "@/lib/loadStockDetail";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
+import { stripThemeYearInProse, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { stockDetailPublicSeed } from "@/lib/stockDetailClientSeed";
 import { mergeStockStaticTickers } from "@/lib/stockStaticParams";
 import { stockPagePath } from "@/lib/stockPagePath";
@@ -61,9 +62,11 @@ function stockPageDescription(
   ticker: string,
 ): string {
   const name = detail?.name?.trim() || ticker;
-  if (detail?.seo_intro?.trim()) return clipDescription(detail.seo_intro);
+  if (detail?.seo_intro?.trim()) {
+    return clipDescription(stripThemeYearInProse(detail.seo_intro));
+  }
   const themeNames = (detail?.themes || [])
-    .map((t) => t.name)
+    .map((t) => themeDisplayLabel(t.name))
     .filter(Boolean)
     .slice(0, 4);
   const themeBit = themeNames.length ? ` Themes: ${themeNames.join("; ")}.` : "";

@@ -33,6 +33,7 @@ import type { ThemeRevenueRevisionsV0 } from "@/types/theme.revenue.v0";
 
 import pageStyles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import styles from "./StockLensPanels.module.css";
 
 const WEIGHTED_THEMES_LABEL = "Weighted themes";
@@ -98,7 +99,7 @@ function rowSortValue(
   revColumns: RevenueColumnDef[],
 ): number | string | null {
   if (key === "theme") {
-    return row.kind === "ticker" ? tickerLabel : row.theme.name;
+    return row.kind === "ticker" ? tickerLabel : themeDisplayLabel(row.theme.name);
   }
   if (key === "weight") {
     return row.kind === "theme" && row.theme.weight != null && Number.isFinite(row.theme.weight)
@@ -476,7 +477,7 @@ export function StockRevisionsPanel({ ticker, membershipThemes, sidecarState }: 
                   return (
                     <tr key={t.slug}>
                       <td>
-                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{t.name}</Link>
+                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{themeDisplayLabel(t.name)}</Link>
                       </td>
                       {hasWeight ? (
                         <td className={styles.wgtCell} style={{ textAlign: "right" }}>

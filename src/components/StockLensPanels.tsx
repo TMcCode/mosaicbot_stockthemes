@@ -59,6 +59,7 @@ import { StockRevisionsPanel } from "@/components/StockRevisionsPanel";
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import pageStyles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import styles from "./StockLensPanels.module.css";
 
 type LensView = "period" | "earnings" | "revenue" | "revisions" | "quality_risk" | "notes";
@@ -181,7 +182,9 @@ type HeatBodyRow =
   | { kind: "theme"; theme: StockThemeMembershipAppV0 };
 
 function heatRowLabel(row: HeatBodyRow): string {
-  return row.kind === "ticker" ? row.label : row.theme.name || row.theme.slug;
+  return row.kind === "ticker"
+    ? row.label
+    : themeDisplayLabel(row.theme.name || row.theme.slug);
 }
 
 function heatRowWeight(row: HeatBodyRow): number | null {
@@ -689,7 +692,7 @@ export function StockLensPanels({
                         return (
                           <tr key={t.slug}>
                             <td>
-                              <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{t.name}</Link>
+                              <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{themeDisplayLabel(t.name)}</Link>
                             </td>
                             <td className={styles.wgtCell} style={{ textAlign: "right" }}>
                               {t.weight != null && Number.isFinite(t.weight)

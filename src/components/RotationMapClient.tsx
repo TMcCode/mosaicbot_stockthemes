@@ -20,7 +20,7 @@ import {
   type RotationMapPoint,
   type RotationMapSource,
 } from "@/lib/buildRotationMapData";
-import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
+import { rotationThemeLabelSuffix, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   coerceRotationLongAxis,
   coerceRotationShortAxis,
@@ -891,7 +891,7 @@ function RotationMapChart({ eyebrow, asOf, source }: ChartProps) {
               top: `${(hover.sy / SVG_H) * 100}%`,
             }}
           >
-            <div className={styles.tooltipTitle}>{hover.point.name}</div>
+            <div className={styles.tooltipTitle}>{themeDisplayLabel(hover.point.name)}</div>
             <div className={styles.tooltipMeta}>{hover.point.sector}</div>
             {formatRotationRank10d(hover.point.rank10d, hover.point.kind) ? (
               <div className={styles.tooltipRank}>

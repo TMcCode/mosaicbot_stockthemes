@@ -74,7 +74,6 @@ export function FactorMakeupScoreTable({ series, selectedAxisId, onSelectAxis }:
                     scope="colgroup"
                     colSpan={2}
                     className={styles.themeCol}
-                    title={s.name}
                   >
                     <span className={styles.themeHead}>
                       <span className={styles.swatch} style={{ background: s.color }} />

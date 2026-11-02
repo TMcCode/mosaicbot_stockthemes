@@ -6,7 +6,7 @@ import { useMemo, useState } from "react";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
-import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
+import { splitThemeDisplayName, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type { GroupThemeTableRow } from "@/lib/groupThemesTable";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import {
@@ -140,6 +140,7 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
               <tbody>
                 {sortedRows.map((row) => {
                   const { title } = splitThemeDisplayName(row.name);
+                  const displayName = themeDisplayLabel(row.name);
                   return (
                   <tr key={row.slug}>
                     <td>
@@ -147,9 +148,8 @@ export function GroupThemesTable({ rows, metricColumns, selectedDates }: Props) 
                         href={`/themes/${row.slug}`}
                         className={styles.name}
                         prefetch={false}
-                        title={row.name}
                       >
-                        <span className={localStyles.nameFull}>{row.name}</span>
+                        <span className={localStyles.nameFull}>{displayName}</span>
                         <span className={localStyles.nameShort}>{title}</span>
                       </Link>
                     </td>

@@ -16,6 +16,7 @@ import {
   stockAppBrowserPath,
 } from "@/lib/mergeStockApp";
 import { absoluteUrl } from "@/lib/seoMetadata";
+import { themeDisplayLabel, stripThemeYearInProse } from "@/lib/rotationThemeLabel";
 import { loadSearchIndexBrowser } from "@/lib/searchIndexBrowser";
 import { stockPagePath } from "@/lib/stockPagePath";
 import {
@@ -64,9 +65,11 @@ function stockPageDescription(
   ticker: string,
 ): string {
   const name = detail?.name?.trim() || ticker;
-  if (detail?.seo_intro?.trim()) return clipDescription(detail.seo_intro);
+  if (detail?.seo_intro?.trim()) {
+    return clipDescription(stripThemeYearInProse(detail.seo_intro));
+  }
   const themeNames = (detail?.themes || [])
-    .map((t) => t.name)
+    .map((t) => themeDisplayLabel(t.name))
     .filter(Boolean)
     .slice(0, 4);
   const themeBit = themeNames.length ? ` Themes: ${themeNames.join("; ")}.` : "";

@@ -9,7 +9,7 @@ import {
   groupEyebrowFromThemeName,
   rotationThemeLabelSuffix,
   stripThemeYearSuffix,
-  themeYearChipFromName,
+  themeDisplayLabel,
 } from "@/lib/rotationThemeLabel";
 import type {
   ManifestHomeFeedEventV0,
@@ -78,11 +78,6 @@ function cleanFeedTitle(evt: ManifestHomeFeedEventV0): string {
     if (base) return base;
   }
   return title;
-}
-
-/** ``'24`` from ``Auto OEMs '24: …`` (same idea as Narrative Radar). */
-function yearChipFromName(name: string): string | null {
-  return themeYearChipFromName(name);
 }
 
 /** Parse ``"AAPL, MSFT added"`` / ``"ETB.BO removed"`` phrases into chips. */
@@ -214,22 +209,16 @@ export function FeedEventCardBody({
     String(meta?.groupName || "").trim() ||
     groupEyebrowFromThemeName(fullThemeName) ||
     "";
-  // Year lives in the chip — never leave `'26` in the eyebrow or title text.
   const groupName = stripThemeYearSuffix(groupNameRaw) || groupNameRaw;
   const groupSlug = String(meta?.groupSlug || "").trim();
   const tickerCount =
     meta?.tickerCount != null && Number.isFinite(Number(meta.tickerCount))
       ? Math.max(0, Math.trunc(Number(meta.tickerCount)))
       : null;
-  // Match suffix against raw group (may include year); strip year from what we render.
-  const themeLabelRaw =
+  // Match suffix against raw group (may include year); never show `'YY` in the title.
+  const themeLabel =
     rotationThemeLabelSuffix(fullThemeName, groupNameRaw) ||
-    stripThemeYearSuffix(fullThemeName);
-  const themeLabel = stripThemeYearSuffix(themeLabelRaw) || themeLabelRaw;
-  const yearChip =
-    yearChipFromName(fullThemeName) ||
-    yearChipFromName(groupNameRaw) ||
-    yearChipFromName(themeLabelRaw);
+    themeDisplayLabel(fullThemeName);
 
   let holdings = Array.isArray(evt.holdings_preview) ? [...evt.holdings_preview] : [];
   let holdingsMore = Number(evt.holdings_more_count) || 0;
@@ -325,7 +314,7 @@ export function FeedEventCardBody({
         <Link
           href={`/themes/${slug}`}
           className={styles.cardStretchLink}
-          aria-label={`Open ${fullThemeName}`}
+          aria-label={`Open ${themeLabel}`}
         />
       ) : null}
 
@@ -349,7 +338,6 @@ export function FeedEventCardBody({
       <div className={styles.titleRow}>
         <div className={styles.titleLeft}>
           <span className={styles.title}>{themeLabel}</span>
-          {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
         </div>
         {flipperNav ? (
           <div className={`${styles.titleRight} ${styles.cardRaise}`}>{flipperNav}</div>

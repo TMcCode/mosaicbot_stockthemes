@@ -23,7 +23,7 @@ import {
 } from "@/lib/buildWatchlistRadarEnrich";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
 import { HOME_RADAR_HOME_CARD_LIMIT } from "@/lib/watchlist/limitsCopy";
-import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
+import { rotationThemeLabelSuffix, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { fetchRadarNewsBrowser } from "@/lib/fetchRadarNewsBrowser";
 import { splitAfternoonMorning } from "@/lib/radarNewsLayout";
 import { trendingReturnCardGradientStyle } from "@/lib/trendingPerfHeat";
@@ -302,15 +302,6 @@ function newsCardsForTab(
   return rawPool;
 }
 
-function yearChipLabel(card: { year_suffix?: number | null; name?: string }): string | null {
-  const y = card.year_suffix;
-  if (y != null && Number.isFinite(Number(y))) {
-    return `'${String(Math.trunc(Number(y))).padStart(2, "0").slice(-2)}`;
-  }
-  const m = /'(\d{2})\b/.exec(String(card.name || ""));
-  return m ? `'${m[1]}` : null;
-}
-
 function RadarCardStar({ slug, name }: { slug?: string | null; name: string }) {
   const key = String(slug || "").trim();
   if (!key) return null;
@@ -345,12 +336,13 @@ function RadarCardBody({
   const moreHidden = Number.isFinite(card.tickers_preview_more)
     ? Math.max(0, Number(card.tickers_preview_more))
     : 0;
-  const title = rotationThemeLabelSuffix(card.name, card.group_name);
+  const title =
+    rotationThemeLabelSuffix(card.name, card.group_name) || themeDisplayLabel(card.name);
   const secondary = metricSecondaryLabel(card);
   const rev = fmtRevRevisions(card.rev_delta_pp);
   return (
     <>
-      {!omitTitle ? <div className={styles.cardTitle}>{title || card.name}</div> : null}
+      {!omitTitle ? <div className={styles.cardTitle}>{title}</div> : null}
       {card.thesis ? <p className={styles.whyNow}>{card.thesis}</p> : null}
       <div className={styles.metrics}>
         <span>1M {fmtPct(card.return_1m)}</span>
@@ -390,28 +382,26 @@ function RadarCardStatic({
   companyNames?: Record<string, string>;
 }) {
   const group = String(card.group_name || "").trim();
-  const yearChip = yearChipLabel(card);
   const href = card.slug ? `/themes/${card.slug}` : "/themes";
-  const title = rotationThemeLabelSuffix(card.name, card.group_name);
+  const title =
+    rotationThemeLabelSuffix(card.name, card.group_name) || themeDisplayLabel(card.name);
   const heat =
     card.return_1m != null && Number.isFinite(Number(card.return_1m))
       ? trendingReturnCardGradientStyle(Number(card.return_1m))
       : undefined;
-  const meta =
-    group || yearChip ? (
-      <div className={styles.cardMeta}>
-        {group ? <span className={styles.cardGroup}>{group}</span> : null}
-        {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
-      </div>
-    ) : null;
+  const meta = group ? (
+    <div className={styles.cardMeta}>
+      <span className={styles.cardGroup}>{group}</span>
+    </div>
+  ) : null;
 
   return (
     <div className={styles.card} style={heat}>
       <div className={styles.cardTitleRow}>
         <Link href={href} className={styles.cardTitleLink}>
-          <div className={styles.cardTitle}>{title || card.name}</div>
+          <div className={styles.cardTitle}>{title}</div>
         </Link>
-        <RadarCardStar slug={card.slug} name={card.name} />
+        <RadarCardStar slug={card.slug} name={title} />
       </div>
       {meta}
       <Link href={href} className={styles.cardBodyLink}>
@@ -433,27 +423,26 @@ function RadarCardFlipper({
   const safeIdx = ((idx % siblings.length) + siblings.length) % siblings.length;
   const current = siblings[safeIdx] ?? card;
   const group = String(card.group_name || current.group_name || "").trim();
-  const yearChip = yearChipLabel(current);
   const href = current.slug ? `/themes/${current.slug}` : "/themes";
-  const title = rotationThemeLabelSuffix(current.name, current.group_name);
+  const title =
+    rotationThemeLabelSuffix(current.name, current.group_name) ||
+    themeDisplayLabel(current.name);
   const heat =
     current.return_1m != null && Number.isFinite(Number(current.return_1m))
       ? trendingReturnCardGradientStyle(Number(current.return_1m))
       : undefined;
 
-  const meta =
-    group || yearChip ? (
-      <div className={styles.cardMeta}>
-        {group ? <span className={styles.cardGroup}>{group}</span> : null}
-        {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
-      </div>
-    ) : null;
+  const meta = group ? (
+    <div className={styles.cardMeta}>
+      <span className={styles.cardGroup}>{group}</span>
+    </div>
+  ) : null;
 
   return (
     <div className={styles.card} style={heat}>
       <div className={styles.cardTitleRow}>
         <Link href={href} className={styles.cardTitleLink}>
-          <div className={styles.cardTitle}>{title || current.name}</div>
+          <div className={styles.cardTitle}>{title}</div>
         </Link>
         <div className={styles.flipperNav} role="group" aria-label="Themes in this group">
           <button
@@ -484,7 +473,7 @@ function RadarCardFlipper({
             ›
           </button>
         </div>
-        <RadarCardStar slug={current.slug} name={current.name} />
+        <RadarCardStar slug={current.slug} name={title} />
       </div>
       {meta}
       <Link href={href} className={styles.cardBodyLink}>
@@ -644,8 +633,8 @@ function NewsRadarCard({
     card.return_1m != null && Number.isFinite(Number(card.return_1m))
       ? trendingReturnCardGradientStyle(Number(card.return_1m))
       : undefined;
-  const title = rotationThemeLabelSuffix(card.name, card.group_name);
-  const yearChip = yearChipLabel(card);
+  const title =
+    rotationThemeLabelSuffix(card.name, card.group_name) || themeDisplayLabel(card.name);
   const group = String(card.group_name || "").trim();
   const articleDate = fmtArticleDate(headline?.published_at);
   const sourceName = String(headline?.source_name || "").trim();
@@ -687,14 +676,13 @@ function NewsRadarCard({
     <div className={`${styles.card} ${styles.cardNews}`} style={heat}>
       <div className={styles.cardTitleRow}>
         <Link href={href} className={styles.cardTitleLink}>
-          <div className={styles.cardTitle}>{title || card.name}</div>
+          <div className={styles.cardTitle}>{title}</div>
         </Link>
-        <RadarCardStar slug={card.slug} name={card.name} />
+        <RadarCardStar slug={card.slug} name={title} />
       </div>
-      {group || yearChip ? (
+      {group ? (
         <div className={styles.cardMeta}>
-          {group ? <span className={styles.cardGroup}>{group}</span> : null}
-          {yearChip ? <span className={styles.yearChip}>{yearChip}</span> : null}
+          <span className={styles.cardGroup}>{group}</span>
         </div>
       ) : null}
       {slideCount > 1 ? (

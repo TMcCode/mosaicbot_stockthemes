@@ -19,6 +19,7 @@ import {
   type ThemeFactorMakeupScores,
 } from "@/lib/loadThemeFactorVectors";
 import { OVERLAY_CHART_PALETTE } from "@/lib/overlayChartPalette";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 
 import pageStyles from "@/components/FactorsPageClient.module.css";
 import styles from "./FactorMakeupPanel.module.css";
@@ -92,7 +93,7 @@ export function FactorMakeupPanel({
       );
       return {
         slug: t.slug,
-        name: row?.theme || t.theme,
+        name: themeDisplayLabel(row?.theme || t.theme),
         color: OVERLAY_CHART_PALETTE[idx % OVERLAY_CHART_PALETTE.length],
         values,
         ranks,
@@ -115,7 +116,8 @@ export function FactorMakeupPanel({
     onThemesChange(themes.filter((t) => t.slug !== slug));
   };
 
-  const displayName = (t: FactorMakeupTheme) => index?.get(t.slug)?.theme || t.theme;
+  const displayName = (t: FactorMakeupTheme) =>
+    themeDisplayLabel(index?.get(t.slug)?.theme || t.theme);
 
   const onSelectAxis = (axisId: FactorMakeupAxisId | null) => {
     setSelectedAxisId(axisId);

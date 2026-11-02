@@ -3,6 +3,7 @@
 import Link from "next/link";
 
 import { WatchlistStar } from "@/components/WatchlistStar";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type { ThemesInMotionRowV0 } from "@/types/themes_in_motion.v0";
 
 import styles from "./HomeThemesInMotionTable.module.css";
@@ -68,6 +69,7 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10 }: Props) {
             ) : (
               shown.map((r) => {
                 const { pct: breadthPct, suffix: breadthSuffix } = breadthParts(r);
+                const label = themeDisplayLabel(r.name);
                 return (
                 <tr key={r.slug || r.name}>
                   <td className={styles.stickyCol}>
@@ -77,7 +79,7 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10 }: Props) {
                           compact
                           itemType="theme"
                           itemKey={r.slug}
-                          label={r.name}
+                          label={label}
                           signInNext={`/themes/${r.slug}`}
                         />
                       ) : null}
@@ -85,7 +87,7 @@ export function HomeThemesInMotionTable({ rows, maxRows = 10 }: Props) {
                         href={r.slug ? `/themes/${r.slug}` : "/themes"}
                         className={styles.themeLink}
                       >
-                        {r.name}
+                        {label}
                       </Link>
                     </div>
                   </td>

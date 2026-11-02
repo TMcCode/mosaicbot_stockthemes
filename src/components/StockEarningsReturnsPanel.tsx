@@ -34,6 +34,7 @@ import type { ThemeDetailConstituentV0 } from "@/types/theme.detail.v0";
 
 import pageStyles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import styles from "./StockLensPanels.module.css";
 
 const DEFAULT_SORTS: ConstituentSortState[] = [{ key: "weight", dir: "desc" }];
@@ -115,7 +116,7 @@ function earnRowSortValue(
   tickerLabel: string,
 ): number | string | null {
   if (key === "theme") {
-    return row.kind === "ticker" ? tickerLabel : row.theme.name;
+    return row.kind === "ticker" ? tickerLabel : themeDisplayLabel(row.theme.name);
   }
   if (key === "weight") {
     return row.kind === "theme" && row.theme.weight != null && Number.isFinite(row.theme.weight)
@@ -366,7 +367,7 @@ export function StockEarningsReturnsPanel({
                 return (
                   <tr key={t.slug}>
                     <td>
-                      <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{t.name}</Link>
+                      <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{themeDisplayLabel(t.name)}</Link>
                     </td>
                     {hasWeight ? (
                       <td className={styles.wgtCell} style={{ textAlign: "right" }}>

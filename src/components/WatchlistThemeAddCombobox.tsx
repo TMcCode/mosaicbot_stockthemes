@@ -12,6 +12,7 @@ import {
   watchlistFullPlaceholder,
   watchlistLimitInterestMailto,
 } from "@/lib/watchlist/limitsCopy";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { collectSiteSearchThemeHits } from "@/lib/siteSearchHits";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import type { SearchIndexThemeRowV0 } from "@/types/search_index.v0";
@@ -178,7 +179,7 @@ export function WatchlistThemeAddCombobox({ embedded = false }: Props) {
                     onMouseEnter={() => setActive(i)}
                     onClick={() => void addTheme(t)}
                   >
-                    <span className={styles.optionName}>{t.name}</span>
+                    <span className={styles.optionName}>{themeDisplayLabel(t.name)}</span>
                     {t.group_name ? (
                       <span className={styles.optionMeta}>{t.group_name}</span>
                     ) : null}

@@ -8,7 +8,7 @@ import styles from "@/app/page.module.css";
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import type { ChartPerfReturns } from "@/lib/computeThemePerf";
-import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
+import { splitThemeDisplayName, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   trendingColumnHeader,
   valueForTrendingColumn,
@@ -155,6 +155,7 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
           {sortedRows.flatMap((row) => {
             const keyBase = row.slug ?? `n-${row.name}`;
             const { title, groupPrefix } = splitThemeDisplayName(row.name);
+            const displayName = themeDisplayLabel(row.name);
             const nameCell =
               row.slug != null ? (
                 <div
@@ -166,16 +167,15 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
                       compact
                       itemType="theme"
                       itemKey={row.slug}
-                      label={row.name}
+                      label={displayName}
                       signInNext={`/themes/${row.slug}`}
                     />
                     <div className={styles.trendingThemeText}>
                       <Link
                         href={`/themes/${row.slug}`}
                         className={styles.trendingThemeName}
-                        title={row.name}
                       >
-                        <span className={styles.trendingThemeNameFull}>{row.name}</span>
+                        <span className={styles.trendingThemeNameFull}>{displayName}</span>
                         <span className={styles.trendingThemeNameShort}>{title}</span>
                       </Link>
                       {groupPrefix ? (
@@ -194,10 +194,9 @@ export function HomeTrendingThemesTable({ rows, columns, columnHelp, defaultSort
                 >
                   <span
                     className={styles.trendingThemeNameMuted}
-                    title={row.name}
                     style={row.marketBaseline ? { fontWeight: 700 } : undefined}
                   >
-                    {row.name}
+                    {displayName}
                   </span>
                 </div>
               );

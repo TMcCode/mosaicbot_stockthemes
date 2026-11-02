@@ -12,6 +12,7 @@ import {
   type OverlayStandardPeriod,
 } from "@/lib/chartPeriodControls";
 import { OVERLAY_CHART_PALETTE } from "@/lib/overlayChartPalette";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   mapOverlayFactorSpreadOptions,
   mergeFactorTimeseriesIntoCatalog,
@@ -452,11 +453,10 @@ export function ThemesInMotionMacroChart({ selectedDates }: Props) {
               type="button"
               className={`${styles.legendItem} ${hiddenIds.has(s.id) ? styles.legendItemMuted : ""}`}
               aria-pressed={!hiddenIds.has(s.id)}
-              title={s.name}
               onClick={() => toggleHidden(s.id)}
             >
               <span className={styles.swatch} style={{ background: s.color }} />
-              <span className={styles.legendLabel}>{s.name}</span>
+              <span className={styles.legendLabel}>{themeDisplayLabel(s.name)}</span>
             </button>
           ))}
         </div>

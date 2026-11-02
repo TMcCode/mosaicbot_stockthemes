@@ -43,6 +43,7 @@ import {
 import { chartViewHeight } from "@/lib/chartViewHeight";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 
 import styles from "./StockPerformanceChart.module.css";
 
@@ -603,7 +604,7 @@ export function StockPerformanceChart({
                     onChange={(e) => void toggleTheme(t.slug, e.target.checked)}
                   />
                   <span className={styles.themeSwatch} style={{ backgroundColor: color }} aria-hidden />
-                  <span>{t.name}</span>
+                  <span>{themeDisplayLabel(t.name)}</span>
                 </label>
               );
             })}

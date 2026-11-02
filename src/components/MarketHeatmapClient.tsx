@@ -23,6 +23,7 @@ import {
   type TreemapReturnColumn,
 } from "@/lib/buildConstituentTreemapNodes";
 import type { HeatmapSectorSpdrReturns } from "@/lib/marketHeatmapSectors";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   formatReturnPct,
   returnTileBackground,
@@ -149,10 +150,11 @@ function HeatmapTreemap({
         }
         const t = r.tile;
         const ret = activePeriod != null ? (t.returns[activePeriod] ?? null) : null;
+        const label = themeDisplayLabel(t.name);
         const title =
           periodLabel
-            ? `${t.name} · ${t.sector} · ${periodLabel}: ${formatReturnPct(ret)}`
-            : `${t.name} · ${t.sector}`;
+            ? `${label} · ${t.sector} · ${periodLabel}: ${formatReturnPct(ret)}`
+            : `${label} · ${t.sector}`;
         return (
           <Link
             key={`${t.slug}-${r.x}-${r.y}`}
@@ -167,7 +169,7 @@ function HeatmapTreemap({
             }}
             title={title}
           >
-            <span className={styles.cellName}>{t.name}</span>
+            <span className={styles.cellName}>{label}</span>
             {activePeriod != null ? (
               <span className={returnPctClass(ret)}>{formatReturnPct(ret)}</span>
             ) : null}
@@ -459,7 +461,7 @@ export function MarketHeatmapClient({
                       return (
                         <li key={t.slug}>
                           <Link href={t.href} className={styles.mobileRow}>
-                            <span className={styles.mobileRowName}>{t.name}</span>
+                            <span className={styles.mobileRowName}>{themeDisplayLabel(t.name)}</span>
                             {activePeriod != null ? (
                               <span className={returnPctClass(ret)}>
                                 {formatReturnPct(ret)}

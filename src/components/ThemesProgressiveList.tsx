@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import { AdPlacement } from "@/components/AdPlacement";
 import { WatchlistStar } from "@/components/WatchlistStar";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 
 import listStyles from "./ThemesProgressiveList.module.css";
 
@@ -98,14 +99,16 @@ export function ThemesProgressiveList({
         return (
           <div key={`themes-block-${idx}`}>
             <ul className={classNameList} style={{ listStyle: "none", paddingLeft: 0 }}>
-              {slice.map((t) => (
+              {slice.map((t) => {
+                const label = themeDisplayLabel(t.name);
+                return (
                 <li key={t.slug}>
                   <div className={listStyles.row}>
                     <WatchlistStar
                       compact
                       itemType="theme"
                       itemKey={t.slug}
-                      label={t.name}
+                      label={label}
                       signInNext={`/themes/${t.slug}`}
                     />
                     <Link
@@ -115,7 +118,7 @@ export function ThemesProgressiveList({
                       onMouseEnter={() => prefetchHref(`/themes/${t.slug}`)}
                       onFocus={() => prefetchHref(`/themes/${t.slug}`)}
                     >
-                      <span className={classNameName}>{t.name}</span>
+                      <span className={classNameName}>{label}</span>
                       <span className={classNameMeta}>
                         {t.groupName}
                         {t.groupName && t.tickerCount != null ? " · " : ""}
@@ -124,7 +127,8 @@ export function ThemesProgressiveList({
                     </Link>
                   </div>
                 </li>
-              ))}
+              );
+              })}
             </ul>
             {moreBlocksExist ? (
               <AdPlacement

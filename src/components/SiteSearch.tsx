@@ -6,6 +6,7 @@ import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { capturePostHog } from "@/lib/posthogClient";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { collectSiteSearchHits, type SiteSearchHit } from "@/lib/siteSearchHits";
 import { navigateToStockPage } from "@/lib/stockPageNavigate";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
@@ -273,7 +274,7 @@ export function SiteSearch({
                                         setQuery("");
                                       }}
                                     >
-                                      {h.ref.theme_names?.[j] ?? slug}
+                                      {themeDisplayLabel(h.ref.theme_names?.[j] ?? slug)}
                                     </Link>
                                   </span>
                                 ))}
@@ -316,7 +317,7 @@ export function SiteSearch({
                         >
                           <div className={styles.rowTitle}>
                             <span className={styles.badge}>Theme</span>
-                            {h.ref.name}
+                            {themeDisplayLabel(h.ref.name)}
                           </div>
                           {h.ref.group_name || h.matched ? (
                             <div className={styles.rowSub}>
@@ -333,7 +334,7 @@ export function SiteSearch({
                           compact
                           itemType="theme"
                           itemKey={h.ref.slug}
-                          label={h.ref.name}
+                          label={themeDisplayLabel(h.ref.name)}
                           signInNext={`/themes/${encodeURIComponent(h.ref.slug)}`}
                         />
                       </div>

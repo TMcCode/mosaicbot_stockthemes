@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 
 import type { CloseMoversBoardPayload, CloseMoversBoardRow } from "@/lib/buildCloseMoversBoard";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeCloseMoversBoard.module.css";
@@ -17,6 +18,7 @@ function fmtPct(v: number | undefined): string {
 function ThemeRow({ row }: { row: CloseMoversBoardRow }) {
   const [newsOpen, setNewsOpen] = useState(false);
   const hasNews = row.headlines.length > 0;
+  const label = themeDisplayLabel(row.name);
   const heat =
     row.returnPct != null && Number.isFinite(row.returnPct)
       ? trendingReturnHeatStyle(row.returnPct)
@@ -37,7 +39,7 @@ function ThemeRow({ row }: { row: CloseMoversBoardRow }) {
           <span className={styles.rank}>
             {row.tier === "top" ? `#${row.rank}` : `▼${row.rank}`}
           </span>
-          <span className={styles.name}>{row.name}</span>
+          <span className={styles.name}>{label}</span>
           <span className={styles.pct}>{fmtPct(row.returnPct)}</span>
         </Link>
         {hasNews ? (
@@ -48,8 +50,8 @@ function ThemeRow({ row }: { row: CloseMoversBoardRow }) {
             aria-controls={`close-mover-news-${row.tier}-${row.slug}`}
             aria-label={
               newsOpen
-                ? `Hide news for ${row.name}`
-                : `Show ${row.headlines.length} news for ${row.name}`
+                ? `Hide news for ${label}`
+                : `Show ${row.headlines.length} news for ${label}`
             }
             title={newsOpen ? "Hide news" : "Show news"}
             onClick={() => setNewsOpen((v) => !v)}

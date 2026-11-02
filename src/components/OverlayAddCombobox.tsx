@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import type { OverlayEntityKind } from "@/lib/chartSidecar";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   collectSiteSearchHits,
   overlaySeriesKeyFromHit,
@@ -37,7 +38,7 @@ function expandHitsForOverlay(hits: SiteSearchHit[], selectedKeys: Set<string>):
         key: hit.key,
         pick: { kind: "theme", slug: hit.ref.slug, name: hit.ref.name },
         badge: "Theme",
-        title: hit.ref.name,
+        title: themeDisplayLabel(hit.ref.name),
         subtitle: hit.ref.group_name ? `Group: ${hit.ref.group_name}` : undefined,
       });
       continue;
@@ -58,7 +59,7 @@ function expandHitsForOverlay(hits: SiteSearchHit[], selectedKeys: Set<string>):
     const tickerKey = `ticker:${ticker}`;
     if (selectedKeys.has(tickerKey)) continue;
     const title = hit.ref.name ? `${ticker} · ${hit.ref.name}` : ticker;
-    const themeNames = hit.ref.theme_names ?? [];
+    const themeNames = (hit.ref.theme_names ?? []).map((n) => themeDisplayLabel(n));
     const themeHint =
       themeNames.length > 0
         ? themeNames.slice(0, 2).join(", ") +

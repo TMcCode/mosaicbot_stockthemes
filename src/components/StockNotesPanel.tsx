@@ -18,6 +18,7 @@ import { formatWeight } from "@/lib/formatWeight";
 
 import pageStyles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import styles from "./StockLensPanels.module.css";
 
 type MembershipTheme = {
@@ -140,7 +141,7 @@ export function StockNotesPanel({ ticker, membershipThemes, notesState }: Props)
                   return (
                     <tr key={t.slug}>
                       <td>
-                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{t.name}</Link>
+                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{themeDisplayLabel(t.name)}</Link>
                       </td>
                       {hasWeight ? (
                         <td className={`${tableStyles.metaCol} ${styles.wgtCell}`}>

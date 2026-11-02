@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import { WatchlistThemeAddCombobox } from "@/components/WatchlistThemeAddCombobox";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { subscribeSearchIndex } from "@/lib/searchIndexBrowser";
 import { loadSearchIndexClient } from "@/lib/searchThemeHits";
 import { normalizeWatchlistKey } from "@/lib/watchlist/api";
@@ -140,12 +141,12 @@ export function RadarWatchlistPanel() {
                   checked={row.pinned}
                   disabled={Boolean(busySlug) || (!row.pinned && pinCount >= HOME_RADAR_HOME_CARD_LIMIT)}
                   onChange={() => void onTogglePin(row.slug)}
-                  aria-label={`Show ${row.name} on home`}
+                  aria-label={`Show ${themeDisplayLabel(row.name)} on home`}
                 />
                 <span className={styles.pinLabel}>Home</span>
               </label>
               <Link href={`/themes/${row.slug}`} className={styles.themeLink}>
-                {row.name}
+                {themeDisplayLabel(row.name)}
               </Link>
               <button
                 type="button"

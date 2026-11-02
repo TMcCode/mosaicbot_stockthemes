@@ -31,6 +31,7 @@ import type { ThemeQualityRiskMetricsV0 } from "@/types/theme.quality_risk.v0";
 
 import pageStyles from "@/app/page.module.css";
 import tableStyles from "@/components/ThemeConstituentsTable.module.css";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import styles from "./StockLensPanels.module.css";
 
 const WEIGHTED_THEMES_LABEL = "Weighted themes";
@@ -78,7 +79,9 @@ function rowSortValue(
   tickerLabel: string,
   columns: QualityRiskColumnDef[],
 ): number | string | null {
-  if (key === "theme") return row.kind === "ticker" ? tickerLabel : row.theme.name;
+  if (key === "theme") {
+    return row.kind === "ticker" ? tickerLabel : themeDisplayLabel(row.theme.name);
+  }
   if (key === "weight") {
     return row.kind === "theme" && row.theme.weight != null && Number.isFinite(row.theme.weight)
       ? row.theme.weight
@@ -396,7 +399,7 @@ export function StockQualityRiskPanel({ ticker, membershipThemes, sidecarState }
                   return (
                     <tr key={t.slug}>
                       <td>
-                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{t.name}</Link>
+                        <Link href={`/themes/${encodeURIComponent(t.slug)}`}>{themeDisplayLabel(t.name)}</Link>
                       </td>
                       {hasWeight ? (
                         <td className={`${tableStyles.metaCol} ${styles.wgtCell}`}>

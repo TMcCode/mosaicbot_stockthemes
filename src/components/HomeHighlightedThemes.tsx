@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import Link from "next/link";
 
 import { HomeHighlightedThemeChart } from "@/components/HomeHighlightedThemeChart";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 
 import pageStyles from "@/app/page.module.css";
@@ -72,7 +73,7 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
           >
             {safeItems.map((item) => (
               <option key={item.slug} value={item.slug}>
-                {item.name}
+                {themeDisplayLabel(item.name)}
               </option>
             ))}
           </select>
@@ -90,12 +91,12 @@ export function HomeHighlightedThemes({ items, benchmarkPerformance }: Props) {
       <div className={styles.chartWrap}>
         <HomeHighlightedThemeChart
           slug={active.slug}
-          name={active.name}
+          name={themeDisplayLabel(active.name)}
           benchmarkPerformance={benchmarkPerformance}
         />
       </div>
       <p className={styles.footerLink}>
-        <Link href={`/themes/${active.slug}`}>{active.name}</Link>
+        <Link href={`/themes/${active.slug}`}>{themeDisplayLabel(active.name)}</Link>
       </p>
     </section>
   );

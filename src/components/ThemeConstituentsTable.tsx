@@ -13,6 +13,7 @@ import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { CompanyNameLink } from "@/components/CompanyNameLink";
 import { TickerBadge } from "@/components/TickerBadge";
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import {
   CONSTITUENT_EARNINGS_COLUMNS,
   type ConstituentEarningsColumnId,
@@ -430,7 +431,7 @@ export function ThemeConstituentsTable({
   return (
     <section className={styles.section} aria-labelledby="constituents-heading">
       <div className={tableStyles.sectionHeader}>
-        <h2 id="constituents-heading">{detail.name} Constituents</h2>
+        <h2 id="constituents-heading">{themeDisplayLabel(detail.name)} Constituents</h2>
         <HorizontalScrollArea
           className={tableStyles.toggleScroll}
           tabIndex={0}

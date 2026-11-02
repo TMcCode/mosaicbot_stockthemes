@@ -46,6 +46,10 @@ import {
   loadThemeSlugRedirects,
   resolveThemeSlugRedirect,
 } from "@/lib/loadThemeSlugRedirects";
+import {
+  stripThemeYearInProse,
+  themeDisplayLabel,
+} from "@/lib/rotationThemeLabel";
 import { absoluteUrl, openGraphImageAsset } from "@/lib/seoMetadata";
 import { detailEyebrowText } from "@/lib/stockthemesBuildHints";
 import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
@@ -129,7 +133,7 @@ function themePageDescription(
   const intro = detail?.seo_intro?.trim() ?? "";
   if (intro) {
     // seo_intro already names the theme and sample tickers from ETL.
-    return clipDescription(intro, META_DESC_MAX);
+    return clipDescription(stripThemeYearInProse(intro), META_DESC_MAX);
   }
   if (tickerSuffix) {
     return clipDescription(
@@ -148,16 +152,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Theme not found" };
   }
   const loaded = await getThemeDetailCached(slug);
-  const desc = themePageDescription(loaded?.detail, t.name);
+  const displayName = themeDisplayLabel(t.name);
+  const desc = themePageDescription(loaded?.detail, displayName);
   const ogImage = openGraphImageAsset();
   return {
-    title: t.name,
+    title: displayName,
     description: desc,
     alternates: {
       canonical: absoluteUrl(`/themes/${slug}`),
     },
     openGraph: {
-      title: t.name,
+      title: displayName,
       description: desc,
       url: absoluteUrl(`/themes/${slug}`),
       siteName: "stockthemes.ai",
@@ -167,7 +172,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     twitter: {
       card: "summary_large_image",
-      title: t.name,
+      title: displayName,
       description: desc,
       images: [ogImage.url],
     },
@@ -216,7 +221,9 @@ export default async function ThemeDetailPage({ params }: Props) {
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const themeUrl = absoluteUrl(`/themes/${slug}`);
   const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
-  const pageDescription = themePageDescription(detail, theme.name);
+  // One strip per request — keep canonical theme.name for short-theme / join logic.
+  const displayName = themeDisplayLabel(theme.name);
+  const pageDescription = themePageDescription(detail, displayName);
   const mentions = (detail?.constituents || []).slice(0, 25).map((c) => ({
     "@type": "Thing",
     name: c.name ? `${c.name} (${c.ticker})` : c.ticker,
@@ -226,7 +233,7 @@ export default async function ThemeDetailPage({ params }: Props) {
     "@graph": [
       {
       "@type": "WebPage",
-      name: `${theme.name} theme`,
+      name: `${displayName} theme`,
       description: pageDescription,
       url: themeUrl,
       dateModified,
@@ -236,18 +243,18 @@ export default async function ThemeDetailPage({ params }: Props) {
         url: absoluteUrl("/"),
       },
       about: [
-        { "@type": "Thing", name: theme.name },
+        { "@type": "Thing", name: displayName },
         ...(group?.name ? [{ "@type": "Thing", name: group.name }] : []),
       ],
       },
       {
       "@type": "DefinedTermSet",
-      name: theme.name,
+      name: displayName,
       description: pageDescription,
       url: themeUrl,
       dateModified,
       isPartOf: absoluteUrl("/themes"),
-      keywords: [theme.name, group?.name, "stocks", "theme investing", "equity exposure"]
+      keywords: [displayName, group?.name, "stocks", "theme investing", "equity exposure"]
         .filter(Boolean)
         .join(", "),
       hasDefinedTerm: mentions,
@@ -271,13 +278,13 @@ export default async function ThemeDetailPage({ params }: Props) {
                   {detailEyebrowText("Theme", source, loaded?.source ?? null)}
                 </p>
                 <h1 className={`${styles.heroTitle} ${styles.heroTitleWithStar}`}>
-                  <span className={styles.heroTitleText}>{theme.name}</span>
+                  <span className={styles.heroTitleText}>{displayName}</span>
                   <WatchlistStar
                     inline
                     titleAdjacent
                     itemType="theme"
                     itemKey={slug}
-                    label={theme.name}
+                    label={displayName}
                     signInNext={`/themes/${slug}`}
                   />
                 </h1>
@@ -400,7 +407,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   serverChart={chartPerformanceSeed}
                   serverDetail={liveDetailSeed}
                   compositionMetaByTicker={compositionMetaByTicker}
-                  performanceTitle={theme.name}
+                  performanceTitle={displayName}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
                   selectedDates={selectedDates}
                 />
@@ -413,7 +420,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                 <Chart1yPanel
                   chart1y={detail.chart_1y}
                   compositionMetaByTicker={compositionMetaByTicker}
-                  performanceTitle={theme.name}
+                  performanceTitle={displayName}
                   benchmarkPerformance={spyPerf?.benchmarkPerformance}
                   selectedDates={selectedDates}
                   sidecarEntity={{ kind: "theme", slug }}
@@ -456,7 +463,7 @@ export default async function ThemeDetailPage({ params }: Props) {
           {dataBaseUrl ? (
             <div className={styles.themeNewsDefer}>
               <DeferRender minHeight={0} rootMargin="480px 0px" fallbackMs={false}>
-                <LazyThemeNewsPanel slug={slug} themeName={theme.name} />
+                <LazyThemeNewsPanel slug={slug} themeName={displayName} />
               </DeferRender>
             </div>
           ) : null}

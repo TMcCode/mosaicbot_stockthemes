@@ -5,7 +5,7 @@ import type { FeedThemeMeta } from "@/components/FeedEventCardBody";
 import type { FeedFlipperSlot } from "@/lib/collapseFeedGroupFlippers";
 import { formatFeedDateShort } from "@/lib/formatFeedDate";
 import type { GroupExplore } from "@/lib/pickExploreGroups";
-import { rotationThemeLabelSuffix } from "@/lib/rotationThemeLabel";
+import { rotationThemeLabelSuffix, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { trendingReturnCardGradientStyle } from "@/lib/trendingPerfHeat";
 
 import styles from "./HomeExploreChanging.module.css";
@@ -75,7 +75,9 @@ export function HomeExploreChanging({
                 <>
                   <div className={styles.themeChips} aria-label={`${g.name} themes`}>
                     {g.themes.map((t) => {
-                      const label = rotationThemeLabelSuffix(t.name, g.name) || t.name;
+                      const label =
+                        rotationThemeLabelSuffix(t.name, g.name) ||
+                        themeDisplayLabel(t.name);
                       return (
                         <Link key={t.slug} href={`/themes/${t.slug}`} className={styles.themeChip}>
                           <span className={styles.themeName}>{label}</span>

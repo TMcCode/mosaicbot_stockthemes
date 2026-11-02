@@ -9,6 +9,7 @@ import formStyles from "@/app/account/suggest/ThemeIdeaSuggestForm.module.css";
 import { capturePostHog } from "@/lib/posthogClient";
 import { THEME_IDEAS_EMAIL } from "@/lib/contactEmails";
 import { parseThemeNameList, parseTickerList } from "@/lib/parseTickerList";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { submitThemeIdea, type ThemeIdeaKind } from "@/lib/themeIdeasSubmit";
 import { countWords, wordCountInRange } from "@/lib/wordCount";
 
@@ -363,7 +364,9 @@ export function ThemeIdeaSuggestForm({
                 ) : (
                   themes.map((t) => (
                     <option key={t.slug} value={t.slug}>
-                      {t.groupName ? `${t.name} (${t.groupName})` : t.name}
+                      {t.groupName
+                        ? `${themeDisplayLabel(t.name)} (${t.groupName})`
+                        : themeDisplayLabel(t.name)}
                     </option>
                   ))
                 )}

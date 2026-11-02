@@ -47,6 +47,7 @@ import {
   buildThemeTickersPreviewMapFromSearchIndex,
   loadSiteSearchEngine,
 } from "@/lib/siteSearchHits";
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { applyShortThemePerformanceDisplay } from "@/lib/shortThemeChart";
 import {
   computeOverlaySupportedCustomPeriodKeys,
@@ -1309,7 +1310,7 @@ export function OverlayPageClient({
                     }
                     className={styles.chipLink}
                   >
-                    {item.name}
+                    {item.kind === "theme" ? themeDisplayLabel(item.name) : item.name}
                     {item.loading ? " …" : null}
                   </Link>
                 )}
@@ -1386,7 +1387,9 @@ export function OverlayPageClient({
               >
                 <span className={chartLegendStyles.swatch} style={{ background: colorByKey.get(s.id) }} />
                 <span className={chartLegendStyles.legendNameCell}>
-                  <span className={chartLegendStyles.legendLabel}>{s.name}</span>
+                  <span className={chartLegendStyles.legendLabel}>
+                    {themeDisplayLabel(s.name)}
+                  </span>
                 </span>
                 {rightMeta ? (
                   <span className={chartLegendStyles.legendTickers}>{rightMeta}</span>

@@ -1,17 +1,39 @@
 /** Quote-like chars used before a 2-digit year suffix. */
 const YEAR_QUOTE = `['\u2019\u2018\u2032\u00B4\`]`;
 
-/** Drop trailing `` '26`` / ``'26`` / ``’26`` so the year can live in a chip. */
+const TRAILING_YEAR_RE = new RegExp(`\\s*${YEAR_QUOTE}?\\d{2}\\s*$`, "u");
+/** Inline vintage tokens in prose / SEO strings (`` '26`` / ``'26``). */
+const INLINE_YEAR_RE = new RegExp(`\\s*${YEAR_QUOTE}\\d{2}\\b`, "gu");
+
+/** Drop trailing `` '26`` / ``'26`` / ``’26`` from a group prefix or bare label. */
 export function stripThemeYearSuffix(label: string): string {
-  return String(label || "")
-    .replace(new RegExp(`\\s*${YEAR_QUOTE}?\\d{2}\\s*$`, "u"), "")
-    .trim();
+  return String(label || "").replace(TRAILING_YEAR_RE, "").trim();
 }
 
-/** ``'24`` / ``’24`` from a theme or group name. */
-export function themeYearChipFromName(name: string): string | null {
-  const m = new RegExp(`${YEAR_QUOTE}(\\d{2})\\b`, "u").exec(String(name || ""));
-  return m ? `'${m[1]}` : null;
+/**
+ * Public UI label: ``Group '26: Subtheme`` → ``Group: Subtheme``.
+ * Pure string transform — call at render; do not precompute catalogs.
+ * Keep canonical ``theme.name`` for slugs, joins, and short-theme math.
+ */
+export function themeDisplayLabel(themeName: string): string {
+  const name = String(themeName ?? "").trim();
+  if (!name) return "";
+
+  const colonIdx = name.indexOf(":");
+  if (colonIdx < 0) return stripThemeYearSuffix(name) || name;
+
+  const groupPrefix = name.slice(0, colonIdx).trim();
+  const title = name.slice(colonIdx + 1).trim();
+  if (!title) return stripThemeYearSuffix(name) || name;
+
+  const group = stripThemeYearSuffix(groupPrefix) || groupPrefix;
+  if (!group) return title;
+  return `${group}: ${title}`;
+}
+
+/** Strip `` 'YY`` tokens from SEO / OG prose that already embeds the full theme name. */
+export function stripThemeYearInProse(text: string): string {
+  return String(text || "").replace(INLINE_YEAR_RE, "").replace(/  +/g, " ").trim();
 }
 
 /** Subtheme label after group prefix, e.g. "Home Improvement '24: Retail" → "Retail". */
@@ -51,9 +73,8 @@ export function rotationThemeLabelSuffix(
 }
 
 /**
- * Split "Euro Spend '26: European Shipbuilding" → title + group prefix for stacked UI.
- * Themes without a colon keep the full name on the title line.
- * Keeps year tokens in the strings (callers that want chips strip separately).
+ * Split "Euro Spend '26: European Shipbuilding" → title + year-free group prefix.
+ * Themes without a colon keep the full name on the title line (year stripped).
  */
 export function splitThemeDisplayName(themeName: string): {
   title: string;
@@ -63,22 +84,24 @@ export function splitThemeDisplayName(themeName: string): {
   if (!name) return { title: "", groupPrefix: null };
 
   const colonIdx = name.indexOf(":");
-  if (colonIdx < 0) return { title: name, groupPrefix: null };
+  if (colonIdx < 0) {
+    return { title: stripThemeYearSuffix(name) || name, groupPrefix: null };
+  }
 
-  const groupPrefix = name.slice(0, colonIdx).trim();
+  const rawGroup = name.slice(0, colonIdx).trim();
   const title = name.slice(colonIdx + 1).trim();
-  if (!title) return { title: name, groupPrefix: null };
-  if (!groupPrefix) return { title, groupPrefix: null };
+  if (!title) return { title: stripThemeYearSuffix(name) || name, groupPrefix: null };
+  if (!rawGroup) return { title, groupPrefix: null };
+  const groupPrefix = stripThemeYearSuffix(rawGroup) || rawGroup;
   return { title, groupPrefix };
 }
 
 /**
  * Group eyebrow from ``Group '25: Subtheme`` when manifest meta is missing.
- * ``Software '26`` → ``Software`` (year stays on the chip).
+ * ``Software '26`` → ``Software``.
  */
 export function groupEyebrowFromThemeName(themeName: string): string | null {
   const { groupPrefix } = splitThemeDisplayName(themeName);
   if (!groupPrefix) return null;
-  const stripped = stripThemeYearSuffix(groupPrefix);
-  return stripped || groupPrefix;
+  return groupPrefix;
 }

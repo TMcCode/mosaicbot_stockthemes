@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { searchThemeHits } from "@/lib/searchThemeHits";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 
@@ -176,7 +177,7 @@ export function FactorMakeupThemeCombobox({
                   >
                     <div className={searchStyles.rowTitle}>
                       <span className={searchStyles.badge}>Theme</span>
-                      {t.name}
+                      {themeDisplayLabel(t.name)}
                     </div>
                     {t.group_name ? (
                       <div className={searchStyles.rowSub}>Group: {t.group_name}</div>

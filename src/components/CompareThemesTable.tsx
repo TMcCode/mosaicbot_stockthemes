@@ -17,7 +17,7 @@ import {
 } from "@/lib/customDateColumnHelp";
 import { isCompareEarningsColumn, type CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { downloadCompareThemesCsv } from "@/lib/compareThemesCsv";
-import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
+import { splitThemeDisplayName, themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -227,6 +227,10 @@ export function CompareThemesTable({
           {renderedRows.flatMap((row) => {
             const isBenchmark = isBenchmarkRow(row);
             const keyBase = row.slug || row.name;
+            const displayName =
+              !isBenchmark && entityKind === "theme"
+                ? themeDisplayLabel(row.name)
+                : row.name;
             const split =
               !isBenchmark && entityKind === "theme"
                 ? splitThemeDisplayName(row.name)
@@ -237,7 +241,7 @@ export function CompareThemesTable({
                 : null;
             const nameCell = isBenchmark ? (
               <div key={`${keyBase}-name`} className={`${styles.themeCell} ${styles.sticky}`}>
-                <span className={styles.benchmarkName} title={row.name}>
+                <span className={styles.benchmarkName}>
                   {row.name}
                 </span>
                 {row.ticker ? (
@@ -256,14 +260,13 @@ export function CompareThemesTable({
                   <Link
                     href={`/${entityKind === "group" ? "groups" : "themes"}/${row.slug}`}
                     className={styles.themeName}
-                    title={row.name}
                   >
-                    <span className={styles.themeNameFull}>{row.name}</span>
+                    <span className={styles.themeNameFull}>{displayName}</span>
                     <span className={styles.themeNameShort}>{split.title}</span>
                   </Link>
                 ) : (
-                  <span className={styles.themeName} title={row.name}>
-                    <span className={styles.themeNameFull}>{row.name}</span>
+                  <span className={styles.themeName}>
+                    <span className={styles.themeNameFull}>{displayName}</span>
                     <span className={styles.themeNameShort}>{split.title}</span>
                   </span>
                 )}

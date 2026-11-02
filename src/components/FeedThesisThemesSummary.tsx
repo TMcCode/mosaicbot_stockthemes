@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import type { ManifestHomeFeedEventV0, ManifestHomeFeedThesisThemeV0 } from "@/types/manifest.v0";
 
 import styles from "@/app/page.module.css";
@@ -23,15 +24,16 @@ function renderThemeLinks(
         const slug = String(t.slug || "").trim();
         const name = String(t.name || "").trim();
         if (!name) return null;
+        const label = themeDisplayLabel(name);
         return (
           <span key={`${slug || name}-${i}`}>
             {i > 0 ? ", " : null}
             {slug ? (
               <Link href={`/themes/${encodeURIComponent(slug)}`} prefetch={false} className={styles.feedThemeLink}>
-                {name}
+                {label}
               </Link>
             ) : (
-              <span>{name}</span>
+              <span>{label}</span>
             )}
           </span>
         );
