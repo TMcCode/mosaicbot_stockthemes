@@ -33,9 +33,17 @@ export default async function DocsRoadmapDataPage() {
         Data
       </p>
       <h1 className={styles.heroTitle}>Data queue</h1>
-      <p className={styles.introCopy}>
-        Pillar 1 in order: what we want to add, roughly when subscriber funding unlocks it, and why
-        that lane comes before the next. Items mirror the public MosaicBot roadmap config.
+      <p className={docsStyles.queueLead}>
+        This is the ordered queue of datasets and capacity we fund as paid subscribers grow—what
+        unlocks next, and why that lane comes before the one after it.
+      </p>
+      <p className={docsStyles.queueLead}>
+        Data providers: if you want your product in front of investors who live in themes and
+        catalysts,{" "}
+        <Link href="/contact">let&apos;s talk</Link>. I can be flexible on what gets shared—sample
+        series, limited tickers, delayed prints, or a branded panel—and placement here is useful
+        marketing: your dataset is shown to the investors who care about the narratives you can
+        help with.
       </p>
 
       {ROADMAP_DATA_LANES.map((lane, laneIdx) => {
@@ -45,52 +53,70 @@ export default async function DocsRoadmapDataPage() {
         for (const item of items) used.add(item.id);
 
         return (
-          <section
+          <details
             key={lane.id}
             id={lane.id}
-            className={`${styles.aboutProse} ${styles.aboutBasketCard}`}
+            className={`${styles.aboutProse} ${styles.aboutBasketCard} ${docsStyles.laneFold}`}
+            {...(laneIdx < 4 ? { open: true } : {})}
           >
-            <h2>
-              <span className={docsStyles.laneIndex}>{String(laneIdx + 1).padStart(2, "0")}</span>{" "}
-              {lane.title}
-            </h2>
-            <p className={styles.introCopy}>{lane.why}</p>
-            {items.length ? (
-              <ol className={docsStyles.roadmapList}>
-                {items.map((item) => {
-                  const need = fmtSubscriberNeed(item.subscribers_required);
-                  return (
-                    <li key={item.id} className={docsStyles.roadmapItem}>
-                      <div className={docsStyles.roadmapMeta}>
-                        <span className={docsStyles.roadmapCategory}>{item.category_label}</span>
-                        {need ? <span className={docsStyles.roadmapNeed}>{need}</span> : null}
-                      </div>
-                      <h3 className={docsStyles.roadmapTitle}>{item.title}</h3>
-                      {item.description ? (
-                        <p className={docsStyles.roadmapBody}>{item.description}</p>
-                      ) : null}
-                    </li>
-                  );
-                })}
-              </ol>
-            ) : (
-              <p className={styles.introCopy}>No items in this lane for the current bake.</p>
-            )}
-          </section>
+            <summary className={docsStyles.laneSummary}>
+              <h2 className={docsStyles.laneSummaryTitle}>
+                <span className={docsStyles.laneIndex}>
+                  {String(laneIdx + 1).padStart(2, "0")}
+                </span>{" "}
+                {lane.title}
+              </h2>
+              <span className={docsStyles.laneSummaryMeta}>
+                {items.length} item{items.length === 1 ? "" : "s"}
+              </span>
+            </summary>
+            <div className={docsStyles.laneFoldBody}>
+              <p className={styles.introCopy}>{lane.why}</p>
+              {items.length ? (
+                <ol className={docsStyles.roadmapList}>
+                  {items.map((item) => {
+                    const need = fmtSubscriberNeed(item.subscribers_required);
+                    const doneClass = item.done ? ` ${docsStyles.roadmapItemDone}` : "";
+                    return (
+                      <li key={item.id} className={`${docsStyles.roadmapItem}${doneClass}`}>
+                        <div className={docsStyles.roadmapMeta}>
+                          <span className={docsStyles.roadmapCategory}>
+                            {item.category_label}
+                          </span>
+                          {need ? (
+                            <span className={docsStyles.roadmapNeed}>{need}</span>
+                          ) : null}
+                        </div>
+                        <h3 className={docsStyles.roadmapTitle}>{item.title}</h3>
+                        {item.description ? (
+                          <p className={docsStyles.roadmapBody}>{item.description}</p>
+                        ) : null}
+                      </li>
+                    );
+                  })}
+                </ol>
+              ) : (
+                <p className={styles.introCopy}>No items in this lane for the current bake.</p>
+              )}
+            </div>
+          </details>
         );
       })}
 
       {(() => {
-        const leftover = (payload?.items || []).filter((item) => item.id && !used.has(item.id));
+        const leftover = (payload?.items || []).filter(
+          (item) => item.id && !item.hidden && !used.has(item.id),
+        );
         if (!leftover.length) return null;
         return (
           <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>
             <h2>Other milestones</h2>
             <ol className={docsStyles.roadmapList}>
-              {leftover.map((item) => {
+              {              leftover.map((item) => {
                 const need = fmtSubscriberNeed(item.subscribers_required);
+                const doneClass = item.done ? ` ${docsStyles.roadmapItemDone}` : "";
                 return (
-                  <li key={item.id} className={docsStyles.roadmapItem}>
+                  <li key={item.id} className={`${docsStyles.roadmapItem}${doneClass}`}>
                     <div className={docsStyles.roadmapMeta}>
                       <span className={docsStyles.roadmapCategory}>{item.category_label}</span>
                       {need ? <span className={docsStyles.roadmapNeed}>{need}</span> : null}

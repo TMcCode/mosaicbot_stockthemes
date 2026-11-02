@@ -2,11 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import {
-  ABOUT_VISION_DISCLAIMER,
   ABOUT_VISION_PARAGRAPHS,
-  ABOUT_VISION_ROADMAP,
+  ABOUT_VISION_RECENT,
+  ABOUT_VISION_UPCOMING,
 } from "@/lib/aboutVisionCopy";
-import { HELLO_EMAIL } from "@/lib/contactEmails";
+import { HELLO_EMAIL, SUPPORT_EMAIL, mailtoHref } from "@/lib/contactEmails";
 import { ABOUT_FOUNDER_FEEDBACK, DEFAULT_HOME_INTRO } from "@/lib/aboutFounderCopy";
 import { SITE_PRODUCT_SUMMARY } from "@/lib/homeSiteCopy";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
@@ -104,24 +104,54 @@ export default async function DocsAboutPage() {
             {p}
           </p>
         ))}
-        <h3 className={styles.aboutRoadmapHeading}>Roadmap</h3>
-        <ol className={styles.aboutRoadmapList}>
-          {ABOUT_VISION_ROADMAP.map((item) => (
-            <li key={item.title} className={styles.introCopy}>
-              <strong>{item.title}</strong>: {item.body}
+        <p className={styles.introCopy}>
+          For the full product path—data foundation, Stockthemes, and Blast Radius—see the{" "}
+          <Link href="/docs/roadmap">roadmap</Link> and{" "}
+          <Link href="/docs/roadmap/data">data queue</Link>.
+        </p>
+
+        <h3 className={styles.aboutRoadmapHeading}>Coming next</h3>
+        <ol
+          className={`${docsStyles.shippedTimeline} ${docsStyles.shippedTimelineUpcoming}`}
+          aria-label="Upcoming milestones"
+        >
+          {ABOUT_VISION_UPCOMING.map((item) => (
+            <li key={item.title} className={docsStyles.shippedTimelineItem}>
+              <time className={docsStyles.shippedTimelineDate} dateTime={item.dateTime}>
+                {item.date}
+              </time>
+              <div className={docsStyles.shippedTimelineBody}>
+                <p className={docsStyles.shippedTimelineTitle}>
+                  {item.title}
+                  <span className={docsStyles.shippedTimelineBadge}>Planned</span>
+                </p>
+                <p className={docsStyles.shippedTimelineCopy}>{item.body}</p>
+              </div>
             </li>
           ))}
         </ol>
-        <p className={styles.introCopy}>
-          Data strengthens the platform; Stockthemes and Blast Radius are the two products on top. See
-          the <Link href="/docs/roadmap">roadmap</Link> and the{" "}
-          <Link href="/docs/roadmap/data">data queue</Link>. To weigh in on what ships next, use the{" "}
-          <Link href="/contact">contact page</Link>.
-        </p>
-        <p className={`${styles.introCopy} ${styles.aboutVisionDisclaimer}`}>{ABOUT_VISION_DISCLAIMER}</p>
+
+        <h3 className={styles.aboutRoadmapHeading}>Recently shipped</h3>
+        <ol className={docsStyles.shippedTimeline} aria-label="Recently shipped milestones">
+          {ABOUT_VISION_RECENT.map((item) => (
+            <li key={item.title} className={docsStyles.shippedTimelineItem}>
+              <time className={docsStyles.shippedTimelineDate} dateTime={item.dateTime}>
+                {item.date}
+              </time>
+              <div className={docsStyles.shippedTimelineBody}>
+                <p className={docsStyles.shippedTimelineTitle}>{item.title}</p>
+                <p className={docsStyles.shippedTimelineCopy}>{item.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
-      <p className={styles.introCopy}>
-        Questions or feedback? See my <Link href="/contact">contact page</Link>.
+      <p className={`${styles.introCopy} ${docsStyles.aboutFooterNote}`}>
+        Questions or feedback? Email{" "}
+        <a href={mailtoHref(SUPPORT_EMAIL)} style={{ fontWeight: 600 }}>
+          {SUPPORT_EMAIL}
+        </a>
+        .
       </p>
     </article>
   );

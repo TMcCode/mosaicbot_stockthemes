@@ -109,7 +109,7 @@ export default function DocsRoadmapPage() {
       </div>
 
       <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>
-        <h2 id="how-it-funds">How it funds</h2>
+        <h2 id="how-it-funds">How it&apos;s funded</h2>
         <p className={styles.introCopy}>{ROADMAP_FUNDING_OPEN}</p>
         <p className={styles.introCopy}>
           {ROADMAP_FUNDING_MAP_BEFORE_LINK}{" "}

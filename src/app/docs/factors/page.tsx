@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 
+import { DocsClosestSectorChart } from "@/components/DocsClosestSectorChart";
 import { DocsFactorMarketChart } from "@/components/DocsFactorMarketChart";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 
@@ -43,9 +44,10 @@ export default function DocsFactorsPage() {
       <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>
         <h2 id="why-it-matters">Why this matters for themes</h2>
         <p className={styles.introCopy}>
-          A theme can rip while the broad market barely moves—if it is tracking something else, like
-          the AI / innovation factor (AIQ vs SPY). Same calendar window, different driver: that is
-          what factor scores are trying to surface.
+          A theme can look like it “worked” when the move had little to do with that basket’s thesis
+          and almost everything to do with a shared factor pull—AI / innovation, growth, market beta,
+          and so on. Same calendar window, different driver: that is what factor scores are trying to
+          surface.
         </p>
         <p className={styles.introCopy}>
           Factors don’t replace reading constituents, filings, or news. They answer a narrower
@@ -198,6 +200,13 @@ export default function DocsFactorsPage() {
         <p className={styles.introCopy}>
           Wording scales with how extreme that fit is—from a modest match, to a very tight match, to
           the clearest sector fit in the universe when a theme is #1.
+        </p>
+
+        <DocsClosestSectorChart />
+        <p className={styles.introCopy}>
+          Live signal on{" "}
+          <Link href="/themes/software-26-seat-based-pricing">Software: Seat-based Pricing</Link>
+          : Financials · score 64 · #30.
         </p>
       </section>
 

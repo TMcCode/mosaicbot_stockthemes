@@ -105,7 +105,7 @@ export const ROADMAP_DATA_LANES: RoadmapDataLane[] = [
     id: "news-catalysts",
     title: "Acute, market-driving news",
     why: "Breadth and structure first so catalysts can attach to themes instead of floating as a generic feed.",
-    itemIds: ["newsapi", "news_entity_graph", "reddit_social_sourcing"],
+    itemIds: ["newsapi", "news_entity_graph", "ravenpack"],
   },
   {
     id: "transcripts-curation",
@@ -115,14 +115,15 @@ export const ROADMAP_DATA_LANES: RoadmapDataLane[] = [
   },
   {
     id: "theme-backdrop",
-    title: "Theme backdrop datasets",
-    why: "Leading and concurrent signals—attention, labor, government spend—so each theme’s data layer updates when the world does.",
+    title: "Real-time datasets",
+    why: "Leading and concurrent signals—attention, labor, government spend, app usage—so each theme’s data layer updates when the world does.",
     itemIds: [
+      "trading_economics",
       "ticker_trends_dataset",
       "workforce_signals",
       "government_spend_dataset",
-      "usaspending_contracts",
       "alt_transaction_data",
+      "app_data",
     ],
   },
   {
@@ -144,12 +145,17 @@ export const ROADMAP_DATA_LANES: RoadmapDataLane[] = [
     why: "Real-time plumbing, premium research feeds, and hiring unlock depth once the core lanes above are funded.",
     itemIds: [
       "realtime_stock_platform",
-      "perf_refactor",
       "bloomberg_terminal",
       "visible_alpha",
       "alphasense",
       "hire_backend",
-      "hire_ai_analyst",
+      "hire_biotech_expert",
+      "hire_tmt_expert",
+      "hire_industrials_expert",
+      "hire_macro_expert",
+      "hire_energy_expert",
+      "hire_factor_expert",
+      "hire_consumer_expert",
       "web_scraper",
     ],
   },
@@ -158,7 +164,7 @@ export const ROADMAP_DATA_LANES: RoadmapDataLane[] = [
 export const ROADMAP_DISCLAIMER =
   "Direction and funding targets—not a delivery schedule, and not investment advice.";
 
-/** “How it funds” on `/docs/roadmap` (common language). */
+/** “How it's funded” on `/docs/roadmap` (common language). */
 export const ROADMAP_FUNDING_OPEN =
   "Plainly: the more people who subscribe, the more data and compute I can buy. News feeds, transcript throughput, labor and attention datasets, trade and commodity matrices—none of that is free, and each one makes Stockthemes and Blast Radius more useful.";
 
@@ -168,7 +174,7 @@ export const ROADMAP_FUNDING_MAP_BEFORE_LINK =
 export const ROADMAP_FUNDING_USEFUL =
   "What the data is for: sharper theme baskets, catalysts that actually attach to the right names, factor context for what moved a stock or theme, and the exposure matrices Blast Radius needs so an event can light up a market map instead of a guess.";
 
-/** Live vendor stack shown under “How it funds”. */
+/** Live vendor stack shown under “How it's funded”. */
 export const ROADMAP_CURRENT_SUBSCRIPTIONS: { name: string; use: string }[] = [
   { name: "NewsAPI.ai", use: "news" },
   { name: "FMP", use: "fundamentals, transcripts" },

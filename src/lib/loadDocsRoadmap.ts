@@ -7,6 +7,10 @@ export type DocsRoadmapItem = {
   description: string;
   category_label: string;
   subscribers_required: number | null;
+  /** Crossed off when already live / unlocked. */
+  done?: boolean;
+  /** Omit from public docs lanes / leftover list. */
+  hidden?: boolean;
 };
 
 export type DocsRoadmapPayload = {
@@ -32,7 +36,7 @@ export function roadmapItemMap(
 ): Map<string, DocsRoadmapItem> {
   const map = new Map<string, DocsRoadmapItem>();
   for (const item of payload?.items || []) {
-    if (item?.id) map.set(item.id, item);
+    if (item?.id && !item.hidden) map.set(item.id, item);
   }
   return map;
 }

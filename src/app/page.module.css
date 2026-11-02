@@ -1622,8 +1622,8 @@ a.feedTitle:hover {
 
 .aboutProse .introCopy {
   margin: 0;
-  font-size: 15px;
-  line-height: 1.56;
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--text-secondary);
   text-wrap: pretty;
 }
@@ -1657,8 +1657,8 @@ a.feedTitle:hover {
 }
 
 .aboutLead .introCopy {
-  font-size: 16px;
-  line-height: 1.56;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .aboutBasketCard {
@@ -1677,8 +1677,8 @@ a.feedTitle:hover {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  font-size: 15px;
-  line-height: 1.56;
+  font-size: 13px;
+  line-height: 1.55;
   color: var(--text-secondary);
 }
 
@@ -1693,7 +1693,7 @@ a.feedTitle:hover {
 
 .aboutVisionSubhead {
   margin: 8px 0 0;
-  font-size: 22px;
+  font-size: 18px;
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--text-primary);
@@ -1701,7 +1701,7 @@ a.feedTitle:hover {
 
 .aboutRoadmapHeading {
   margin: 6px 0 0;
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.3;
   color: var(--text-primary);
 }
@@ -1969,16 +1969,16 @@ a.secondary {
   }
 
   .aboutProse .introCopy {
-    font-size: 14px;
+    font-size: 12.5px;
     line-height: 1.52;
   }
 
   .aboutProse h2 {
-    font-size: 29px;
+    font-size: 26px;
   }
 
   .aboutLead .introCopy {
-    font-size: 15px;
+    font-size: 13px;
     line-height: 1.52;
   }
 

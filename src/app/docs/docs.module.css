@@ -32,10 +32,27 @@
   max-width: 760px;
 }
 
+/* Page H1 on docs — quieter than home hero (page.module `.heroTitle` is 52px). */
+.article :global(h1) {
+  font-size: clamp(26px, 3.2vw, 34px) !important;
+  line-height: 1.12 !important;
+  letter-spacing: -0.025em !important;
+}
+
+/* Docs page eyebrow sits as the first paragraph under `.article`. */
+.article > :global(p:first-child) {
+  font-size: 11px;
+}
+
+/* Align footer CTA with aboutBasketCard content inset (20px). */
+.aboutFooterNote {
+  padding-inline: 20px;
+}
+
 /* Section titles inside cards — keep quieter than the page H1.
    Beat page `.aboutProse h2` (32px) with equal/higher specificity via `.article h2`. */
 .article h2 {
-  font-size: 18px !important;
+  font-size: 16px !important;
   line-height: 1.25 !important;
   letter-spacing: -0.01em !important;
   font-weight: 650;
@@ -44,7 +61,7 @@
 
 @media (max-width: 640px) {
   .article h2 {
-    font-size: 16px !important;
+    font-size: 15px !important;
   }
 }
 
@@ -64,7 +81,7 @@
 
 .hubTitle {
   margin: 0 0 8px;
-  font-size: 32px;
+  font-size: 28px;
   font-weight: 650;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -74,9 +91,33 @@
 .hubLead {
   margin: 0 0 24px;
   max-width: 42rem;
-  font-size: 15px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary);
+}
+
+.queueLead {
+  margin: 0 0 16px;
+  max-width: 42rem;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--text-muted);
+  text-wrap: pretty;
+}
+
+.queueLead + .queueLead {
+  margin-top: 4px;
+}
+
+.queueLead a {
+  color: var(--accent, #26fcd6);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+.queueLead a:hover {
+  color: var(--text-primary);
 }
 
 .hubGrid {
@@ -112,7 +153,7 @@
 
 .hubCardTitle {
   margin: 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.01em;
   color: var(--text-primary);
@@ -120,7 +161,7 @@
 
 .hubCardSummary {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.4;
   color: var(--text-secondary);
 }
@@ -157,7 +198,7 @@
   }
 
   .hubTitle {
-    font-size: 26px;
+    font-size: 24px;
   }
 
   .hubGrid {
@@ -262,6 +303,41 @@
   color: var(--text-secondary);
 }
 
+.sectorExampleGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+}
+
+.sectorExampleKind {
+  margin: 0 0 4px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.sectorExampleValue {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sectorExampleValueAccent {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--accent, #26fcd6);
+}
+
+@media (max-width: 640px) {
+  .sectorExampleGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 :global(.st-theme[data-theme="light"]) .factorCompare {
   background: rgba(0, 0, 0, 0.02);
 }
@@ -285,6 +361,128 @@
   }
 }
 
+/* About: recently shipped timeline */
+.shippedTimeline {
+  list-style: none;
+  margin: 12px 0 4px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  border-left: 1px solid rgba(38, 252, 214, 0.28);
+}
+
+.shippedTimelineItem {
+  position: relative;
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr);
+  gap: 12px 14px;
+  padding: 0 0 16px 18px;
+}
+
+.shippedTimelineItem:last-child {
+  padding-bottom: 4px;
+}
+
+.shippedTimelineItem::before {
+  content: "";
+  position: absolute;
+  left: -4px;
+  top: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--accent, #26fcd6);
+  box-shadow: 0 0 0 3px rgba(38, 252, 214, 0.15);
+}
+
+.shippedTimelineDate {
+  margin: 0;
+  padding-top: 1px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent, #26fcd6);
+  font-variant-numeric: tabular-nums;
+}
+
+.shippedTimelineBody {
+  min-width: 0;
+}
+
+.shippedTimelineTitle {
+  margin: 0 0 3px;
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.shippedTimelineCopy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.shippedTimelineUpcoming {
+  border-left-style: dashed;
+  border-left-color: rgba(38, 252, 214, 0.45);
+  margin-bottom: 18px;
+}
+
+.shippedTimelineUpcoming .shippedTimelineItem::before {
+  background: transparent;
+  border: 1.5px solid var(--accent, #26fcd6);
+  box-shadow: none;
+  width: 6px;
+  height: 6px;
+  left: -3.5px;
+}
+
+.shippedTimelineBadge {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  border: 1px solid rgba(38, 252, 214, 0.35);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent, #26fcd6);
+  vertical-align: 1px;
+}
+
+@media (max-width: 640px) {
+  .shippedTimelineItem {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    padding-left: 16px;
+  }
+
+  .shippedTimelineDate {
+    padding-top: 0;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .shippedTimeline {
+  border-left-color: rgba(10, 140, 120, 0.35);
+}
+
+:global(.st-theme[data-theme="light"]) .shippedTimelineItem::before {
+  box-shadow: 0 0 0 3px rgba(10, 140, 120, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .shippedTimelineUpcoming {
+  border-left-color: rgba(10, 140, 120, 0.45);
+}
+
+:global(.st-theme[data-theme="light"]) .shippedTimelineBadge {
+  border-color: rgba(10, 140, 120, 0.4);
+  color: var(--accent, #0a7f66);
+}
+
 /* Roadmap: foundation → fork into two prongs. */
 .foundationBlock {
   margin: 20px 0 0;
@@ -305,7 +503,7 @@
 
 .pillarTitle {
   margin: 0 0 6px !important;
-  font-size: 18px !important;
+  font-size: 16px !important;
   line-height: 1.25 !important;
   font-weight: 650;
   letter-spacing: -0.015em;
@@ -314,7 +512,7 @@
 
 .pillarLede {
   margin: 0 0 10px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.45;
   color: var(--text-secondary);
 }
@@ -325,7 +523,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--text-secondary);
 }
@@ -477,6 +675,59 @@
   font-size: 0.9em;
 }
 
+.laneSummary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.laneSummary::-webkit-details-marker {
+  display: none;
+}
+
+.laneSummary::marker {
+  content: "";
+}
+
+.laneSummaryTitle {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35em;
+  margin: 0 !important;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.laneSummaryTitle::before {
+  content: "▸";
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 0.85em;
+  line-height: 1;
+  transition: transform 120ms ease;
+}
+
+.laneFold[open] > .laneSummary .laneSummaryTitle::before {
+  content: "▾";
+}
+
+.laneSummaryMeta {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+
+.laneFoldBody {
+  margin-top: 8px;
+}
+
 .currentSubsBox {
   margin: 20px 0 14px;
   padding: 12px 14px;
@@ -600,7 +851,7 @@
 
 .roadmapTitle {
   margin: 0 0 4px;
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 650;
   letter-spacing: -0.01em;
   line-height: 1.3;
@@ -615,9 +866,21 @@
 
 .roadmapBody {
   margin: 0;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--text-secondary);
+}
+
+.roadmapItemDone .roadmapTitle,
+.roadmapItemDone .roadmapBody,
+.roadmapItemDone .roadmapCategory,
+.roadmapItemDone .roadmapNeed {
+  text-decoration: line-through;
+  opacity: 0.72;
+}
+
+.roadmapItemDone .roadmapTitle::before {
+  text-decoration: none;
 }
 
 :global(.st-theme[data-theme="light"]) .roadmapNeed {
