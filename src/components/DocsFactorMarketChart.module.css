@@ -1,0 +1,128 @@
+.wrap {
+  margin: 14px 0 6px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.meta {
+  margin: 4px 0 10px;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 240px;
+}
+
+.baseline {
+  stroke: rgba(255, 255, 255, 0.12);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+}
+
+.lineTheme {
+  stroke: var(--accent, #26fcd6);
+  stroke-width: 2.25;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.lineSpy {
+  stroke: rgba(154, 168, 166, 0.95);
+  stroke-width: 1.75;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.lineResid {
+  stroke: rgba(120, 170, 255, 0.95);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  stroke-dasharray: 5 3.5;
+}
+
+.legend {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.swatch {
+  width: 14px;
+  height: 3px;
+  border-radius: 2px;
+  flex: 0 0 auto;
+}
+
+.swatchTheme {
+  background: var(--accent, #26fcd6);
+}
+
+.swatchSpy {
+  background: rgba(154, 168, 166, 0.95);
+}
+
+.swatchResid {
+  background: rgba(120, 170, 255, 0.95);
+  height: 0;
+  border-top: 2px dashed rgba(120, 170, 255, 0.95);
+}
+
+.caption {
+  margin: 10px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.method {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--text-muted);
+}
+
+:global(.st-theme[data-theme="light"]) .wrap {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .baseline {
+  stroke: rgba(0, 0, 0, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .lineSpy {
+  stroke: rgba(95, 110, 108, 0.9);
+}
+
+@media (max-width: 640px) {
+  .legend {
+    gap: 6px 10px;
+    font-size: 10px;
+  }
+}

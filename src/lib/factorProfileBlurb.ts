@@ -12,6 +12,9 @@ export const FACTOR_BLURB_MAX_PER_SIDE = 2;
 export const SECTOR_BLURB_MIN_SCORE = 60;
 /** “Fairly tight match” if score ≥ this or rank in top 10%. */
 export const SECTOR_BLURB_TIGHT_SCORE = 70;
+/** “Very tight” band: top ~2.5% of universe (or rank ≤ 5). */
+export const SECTOR_BLURB_VERY_TIGHT_PCT = 0.025;
+export const SECTOR_BLURB_VERY_TIGHT_RANK_MAX = 5;
 
 /** If both members clear the high bar, name neither of the pair. */
 export const FACTOR_BLURB_CONFLICT_PAIRS: ReadonlyArray<readonly [string, string]> = [
@@ -42,20 +45,15 @@ export type FactorProfileBlurbResult = {
   text: string;
 };
 
-/** Prefer co-movement score when published (same rule as themeFactorDisplayScore). */
+/** Incremental score — same basis as Higher/Lower columns / themeFactorDisplayScore. */
 function displayScore(entry: ThemeFactorScoreEntryV0): number {
-  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
-    return Math.max(0, Math.min(100, Math.round(entry.score_standalone)));
-  }
   return Math.max(0, Math.min(100, Math.round(entry.score)));
 }
 
 function displayRank(entry: ThemeFactorScoreEntryV0): { rank: number; total: number } | null {
   const total = entry.total;
   if (total == null || !Number.isFinite(total) || total <= 0) return null;
-  const preferStandalone =
-    entry.score_standalone != null && Number.isFinite(entry.score_standalone);
-  const rank = preferStandalone ? entry.rank_standalone : entry.rank;
+  const rank = entry.rank;
   if (rank == null || !Number.isFinite(rank) || rank <= 0) return null;
   return { rank: Math.floor(rank), total: Math.floor(total) };
 }
@@ -205,6 +203,28 @@ function buildFactorSentence(
   return formatLowSentence(lows).replace(/^It\b/, "This theme");
 }
 
+/** Closeness phrase for the sector sentence — stronger when rank/score are extreme. */
+export function sectorBlurbCloseness(
+  rank: number,
+  total: number,
+  score: number,
+): string {
+  if (rank <= 1) {
+    return score >= SECTOR_BLURB_TIGHT_SCORE
+      ? "the clearest sector fit in the universe"
+      : "the closest sector fit in the universe";
+  }
+  const pctFromTop = rank / total;
+  const veryTight =
+    rank <= SECTOR_BLURB_VERY_TIGHT_RANK_MAX ||
+    pctFromTop <= SECTOR_BLURB_VERY_TIGHT_PCT;
+  if (veryTight && score >= SECTOR_BLURB_MIN_SCORE) {
+    return "a very tight match";
+  }
+  const tight = score >= SECTOR_BLURB_TIGHT_SCORE || pctFromTop <= FACTOR_BLURB_DEFINITE_PCT;
+  return tight ? "a fairly tight match" : "a modest match";
+}
+
 export function buildSectorBlurbSentence(entry: ThemeFactorScoreEntryV0 | null | undefined): string | null {
   if (!entry) return null;
   const rt = displayRank(entry);
@@ -213,8 +233,7 @@ export function buildSectorBlurbSentence(entry: ThemeFactorScoreEntryV0 | null |
   const pctFromTop = rt.rank / rt.total;
   if (pctFromTop > FACTOR_BLURB_ELIGIBLE_PCT || score < SECTOR_BLURB_MIN_SCORE) return null;
   const label = shortLabel(entry);
-  const tight = score >= SECTOR_BLURB_TIGHT_SCORE || pctFromTop <= FACTOR_BLURB_DEFINITE_PCT;
-  const closeness = tight ? "a fairly tight match" : "a modest match";
+  const closeness = sectorBlurbCloseness(rt.rank, rt.total, score);
   return `Closest sector signal: ${label} (score ${score}, #${rt.rank}) — ${closeness}.`;
 }
 

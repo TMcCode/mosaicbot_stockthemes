@@ -14,7 +14,7 @@ async function loadLiveThemeFactorProfile(slug: string): Promise<ThemeFactorProf
   const rel = `themes/${slug}${FACTOR_PROFILE_SIDECAR_SUFFIX}`;
   const url = `${base}/themes/${encodeURIComponent(slug)}${FACTOR_PROFILE_SIDECAR_SUFFIX}`;
   try {
-    const raw = await fetchPublicJsonText(url, rel);
+    const raw = await fetchPublicJsonText(url, rel, { optional: true });
     return parseThemeFactorProfile(raw);
   } catch {
     return null;

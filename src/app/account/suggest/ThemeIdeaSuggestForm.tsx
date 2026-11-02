@@ -23,6 +23,8 @@ type Props = {
   themes: ThemeOption[];
   /** From the site search "Suggest a new theme" link — opens the theme tab pre-filled. */
   initialThemeName?: string;
+  /** From theme-page “Suggest an edit” — opens the edit tab on this slug when present. */
+  initialEditThemeSlug?: string;
 };
 
 const MIN_THEMES = 2;
@@ -37,8 +39,17 @@ export function ThemeIdeaSuggestForm({
   groups,
   themes,
   initialThemeName = "",
+  initialEditThemeSlug = "",
 }: Props) {
-  const [kind, setKind] = useState<ThemeIdeaKind>(initialThemeName ? "theme_in_group" : "new_group");
+  const editSlugFromQuery =
+    initialEditThemeSlug && themes.some((t) => t.slug === initialEditThemeSlug)
+      ? initialEditThemeSlug
+      : "";
+  const [kind, setKind] = useState<ThemeIdeaKind>(() => {
+    if (editSlugFromQuery) return "theme_edit";
+    if (initialThemeName) return "theme_in_group";
+    return "new_group";
+  });
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +63,9 @@ export function ThemeIdeaSuggestForm({
   const [tickersRaw, setTickersRaw] = useState("");
   const [themeReasoning, setThemeReasoning] = useState("");
 
-  const [editThemeSlug, setEditThemeSlug] = useState(themes[0]?.slug ?? "");
+  const [editThemeSlug, setEditThemeSlug] = useState(
+    editSlugFromQuery || themes[0]?.slug || "",
+  );
   const [removeTickersRaw, setRemoveTickersRaw] = useState("");
   const [weightChangesRaw, setWeightChangesRaw] = useState("");
   const [editReasoning, setEditReasoning] = useState("");

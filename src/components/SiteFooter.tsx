@@ -37,7 +37,7 @@ export function SiteFooter({ dataAsOf }: Props) {
                 Manage cookies
               </PrefetchIntentLink>
               <PrefetchIntentLink href="/terms">Terms of Service</PrefetchIntentLink>
-              <PrefetchIntentLink href="/about">About</PrefetchIntentLink>
+              <PrefetchIntentLink href="/docs">Documentation</PrefetchIntentLink>
               <PrefetchIntentLink href="/contact">Contact</PrefetchIntentLink>
               <a
                 href="https://www.tradingview.com/"

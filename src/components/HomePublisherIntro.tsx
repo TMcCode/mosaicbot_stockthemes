@@ -36,9 +36,9 @@ export function HomePublisherIntro() {
       <div className={styles.footerMeta}>
         <p className={styles.disclaimer}>{HOME_SITE_DISCLAIMER}</p>
         <p className={styles.links}>
-          <Link href="/about/methodology#limitations">Limitations</Link>
+          <Link href="/docs/methodology#limitations">Limitations</Link>
           <span aria-hidden="true"> · </span>
-          <Link href="/about/methodology">Methodology</Link>
+          <Link href="/docs/methodology">Methodology</Link>
         </p>
       </div>
     </section>

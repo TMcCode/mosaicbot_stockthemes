@@ -200,6 +200,9 @@ function FactorDeckPanel({
         >
           Compare factor makeup
         </Link>
+        <Link href="/docs/factors" className={styles.factorDeckLink}>
+          Read why factors matter
+        </Link>
       </>
     );
   }

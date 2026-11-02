@@ -963,7 +963,15 @@ export function ThemeConstituentsTable({
               EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.
             </p>
           ) : null}
-          <ConstituentsTableSortHint showScrollHint={!showNotes} />
+          <ConstituentsTableSortHint
+            showScrollHint={!showNotes}
+            compact={showReturns}
+            suggestEditHref={
+              slug && (showReturns || showNotes)
+                ? `/account/suggest?edit=${encodeURIComponent(slug)}`
+                : undefined
+            }
+          />
           <TableFooterBrandMark className={styles.tableWatermark} />
         </div>
       </div>

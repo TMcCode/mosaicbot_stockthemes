@@ -14,7 +14,7 @@ export const HOME_SITE_CONTACT_HREF = "mailto:hello@stockthemes.ai";
 export const HOME_SITE_BULLETS: string[] = [
   "Themes track one investable story; groups bundle related themes under a macro angle.",
   "Constituents are chosen from public filings and earnings—not generic LLM keyword lists.",
-  "For construction rules, return math, and data limits, see the methodology page.",
+  "For construction rules, return math, and data limits, see Documentation → Methodology.",
 ];
 
 export const HOME_SITE_DISCLAIMER =

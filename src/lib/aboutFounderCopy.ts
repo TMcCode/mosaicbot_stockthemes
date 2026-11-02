@@ -1,5 +1,5 @@
 /**
- * Founder intro for `/about` — sourced from this repo, not website_content on R2.
+ * Founder intro for `/docs/about` — sourced from this repo, not website_content on R2.
  */
 
 export const DEFAULT_HOME_INTRO =

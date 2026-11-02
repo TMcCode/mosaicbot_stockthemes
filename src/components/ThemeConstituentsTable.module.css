@@ -223,6 +223,22 @@
   text-overflow: ellipsis;
 }
 
+.sortHintCompact {
+  font-size: 11px;
+  line-height: 1.25;
+  opacity: 0.8;
+}
+
+.sortHintLink {
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.sortHintLink:hover {
+  text-decoration: underline;
+}
+
 .sortHintMobile {
   display: none;
 }

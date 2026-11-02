@@ -147,18 +147,16 @@ export function formatFactorRankLabelStandalone(entry: ThemeFactorScoreEntryV0):
   return `#${entry.rank_standalone} of ${entry.total.toLocaleString()} themes`;
 }
 
-/** Theme pages: co-movement score when published, else incremental. */
+/**
+ * Theme Factor Profile card: incremental (after-controls) score.
+ * Matches Higher/Lower column bucketing from ETL — not co-movement / standalone.
+ */
 export function themeFactorDisplayScore(entry: ThemeFactorScoreEntryV0): number {
-  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
-    return Math.max(0, Math.min(100, Math.round(entry.score_standalone)));
-  }
   return Math.max(0, Math.min(100, Math.round(entry.score)));
 }
 
+/** Incremental rank for the Factor Profile card (same basis as Higher/Lower columns). */
 export function formatThemeFactorDisplayRank(entry: ThemeFactorScoreEntryV0): string | null {
-  if (entry.score_standalone != null && Number.isFinite(entry.score_standalone)) {
-    return formatFactorRankLabelStandalone(entry);
-  }
   return formatFactorRankLabel(entry);
 }
 

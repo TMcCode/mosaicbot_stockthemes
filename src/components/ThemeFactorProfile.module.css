@@ -246,6 +246,28 @@
   padding-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   flex-shrink: 0;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.docsLink {
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin-left: auto;
+}
+
+.docsLink:hover {
+  text-decoration: underline;
 }
 
 /* div — avoid `.intro p` forcing ~18px on theme pages. */
@@ -254,6 +276,16 @@
   font-size: 10px;
   line-height: 1.3;
   color: var(--text-secondary, #9aa8a6);
+  min-width: 0;
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sectorLineSpacer {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .sectorLine strong {
@@ -288,6 +320,10 @@
 
   .sector {
     margin-top: 0;
+  }
+
+  .docsLink {
+    font-size: 9px;
   }
 
   .blurb {

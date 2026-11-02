@@ -31,9 +31,15 @@ export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
     () => (new URLSearchParams(search).get("theme") ?? "").trim().slice(0, 120),
     [search],
   );
-  const nextPath = prefillTheme
-    ? `/account/suggest?theme=${encodeURIComponent(prefillTheme)}`
-    : "/account/suggest";
+  const prefillEditSlug = useMemo(
+    () => (new URLSearchParams(search).get("edit") ?? "").trim().slice(0, 160),
+    [search],
+  );
+  const nextPath = prefillEditSlug
+    ? `/account/suggest?edit=${encodeURIComponent(prefillEditSlug)}`
+    : prefillTheme
+      ? `/account/suggest?theme=${encodeURIComponent(prefillTheme)}`
+      : "/account/suggest";
 
   if (!configured) {
     return (
@@ -80,8 +86,9 @@ export function ThemeIdeaSuggestPageClient({ groups, themes }: Props) {
           <p className={styles.eyebrow}>Account · Suggest</p>
           <h1>Suggest a group or theme</h1>
           <ThemeIdeaSuggestForm
-            key={prefillTheme}
+            key={`${prefillTheme}|${prefillEditSlug}`}
             initialThemeName={prefillTheme}
+            initialEditThemeSlug={prefillEditSlug}
             userId={user.id}
             submitterEmail={user.email ?? ""}
             groups={groups}

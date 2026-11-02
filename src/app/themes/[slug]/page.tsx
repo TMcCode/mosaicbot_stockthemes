@@ -21,7 +21,11 @@ import { ThemeThesisBleedSlot } from "@/components/ThemeThesisBleedSlot";
 import { LazyThemeNewsPanel } from "@/components/LazyThemeNewsPanel";
 import { ThemeThesisBlock } from "@/components/ThemeThesisSection";
 import { JsonLd } from "@/components/JsonLd";
-import { shouldShowThemeThesisUi, themeThesisProse } from "@/lib/themeThesis";
+import {
+  shouldShowThemeThesisUi,
+  themeThesisFirstSentence,
+  themeThesisProse,
+} from "@/lib/themeThesis";
 import { factorProfileUiAllowed } from "@/lib/themeFactorProfile";
 import {
   themeChartPerformanceSeed,
@@ -105,7 +109,7 @@ function sampleTickersFromDetail(
 
 /**
  * SERP/OG blurb: theme name + thesis (when present) + sample tickers.
- * Falls back to seo_intro, then a short default. Not shown in page UI.
+ * Falls back to seo_intro, then a short default. Hero UI uses the first thesis sentence.
  */
 function themePageDescription(
   detail:
@@ -196,9 +200,12 @@ export default async function ThemeDetailPage({ params }: Props) {
     ? manifest.groups.find((g) => g.slug === theme.group_slug)
     : undefined;
 
+  // Manifest already carries rank_10d for nearly all themes — skip the ~1MB
+  // compare_themes parse unless we need it as a fallback.
+  const manifestRank10d = rank10dFromPayload(theme.rank_10d);
   const [loaded, compareRes, factorProfile] = await Promise.all([
     getThemeDetailCached(slug),
-    getCompareThemesCached(),
+    manifestRank10d ? Promise.resolve(null) : getCompareThemesCached(),
     getThemeFactorProfileCached(slug),
   ]);
   const detail = loaded?.detail;
@@ -206,7 +213,7 @@ export default async function ThemeDetailPage({ params }: Props) {
   const chartPerformanceSeed = detail ? themeChartPerformanceSeed(detail) : undefined;
   const rank10d =
     rank10dFromPayload(detail?.rank_10d) ??
-    rank10dFromPayload(theme.rank_10d) ??
+    manifestRank10d ??
     (compareRes
       ? computeTheme10DRanks(slug, theme.group_slug, compareRes.bundle.rows)
       : null);
@@ -223,6 +230,8 @@ export default async function ThemeDetailPage({ params }: Props) {
   const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
   // One strip per request — keep canonical theme.name for short-theme / join logic.
   const displayName = themeDisplayLabel(theme.name);
+  const heroIntroRaw = themeThesisFirstSentence(detail?.theme_thesis);
+  const heroIntro = heroIntroRaw ? stripThemeYearInProse(heroIntroRaw) : null;
   const pageDescription = themePageDescription(detail, displayName);
   const mentions = (detail?.constituents || []).slice(0, 25).map((c) => ({
     "@type": "Thing",
@@ -289,6 +298,7 @@ export default async function ThemeDetailPage({ params }: Props) {
                   />
                 </h1>
                 <ThemeHeroMeta
+                  intro={heroIntro}
                   tickerCount={theme.ticker_count ?? detail?.constituents?.length}
                   totalMarketCapUsd={hasTotalMarketCap ? totalMarketCapUsd : undefined}
                   rank10d={rank10d}

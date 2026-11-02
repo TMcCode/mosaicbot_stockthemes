@@ -30,10 +30,7 @@ type Props = {
 function FactorRow({ entry, variant }: { entry: ThemeFactorScoreEntryV0; variant: "pos" | "neg" }) {
   const displayScore = themeFactorDisplayScore(entry);
   const rankLabel = formatThemeFactorDisplayRank(entry);
-  const rankNum =
-    entry.score_standalone != null && Number.isFinite(entry.score_standalone)
-      ? entry.rank_standalone
-      : entry.rank;
+  const rankNum = entry.rank;
   const rankTotal = entry.total;
   const rankShort =
     rankNum != null && Number.isFinite(rankNum)
@@ -125,8 +122,8 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
         </div>
       </div>
 
-      {industry ? (
-        <div className={styles.sector}>
+      <div className={styles.sector}>
+        {industry ? (
           <div className={styles.sectorLine}>
             Closest industry: <strong>{industry.label}</strong>
             {industry.score != null ? (
@@ -136,8 +133,13 @@ function FactorProfileCard({ profile }: { profile: ThemeFactorProfileV0 }) {
               <span className={styles.sectorMeta}>{` · ${industryRank}`}</span>
             ) : null}
           </div>
-        </div>
-      ) : null}
+        ) : (
+          <span className={styles.sectorLineSpacer} aria-hidden />
+        )}
+        <Link href="/docs/factors" className={styles.docsLink}>
+          Read why factors matter
+        </Link>
+      </div>
     </div>
   );
 }

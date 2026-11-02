@@ -1,4 +1,4 @@
-/** Static copy for the Vision section on `/about`. */
+/** Static copy for the Vision section on `/docs/about`. */
 
 export const ABOUT_VISION_PARAGRAPHS = [
   "stockthemes.ai is your check-in for the themes that matter—the data and news behind each narrative, and which tickers in those baskets are most exposed when the theme moves. Today you can search tickers and themes, follow my trending list, and read recent commentary.",
@@ -7,16 +7,16 @@ export const ABOUT_VISION_PARAGRAPHS = [
 
 export const ABOUT_VISION_ROADMAP = [
   {
-    title: "Trading Economics for real-time data",
-    body: "Live macro prints, commodity prices, and the economic calendar, so each theme's data backdrop updates the moment a release hits instead of waiting on lagged monthly government files.",
+    title: "Data, compute, and market-driving news",
+    body: "Sharper inputs that improve the whole platform—theme curation, evidence, and catalysts on the right baskets.",
   },
   {
-    title: "Workforce data",
-    body: "Hiring, headcount, and job-posting trends by company and industry. Companies staff up ahead of what they plan to build, so labor demand is an early, hard-to-fake signal of whether a theme is real—and which names are actually investing in it—well before it shows up in revenue.",
+    title: "Stockthemes",
+    body: "One prong of that platform: sector expertise that tracks and writes about themes—and factor work that shows what is actually moving stocks, themes, and portfolios.",
   },
   {
-    title: "TickerTrends",
-    body: "Consumer attention data—search, social, app downloads, and web traffic—mapped to tickers. Demand tends to show up in attention before it shows up in reported results, which helps flag which names in a basket are gaining or losing mindshare between earnings.",
+    title: "Blast Radius",
+    body: "The other prong: ask how an event hits the map—or how a theme fares under a shock—and read it on a market map.",
   },
 ] as const;
 

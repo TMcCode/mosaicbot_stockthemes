@@ -3,16 +3,25 @@ import type { ReactNode } from "react";
 
 import { formatUsdMarketCap } from "@/lib/constituentMeta";
 import type { Theme10DRankSnapshot } from "@/lib/themeCompareRank";
+import { formatReturnPct } from "@/lib/treemapLayout";
 
 import styles from "./ThemeHeroMeta.module.css";
 
 type Props = {
+  /** Public one-liner (“what is this”) — shown to everyone when present. */
+  intro?: string | null;
   tickerCount?: number | null;
   totalMarketCapUsd?: number;
   rank10d: Theme10DRankSnapshot | null;
   groupSlug?: string | null;
   groupName?: string | null;
 };
+
+function returnToneClass(returnPct: number): string {
+  if (returnPct > 0) return styles.returnUp;
+  if (returnPct < 0) return styles.returnDown;
+  return styles.returnFlat;
+}
 
 function MetaRow({ items }: { items: ReactNode[] }) {
   const nodes = items.filter((item) => item != null && item !== false);
@@ -34,12 +43,15 @@ function MetaRow({ items }: { items: ReactNode[] }) {
 }
 
 export function ThemeHeroMeta({
+  intro,
   tickerCount,
   totalMarketCapUsd,
   rank10d,
   groupSlug,
   groupName,
 }: Props) {
+  const introText = intro?.trim() ?? "";
+  const hasIntro = Boolean(introText);
   const hasMcap = totalMarketCapUsd != null && totalMarketCapUsd > 0;
   const showTickers = tickerCount != null;
   const showRanks = rank10d != null;
@@ -52,7 +64,7 @@ export function ThemeHeroMeta({
     rank10d!.groupTotal != null &&
     showGroupLink;
 
-  if (!showTickers && !hasMcap && !showRanks && !showGroupLink) {
+  if (!hasIntro && !showTickers && !hasMcap && !showRanks && !showGroupLink) {
     return null;
   }
 
@@ -76,13 +88,17 @@ export function ThemeHeroMeta({
 
   return (
     <div className={styles.block}>
+      {hasIntro ? <div className={styles.seoIntro}>{introText}</div> : null}
       <MetaRow items={statsItems} />
       {showRanks ? (
-        <div className={styles.rankRow}>
+        <div
+          className={styles.rankRow}
+          aria-label={`10D ${formatReturnPct(rank10d!.returnPct)}, ranked #${rank10d!.universeRank} of ${rank10d!.universeTotal} themes`}
+        >
           <span className={styles.rankPill}>
-            <span className={styles.rankPillTag}>
-              <span className={styles.rankFull}>10D rank</span>
-              <span className={styles.rankShort}>10D</span>
+            <span className={styles.rankPillTag}>10D</span>
+            <span className={`${styles.rankReturn} ${returnToneClass(rank10d!.returnPct)}`}>
+              {formatReturnPct(rank10d!.returnPct)}
             </span>
           </span>
           <span className={styles.rankPill}>

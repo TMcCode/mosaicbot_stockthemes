@@ -1,0 +1,226 @@
+{
+  "schema_version": 0,
+  "title": "Data roadmap",
+  "intro": "Subscriber-funded dataset and capacity queue for pillar 1 (data, compute, news). Story lives on /docs/roadmap.",
+  "paid_subscribers_display": 0,
+  "avg_monthly_price": 30.0,
+  "disclaimer": "Direction and funding targets—not a delivery schedule, and not investment advice.",
+  "items": [
+    {
+      "id": "ticker_screener",
+      "title": "Theme / ticker screener",
+      "description": "Find new themes and tickers inflecting early—momentum, revisions, and setup",
+      "category": "general",
+      "category_label": "General",
+      "subscribers_required": 10,
+      "sort_order": 10
+    },
+    {
+      "id": "realtime_stock_platform",
+      "title": "Engineering: real-time stock data platform",
+      "description": "Design and build the streaming/websocket + normalization layer for live quotes and tape—infra, vendors, and reliability so dashboards and Blast Radius can consume RT prices.",
+      "category": "product",
+      "category_label": "Product & platform",
+      "subscribers_required": 25,
+      "sort_order": 40
+    },
+    {
+      "id": "newsapi",
+      "title": "NewsAPI.AI -- real-time, full-context news across 150k sources",
+      "description": "Lower-cost news layer for breadth before heavier feeds.",
+      "category": "news_api",
+      "category_label": "News APIs",
+      "subscribers_required": 50,
+      "sort_order": 20
+    },
+    {
+      "id": "trade_flow_comtrade",
+      "title": "Country trade-flow matrix (UN Comtrade / ITC)",
+      "description": "Country–commodity dependency matrix: % of oil/gas/rare earths/semis/food from source countries; map shocks to importers; tie to themes via business_info country fields (plan §6).",
+      "category": "blast_enrichment",
+      "category_label": "Trade & enrichment",
+      "subscribers_required": 100,
+      "sort_order": 30
+    },
+    {
+      "id": "transcript_catalyst_depth",
+      "title": "Quartr — deeper transcript / catalyst pipeline",
+      "description": "Throughput and structured catalyst extraction for event scoring.",
+      "category": "blast_radius",
+      "category_label": "Blast Radius / events",
+      "subscribers_required": 100,
+      "sort_order": 50
+    },
+    {
+      "id": "government_spend_dataset",
+      "title": "Quiver Quantitative — Tickerized Government Spending",
+      "description": "Maps U.S. federal contract awards and obligations to publicly traded tickers, enabling company-level tracking of government spending, contract wins, agency exposure, and spend acceleration. Useful for identifying government-driven revenue trends before earnings.",
+      "category": "general",
+      "category_label": "General",
+      "subscribers_required": 240,
+      "sort_order": 25
+    },
+    {
+      "id": "commodity_exposure_matrix",
+      "title": "Commodity exposure matrix (company-level)",
+      "description": "Net producer/consumer/neutral per major commodity with COGS linkage; direct scoring for commodity shocks (plan §12).",
+      "category": "blast_company",
+      "category_label": "Company deep data",
+      "subscribers_required": 250,
+      "sort_order": 90
+    },
+    {
+      "id": "regulatory_pipeline",
+      "title": "Regulatory pipeline (FDA / FCC / EPA) via FiscalNote",
+      "description": "PDUFA, advisory committees, spectrum, emissions rules; pre-load registry with dated decisions via FiscalNote (plan §14).",
+      "category": "blast_company",
+      "category_label": "Company deep data",
+      "subscribers_required": 250,
+      "sort_order": 100
+    },
+    {
+      "id": "panjiva",
+      "title": "S&P Panjiva — supply chain & shipment intelligence",
+      "description": "Global trade flows, suppliers, buyers, and shipment-level context; complements Comtrade and chokepoint mapping for Blast Radius supply-chain scenarios.",
+      "category": "blast_enrichment",
+      "category_label": "Trade & enrichment",
+      "subscribers_required": 250,
+      "sort_order": 150
+    },
+    {
+      "id": "ticker_trends_dataset",
+      "title": "TickerTrends — Google Trends and other online sentiment",
+      "description": "Shows google trends, clickstream data, reddit trends to provide tickerized social sentiment across the web",
+      "category": "general",
+      "category_label": "General",
+      "subscribers_required": 500,
+      "sort_order": 26
+    },
+    {
+      "id": "patents_ip_clustering",
+      "title": "Patent / IP clustering (USPTO, Google Patents)",
+      "description": "Similarity and tech-area concentration for moat and obsolescence scenarios (plan §15).",
+      "category": "blast_advanced",
+      "category_label": "Advanced intel",
+      "subscribers_required": 500,
+      "sort_order": 110
+    },
+    {
+      "id": "workforce_signals",
+      "title": "Workforce data (hiring / layoffs)",
+      "description": "Systematic headcount and role signals by ticker and geo; leading indicator for capacity vs retrenchment (plan §16).",
+      "category": "blast_advanced",
+      "category_label": "Advanced intel",
+      "subscribers_required": 500,
+      "sort_order": 120
+    },
+    {
+      "id": "news_entity_graph",
+      "title": "News entity graph",
+      "description": "Knowledge graph from news pipeline: companies, people, countries, policies—narrative linkages beyond theme adjacency (plan §19).",
+      "category": "blast_advanced",
+      "category_label": "Advanced intel",
+      "subscribers_required": 500,
+      "sort_order": 130
+    },
+    {
+      "id": "perf_refactor",
+      "title": "Performance & refactor capacity",
+      "description": "Contractor time for large-dashboard refactor and latency (Phase 0).",
+      "category": "product",
+      "category_label": "Product & platform",
+      "subscribers_required": 1000,
+      "sort_order": 140
+    },
+    {
+      "id": "bloomberg_terminal",
+      "title": "Bloomberg Terminal",
+      "description": "Professional Terminal—real-time data, news, analytics, messaging (~$24k/year/seat order of magnitude).",
+      "category": "premium_data",
+      "category_label": "Premium data",
+      "subscribers_required": 1000,
+      "sort_order": 150
+    },
+    {
+      "id": "satellite_geospatial",
+      "title": "Satellite / geospatial validation",
+      "description": "Ports, plants, foot traffic—validate event impact in near real time; high ROI bar (plan §18).",
+      "category": "blast_advanced",
+      "category_label": "Advanced intel",
+      "subscribers_required": 1500,
+      "sort_order": 210
+    },
+    {
+      "id": "usaspending_contracts",
+      "title": "USASpending.gov — federal contracts",
+      "description": "Rebuild home version of Quiver Quant w/ contracts by company, agency, $, type; defense and policy-scenario scoring (plan §13).",
+      "category": "blast_company",
+      "category_label": "Company deep data",
+      "subscribers_required": 2000,
+      "sort_order": 230
+    },
+    {
+      "id": "reddit_social_sourcing",
+      "title": "Reddit / social event sourcing",
+      "description": "Rebuild home version of Ticker Trends. Key subreddits + engagement filters; LLM extracts events, dedupes registry, scores novel narratives (plan §10).",
+      "category": "blast_enrichment",
+      "category_label": "Trade & enrichment",
+      "subscribers_required": 2000,
+      "sort_order": 240
+    },
+    {
+      "id": "hire_backend",
+      "title": "Hire a backend engineer",
+      "description": "Full-time capacity for data pipelines, infra, and reliability.",
+      "category": "hiring",
+      "category_label": "Team",
+      "subscribers_required": 2500,
+      "sort_order": 160
+    },
+    {
+      "id": "visible_alpha",
+      "title": "Visible Alpha — segment & estimate depth",
+      "description": "Deeper sell-side–style segment models and consensus detail where available.",
+      "category": "premium_data",
+      "category_label": "Premium data",
+      "subscribers_required": 2500,
+      "sort_order": 170
+    },
+    {
+      "id": "alphasense",
+      "title": "AlphaSense — sell-side research & search",
+      "description": "Broker research, expert calls, unified search across internal docs.",
+      "category": "premium_data",
+      "category_label": "Premium data",
+      "subscribers_required": 2500,
+      "sort_order": 180
+    },
+    {
+      "id": "hire_ai_analyst",
+      "title": "Hire an AI / research analyst",
+      "description": "Dedicated support for LLM workflows, QA, and research tooling.",
+      "category": "hiring",
+      "category_label": "Team",
+      "subscribers_required": 3000,
+      "sort_order": 190
+    },
+    {
+      "id": "alt_transaction_data",
+      "title": "Credit card / alt transaction data",
+      "description": "Spend acceleration by merchant category and geo; consumer names and event validation (plan §17).",
+      "category": "blast_advanced",
+      "category_label": "Advanced intel",
+      "subscribers_required": 3000,
+      "sort_order": 200
+    },
+    {
+      "id": "web_scraper",
+      "title": "Hire a webscraper",
+      "description": "Full-time capacity to find web data",
+      "category": "general",
+      "category_label": "General",
+      "subscribers_required": 3000,
+      "sort_order": 220
+    }
+  ]
+}

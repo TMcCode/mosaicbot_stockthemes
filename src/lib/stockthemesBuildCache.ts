@@ -166,6 +166,7 @@ export async function invalidateDevDiskCache(relPath: string): Promise<void> {
   } catch {
     /* missing */
   }
+  await clearDevAbsentMarker(relPath);
 }
 
 export type FetchPublicJsonOptions = {
@@ -176,7 +177,52 @@ export type FetchPublicJsonOptions = {
    * For optional sidecars that may not exist yet (avoids slow 404 storms in next dev).
    */
   diskOnly?: boolean;
+  /**
+   * Optional public sidecars (``.app.v0.json``, factor profiles, …).
+   * In ``next dev``: reuse stale disk without R2/CDN; remember 404s so missing
+   * objects are not re-probed every navigation.
+   */
+  optional?: boolean;
 };
+
+function absentMarkerPath(relPath: string): string {
+  return `${cachePathForRel(relPath)}.absent`;
+}
+
+async function readDevAbsentMarker(relPath: string): Promise<boolean> {
+  if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
+    return false;
+  }
+  try {
+    const st = await stat(absentMarkerPath(relPath));
+    if (Date.now() - st.mtimeMs > devDiskCacheMaxAgeMs()) {
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function writeDevAbsentMarker(relPath: string): Promise<void> {
+  if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
+    return;
+  }
+  const abs = absentMarkerPath(relPath);
+  await mkdir(path.dirname(abs), { recursive: true });
+  await writeFile(abs, `${Date.now()}\n`, "utf-8");
+}
+
+async function clearDevAbsentMarker(relPath: string): Promise<void> {
+  if (process.env.NODE_ENV !== "development" || devDiskCacheDisabled()) {
+    return;
+  }
+  try {
+    await unlink(absentMarkerPath(relPath));
+  } catch {
+    /* missing */
+  }
+}
 
 /**
  * Fetch public JSON during static export / CI, preferring an on-disk cache.
@@ -211,6 +257,16 @@ export async function fetchPublicJsonText(
     if (devCached !== null) {
       return devCached;
     }
+    // Optional sidecars: prefer any on-disk copy over R2/CDN 404 storms when TTL expires.
+    if (options?.optional) {
+      const stale = await readDevDiskCacheRaw(cacheRelPath);
+      if (stale && hasJsonPayloadStart(stale)) {
+        return stale;
+      }
+      if (await readDevAbsentMarker(cacheRelPath)) {
+        throw new Error(`optional absent (cached): ${cacheRelPath}`);
+      }
+    }
   }
 
   if (options?.diskOnly) {
@@ -221,6 +277,7 @@ export async function fetchPublicJsonText(
     try {
       const text = await fetchDevGcsObject(cacheRelPath);
       await writeDevDiskCache(cacheRelPath, text);
+      await clearDevAbsentMarker(cacheRelPath);
       return text;
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
@@ -257,6 +314,9 @@ export async function fetchPublicJsonText(
       );
       return stale;
     }
+    if (options?.optional && process.env.NODE_ENV === "development") {
+      await writeDevAbsentMarker(cacheRelPath);
+    }
     throw cdnErr;
   }
 
@@ -266,6 +326,7 @@ export async function fetchPublicJsonText(
   } else if (process.env.NODE_ENV === "development" && !devDiskCacheDisabled()) {
     await writeDevDiskCache(cacheRelPath, text);
   }
+  await clearDevAbsentMarker(cacheRelPath);
 
   return text;
 }

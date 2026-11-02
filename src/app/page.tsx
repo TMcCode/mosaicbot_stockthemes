@@ -58,11 +58,11 @@ export default function Home() {
                 <span className={styles.heroBrandLabel}>stockthemes.ai</span>
               </div>
               <h1 className={`${styles.heroTitle} ${styles.heroTitleOneLine}`}>
-                For investors who think in narratives.
+                See what’s moving markets—and why.
               </h1>
               <p className={styles.introPunchline}>
-                Track equity markets at the theme level — performance, KPIs, news, and thesis
-                commentary — then drill into the companies behind each story.
+                Track themes, identify the stocks driving them, and follow the data, news, and
+                earnings shaping each investment story.
               </p>
             </div>
 
@@ -71,7 +71,7 @@ export default function Home() {
             </Suspense>
 
             <div className={`${styles.heroSearch} ${styles.heroFullBleed}`}>
-              <span className={styles.heroSearchLabel}>Search narratives</span>
+              <span className={styles.heroSearchLabel}>Find a theme or ticker</span>
               <LazySiteSearch
                 variant="hero"
                 placeholder="Type a theme, industry, idea, or ticker…"

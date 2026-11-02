@@ -6,8 +6,9 @@
     "node": ">=20.9 <24"
   },
   "scripts": {
-    "dev": "next dev",
-    "dev:clean": "bash scripts/dev-reset.sh && next dev",
+    "dev": "next dev --webpack",
+    "dev:turbo": "next dev --turbopack",
+    "dev:clean": "bash scripts/dev-reset.sh && next dev --webpack",
     "dev:clean:webpack": "bash scripts/dev-reset.sh && next dev --webpack",
     "dev:webpack": "next dev --webpack",
     "dev:cache": "node scripts/sync-build-cache.mjs",

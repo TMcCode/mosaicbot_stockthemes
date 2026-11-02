@@ -1,0 +1,625 @@
+/* Beat page overflow containment so sticky sidebar can pin to the viewport. */
+.docsSurface {
+  overflow-x: visible !important;
+  overflow-y: visible !important;
+  /* Edge-to-edge docs chrome (sidebar + content), still under site nav. */
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  padding-top: 0 !important;
+}
+
+.frame {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-width: 0;
+  min-height: calc(100vh - var(--site-nav-offset, 45px));
+}
+
+.contentPane {
+  flex: 1 1 auto;
+  min-width: 0;
+  width: 100%;
+  padding: 28px 36px 48px;
+  box-sizing: border-box;
+}
+
+/* Long-form doc pages (About / Methodology / Factors). */
+.article {
+  width: 100%;
+  max-width: 760px;
+}
+
+/* Section titles inside cards — keep quieter than the page H1.
+   Beat page `.aboutProse h2` (32px) with equal/higher specificity via `.article h2`. */
+.article h2 {
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  letter-spacing: -0.01em !important;
+  font-weight: 650;
+  margin: 0 0 8px !important;
+}
+
+@media (max-width: 640px) {
+  .article h2 {
+    font-size: 16px !important;
+  }
+}
+
+.hub {
+  width: 100%;
+  max-width: 980px;
+}
+
+.hubEyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.hubTitle {
+  margin: 0 0 8px;
+  font-size: 32px;
+  font-weight: 650;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.hubLead {
+  margin: 0 0 24px;
+  max-width: 42rem;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.hubGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.hubCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 100%;
+  padding: 16px 16px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.03);
+  text-decoration: none;
+  color: inherit;
+  box-sizing: border-box;
+  transition:
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.hubCard:hover {
+  border-color: rgba(38, 252, 214, 0.35);
+  background: rgba(38, 252, 214, 0.06);
+}
+
+.hubCardTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.hubCardSummary {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+:global(.st-theme[data-theme="light"]) .hubCard {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .hubCard:hover {
+  background: rgba(0, 128, 96, 0.05);
+  border-color: rgba(0, 128, 96, 0.25);
+}
+
+@media (max-width: 980px) {
+  .hubGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .docsSurface {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+    padding-top: 12px !important;
+  }
+
+  .frame {
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .contentPane {
+    padding: 16px 4px 32px;
+  }
+
+  .hubTitle {
+    font-size: 26px;
+  }
+
+  .hubGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Static co-movement vs incremental example (docs/factors) — CSS only, no chart lib. */
+.factorCompare {
+  margin: 14px 0 4px;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.factorCompareTitle {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.factorCompareNote {
+  margin: 0 0 14px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+
+.factorCompareRows {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.factorCompareRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 10px 16px;
+  align-items: center;
+}
+
+.factorCompareLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.factorCompareBars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+.factorCompareBarLine {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) 28px;
+  gap: 8px;
+  align-items: center;
+}
+
+.factorCompareBarKind {
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.factorCompareTrack {
+  height: 6px;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.08);
+  overflow: hidden;
+}
+
+.factorCompareFill {
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent, #26fcd6);
+}
+
+.factorCompareFillMuted {
+  background: rgba(154, 168, 166, 0.55);
+}
+
+.factorCompareScore {
+  font-size: 11px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.factorCompareCaption {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+:global(.st-theme[data-theme="light"]) .factorCompare {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .factorCompareTrack {
+  background: rgba(0, 0, 0, 0.06);
+}
+
+:global(.st-theme[data-theme="light"]) .factorCompareFillMuted {
+  background: rgba(95, 110, 108, 0.45);
+}
+
+@media (max-width: 640px) {
+  .factorCompareRow {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+
+  .factorCompareBarLine {
+    grid-template-columns: 64px minmax(0, 1fr) 28px;
+  }
+}
+
+/* Roadmap: foundation → fork into two prongs. */
+.foundationBlock {
+  margin: 20px 0 0;
+  padding: 16px 16px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(38, 252, 214, 0.22);
+  background: rgba(38, 252, 214, 0.04);
+}
+
+.foundationEyebrow {
+  margin: 0 0 6px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent, #26fcd6);
+}
+
+.pillarTitle {
+  margin: 0 0 6px !important;
+  font-size: 18px !important;
+  line-height: 1.25 !important;
+  font-weight: 650;
+  letter-spacing: -0.015em;
+  color: var(--text-primary);
+}
+
+.pillarLede {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.pillarBullets {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.pillarBullets li::marker {
+  color: var(--accent, #26fcd6);
+}
+
+.pillarCta {
+  margin: 12px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pillarCta a {
+  color: var(--accent, #26fcd6);
+  text-decoration: none;
+}
+
+.pillarCta a:hover {
+  text-decoration: underline;
+}
+
+.forkJoin {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 4px 0 0;
+  height: 36px;
+  pointer-events: none;
+}
+
+.forkStem {
+  width: 1px;
+  flex: 1 1 auto;
+  background: rgba(38, 252, 214, 0.4);
+}
+
+.forkBar {
+  width: min(100%, 420px);
+  height: 1px;
+  background: rgba(38, 252, 214, 0.35);
+}
+
+.forkLabel {
+  margin: 10px 0 12px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.prongGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 8px;
+  align-items: start;
+}
+
+.prongCard {
+  margin: 0;
+  padding: 14px 14px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.prongTitle {
+  margin: 0 0 6px !important;
+  font-size: 15px !important;
+  line-height: 1.3 !important;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+:global(.st-theme[data-theme="light"]) .foundationBlock {
+  background: rgba(0, 128, 96, 0.05);
+  border-color: rgba(0, 128, 96, 0.22);
+}
+
+:global(.st-theme[data-theme="light"]) .forkStem,
+:global(.st-theme[data-theme="light"]) .forkBar {
+  background: rgba(0, 128, 96, 0.35);
+}
+
+:global(.st-theme[data-theme="light"]) .prongCard {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.blastBlock {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.blastBlockLabel {
+  margin: 0 0 6px;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.blastModes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.blastMode {
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.blastModeTitle {
+  font-size: 11px;
+  font-weight: 650;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.blastModePrompt {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.laneIndex {
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted);
+  font-weight: 650;
+  font-size: 0.9em;
+}
+
+.currentSubsBox {
+  margin: 20px 0 14px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.currentSubsLabel {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.currentSubsList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 14px;
+}
+
+.currentSubsList li {
+  margin: 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.currentSubsName {
+  font-size: 13px;
+  font-weight: 650;
+  color: var(--text-primary);
+}
+
+.currentSubsUse {
+  font-size: 12px;
+  line-height: 1.3;
+  color: var(--text-muted);
+}
+
+:global(.st-theme[data-theme="light"]) .currentSubsBox {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 520px) {
+  .currentSubsList {
+    grid-template-columns: 1fr;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .blastBlock {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+@media (max-width: 720px) {
+  .prongGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .forkBar {
+    width: 2px;
+    height: 12px;
+  }
+
+  .forkJoin {
+    height: 28px;
+  }
+}
+
+/* Roadmap milestones (docs/roadmap/data) — static list, no client JS. */
+.roadmapList {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  counter-reset: roadmap;
+}
+
+.roadmapItem {
+  margin: 0;
+  padding: 12px 0 0;
+  border-top: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.08));
+  counter-increment: roadmap;
+}
+
+.roadmapItem:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.roadmapMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  align-items: baseline;
+  margin: 0 0 4px;
+}
+
+.roadmapCategory {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.roadmapNeed {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent, #26fcd6);
+}
+
+.roadmapTitle {
+  margin: 0 0 4px;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  line-height: 1.3;
+  color: var(--text-primary);
+}
+
+.roadmapTitle::before {
+  content: counter(roadmap) ". ";
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.roadmapBody {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+:global(.st-theme[data-theme="light"]) .roadmapNeed {
+  color: var(--accent, #0a7f66);
+}

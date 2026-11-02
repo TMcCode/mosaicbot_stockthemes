@@ -35,7 +35,7 @@ async function loadLiveThemeApp(
   const rel = themeAppSidecarRel(slug);
   const url = themeAppSidecarUrl(base, slug);
   try {
-    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache });
+    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache, optional: true });
     return parseThemeAppPayload(JSON.parse(raw));
   } catch {
     return null;

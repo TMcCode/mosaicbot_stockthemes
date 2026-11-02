@@ -1,8 +1,15 @@
 import type { ReactNode } from "react";
 
 import type { Group10DRankSnapshot } from "@/lib/groupCompareRank";
+import { formatReturnPct } from "@/lib/treemapLayout";
 
 import styles from "./ThemeHeroMeta.module.css";
+
+function returnToneClass(returnPct: number): string {
+  if (returnPct > 0) return styles.returnUp;
+  if (returnPct < 0) return styles.returnDown;
+  return styles.returnFlat;
+}
 
 type Props = {
   themeCount?: number | null;
@@ -60,11 +67,14 @@ export function GroupHeroMeta({ themeCount, tickerCount, rank10d }: Props) {
     <div className={styles.block}>
       <MetaRow items={statsItems} />
       {showRanks ? (
-        <div className={styles.rankRow}>
+        <div
+          className={styles.rankRow}
+          aria-label={`10D ${formatReturnPct(rank10d!.returnPct)}, ranked #${rank10d!.universeRank} of ${rank10d!.universeTotal} groups`}
+        >
           <span className={styles.rankPill}>
-            <span className={styles.rankPillTag}>
-              <span className={styles.rankFull}>10D rank</span>
-              <span className={styles.rankShort}>10D</span>
+            <span className={styles.rankPillTag}>10D</span>
+            <span className={`${styles.rankReturn} ${returnToneClass(rank10d!.returnPct)}`}>
+              {formatReturnPct(rank10d!.returnPct)}
             </span>
           </span>
           <span className={styles.rankPill}>

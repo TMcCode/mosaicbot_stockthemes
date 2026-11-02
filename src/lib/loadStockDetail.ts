@@ -41,7 +41,7 @@ async function loadLiveStockApp(
   const rel = stockAppSidecarRel(ticker);
   const url = stockAppSidecarUrl(base, ticker);
   try {
-    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache });
+    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache, optional: true });
     return parseStockAppPayload(JSON.parse(raw));
   } catch {
     return null;

@@ -63,7 +63,8 @@ test("screenshot-like: definite value high + less-tied lows + tight sector", () 
   assert.doesNotMatch(result.factorSentence, /Market/);
   assert.ok(result.sectorSentence);
   assert.match(result.sectorSentence, /Consumer Staples/);
-  assert.match(result.sectorSentence, /fairly tight match/);
+  // #10 of 1287 ≈ top 1% → very tight (not merely “fairly”).
+  assert.match(result.sectorSentence, /very tight match/);
 });
 
 test("Falling-Rate in Higher column with bottom rank is not called opposite", () => {
@@ -186,6 +187,26 @@ test("sector gate requires score and rank", () => {
   );
   assert.ok(modest);
   assert.match(modest, /modest match/);
+});
+
+test("sector closeness scales with rank", () => {
+  const clearest = buildSectorBlurbSentence(
+    entry({ id: "XLK", label: "Technology", score: 74, rank: 1, total: 1293 }),
+  );
+  assert.ok(clearest);
+  assert.match(clearest, /clearest sector fit in the universe/);
+
+  const veryTight = buildSectorBlurbSentence(
+    entry({ id: "XLK", label: "Technology", score: 74, rank: 4, total: 1293 }),
+  );
+  assert.ok(veryTight);
+  assert.match(veryTight, /very tight match/);
+
+  const fairly = buildSectorBlurbSentence(
+    entry({ id: "XLK", label: "Technology", score: 72, rank: 80, total: 1293 }),
+  );
+  assert.ok(fairly);
+  assert.match(fairly, /fairly tight match/);
 });
 
 test("suppressConflictingHighs drops both members", () => {
