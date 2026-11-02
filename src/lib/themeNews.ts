@@ -22,6 +22,102 @@ function parseItems(value: unknown): ThemeNewsItemV0[] {
   );
 }
 
+const TITLE_STOP = new Set([
+  "a",
+  "an",
+  "the",
+  "and",
+  "or",
+  "to",
+  "of",
+  "in",
+  "on",
+  "for",
+  "as",
+  "at",
+  "by",
+  "from",
+  "with",
+  "its",
+  "is",
+  "are",
+  "was",
+  "were",
+  "be",
+  "after",
+  "says",
+  "said",
+]);
+const TITLE_ALIAS: Record<string, string> = {
+  shares: "stock",
+  share: "stock",
+  tumbles: "tumble",
+  plunges: "plunge",
+  drops: "drop",
+  falls: "fall",
+  slumps: "slump",
+};
+
+function normTitle(title: string): string {
+  return title
+    .toLowerCase()
+    .replace(/['’]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function titleTokens(title: string): Set<string> {
+  const out = new Set<string>();
+  for (const t of normTitle(title).split(" ")) {
+    if (t.length < 4 || TITLE_STOP.has(t)) continue;
+    out.add(TITLE_ALIAS[t] ?? t);
+  }
+  return out;
+}
+
+function titlesNearDup(a: string, b: string): boolean {
+  const na = normTitle(a);
+  const nb = normTitle(b);
+  if (!na || !nb) return false;
+  if (na === nb) return true;
+  const ta = titleTokens(a);
+  const tb = titleTokens(b);
+  if (ta.size < 3 || tb.size < 3) return false;
+  let inter = 0;
+  for (const t of ta) if (tb.has(t)) inter += 1;
+  const union = ta.size + tb.size - inter;
+  return union > 0 && inter / union >= 0.55;
+}
+
+function normUrl(url: string): string {
+  return url.trim().split("?")[0]!.split("#")[0]!.replace(/\/+$/, "").toLowerCase();
+}
+
+/** Collapse same-day wire rewrites (WSJ Shares/Stock twins) until ETL republishes. */
+export function dedupeThemeNewsItems(items: ThemeNewsItemV0[]): ThemeNewsItemV0[] {
+  const ranked = [...items].sort((a, b) => {
+    const d = String(b.date ?? "").localeCompare(String(a.date ?? ""));
+    if (d) return d;
+    const pick = Number(Boolean(b.picked)) - Number(Boolean(a.picked));
+    if (pick) return pick;
+    return (b.title?.length ?? 0) - (a.title?.length ?? 0);
+  });
+  const kept: ThemeNewsItemV0[] = [];
+  for (const item of ranked) {
+    const url = normUrl(item.url);
+    const day = String(item.date ?? "").slice(0, 10);
+    const dup = kept.some((h) => {
+      if (url && normUrl(h.url) === url) return true;
+      if (!titlesNearDup(item.title, h.title)) return false;
+      const keepDay = String(h.date ?? "").slice(0, 10);
+      return !day || !keepDay || day === keepDay;
+    });
+    if (!dup) kept.push(item);
+  }
+  return kept.sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
+}
+
 export function parseThemeNewsIndex(raw: unknown): ThemeNewsIndexV0 | null {
   const row = (raw ?? {}) as Record<string, unknown>;
   if (row.schema_version !== "theme.news.index.v0" || typeof row.slug !== "string") return null;
@@ -30,7 +126,7 @@ export function parseThemeNewsIndex(raw: unknown): ThemeNewsIndexV0 | null {
         .filter((m) => typeof m?.month === "string" && /^\d{4}-\d{2}$/.test(m.month as string))
         .map((m) => ({ month: m.month as string, count: Number(m.count) || 0 }))
     : [];
-  const latest = parseItems(row.latest);
+  const latest = dedupeThemeNewsItems(parseItems(row.latest));
   if (!latest.length) return null;
   return {
     schema_version: "theme.news.index.v0",
@@ -84,7 +180,9 @@ export async function fetchThemeNewsMonth(
     });
     if (!res.ok) return [];
     const raw = (await res.json()) as Partial<ThemeNewsMonthV0>;
-    return raw?.schema_version === "theme.news.month.v0" ? parseItems(raw.items) : [];
+    return raw?.schema_version === "theme.news.month.v0"
+      ? dedupeThemeNewsItems(parseItems(raw.items))
+      : [];
   } catch {
     return [];
   }

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
-import { fetchThemeNewsIndex, fetchThemeNewsMonth } from "@/lib/themeNews";
+import { dedupeThemeNewsItems, fetchThemeNewsIndex, fetchThemeNewsMonth } from "@/lib/themeNews";
 import type { ThemeNewsIndexV0, ThemeNewsItemV0 } from "@/types/theme.news.v0";
 
 import styles from "./ThemeNewsPanel.module.css";
@@ -27,7 +27,9 @@ function mergeItems(a: ThemeNewsItemV0[], b: ThemeNewsItemV0[]): ThemeNewsItemV0
     added.push(item);
   }
   if (!added.length) return a;
-  return [...a, ...added].sort((x, y) => (x.date < y.date ? 1 : x.date > y.date ? -1 : 0));
+  return dedupeThemeNewsItems(
+    [...a, ...added].sort((x, y) => (x.date < y.date ? 1 : x.date > y.date ? -1 : 0)),
+  );
 }
 
 function dayLabel(date: string): string {
