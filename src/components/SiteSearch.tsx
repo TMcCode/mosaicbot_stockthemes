@@ -26,11 +26,14 @@ type SiteSearchProps = {
   placeholder?: string;
   /** `hero` = full-width homepage search. */
   variant?: "nav" | "hero";
+  /** Focus the field on mount (LazySiteSearch after stub → real swap). */
+  autoFocus?: boolean;
 };
 
 export function SiteSearch({
   placeholder = "Search…",
   variant = "nav",
+  autoFocus = false,
 }: SiteSearchProps = {}) {
   const router = useRouter();
   const listId = useId();
@@ -200,10 +203,14 @@ export function SiteSearch({
           setQuery(e.target.value);
           setOpen(true);
         }}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          beginLoad();
+          setOpen(true);
+        }}
         onKeyDown={onKeyDown}
         autoComplete="off"
         enterKeyHint="search"
+        autoFocus={autoFocus}
       />
       {showPanel ? (
         <div id={listId} className={styles.panel} role="listbox" aria-label="Search results">

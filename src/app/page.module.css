@@ -2192,10 +2192,18 @@ a.secondary {
   max-width: none !important;
 }
 
-/* Quiet space while Suspense islands stream in (dev). */
+/* Quiet space while Suspense islands stream in — match strip height to avoid hero twitch. */
 .explorePathsFallback {
   margin-top: 12px;
   min-height: 108px;
+}
+
+@media (max-width: 600px) {
+  .explorePathsFallback {
+    margin-top: 8px;
+    /* label + 3 stacked chips + dots (stable page size on phone). */
+    min-height: 132px;
+  }
 }
 
 .homeMoversFallback {

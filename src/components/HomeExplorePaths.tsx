@@ -18,8 +18,6 @@ import type { HomeExplorePathV0 } from "@/types/home_explore_paths.v0";
 import styles from "./HomeExplorePaths.module.css";
 
 const DEFAULT_VISIBLE = 3;
-/** A couple chips on phone — enough to scan without burying search. */
-const MOBILE_VISIBLE = 2;
 const MOBILE_MAX_WIDTH = 600;
 const DEFAULT_ROTATE_MS = 10_000;
 const DRAG_CLICK_SUPPRESS_MS = 280;
@@ -54,17 +52,11 @@ function chunkPaths(paths: HomeExplorePathV0[], size: number): HomeExplorePathV0
   return chunks;
 }
 
-/**
- * Viewport unknown until mount — SSR + first paint use desktop page size (3) so
- * markup matches, then phones drop to 2.
- */
-function useNarrowExploreViewport(): boolean | null {
-  const [narrow, setNarrow] = useState<boolean | null>(null);
+/** Dots are passive on phone; chip page size stays stable (no 3→2 remount twitch). */
+function useNarrowExploreViewport(): boolean {
+  const [narrow, setNarrow] = useState(false);
   useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      setNarrow(false);
-      return;
-    }
+    if (typeof window === "undefined" || !window.matchMedia) return;
     const mq = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`);
     const sync = () => setNarrow(mq.matches);
     sync();
@@ -142,8 +134,7 @@ export function HomeExplorePaths({
   visibleCount = DEFAULT_VISIBLE,
 }: Props) {
   const router = useRouter();
-  const narrow = useNarrowExploreViewport();
-  const isMobile = narrow === true;
+  const isMobile = useNarrowExploreViewport();
   const cleaned = useMemo(
     () =>
       paths.filter(
@@ -158,9 +149,8 @@ export function HomeExplorePaths({
     [paths],
   );
 
-  const desktopVisible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
-  // Until mount: desktop page size so SSR === first client paint.
-  const visible = isMobile ? MOBILE_VISIBLE : desktopVisible;
+  // Stable page size across SSR → hydrate (no mobile remount that shifts Trending under a tap).
+  const visible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
   const chunks = useMemo(() => chunkPaths(cleaned, visible), [cleaned, visible]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
