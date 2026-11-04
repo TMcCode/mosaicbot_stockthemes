@@ -1528,7 +1528,13 @@ export function Chart1yLightweight({
           const tickersPreview = meta?.tickersPreview?.trim();
           const tip = [name || ticker, tickersPreview].filter(Boolean).join(" · ");
           if (phone) {
-            const label = ticker || name || "?";
+            // Theme pages: short ticker chips. Group pages: ticker is a theme slug —
+            // prefer display name (desktop already does).
+            const isGroupLegend =
+              sidecarEntity?.kind === "group" || !compositionLegendShowSeriesBadge;
+            const label = isGroupLegend
+              ? name || ticker || "?"
+              : ticker || name || "?";
             return (
               <button
                 key={s.ticker}
