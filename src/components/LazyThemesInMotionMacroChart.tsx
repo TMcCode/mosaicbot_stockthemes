@@ -24,7 +24,7 @@ const ThemesInMotionMacroChartDynamic = dynamic(
   },
 );
 
-/** Code-split LW Charts off the home critical path (DeferRender mounts this near viewport). */
+/** Code-split LW Charts off the main bundle. The section still renders with the page. */
 export function LazyThemesInMotionMacroChart(props: ThemesInMotionMacroChartProps) {
   return <ThemesInMotionMacroChartDynamic {...props} />;
 }

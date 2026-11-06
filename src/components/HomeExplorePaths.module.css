@@ -79,9 +79,9 @@
   text-align: center;
   text-decoration: none;
   white-space: normal;
-  overflow-wrap: anywhere;
+  overflow-wrap: normal;
   word-break: normal;
-  hyphens: auto;
+  hyphens: manual;
   transition:
     background 140ms ease,
     border-color 140ms ease;

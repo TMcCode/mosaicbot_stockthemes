@@ -314,6 +314,58 @@
   text-underline-offset: 2px;
 }
 
+/* News cards: title (2 lines) + blurb (3 lines) share the old 5-line blurb height. */
+.cardNews a.storyLink,
+.cardNews .storyLink {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  max-height: 6.75em;
+  overflow: hidden;
+  flex: 1 1 auto;
+  min-width: 0;
+  max-width: none;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.35;
+  color: var(--text-secondary);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cardNews .articleTitle,
+.cardNews .storyBlurb {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-wrap: pretty;
+}
+
+.cardNews .articleTitle {
+  -webkit-line-clamp: 2;
+  max-height: 2.7em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.cardNews .storyBlurb {
+  -webkit-line-clamp: 3;
+  max-height: 4.05em;
+  opacity: 0.9;
+}
+
+.cardNews a.storyLink:hover {
+  color: var(--accent);
+}
+
+.cardNews a.storyLink:hover .articleTitle,
+.cardNews a.storyLink:hover .storyBlurb {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .cardTitleLink {
   text-decoration: none;
   color: inherit;

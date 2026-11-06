@@ -1,5 +1,4 @@
 import { AdPlacement } from "@/components/AdPlacement";
-import { DeferRender } from "@/components/DeferRender";
 import { HomeExploreChanging } from "@/components/HomeExploreChanging";
 import { HomePublisherIntro } from "@/components/HomePublisherIntro";
 import { LazyHomeNarrativeRadar } from "@/components/LazyHomeNarrativeRadar";
@@ -136,26 +135,22 @@ export async function HomeDeferredBand() {
         watchlistEnrichBySlug={watchlistEnrichBySlug}
       />
 
-      <DeferRender minHeight={420} rootMargin="400px 0px">
-        <HomeExploreChanging
-          groups={exploreGroups}
-          feedSlots={slimFeedSlotsForClient(homeFeedDisplay)}
-          tickersByThemeSlug={tickersByThemeSlug}
-          themeMetaBySlug={themeMetaBySlug}
-        />
-      </DeferRender>
+      <HomeExploreChanging
+        groups={exploreGroups}
+        feedSlots={slimFeedSlotsForClient(homeFeedDisplay)}
+        tickersByThemeSlug={tickersByThemeSlug}
+        themeMetaBySlug={themeMetaBySlug}
+      />
 
       <LazyHomeThemesInMotionTable rows={motionsHomepage} />
 
       <div className={styles.homeFeedStack}>
         <div className={styles.directoryGrid}>
-          <DeferRender minHeight={480} rootMargin="420px 0px">
-            <LazyThemesInMotionMacroChart
-              selectedDates={
-                Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
-              }
-            />
-          </DeferRender>
+          <LazyThemesInMotionMacroChart
+            selectedDates={
+              Array.isArray(manifest.selected_dates) ? manifest.selected_dates : []
+            }
+          />
 
           <LazyHomeNewsletterPostsLive posts={newsletterRes?.bundle?.posts ?? []} />
 

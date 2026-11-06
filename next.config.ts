@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
     turbopackFileSystemCacheForDev: false,
   },
   // Allow LAN-origin browser access to dev-only assets (e.g. HMR) while testing from another device.
-  allowedDevOrigins: ["192.168.1.218"],
+  allowedDevOrigins: ["192.168.1.218", "127.0.0.1", "localhost"],
   ...(basePath ? { basePath } : {}),
   webpack: (config, { dev }) => {
     if (dev) {

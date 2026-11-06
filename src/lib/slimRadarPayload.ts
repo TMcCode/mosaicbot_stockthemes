@@ -3,6 +3,17 @@ import type { RadarNewsV0 } from "@/types/radar_news.v0";
 import { collectRadarPreviewTickers } from "@/lib/normalizeRadarTickers";
 
 const HOME_PREVIEW = 6;
+/** About three wrapped lines on a home news card. CSS clamps anything longer. */
+const HOME_NEWS_SNIPPET_MAX = 220;
+
+function trimHomeSnippet(text: string | null | undefined): string | null | undefined {
+  if (text == null) return text;
+  const s = String(text).replace(/\s+/g, " ").trim();
+  if (s.length <= HOME_NEWS_SNIPPET_MAX) return s;
+  const cut = s.slice(0, HOME_NEWS_SNIPPET_MAX);
+  const word = cut.lastIndexOf(" ");
+  return (word > 80 ? cut.slice(0, word) : cut).replace(/[\s,;:–—-]+$/, "");
+}
 
 /** Drop ``all`` / history so home only ships the 2×3 strip. */
 export function slimRadarForHome(
@@ -38,7 +49,13 @@ export function slimNewsForHome(
 ): RadarNewsV0 | null {
   if (!news?.today) return news;
   const pool = (news.today.all?.length ? news.today.all : news.today.home) || [];
-  const sliced = pool.slice(0, limit);
+  const sliced = pool.slice(0, limit).map((card) => ({
+    ...card,
+    headlines: (card.headlines || []).map((hl) => ({
+      ...hl,
+      snippet: trimHomeSnippet(hl.snippet),
+    })),
+  }));
   return {
     ...news,
     history: undefined,

@@ -145,10 +145,13 @@ function RadarLogoRow({
   items,
   moreHidden,
   companyNames,
+  priority = false,
 }: {
   items: RadarTickerPreview[];
   moreHidden: number;
   companyNames?: Record<string, string>;
+  /** Eager logos only for the first on-screen card. */
+  priority?: boolean;
 }) {
   const shown = items.slice(0, PREVIEW_LOGOS_VISIBLE_MAX);
   const more = Math.max(0, items.length - shown.length) + Math.max(0, moreHidden);
@@ -165,7 +168,7 @@ function RadarLogoRow({
           className={styles.logoHit}
           title={logoTitle(item, companyNames)}
         >
-          <ConstituentLogo ticker={item.ticker} logoUrl={item.logoUrl} priority />
+          <ConstituentLogo ticker={item.ticker} logoUrl={item.logoUrl} priority={priority} />
           <span className={styles.logoTicker}>{item.ticker}</span>
         </span>
       ))}
@@ -322,10 +325,12 @@ function RadarCardBody({
   card,
   companyNames,
   omitTitle = false,
+  priorityLogos = false,
 }: {
   card: HomeRadarCardV0;
   companyNames?: Record<string, string>;
   omitTitle?: boolean;
+  priorityLogos?: boolean;
 }) {
   const previewItems = normalizeRadarTickersPreview(
     card.tickers_preview,
@@ -368,6 +373,7 @@ function RadarCardBody({
           items={previewItems}
           moreHidden={moreHidden}
           companyNames={companyNames}
+          priority={priorityLogos}
         />
       ) : null}
     </>
@@ -377,9 +383,11 @@ function RadarCardBody({
 function RadarCardStatic({
   card,
   companyNames,
+  priorityLogos = false,
 }: {
   card: HomeRadarCardV0;
   companyNames?: Record<string, string>;
+  priorityLogos?: boolean;
 }) {
   const group = String(card.group_name || "").trim();
   const href = card.slug ? `/themes/${card.slug}` : "/themes";
@@ -405,7 +413,12 @@ function RadarCardStatic({
       </div>
       {meta}
       <Link href={href} className={styles.cardBodyLink}>
-        <RadarCardBody card={card} companyNames={companyNames} omitTitle />
+        <RadarCardBody
+          card={card}
+          companyNames={companyNames}
+          omitTitle
+          priorityLogos={priorityLogos}
+        />
       </Link>
     </div>
   );
@@ -414,9 +427,11 @@ function RadarCardStatic({
 function RadarCardFlipper({
   card,
   companyNames,
+  priorityLogos = false,
 }: {
   card: HomeRadarCardV0;
   companyNames?: Record<string, string>;
+  priorityLogos?: boolean;
 }) {
   const siblings = card.siblings!;
   const [idx, setIdx] = useState(0);
@@ -477,7 +492,12 @@ function RadarCardFlipper({
       </div>
       {meta}
       <Link href={href} className={styles.cardBodyLink}>
-        <RadarCardBody card={current} companyNames={companyNames} omitTitle />
+        <RadarCardBody
+          card={current}
+          companyNames={companyNames}
+          omitTitle
+          priorityLogos={priorityLogos}
+        />
       </Link>
     </div>
   );
@@ -487,14 +507,18 @@ function RadarCardFlipper({
 function RadarCard({
   card,
   companyNames,
+  priorityLogos = false,
 }: {
   card: HomeRadarCardV0;
   companyNames?: Record<string, string>;
+  priorityLogos?: boolean;
 }) {
   if (Array.isArray(card.siblings) && card.siblings.length >= 3) {
-    return <RadarCardFlipper card={card} companyNames={companyNames} />;
+    return (
+      <RadarCardFlipper card={card} companyNames={companyNames} priorityLogos={priorityLogos} />
+    );
   }
-  return <RadarCardStatic card={card} companyNames={companyNames} />;
+  return <RadarCardStatic card={card} companyNames={companyNames} priorityLogos={priorityLogos} />;
 }
 
 function RadarProgressiveGrid({
@@ -567,11 +591,12 @@ function NewsRadarDayGrid({
   const hasMore = progressive && visible < flat.length;
   const nextBatch = Math.min(RADAR_PAGE_BATCH, flat.length - visible);
 
-  const renderCard = (c: RadarNewsCardV0) => (
+  const renderCard = (c: RadarNewsCardV0, priorityLogos = false) => (
     <NewsRadarCard
       key={`${asOfKey}-${c.slug}-${c.name}-${c.headlines?.[0]?.url || ""}`}
       card={c}
       companyNames={companyNames}
+      priorityLogos={priorityLogos}
     />
   );
 
@@ -579,18 +604,20 @@ function NewsRadarDayGrid({
     <div className={styles.newsDaySections}>
       {showBreak ? (
         <>
-          <div className={styles.grid}>{shownAfternoon.map(renderCard)}</div>
+          <div className={styles.grid}>
+            {shownAfternoon.map((c, i) => renderCard(c, i === 0))}
+          </div>
           {showBreakNow ? (
             <div className={styles.afternoonBreak} role="separator">
               <span className={styles.afternoonBreakLabel}>Afternoon</span>
             </div>
           ) : null}
           {showBreakNow && shownMorning.length > 0 ? (
-            <div className={styles.grid}>{shownMorning.map(renderCard)}</div>
+            <div className={styles.grid}>{shownMorning.map((c) => renderCard(c))}</div>
           ) : null}
         </>
       ) : (
-        <div className={styles.grid}>{shown.map(renderCard)}</div>
+        <div className={styles.grid}>{shown.map((c, i) => renderCard(c, i === 0))}</div>
       )}
       {hasMore ? (
         <div className={styles.showMoreWrap}>
@@ -610,9 +637,11 @@ function NewsRadarDayGrid({
 function NewsRadarCard({
   card,
   companyNames,
+  priorityLogos = false,
 }: {
   card: RadarNewsCardV0;
   companyNames?: Record<string, string>;
+  priorityLogos?: boolean;
 }) {
   const href = card.slug ? `/themes/${card.slug}` : "/themes";
   const headlines = Array.isArray(card.headlines) ? card.headlines : [];
@@ -638,14 +667,24 @@ function NewsRadarCard({
   const group = String(card.group_name || "").trim();
   const articleDate = fmtArticleDate(headline?.published_at);
   const sourceName = String(headline?.source_name || "").trim();
-  // Prefer baked lead snippet (fuller deck blurb); title is the fallback.
-  const blurb =
-    String(headline?.snippet || "").trim() || String(headline?.title || "").trim();
+  const articleTitle = String(headline?.title || "").trim();
+  const snippet = String(headline?.snippet || "").trim();
+  // Title takes two lines; snippet keeps the rest of the same text block.
+  const showTitle = Boolean(articleTitle && snippet && articleTitle !== snippet);
+  const blurb = snippet || articleTitle;
 
   useEffect(() => {
     setSlide(0);
   }, [card.slug, headlines.length]);
 
+  const storyCopy = showTitle ? (
+    <>
+      <span className={styles.articleTitle}>{articleTitle}</span>
+      <span className={styles.storyBlurb}>{blurb}</span>
+    </>
+  ) : (
+    blurb
+  );
   const storyBody = (
     <div className={styles.headlineBody}>
       {blurb && headline?.url ? (
@@ -653,12 +692,18 @@ function NewsRadarCard({
           href={headline.url}
           target="_blank"
           rel="noopener noreferrer"
-          className={styles.whyNow}
+          className={showTitle ? styles.storyLink : styles.whyNow}
         >
-          {blurb}
+          {storyCopy}
         </a>
       ) : blurb ? (
-        <p className={styles.whyNow}>{blurb}</p>
+        showTitle ? (
+          <div className={styles.storyLink}>
+            {storyCopy}
+          </div>
+        ) : (
+          <p className={styles.whyNow}>{blurb}</p>
+        )
       ) : null}
       <div className={styles.metrics}>
         <span>1M {fmtPct(card.return_1m)}</span>
@@ -719,6 +764,7 @@ function NewsRadarCard({
           items={previewItems}
           moreHidden={moreHidden}
           companyNames={companyNames}
+          priority={priorityLogos}
         />
       ) : null}
       {card.editorial ? null : <span className={styles.newsApiCredit}>via NewsAPI.ai</span>}
@@ -967,11 +1013,12 @@ export function HomeNarrativeRadar({
         <div className={styles.watchlistPane}>
           {radarCards.length > 0 ? (
             <RadarProgressiveGrid enabled={previewLimit <= 0}>
-              {radarCards.map((c) => (
+              {radarCards.map((c, i) => (
                 <RadarCard
                   key={`${c.slug}-${c.name}`}
                   card={c}
                   companyNames={companyNames}
+                  priorityLogos={i === 0}
                 />
               ))}
             </RadarProgressiveGrid>
@@ -1002,7 +1049,7 @@ export function HomeNarrativeRadar({
         <div className={styles.empty}>No themes in this tab yet — check back after the next publish.</div>
       ) : (
         <RadarProgressiveGrid enabled={previewLimit <= 0}>
-          {radarCards.map((c) => (
+          {radarCards.map((c, i) => (
             <RadarCard
               key={
                 c.siblings && c.siblings.length >= 3
@@ -1011,6 +1058,7 @@ export function HomeNarrativeRadar({
               }
               card={c}
               companyNames={companyNames}
+              priorityLogos={i === 0}
             />
           ))}
         </RadarProgressiveGrid>
