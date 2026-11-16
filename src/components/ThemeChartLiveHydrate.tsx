@@ -28,7 +28,9 @@ import {
   extendCompositionIndexedWithLiveDayReturns,
   liveDayReturnsStructuralKey,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
+  resolveLiveChartDayReturnPct,
 } from "@/lib/extendCompositionLiveTail";
+import { isShortThemeName } from "@/lib/shortThemeChart";
 import {
   stockthemesLiveChartPerformanceEnabled,
   stockthemesLiveCompositionEnabled,
@@ -186,6 +188,32 @@ export function ThemeChartLiveHydrate({
     return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
   }, [liveDetail?.compare_returns?.metrics, chartJsonFolder]);
 
+  /**
+   * Gate/repair the Performance live tail with the same constituent 1Ds the table shows.
+   * Prevents a bad theme-level 1D from painting a vertical cliff while rows look fine.
+   */
+  const liveChartDayReturnPct = useMemo(() => {
+    if (!stockthemesLivePriceReturnsEnabled() || chartJsonFolder !== "themes") {
+      return null;
+    }
+    const peerReturns = liveDayReturnPctByTicker
+      ? Object.values(liveDayReturnPctByTicker)
+      : [];
+    const shortDisplay =
+      liveDetail?.compare_returns?.short_display_inverted === true ||
+      isShortThemeName(String(performanceTitle || liveDetail?.name || ""));
+    return resolveLiveChartDayReturnPct(liveThemeDayReturnPct, peerReturns, {
+      shortDisplay,
+    });
+  }, [
+    chartJsonFolder,
+    liveDayReturnPctByTicker,
+    liveDetail?.compare_returns?.short_display_inverted,
+    liveDetail?.name,
+    liveThemeDayReturnPct,
+    performanceTitle,
+  ]);
+
   const chart1y = useMemo(() => {
     const sc = serverChartRef.current;
     const fd = fetchedRef.current;
@@ -212,11 +240,11 @@ export function ThemeChartLiveHydrate({
       base?.performance?.dates?.at(-1) ||
       livePerformance?.dates?.at(-1) ||
       sc?.performance?.dates?.at(-1);
-    if (base?.performance && liveThemeDayReturnPct != null && sessionIso) {
+    if (base?.performance && liveChartDayReturnPct != null && sessionIso) {
       const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
         base.performance,
         sessionIso,
-        liveThemeDayReturnPct,
+        liveChartDayReturnPct,
       );
       if (extended && extended !== base.performance) {
         base = { ...base, performance: extended } satisfies ThemeChart1yV0;
@@ -228,7 +256,7 @@ export function ThemeChartLiveHydrate({
       sessionIso,
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
-  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey, liveThemeDayReturnPct]);
+  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey, liveChartDayReturnPct]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(

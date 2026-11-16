@@ -116,6 +116,88 @@ export function maybeExtendIndexedPerformanceFromLiveDayReturn(
   return extendIndexedPerformanceWithLiveDayReturn(performance, session, dayReturnPct);
 }
 
+/** Minimum names with a finite 1D before peer consensus can override theme 1D. */
+const LIVE_CHART_PEER_MIN_CONSTITUENTS = 3;
+/**
+ * If |theme 1D − peer 1D| exceeds this (percentage points), prefer the constituent
+ * cross-section. Theme pages already have those cells in memory — no extra fetch.
+ */
+const LIVE_CHART_PEER_MAX_DISAGREE_PP = 8;
+/** Hard ceiling when we have no constituent peers to cross-check. */
+const LIVE_CHART_MAX_ABS_ALONE_PCT = 25;
+
+function finiteDayReturns(values: Iterable<number>): number[] {
+  const out: number[] = [];
+  for (const v of values) {
+    if (typeof v === "number" && Number.isFinite(v)) out.push(v);
+  }
+  return out;
+}
+
+/** Equal-weight mean of finite constituent day returns, or null if too sparse. */
+export function meanConstituentDayReturnPct(
+  constituentDayReturnPcts: Iterable<number>,
+  minCount = LIVE_CHART_PEER_MIN_CONSTITUENTS,
+): number | null {
+  const xs = finiteDayReturns(constituentDayReturnPcts);
+  if (xs.length < minCount) return null;
+  return xs.reduce((a, b) => a + b, 0) / xs.length;
+}
+
+/**
+ * Peer-consensus theme day return in the same sign space as the Performance chart.
+ * Constituent ``price_returns`` 1D is always long-side; short-display charts need the flip.
+ */
+export function peerThemeDayReturnPct(
+  constituentDayReturnPcts: Iterable<number>,
+  options?: { shortDisplay?: boolean; minCount?: number },
+): number | null {
+  const mean = meanConstituentDayReturnPct(
+    constituentDayReturnPcts,
+    options?.minCount ?? LIVE_CHART_PEER_MIN_CONSTITUENTS,
+  );
+  if (mean == null) return null;
+  return options?.shortDisplay ? -mean : mean;
+}
+
+/**
+ * Choose the 1D % used to paint today's Performance point.
+ *
+ * Theme ``compare_returns["1D"]`` can briefly disagree with the constituent tape the
+ * table shows (bad slim aggregate / sign lag). When that happens, fall back to the
+ * equal-weight constituent cross-section already loaded for the table — keeps the
+ * chart live without a bogus vertical cliff, and costs no extra network.
+ */
+export function resolveLiveChartDayReturnPct(
+  themeDayReturnPct: number | null | undefined,
+  constituentDayReturnPcts: Iterable<number>,
+  options?: {
+    shortDisplay?: boolean;
+    maxDisagreePp?: number;
+    maxAbsAlonePct?: number;
+    minCount?: number;
+  },
+): number | null {
+  const shortDisplay = Boolean(options?.shortDisplay);
+  const maxDisagreePp = options?.maxDisagreePp ?? LIVE_CHART_PEER_MAX_DISAGREE_PP;
+  const maxAbsAlonePct = options?.maxAbsAlonePct ?? LIVE_CHART_MAX_ABS_ALONE_PCT;
+  const peer = peerThemeDayReturnPct(constituentDayReturnPcts, {
+    shortDisplay,
+    minCount: options?.minCount,
+  });
+  const theme =
+    themeDayReturnPct != null && Number.isFinite(themeDayReturnPct)
+      ? Number(themeDayReturnPct)
+      : null;
+
+  if (theme == null) return peer;
+  if (peer == null) {
+    return Math.abs(theme) <= maxAbsAlonePct ? theme : null;
+  }
+  if (Math.abs(theme - peer) <= maxDisagreePp) return theme;
+  return peer;
+}
+
 /**
  * Append/refresh today's point on theme composition lines using live constituent 1D %.
  * Session date should match the live theme performance tail (e.g. 2026-07-24).

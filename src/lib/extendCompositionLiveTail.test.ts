@@ -7,6 +7,8 @@ import {
   extendCompositionIndexedWithLiveDayReturns,
   extendCompositionSeriesWithLiveDayReturn,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
+  peerThemeDayReturnPct,
+  resolveLiveChartDayReturnPct,
 } from "./extendCompositionLiveTail.ts";
 
 test("appends session day from prior close using 1D %", () => {
@@ -104,4 +106,43 @@ test("refreshes flat same-day CDN tail from live 1D (stale chart sidecar)", () =
     next?.values?.[3],
     Math.round(257.5654 * (1 - 0.031414) * 10_000) / 10_000,
   );
+});
+
+test("peer theme day return flips long constituent 1D for short-display charts", () => {
+  assert.equal(peerThemeDayReturnPct([1, 2, 3], { shortDisplay: false }), 2);
+  assert.equal(peerThemeDayReturnPct([1, 2, 3], { shortDisplay: true }), -2);
+  assert.equal(peerThemeDayReturnPct([1, 2], { shortDisplay: false }), null);
+});
+
+test("resolveLiveChartDayReturnPct keeps theme 1D when peers agree", () => {
+  assert.equal(resolveLiveChartDayReturnPct(-1.2, [-1.0, -1.1, -1.4]), -1.2);
+});
+
+test("resolveLiveChartDayReturnPct falls back to peers when theme 1D cliffs away from the table", () => {
+  // Wednesday-style glitch: theme aggregate prints ~-11% while names are quiet.
+  const resolved = resolveLiveChartDayReturnPct(-11, [-0.4, 0.2, -0.6, 0.1, -0.3], {
+    shortDisplay: true,
+  });
+  // Long peer mean ≈ -0.2 → short-display peer ≈ +0.2
+  assert.ok(resolved != null);
+  assert.ok(Math.abs((resolved as number) - 0.2) < 1e-9);
+});
+
+test("resolveLiveChartDayReturnPct repairs a bad same-day chart point via peer 1D", () => {
+  const perf = {
+    dates: ["2026-11-11", "2026-11-12"],
+    values: [95, 84],
+  };
+  const dayReturn = resolveLiveChartDayReturnPct(-11.5789, [-0.5, 0.1, -0.2, 0.0], {
+    shortDisplay: true,
+  });
+  assert.ok(dayReturn != null);
+  const next = maybeExtendIndexedPerformanceFromLiveDayReturn(perf, "2026-11-12", dayReturn);
+  assert.deepEqual(next?.dates, perf.dates);
+  // Recompute from prior close with peer short-display 1D (≈ +0.15), not the -11% cliff.
+  assert.equal(
+    next?.values?.[1],
+    Math.round(95 * (1 + (dayReturn as number) / 100) * 10_000) / 10_000,
+  );
+  assert.ok((next?.values?.[1] as number) > 90);
 });
