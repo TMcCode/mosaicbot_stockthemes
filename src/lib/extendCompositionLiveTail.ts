@@ -116,86 +116,39 @@ export function maybeExtendIndexedPerformanceFromLiveDayReturn(
   return extendIndexedPerformanceWithLiveDayReturn(performance, session, dayReturnPct);
 }
 
-/** Minimum names with a finite 1D before peer consensus can override theme 1D. */
-const LIVE_CHART_PEER_MIN_CONSTITUENTS = 3;
-/**
- * If |theme 1D − peer 1D| exceeds this (percentage points), prefer the constituent
- * cross-section. Theme pages already have those cells in memory — no extra fetch.
- */
-const LIVE_CHART_PEER_MAX_DISAGREE_PP = 8;
-/** Hard ceiling when we have no constituent peers to cross-check. */
-const LIVE_CHART_MAX_ABS_ALONE_PCT = 25;
+/** Default gap (pp) between a chart tail move and Theme ``compare_returns`` 1D. */
+const CHART_TAIL_THEME_1D_MAX_DISAGREE_PP = 8;
 
-function finiteDayReturns(values: Iterable<number>): number[] {
-  const out: number[] = [];
-  for (const v of values) {
-    if (typeof v === "number" && Number.isFinite(v)) out.push(v);
-  }
-  return out;
-}
-
-/** Equal-weight mean of finite constituent day returns, or null if too sparse. */
-export function meanConstituentDayReturnPct(
-  constituentDayReturnPcts: Iterable<number>,
-  minCount = LIVE_CHART_PEER_MIN_CONSTITUENTS,
+/** Last completed day-to-day % move on an indexed performance series. */
+export function lastCompletedDayReturnPct(
+  performance: ChartPerformanceV0 | undefined,
 ): number | null {
-  const xs = finiteDayReturns(constituentDayReturnPcts);
-  if (xs.length < minCount) return null;
-  return xs.reduce((a, b) => a + b, 0) / xs.length;
+  const values = performance?.values;
+  if (!values || values.length < 2) return null;
+  const prior = Number(values[values.length - 2]);
+  const last = Number(values[values.length - 1]);
+  if (!Number.isFinite(prior) || !Number.isFinite(last) || prior === 0) return null;
+  const move = (last / prior - 1) * 100;
+  return Number.isFinite(move) ? move : null;
 }
 
 /**
- * Peer-consensus theme day return in the same sign space as the Performance chart.
- * Constituent ``price_returns`` 1D is always long-side; short-display charts need the flip.
- */
-export function peerThemeDayReturnPct(
-  constituentDayReturnPcts: Iterable<number>,
-  options?: { shortDisplay?: boolean; minCount?: number },
-): number | null {
-  const mean = meanConstituentDayReturnPct(
-    constituentDayReturnPcts,
-    options?.minCount ?? LIVE_CHART_PEER_MIN_CONSTITUENTS,
-  );
-  if (mean == null) return null;
-  return options?.shortDisplay ? -mean : mean;
-}
-
-/**
- * Choose the 1D % used to paint today's Performance point.
+ * True when the chart's last segment disagrees with Theme ``compare_returns`` 1D.
  *
- * Theme ``compare_returns["1D"]`` can briefly disagree with the constituent tape the
- * table shows (bad slim aggregate / sign lag). When that happens, fall back to the
- * equal-weight constituent cross-section already loaded for the table — keeps the
- * chart live without a bogus vertical cliff, and costs no extra network.
+ * Theme 1D is the weighted blend of the same constituent cells as the table (same
+ * price_returns sidecar). Chart history is a separate matrix/sidecar — a corrupt
+ * same-day tail can cliff while the table stays honest. Prefer Theme 1D over that
+ * tail; do not invent an equal-weight peer aggregate.
  */
-export function resolveLiveChartDayReturnPct(
+export function chartTailDisagreesWithThemeDayReturn(
+  performance: ChartPerformanceV0 | undefined,
   themeDayReturnPct: number | null | undefined,
-  constituentDayReturnPcts: Iterable<number>,
-  options?: {
-    shortDisplay?: boolean;
-    maxDisagreePp?: number;
-    maxAbsAlonePct?: number;
-    minCount?: number;
-  },
-): number | null {
-  const shortDisplay = Boolean(options?.shortDisplay);
-  const maxDisagreePp = options?.maxDisagreePp ?? LIVE_CHART_PEER_MAX_DISAGREE_PP;
-  const maxAbsAlonePct = options?.maxAbsAlonePct ?? LIVE_CHART_MAX_ABS_ALONE_PCT;
-  const peer = peerThemeDayReturnPct(constituentDayReturnPcts, {
-    shortDisplay,
-    minCount: options?.minCount,
-  });
-  const theme =
-    themeDayReturnPct != null && Number.isFinite(themeDayReturnPct)
-      ? Number(themeDayReturnPct)
-      : null;
-
-  if (theme == null) return peer;
-  if (peer == null) {
-    return Math.abs(theme) <= maxAbsAlonePct ? theme : null;
-  }
-  if (Math.abs(theme - peer) <= maxDisagreePp) return theme;
-  return peer;
+  maxDisagreePp = CHART_TAIL_THEME_1D_MAX_DISAGREE_PP,
+): boolean {
+  if (themeDayReturnPct == null || !Number.isFinite(themeDayReturnPct)) return false;
+  const move = lastCompletedDayReturnPct(performance);
+  if (move == null) return false;
+  return Math.abs(move - Number(themeDayReturnPct)) > maxDisagreePp;
 }
 
 /**

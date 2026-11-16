@@ -3,12 +3,12 @@ import test from "node:test";
 
 // @ts-expect-error Node's type-stripping test runner requires the source extension.
 import {
+  chartTailDisagreesWithThemeDayReturn,
   dayReturnMatchesLastCompletedMove,
   extendCompositionIndexedWithLiveDayReturns,
   extendCompositionSeriesWithLiveDayReturn,
+  lastCompletedDayReturnPct,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
-  peerThemeDayReturnPct,
-  resolveLiveChartDayReturnPct,
 } from "./extendCompositionLiveTail.ts";
 
 test("appends session day from prior close using 1D %", () => {
@@ -108,41 +108,28 @@ test("refreshes flat same-day CDN tail from live 1D (stale chart sidecar)", () =
   );
 });
 
-test("peer theme day return flips long constituent 1D for short-display charts", () => {
-  assert.equal(peerThemeDayReturnPct([1, 2, 3], { shortDisplay: false }), 2);
-  assert.equal(peerThemeDayReturnPct([1, 2, 3], { shortDisplay: true }), -2);
-  assert.equal(peerThemeDayReturnPct([1, 2], { shortDisplay: false }), null);
+test("lastCompletedDayReturnPct reads the final indexed segment", () => {
+  assert.equal(
+    lastCompletedDayReturnPct({ dates: ["2026-11-11", "2026-11-12"], values: [100, 89] }),
+    -11,
+  );
 });
 
-test("resolveLiveChartDayReturnPct keeps theme 1D when peers agree", () => {
-  assert.equal(resolveLiveChartDayReturnPct(-1.2, [-1.0, -1.1, -1.4]), -1.2);
+test("chartTailDisagreesWithThemeDayReturn flags corrupt matrix tails vs Theme 1D", () => {
+  const cliff = { dates: ["2026-11-11", "2026-11-12"], values: [95, 84] };
+  // Theme row (weighted blend of fine cells) says ~-0.4%; chart tail says ~-11.6%.
+  assert.equal(chartTailDisagreesWithThemeDayReturn(cliff, -0.4), true);
+  assert.equal(chartTailDisagreesWithThemeDayReturn(cliff, -11.5), false);
 });
 
-test("resolveLiveChartDayReturnPct falls back to peers when theme 1D cliffs away from the table", () => {
-  // Wednesday-style glitch: theme aggregate prints ~-11% while names are quiet.
-  const resolved = resolveLiveChartDayReturnPct(-11, [-0.4, 0.2, -0.6, 0.1, -0.3], {
-    shortDisplay: true,
-  });
-  // Long peer mean ≈ -0.2 → short-display peer ≈ +0.2
-  assert.ok(resolved != null);
-  assert.ok(Math.abs((resolved as number) - 0.2) < 1e-9);
-});
-
-test("resolveLiveChartDayReturnPct repairs a bad same-day chart point via peer 1D", () => {
+test("Theme 1D repairs a bad same-day chart point without inventing a peer aggregate", () => {
   const perf = {
     dates: ["2026-11-11", "2026-11-12"],
     values: [95, 84],
   };
-  const dayReturn = resolveLiveChartDayReturnPct(-11.5789, [-0.5, 0.1, -0.2, 0.0], {
-    shortDisplay: true,
-  });
-  assert.ok(dayReturn != null);
-  const next = maybeExtendIndexedPerformanceFromLiveDayReturn(perf, "2026-11-12", dayReturn);
+  const theme1d = -0.4; // same number the Theme return row shows
+  assert.equal(chartTailDisagreesWithThemeDayReturn(perf, theme1d), true);
+  const next = maybeExtendIndexedPerformanceFromLiveDayReturn(perf, "2026-11-12", theme1d);
   assert.deepEqual(next?.dates, perf.dates);
-  // Recompute from prior close with peer short-display 1D (≈ +0.15), not the -11% cliff.
-  assert.equal(
-    next?.values?.[1],
-    Math.round(95 * (1 + (dayReturn as number) / 100) * 10_000) / 10_000,
-  );
-  assert.ok((next?.values?.[1] as number) > 90);
+  assert.equal(next?.values?.[1], Math.round(95 * 0.996 * 10_000) / 10_000);
 });

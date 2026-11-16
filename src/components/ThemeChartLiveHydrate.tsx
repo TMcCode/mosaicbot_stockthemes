@@ -24,13 +24,13 @@ import { useLiveThemeDetailPrices } from "@/hooks/useLiveThemeDetailPrices";
 import { groupCompositionNeedsLiveRefresh } from "@/lib/chart1yRenderable";
 import { priceReturnMetric } from "@/lib/constituentPriceReturns";
 import {
+  chartTailDisagreesWithThemeDayReturn,
   etSessionIsoDay,
   extendCompositionIndexedWithLiveDayReturns,
   liveDayReturnsStructuralKey,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
-  resolveLiveChartDayReturnPct,
 } from "@/lib/extendCompositionLiveTail";
-import { isShortThemeName } from "@/lib/shortThemeChart";
+import { applyShortThemeCompareReturnsDisplay } from "@/lib/shortThemeChart";
 import {
   stockthemesLiveChartPerformanceEnabled,
   stockthemesLiveCompositionEnabled,
@@ -179,38 +179,25 @@ export function ThemeChartLiveHydrate({
   }, [liveDetail?.constituents, chartJsonFolder]);
   const liveDayReturnsKey = liveDayReturnsStructuralKey(liveDayReturnPctByTicker);
 
-  /** Theme-level live 1D from price_returns sidecar (compare_returns) — chart sidecars can lag. */
+  /**
+   * Theme-level live 1D from the same price_returns sidecar as the table.
+   * This is the weighted blend of constituent cells (ETL) — not a second client aggregate.
+   * Chart history is a separate matrix/sidecar; we only use this 1D to paint/repair today's tip.
+   */
   const liveThemeDayReturnPct = useMemo(() => {
     if (!stockthemesLivePriceReturnsEnabled() || chartJsonFolder !== "themes") {
       return null;
     }
-    const raw = liveDetail?.compare_returns?.metrics?.["1D"];
+    const block = applyShortThemeCompareReturnsDisplay(
+      liveDetail?.compare_returns,
+      String(performanceTitle || liveDetail?.name || ""),
+    );
+    const raw = block?.metrics?.["1D"];
     return typeof raw === "number" && Number.isFinite(raw) ? raw : null;
-  }, [liveDetail?.compare_returns?.metrics, chartJsonFolder]);
-
-  /**
-   * Gate/repair the Performance live tail with the same constituent 1Ds the table shows.
-   * Prevents a bad theme-level 1D from painting a vertical cliff while rows look fine.
-   */
-  const liveChartDayReturnPct = useMemo(() => {
-    if (!stockthemesLivePriceReturnsEnabled() || chartJsonFolder !== "themes") {
-      return null;
-    }
-    const peerReturns = liveDayReturnPctByTicker
-      ? Object.values(liveDayReturnPctByTicker)
-      : [];
-    const shortDisplay =
-      liveDetail?.compare_returns?.short_display_inverted === true ||
-      isShortThemeName(String(performanceTitle || liveDetail?.name || ""));
-    return resolveLiveChartDayReturnPct(liveThemeDayReturnPct, peerReturns, {
-      shortDisplay,
-    });
   }, [
     chartJsonFolder,
-    liveDayReturnPctByTicker,
-    liveDetail?.compare_returns?.short_display_inverted,
+    liveDetail?.compare_returns,
     liveDetail?.name,
-    liveThemeDayReturnPct,
     performanceTitle,
   ]);
 
@@ -230,21 +217,26 @@ export function ThemeChartLiveHydrate({
     }
     if (base && livePerformance?.dates?.length && livePerformance?.values?.length) {
       const sanitizedLive = sanitizeChartPerformanceForDisplay(livePerformance);
-      if (sanitizedLive && !isSuspiciousChartPerformanceCliff(sanitizedLive, base.performance)) {
+      // Reject chart-sidecar tails that cliff away from Theme 1D (table source of truth).
+      const sidecarOk =
+        sanitizedLive &&
+        !isSuspiciousChartPerformanceCliff(sanitizedLive, base.performance) &&
+        !chartTailDisagreesWithThemeDayReturn(sanitizedLive, liveThemeDayReturnPct);
+      if (sidecarOk) {
         base = { ...base, performance: sanitizedLive } satisfies ThemeChart1yV0;
       }
     }
-    // Prefer ET "today" so we refresh a flat same-day CDN tail from live 1D (overlay parity).
+    // Prefer ET "today" so we refresh a flat/corrupt same-day CDN tail from Theme 1D.
     const sessionIso =
       etSessionIsoDay() ||
       base?.performance?.dates?.at(-1) ||
       livePerformance?.dates?.at(-1) ||
       sc?.performance?.dates?.at(-1);
-    if (base?.performance && liveChartDayReturnPct != null && sessionIso) {
+    if (base?.performance && liveThemeDayReturnPct != null && sessionIso) {
       const extended = maybeExtendIndexedPerformanceFromLiveDayReturn(
         base.performance,
         sessionIso,
-        liveChartDayReturnPct,
+        liveThemeDayReturnPct,
       );
       if (extended && extended !== base.performance) {
         base = { ...base, performance: extended } satisfies ThemeChart1yV0;
@@ -256,7 +248,7 @@ export function ThemeChartLiveHydrate({
       sessionIso,
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps -- structural keys (not object identity) keep stable `chart1y`; refs hold latest payloads
-  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey, liveChartDayReturnPct]);
+  }, [serverKey, fetchedKey, livePerfKey, liveDayReturnsKey, liveThemeDayReturnPct]);
 
   /** Avoid re-running fetch when parent passes a new object reference with identical chart data. */
   const serverChartFetchSig = useMemo(
