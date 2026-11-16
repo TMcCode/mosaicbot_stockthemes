@@ -109,10 +109,12 @@ test("refreshes flat same-day CDN tail from live 1D (stale chart sidecar)", () =
 });
 
 test("lastCompletedDayReturnPct reads the final indexed segment", () => {
-  assert.equal(
-    lastCompletedDayReturnPct({ dates: ["2026-11-11", "2026-11-12"], values: [100, 89] }),
-    -11,
-  );
+  const move = lastCompletedDayReturnPct({
+    dates: ["2026-11-11", "2026-11-12"],
+    values: [100, 89],
+  });
+  assert.ok(move != null);
+  assert.ok(Math.abs((move as number) - -11) < 1e-9);
 });
 
 test("chartTailDisagreesWithThemeDayReturn flags corrupt matrix tails vs Theme 1D", () => {
