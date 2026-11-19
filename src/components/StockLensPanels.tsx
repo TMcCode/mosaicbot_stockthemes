@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 
 import { HorizontalScrollArea } from "@/components/HorizontalScrollArea";
 import { useLiveStockPriceReturns } from "@/hooks/useLiveStockPriceReturns";
+import { useLiveStockThemes } from "@/hooks/useLiveStockThemes";
 import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useStockMembershipNotes } from "@/hooks/useStockMembershipNotes";
 import { useStockQualityRiskSidecar } from "@/hooks/useStockQualityRiskSidecar";
@@ -32,6 +33,7 @@ import {
   stockthemesBrowserFetchCache,
 } from "@/lib/stockthemesCache";
 import { medianFinite } from "@/lib/compareReturnPlausible";
+import { withLiveThemeIndexCompare } from "@/lib/stockThemeLiveBlend";
 import { formatConstituentPct } from "@/lib/themeConstituentTableModel";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import {
@@ -252,7 +254,7 @@ export function StockLensPanels({
     themesProp.map((t) => ({ ...t })),
   );
   const [heatmapColumns, setHeatmapColumns] = useState(heatmapColumnsProp);
-  const [themeIndex, setThemeIndex] = useState<StockThemeIndexV0 | null>(null);
+  const [themeIndexNightly, setThemeIndex] = useState<StockThemeIndexV0 | null>(null);
   const [tickerEarnings, setTickerEarnings] = useState<StockTickerEarningsV0 | null>(null);
   const [earningsTableStats, setEarningsTableStats] = useState<StockEarningsTableStatsV0 | null>(
     null,
@@ -401,7 +403,14 @@ export function StockLensPanels({
     clientTierB,
   );
 
-  const themes = liveThemes;
+  // Theme returns + the weighted-themes blend come from the live compare bundle (refreshed
+  // every price tick) instead of being baked into each `.app.v0.json` by the ETL. Weights
+  // and the chart stay from the nightly app file.
+  const { themes, liveCompare } = useLiveStockThemes(liveThemes);
+  const themeIndex = useMemo(
+    () => withLiveThemeIndexCompare(themeIndexNightly, liveCompare ? themes : []),
+    [themeIndexNightly, themes, liveCompare],
+  );
 
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),

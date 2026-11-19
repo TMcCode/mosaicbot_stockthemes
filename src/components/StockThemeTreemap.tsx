@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
+import { useLiveStockThemes } from "@/hooks/useLiveStockThemes";
 import {
   buildStockThemeTreemapNodes,
 } from "@/lib/buildStockThemeTreemapNodes";
@@ -82,7 +83,8 @@ export function StockThemeTreemap({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- themeShellKey stands in for themesProp
   }, [clientTierB, dataBaseUrl, ticker, themeShellKey]);
 
-  const nodes = useMemo(() => buildStockThemeTreemapNodes(themes), [themes]);
+  const { themes: liveThemes } = useLiveStockThemes(themes);
+  const nodes = useMemo(() => buildStockThemeTreemapNodes(liveThemes), [liveThemes]);
   const defaultPeriod = useMemo(() => pickDefaultTreemapPeriod(nodes), [nodes]);
 
   if (!nodes.length) return null;
