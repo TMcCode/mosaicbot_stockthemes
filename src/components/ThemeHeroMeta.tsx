@@ -13,6 +13,8 @@ type Props = {
   tickerCount?: number | null;
   totalMarketCapUsd?: number;
   rank10d: Theme10DRankSnapshot | null;
+  /** Hide (but keep space for) the rank row until the live rank loads. */
+  ranksPending?: boolean;
   groupSlug?: string | null;
   groupName?: string | null;
 };
@@ -47,6 +49,7 @@ export function ThemeHeroMeta({
   tickerCount,
   totalMarketCapUsd,
   rank10d,
+  ranksPending,
   groupSlug,
   groupName,
 }: Props) {
@@ -92,7 +95,7 @@ export function ThemeHeroMeta({
       <MetaRow items={statsItems} />
       {showRanks ? (
         <div
-          className={styles.rankRow}
+          className={ranksPending ? `${styles.rankRow} ${styles.rankRowPending}` : styles.rankRow}
           aria-label={`10D ${formatReturnPct(rank10d!.returnPct)}, ranked #${rank10d!.universeRank} of ${rank10d!.universeTotal} themes`}
         >
           <span className={styles.rankPill}>

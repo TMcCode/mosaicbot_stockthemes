@@ -15,6 +15,8 @@ type Props = {
   themeCount?: number | null;
   tickerCount?: number | null;
   rank10d: Group10DRankSnapshot | null;
+  /** Hide (but keep space for) the rank row until the live rank loads. */
+  ranksPending?: boolean;
 };
 
 function MetaRow({ items }: { items: ReactNode[] }) {
@@ -36,7 +38,7 @@ function MetaRow({ items }: { items: ReactNode[] }) {
   );
 }
 
-export function GroupHeroMeta({ themeCount, tickerCount, rank10d }: Props) {
+export function GroupHeroMeta({ themeCount, tickerCount, rank10d, ranksPending }: Props) {
   const showThemes = themeCount != null;
   const showTickers = tickerCount != null;
   const showRanks = rank10d != null;
@@ -68,7 +70,7 @@ export function GroupHeroMeta({ themeCount, tickerCount, rank10d }: Props) {
       <MetaRow items={statsItems} />
       {showRanks ? (
         <div
-          className={styles.rankRow}
+          className={ranksPending ? `${styles.rankRow} ${styles.rankRowPending}` : styles.rankRow}
           aria-label={`10D ${formatReturnPct(rank10d!.returnPct)}, ranked #${rank10d!.universeRank} of ${rank10d!.universeTotal} groups`}
         >
           <span className={styles.rankPill}>

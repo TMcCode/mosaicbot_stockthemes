@@ -63,6 +63,23 @@
   container-name: theme-hero-ranks;
 }
 
+/*
+ * Live-rank pending: the static HTML carries the build-time rank, which can be stale.
+ * Keep its space reserved (no layout shift) but invisible until the live rank loads, so
+ * visitors never see a stale number flip. The CSS-only reveal after 2s is a safety net:
+ * with no JS or a failed fetch, the build-time rank still appears.
+ */
+.rankRowPending {
+  visibility: hidden;
+  animation: rankRowReveal 0s linear 2s forwards;
+}
+
+@keyframes rankRowReveal {
+  to {
+    visibility: visible;
+  }
+}
+
 /* Shared pill — label + rank chips use the same box model */
 .rankPill {
   display: inline-flex;

@@ -7,7 +7,7 @@ import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnav
 import { Chart1yPanel } from "@/components/Chart1yPanel";
 import { DeferRender } from "@/components/DeferRender";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
-import { GroupHeroMeta } from "@/components/GroupHeroMeta";
+import { GroupHeroMetaLive } from "@/components/GroupHeroMetaLive";
 import { GroupHeroSummary } from "@/components/GroupHeroSummary";
 import { GroupHeroTreemapLive } from "@/components/GroupHeroTreemapLive";
 import { GroupThemesTableLive } from "@/components/GroupThemesTableLive";
@@ -181,7 +181,8 @@ export default async function GroupDetailPage({ params }: Props) {
                 {detailEyebrowText("Group", source, loaded?.source ?? null)}
               </p>
               <h1 className={styles.heroTitle}>{group.name}</h1>
-              <GroupHeroMeta
+              <GroupHeroMetaLive
+                slug={slug}
                 themeCount={group.theme_count ?? detail?.theme_count}
                 tickerCount={group.ticker_count ?? detail?.ticker_count}
                 rank10d={rank10d}

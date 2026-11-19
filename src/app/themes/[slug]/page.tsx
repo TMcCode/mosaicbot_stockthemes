@@ -10,7 +10,7 @@ import { WatchlistStar } from "@/components/WatchlistStar";
 import { ThemeChartLiveHydrate } from "@/components/ThemeChartLiveHydrate";
 import { ThemeConstituentsTable } from "@/components/ThemeConstituentsTable";
 import { ThemeConstituentsTableLive } from "@/components/ThemeConstituentsTableLive";
-import { ThemeHeroMeta } from "@/components/ThemeHeroMeta";
+import { ThemeHeroMetaLive } from "@/components/ThemeHeroMetaLive";
 import { ThemeHeroTreemap } from "@/components/ThemeHeroTreemap";
 import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
@@ -297,7 +297,8 @@ export default async function ThemeDetailPage({ params }: Props) {
                     signInNext={`/themes/${slug}`}
                   />
                 </h1>
-                <ThemeHeroMeta
+                <ThemeHeroMetaLive
+                  slug={slug}
                   intro={heroIntro}
                   tickerCount={theme.ticker_count ?? detail?.constituents?.length}
                   totalMarketCapUsd={hasTotalMarketCap ? totalMarketCapUsd : undefined}
