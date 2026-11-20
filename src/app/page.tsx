@@ -11,8 +11,6 @@ import { PageSurface } from "@/components/PageSurface";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
 import { buildPageMetadata } from "@/lib/seoMetadata";
-import { brandAssetPath } from "@/lib/siteUrl";
-
 import styles from "./page.module.css";
 
 export const metadata: Metadata = buildPageMetadata({
@@ -21,6 +19,30 @@ export const metadata: Metadata = buildPageMetadata({
     "Curated thematic equity research: hand-built theme baskets, group discovery, performance tables, and methodology-backed limitations—not investment advice.",
   path: "/",
 });
+
+/**
+ * Inline SVG of the brand mark (same geometry as /brand/logo-icon.svg, rebased to a 0,0 viewBox).
+ * Four outer circles roll in separately (CSS only), then the orange core stamps on.
+ * Static logo is the default; animation only runs when reduced motion is not requested.
+ */
+function HeroAnimatedLogo() {
+  return (
+    <svg
+      className={styles.heroBrandMark}
+      viewBox="0 0 623 614"
+      width={56}
+      height={56}
+      aria-hidden
+      focusable="false"
+    >
+      <circle className={`${styles.logoBall} ${styles.logoBallTeal}`} cx="147.5" cy="307" r="147.5" fill="#2ACFC8" />
+      <circle className={`${styles.logoBall} ${styles.logoBallNavy}`} cx="295.5" cy="467" r="147" fill="#3B4DA2" />
+      <circle className={`${styles.logoBall} ${styles.logoBallPurple}`} cx="476" cy="307" r="147" fill="#695BF8" />
+      <circle className={`${styles.logoBall} ${styles.logoBallRed}`} cx="295.5" cy="147" r="147" fill="#E63946" />
+      <circle className={styles.logoCore} cx="304" cy="315.5" r="50" fill="#FFB86A" />
+    </svg>
+  );
+}
 
 function HomeExplorePathsFallback() {
   return <div className={styles.explorePathsFallback} aria-hidden />;
@@ -45,24 +67,20 @@ export default function Home() {
           <div className={styles.heroGrid}>
             <div className={styles.heroMain}>
               <div className={styles.heroBrand}>
-                <img
-                  className={styles.heroBrandMark}
-                  src={brandAssetPath("/brand/logo-icon-custom.png")}
-                  alt=""
-                  width={56}
-                  height={56}
-                  decoding="async"
-                  fetchPriority="high"
-                  aria-hidden
-                />
-                <span className={styles.heroBrandLabel}>stockthemes.ai</span>
+                <HeroAnimatedLogo />
+                <span className={`${styles.heroBrandLabel} ${styles.heroBrandLabelReveal}`}>
+                  stockthemes.ai
+                </span>
               </div>
-              <h1 className={`${styles.heroTitle} ${styles.heroTitleOneLine}`}>
-                See what’s moving markets—and why.
+              <h1
+                className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
+              >
+                Your Thematic Investing Toolkit
               </h1>
               <p className={styles.introPunchline}>
-                Track themes, identify the stocks driving them, and follow the data, news, and
-                earnings shaping each investment story.
+                Understand the thematic crosswinds moving your stocks. News, data, factor drivers,
+                and theses built on an expert research process that updates as new information
+                arrives.
               </p>
             </div>
 

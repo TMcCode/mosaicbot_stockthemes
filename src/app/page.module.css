@@ -272,6 +272,23 @@
   vertical-align: middle;
 }
 
+/* Home hero only: title rolls in from the left on page load. Transform-only (no opacity fade)
+   so the h1 paints immediately and LCP is not delayed; compositor-only, no layout work. */
+@keyframes heroTitleRollIn {
+  from {
+    transform: translate3d(-56px, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .heroTitleRollIn {
+    animation: heroTitleRollIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+}
+
 .heroMain {
   display: flex;
   flex-direction: column;
@@ -281,6 +298,8 @@
 }
 
 .heroBrand {
+  position: relative;
+  z-index: 2; /* animated balls roll over the title below */
   display: flex;
   align-items: center;
   gap: 14px;
@@ -294,8 +313,106 @@
   height: 56px;
   max-width: 56px;
   max-height: 56px;
-  object-fit: contain;
-  object-position: center;
+  overflow: visible; /* balls start outside the 56px box */
+  pointer-events: none;
+}
+
+/* ── Hero logo assembly (home) ────────────────────────────────────────────
+   Outer circles roll in separately and spin into the logo, orange core stamps on,
+   then the wordmark reveals. Transform/opacity only (compositor), no JS. */
+.logoBall {
+  transform-box: view-box;
+  transform-origin: 311px 307px; /* logo centre in viewBox units */
+}
+
+.logoCore {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.logoBallRed {
+  --dx: 2400px;
+  --dy: 1500px;
+  --rot: -300deg;
+}
+.logoBallTeal {
+  --dx: -2200px;
+  --dy: 1400px;
+  --rot: 300deg;
+}
+.logoBallPurple {
+  --dx: 5200px;
+  --dy: 900px;
+  --rot: -360deg;
+}
+.logoBallNavy {
+  --dx: 1200px;
+  --dy: 2200px;
+  --rot: 330deg;
+}
+
+@keyframes logoBallIn {
+  0% {
+    transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
+    opacity: 0;
+  }
+  12% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+    opacity: 1;
+  }
+}
+
+@keyframes logoCoreStamp {
+  0% {
+    transform: scale(3.2);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(0.82);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes heroBrandLabelReveal {
+  from {
+    transform: translate3d(-10px, 0, 0);
+    opacity: 0;
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .logoBall {
+    animation: logoBallIn 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+  .logoBallRed {
+    animation-delay: 0s;
+  }
+  .logoBallTeal {
+    animation-delay: 0.1s;
+  }
+  .logoBallPurple {
+    animation-delay: 0.2s;
+  }
+  .logoBallNavy {
+    animation-delay: 0.3s;
+  }
+  .logoCore {
+    animation: logoCoreStamp 0.4s cubic-bezier(0.34, 1.4, 0.64, 1) 1.15s both;
+  }
+  .heroBrandLabelReveal {
+    animation: heroBrandLabelReveal 0.5s ease-out 1.5s both;
+  }
 }
 
 .heroBrandLabel {
