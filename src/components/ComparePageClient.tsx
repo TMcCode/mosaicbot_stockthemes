@@ -75,35 +75,22 @@ export function ComparePageClient({
   selectedDates,
 }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>("themes");
+  const [urlViewResolved, setUrlViewResolved] = useState(false);
   const {
     compareBundle: liveCompareBundle,
     compareLoading: themesLoading,
     compareFailed: themesFailed,
-  } = useLiveCompareBundles(null, null);
+  } = useLiveCompareBundles(null, null, {
+    enabled: urlViewResolved && viewMode === "themes",
+  });
   const {
     bundle: groupBundle,
     loading: groupsLoading,
     failed: groupsFailed,
-  } = useLazyCompareGroups(viewMode === "groups");
+  } = useLazyCompareGroups(urlViewResolved && viewMode === "groups");
   const rowsWithLiveCompare = useMemo(
     () => mergeComparePageRows(rows, liveCompareBundle?.rows ?? []),
     [rows, liveCompareBundle?.rows],
-  );
-  const fullColumns = useMemo(() => {
-    // Must use compare order (not trending) — trending strips LstRpt / SinceLstRpt / 3M.
-    return resolveCompareColumnOrder(
-      rowsWithLiveCompare.map((row) => ({
-        compare_returns: row.compareReturns ?? undefined,
-      })),
-      liveCompareBundle?.columns ?? columns,
-    );
-  }, [rowsWithLiveCompare, liveCompareBundle?.columns, columns]);
-  const sessionColumns = useSessionVisibleColumns(fullColumns);
-  /** null = editorial default for this session; not persisted across visits. */
-  const [columnPrefs, setColumnPrefs] = useState<CompareColumnPrefs | null>(null);
-  const visibleColumns = useMemo(
-    () => resolveCompareDisplayColumns(sessionColumns, columnPrefs),
-    [sessionColumns, columnPrefs],
   );
   const groupRows = useMemo<Row[]>(
     () =>
@@ -116,11 +103,39 @@ export function ComparePageClient({
       })),
     [groupBundle?.rows],
   );
+  const fullColumns = useMemo(() => {
+    // Must use compare order (not trending) — trending strips LstRpt / SinceLstRpt / 3M.
+    const activeRows = viewMode === "groups" ? groupRows : rowsWithLiveCompare;
+    const bundleCols =
+      viewMode === "groups"
+        ? (groupBundle?.columns ?? liveCompareBundle?.columns ?? columns)
+        : (liveCompareBundle?.columns ?? columns);
+    return resolveCompareColumnOrder(
+      activeRows.map((row) => ({
+        compare_returns: row.compareReturns ?? undefined,
+      })),
+      bundleCols,
+    );
+  }, [
+    viewMode,
+    groupRows,
+    rowsWithLiveCompare,
+    groupBundle?.columns,
+    liveCompareBundle?.columns,
+    columns,
+  ]);
+  const sessionColumns = useSessionVisibleColumns(fullColumns);
+  /** null = editorial default for this session; not persisted across visits. */
+  const [columnPrefs, setColumnPrefs] = useState<CompareColumnPrefs | null>(null);
+  const visibleColumns = useMemo(
+    () => resolveCompareDisplayColumns(sessionColumns, columnPrefs),
+    [sessionColumns, columnPrefs],
+  );
   const [selectedSectors, setSelectedSectors] = useState<string[]>(() => [...sectorOptions]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>(() => [...groupOptions]);
   const [showBenchmarks, setShowBenchmarks] = useState(true);
   const [showFactorSpreads, setShowFactorSpreads] = useState(false);
-  const [excludeShortThemes, setExcludeShortThemes] = useState(false);
+  const [excludeShort, setExcludeShort] = useState(false);
   const [excludeSupportingThemes, setExcludeSupportingThemes] = useState(true);
   const availablePeriods = useMemo(
     () => availableCompareSummaryPeriods(visibleColumns),
@@ -135,6 +150,7 @@ export function ComparePageClient({
     const applyUrlView = () => {
       const value = new URLSearchParams(window.location.search).get("view");
       setViewMode(value === "groups" ? "groups" : "themes");
+      setUrlViewResolved(true);
     };
     applyUrlView();
     window.addEventListener("popstate", applyUrlView);
@@ -173,7 +189,7 @@ export function ComparePageClient({
       selectedYears: [],
       selectedSectors,
     });
-    if (excludeShortThemes) {
+    if (excludeShort) {
       base = base.filter((row) => !isShortThemeName(row.name));
     }
     if (excludeSupportingThemes) {
@@ -186,22 +202,26 @@ export function ComparePageClient({
     sectorOptions,
     visibleSelectedGroups,
     selectedSectors,
-    excludeShortThemes,
+    excludeShort,
     excludeSupportingThemes,
   ]);
-  const filteredGroups = useMemo(
-    () =>
-      filterCompareRows(groupRows, {
-        groupOptions: [],
-        yearOptions: [],
-        sectorOptions,
-        selectedGroups: [],
-        selectedYears: [],
-        selectedSectors,
-      }),
-    [groupRows, sectorOptions, selectedSectors],
-  );
+  const filteredGroups = useMemo(() => {
+    let base = filterCompareRows(groupRows, {
+      groupOptions: [],
+      yearOptions: [],
+      sectorOptions,
+      selectedGroups: [],
+      selectedYears: [],
+      selectedSectors,
+    });
+    if (excludeShort) {
+      base = base.filter((row) => !isShortThemeName(row.name));
+    }
+    return base;
+  }, [groupRows, sectorOptions, selectedSectors, excludeShort]);
   const filtered = viewMode === "groups" ? filteredGroups : filteredThemes;
+  const activeBundleReady =
+    viewMode === "groups" ? Boolean(groupBundle) : Boolean(liveCompareBundle);
 
   const tableBenchmarkRows = useMemo(() => {
     const out: CompareBenchmarkRow[] = [];
@@ -272,7 +292,7 @@ export function ComparePageClient({
             />
           </div>
         </div>
-        {viewMode === "groups" || liveCompareBundle ? (
+        {activeBundleReady ? (
           <CompareSummaryPanel
             rows={filtered}
             period={summaryPeriod}
@@ -282,12 +302,18 @@ export function ComparePageClient({
           />
         ) : (
           <p className={pageStyles.muted}>
-            {themesFailed ? "Theme returns are temporarily unavailable." : "Loading theme returns…"}
+            {viewMode === "groups"
+              ? groupsFailed && !groupsLoading
+                ? "Group returns are temporarily unavailable."
+                : "Loading group returns…"
+              : themesFailed && !themesLoading
+                ? "Theme returns are temporarily unavailable."
+                : "Loading theme returns…"}
           </p>
         )}
       </div>
       <section className={pageStyles.compareSectionTight}>
-        {viewMode === "groups" || liveCompareBundle ? (
+        {activeBundleReady ? (
           <CompareThemesTable
             benchmarkRows={tableBenchmarkRows}
             rows={filtered}
@@ -295,68 +321,67 @@ export function ComparePageClient({
             selectedDates={selectedDates}
             entityKind={viewMode === "groups" ? "group" : "theme"}
             toolbarStart={
-              viewMode === "themes" ||
-              benchmarkRows.length > 0 ||
-              factorSpreadRows.length > 0 ? (
-                <div className={styles.referenceToggles}>
-                  {benchmarkRows.length > 0 ? (
-                    <label className={styles.benchmarkToggle}>
-                      <input
-                        type="checkbox"
-                        checked={showBenchmarks}
-                        onChange={(e) => setShowBenchmarks(e.target.checked)}
-                      />
-                      <span className={styles.toggleLabelFull}>Sector ETFs</span>
-                      <span className={styles.toggleLabelShort}>ETFs</span>
-                    </label>
-                  ) : null}
-                  {factorSpreadRows.length > 0 ? (
-                    <label className={styles.benchmarkToggle}>
-                      <input
-                        type="checkbox"
-                        checked={showFactorSpreads}
-                        onChange={(e) => setShowFactorSpreads(e.target.checked)}
-                      />
-                      <span className={styles.toggleLabelFull}>Factor Spreads</span>
-                      <span className={styles.toggleLabelShort}>Factors</span>
-                    </label>
-                  ) : null}
-                  {viewMode === "themes" ? (
-                    <>
-                      <label className={styles.benchmarkToggle}>
-                        <input
-                          type="checkbox"
-                          checked={excludeShortThemes}
-                          onChange={(e) => setExcludeShortThemes(e.target.checked)}
-                        />
-                        <span className={styles.toggleLabelFull}>Exclude Short Themes</span>
-                        <span className={styles.toggleLabelShort}>No short themes</span>
-                      </label>
-                      <label className={styles.benchmarkToggle}>
-                        <input
-                          type="checkbox"
-                          checked={excludeSupportingThemes}
-                          onChange={(e) => setExcludeSupportingThemes(e.target.checked)}
-                        />
-                        <span className={styles.toggleLabelFull}>Exclude Supporting Themes</span>
-                        <span className={styles.toggleLabelShort}>No supporting</span>
-                      </label>
-                    </>
-                  ) : null}
-                </div>
-              ) : null
+              <div className={styles.referenceToggles}>
+                {benchmarkRows.length > 0 ? (
+                  <label className={styles.benchmarkToggle}>
+                    <input
+                      type="checkbox"
+                      checked={showBenchmarks}
+                      onChange={(e) => setShowBenchmarks(e.target.checked)}
+                    />
+                    <span className={styles.toggleLabelFull}>Sector ETFs</span>
+                    <span className={styles.toggleLabelShort}>ETFs</span>
+                  </label>
+                ) : null}
+                {factorSpreadRows.length > 0 ? (
+                  <label className={styles.benchmarkToggle}>
+                    <input
+                      type="checkbox"
+                      checked={showFactorSpreads}
+                      onChange={(e) => setShowFactorSpreads(e.target.checked)}
+                    />
+                    <span className={styles.toggleLabelFull}>Factor Spreads</span>
+                    <span className={styles.toggleLabelShort}>Factors</span>
+                  </label>
+                ) : null}
+                <label className={styles.benchmarkToggle}>
+                  <input
+                    type="checkbox"
+                    checked={excludeShort}
+                    onChange={(e) => setExcludeShort(e.target.checked)}
+                  />
+                  <span className={styles.toggleLabelFull}>
+                    {viewMode === "groups" ? "Exclude Short Groups" : "Exclude Short Themes"}
+                  </span>
+                  <span className={styles.toggleLabelShort}>
+                    {viewMode === "groups" ? "No short groups" : "No short themes"}
+                  </span>
+                </label>
+                {viewMode === "themes" ? (
+                  <label className={styles.benchmarkToggle}>
+                    <input
+                      type="checkbox"
+                      checked={excludeSupportingThemes}
+                      onChange={(e) => setExcludeSupportingThemes(e.target.checked)}
+                    />
+                    <span className={styles.toggleLabelFull}>Exclude Supporting Themes</span>
+                    <span className={styles.toggleLabelShort}>No supporting</span>
+                  </label>
+                ) : null}
+              </div>
             }
           />
         ) : (
           <p className={pageStyles.muted} aria-live="polite">
-            {themesFailed && !themesLoading
-              ? "Theme returns are temporarily unavailable."
-              : "Loading the latest theme returns…"}
+            {viewMode === "groups"
+              ? groupsFailed && !groupsLoading
+                ? "Group returns are temporarily unavailable."
+                : "Loading the latest group returns…"
+              : themesFailed && !themesLoading
+                ? "Theme returns are temporarily unavailable."
+                : "Loading the latest theme returns…"}
           </p>
         )}
-        {viewMode === "groups" && groupsFailed && groupRows.length === 0 ? (
-          <p className={styles.loadError}>Group returns are temporarily unavailable.</p>
-        ) : null}
       </section>
     </>
   );

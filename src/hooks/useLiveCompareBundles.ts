@@ -45,9 +45,14 @@ const EMPTY_SNAPSHOT: LiveCompareSnapshot = {
 let snapshot = EMPTY_SNAPSHOT;
 let refreshPromise: Promise<void> | null = null;
 let intervalId: number | null = null;
+let lastLiveFetchAt = 0;
 /** When SSR compare is fresh, skip the immediate ~1MB refetch on first subscribe. */
 let skipNextImmediateRefresh = false;
 const listeners = new Set<() => void>();
+
+function noopSubscribe() {
+  return () => {};
+}
 
 /** Full SSR bundle, or as_of-only so home can skip shipping ~942KB compare JSON. */
 export type ServerCompareSeed = CompareThemesV0 | { as_of: string } | null | undefined;
@@ -85,6 +90,9 @@ function refreshLiveBundles(): Promise<void> {
       ]);
       const compare = parseCompareThemesJson(compareRaw);
       const spy = parseSpySnapshotJson(spyRaw);
+      if (compare) {
+        lastLiveFetchAt = Date.now();
+      }
       emit({
         liveCompare: compare ?? snapshot.liveCompare,
         liveSpyPerf: spy ?? snapshot.liveSpyPerf,
@@ -110,16 +118,18 @@ function serverAsOfIsFresh(asOf: string | null | undefined): boolean {
 function subscribe(listener: () => void) {
   listeners.add(listener);
   if (listeners.size === 1 && stockthemesPublicDataBase()) {
+    const intervalMs = priceReturnsRevalidateSeconds() * 1000;
+    const liveFresh =
+      Boolean(snapshot.liveCompare) &&
+      lastLiveFetchAt > 0 &&
+      Date.now() - lastLiveFetchAt < intervalMs;
     if (skipNextImmediateRefresh) {
       skipNextImmediateRefresh = false;
-    } else {
+    } else if (!liveFresh) {
       void refreshLiveBundles();
     }
     if (stockthemesLiveCompareReturnsEnabled()) {
-      intervalId = window.setInterval(
-        () => void refreshLiveBundles(),
-        priceReturnsRevalidateSeconds() * 1000,
-      );
+      intervalId = window.setInterval(() => void refreshLiveBundles(), intervalMs);
     }
   }
   return () => {
@@ -142,6 +152,7 @@ function getServerSnapshot() {
 export function useLiveCompareBundles(
   serverCompare: ServerCompareSeed,
   serverTopMovers: HomeTopMoversV0 | null | undefined,
+  options?: { enabled?: boolean },
 ): {
   compareBundle: CompareThemesV0 | null | undefined;
   topMoversBundle: HomeTopMoversV0 | null | undefined;
@@ -152,6 +163,7 @@ export function useLiveCompareBundles(
   compareLoading: boolean;
   compareFailed: boolean;
 } {
+  const active = options?.enabled ?? true;
   const enabled = stockthemesLiveCompareReturnsEnabled();
   // Seed module snapshot from SSR so home can skip the immediate CDN refetch.
   if (typeof window !== "undefined" && serverCompare && serverAsOfIsFresh(seedAsOf(serverCompare))) {
@@ -166,7 +178,11 @@ export function useLiveCompareBundles(
     skipNextImmediateRefresh = true;
   }
 
-  const live = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const live = useSyncExternalStore(
+    active ? subscribe : noopSubscribe,
+    getSnapshot,
+    getServerSnapshot,
+  );
 
   const fullServer = isFullCompareBundle(serverCompare) ? serverCompare : null;
   const compareBundle = useMemo(
