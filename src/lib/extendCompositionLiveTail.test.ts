@@ -3,9 +3,11 @@ import test from "node:test";
 
 // @ts-expect-error Node's type-stripping test runner requires the source extension.
 import {
+  chartTailDisagreesWithThemeDayReturn,
   dayReturnMatchesLastCompletedMove,
   extendCompositionIndexedWithLiveDayReturns,
   extendCompositionSeriesWithLiveDayReturn,
+  lastCompletedDayReturnPct,
   maybeExtendIndexedPerformanceFromLiveDayReturn,
 } from "./extendCompositionLiveTail.ts";
 
@@ -104,4 +106,32 @@ test("refreshes flat same-day CDN tail from live 1D (stale chart sidecar)", () =
     next?.values?.[3],
     Math.round(257.5654 * (1 - 0.031414) * 10_000) / 10_000,
   );
+});
+
+test("lastCompletedDayReturnPct reads the final indexed segment", () => {
+  const move = lastCompletedDayReturnPct({
+    dates: ["2026-11-11", "2026-11-12"],
+    values: [100, 89],
+  });
+  assert.ok(move != null);
+  assert.ok(Math.abs((move as number) - -11) < 1e-9);
+});
+
+test("chartTailDisagreesWithThemeDayReturn flags corrupt matrix tails vs Theme 1D", () => {
+  const cliff = { dates: ["2026-11-11", "2026-11-12"], values: [95, 84] };
+  // Theme row (weighted blend of fine cells) says ~-0.4%; chart tail says ~-11.6%.
+  assert.equal(chartTailDisagreesWithThemeDayReturn(cliff, -0.4), true);
+  assert.equal(chartTailDisagreesWithThemeDayReturn(cliff, -11.5), false);
+});
+
+test("Theme 1D repairs a bad same-day chart point without inventing a peer aggregate", () => {
+  const perf = {
+    dates: ["2026-11-11", "2026-11-12"],
+    values: [95, 84],
+  };
+  const theme1d = -0.4; // same number the Theme return row shows
+  assert.equal(chartTailDisagreesWithThemeDayReturn(perf, theme1d), true);
+  const next = maybeExtendIndexedPerformanceFromLiveDayReturn(perf, "2026-11-12", theme1d);
+  assert.deepEqual(next?.dates, perf.dates);
+  assert.equal(next?.values?.[1], Math.round(95 * 0.996 * 10_000) / 10_000);
 });

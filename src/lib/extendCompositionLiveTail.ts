@@ -116,6 +116,41 @@ export function maybeExtendIndexedPerformanceFromLiveDayReturn(
   return extendIndexedPerformanceWithLiveDayReturn(performance, session, dayReturnPct);
 }
 
+/** Default gap (pp) between a chart tail move and Theme ``compare_returns`` 1D. */
+const CHART_TAIL_THEME_1D_MAX_DISAGREE_PP = 8;
+
+/** Last completed day-to-day % move on an indexed performance series. */
+export function lastCompletedDayReturnPct(
+  performance: ChartPerformanceV0 | undefined,
+): number | null {
+  const values = performance?.values;
+  if (!values || values.length < 2) return null;
+  const prior = Number(values[values.length - 2]);
+  const last = Number(values[values.length - 1]);
+  if (!Number.isFinite(prior) || !Number.isFinite(last) || prior === 0) return null;
+  const move = (last / prior - 1) * 100;
+  return Number.isFinite(move) ? move : null;
+}
+
+/**
+ * True when the chart's last segment disagrees with Theme ``compare_returns`` 1D.
+ *
+ * Theme 1D is the weighted blend of the same constituent cells as the table (same
+ * price_returns sidecar). Chart history is a separate matrix/sidecar — a corrupt
+ * same-day tail can cliff while the table stays honest. Prefer Theme 1D over that
+ * tail; do not invent an equal-weight peer aggregate.
+ */
+export function chartTailDisagreesWithThemeDayReturn(
+  performance: ChartPerformanceV0 | undefined,
+  themeDayReturnPct: number | null | undefined,
+  maxDisagreePp = CHART_TAIL_THEME_1D_MAX_DISAGREE_PP,
+): boolean {
+  if (themeDayReturnPct == null || !Number.isFinite(themeDayReturnPct)) return false;
+  const move = lastCompletedDayReturnPct(performance);
+  if (move == null) return false;
+  return Math.abs(move - Number(themeDayReturnPct)) > maxDisagreePp;
+}
+
 /**
  * Append/refresh today's point on theme composition lines using live constituent 1D %.
  * Session date should match the live theme performance tail (e.g. 2026-07-24).
