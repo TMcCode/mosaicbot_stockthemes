@@ -72,15 +72,25 @@ export default function Home() {
                   stockthemes.ai
                 </span>
               </div>
-              <h1
-                className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
-              >
-                Your Thematic Investing Toolkit
-              </h1>
+              <div className={styles.heroTitleRow}>
+                <h1
+                  className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
+                >
+                  Your Thematic Investing Toolkit
+                </h1>
+                {/* Mobile only: brand row is hidden there, so show the animated mark beside the title. */}
+                <div className={styles.heroTitleLogoMobile}>
+                  <HeroAnimatedLogo />
+                </div>
+              </div>
               <p className={styles.introPunchline}>
-                Understand the thematic crosswinds moving your stocks. News, data, factor drivers,
-                and theses built on an expert research process that updates as new information
-                arrives.
+                <span className={styles.introPunchlineLine}>
+                  Understand the thematic crosswinds moving your stocks.
+                </span>
+                <span className={styles.introPunchlineLine}>
+                  News, data, factor drivers, and theses built on an expert research process that
+                  updates as new information arrives.
+                </span>
               </p>
             </div>
 

@@ -351,6 +351,63 @@
   --rot: 330deg;
 }
 
+/* Title row wrapper: plain block on desktop; on mobile the animated mark sits to the right. */
+.heroTitleRow {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.heroTitleLogoMobile {
+  display: none;
+}
+
+@media (max-width: 600px) {
+  .heroTitleRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    overflow-x: clip; /* balls fly in over the title; never create horizontal page scroll */
+  }
+
+  .heroTitleRow .heroTitle {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .heroTitleLogoMobile {
+    display: block;
+    flex: 0 0 auto;
+    position: relative;
+    z-index: 2;
+  }
+
+  .heroTitleLogoMobile .heroBrandMark {
+    width: 48px;
+    height: 48px;
+    max-width: 48px;
+    max-height: 48px;
+  }
+
+  /* Mark is on the right, so balls roll in from the left across the title (no rightward overflow). */
+  .heroTitleRow .logoBallRed {
+    --dx: -2600px;
+    --dy: 800px;
+  }
+  .heroTitleRow .logoBallTeal {
+    --dx: -3600px;
+    --dy: 300px;
+  }
+  .heroTitleRow .logoBallPurple {
+    --dx: -4800px;
+    --dy: 600px;
+  }
+  .heroTitleRow .logoBallNavy {
+    --dx: -2000px;
+    --dy: 1200px;
+  }
+}
+
 @keyframes logoBallIn {
   0% {
     transform: translate3d(var(--dx), var(--dy), 0) rotate(var(--rot));
@@ -1853,12 +1910,20 @@ a.feedTitle:hover {
 
 .intro .introPunchline {
   margin: 0;
-  font-size: clamp(22px, 2.6vw, 30px);
-  line-height: 1.2;
+  font-size: clamp(18px, 2.1vw, 24px);
+  line-height: 1.25;
   font-weight: 500;
   color: var(--text-secondary);
   max-width: 920px;
   text-wrap: balance;
+}
+
+.introPunchlineLine {
+  display: block;
+}
+
+.introPunchlineLine + .introPunchlineLine {
+  margin-top: 6px;
 }
 
 .introPunchlineLead {
