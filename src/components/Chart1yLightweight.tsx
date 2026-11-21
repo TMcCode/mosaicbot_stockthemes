@@ -941,9 +941,9 @@ export function Chart1yLightweight({
     comp?.series?.some((s) => s.dates?.length && s.values?.length),
   );
 
-  const [view, setView] = useState<"performance" | "composition">(
-    () => (hasPerf ? "performance" : "composition"),
-  );
+  // Always prefer Performance. CDN theme pages mount with an empty chart first
+  // (serverChart stripped); initializing from hasPerf stuck guests on Composition.
+  const [view, setView] = useState<"performance" | "composition">("performance");
 
   const chart1ySorted = useMemo(() => {
     if (!chart1y) return chart1y;
