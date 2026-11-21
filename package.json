@@ -24,6 +24,7 @@
     "verify:budgets": "node scripts/verify-build-budgets.mjs",
     "verify:cdn": "node scripts/verify-cdn.mjs",
     "verify:tier-b": "node scripts/verify-tier-b.mjs",
+    "apply:corpus-rate-limits": "node scripts/apply-corpus-rate-limits.mjs",
     "report:export": "node scripts/report-export-stats.mjs"
   },
   "dependencies": {

@@ -15,10 +15,10 @@ Protected suffixes (Function allowlist): `.app`, `.notes`, `.price_returns`, `.f
 
 - Requires allowlisted `Origin` / `Referer` / `Sec-Fetch-Site: same-origin`
 - Soft per-IP rate limit in the Function (~90/min/isolate)
-- **Dashboard rate limit (required belt-and-suspenders):** Cloudflare → stockthemes.ai → Security → Rate limiting → create rule:
-  - **If** URI Path starts with `/cdn-app/`
-  - **Then** Block / challenge when > ~120 requests / 1 minute per IP
-  - (API tokens without Firewall edit get 403; use the dashboard)
+- **Dashboard rate limit (required belt-and-suspenders):** Cloudflare → stockthemes.ai → Security → Rate limiting → create rules in **`docs/CORPUS_SCRAPE_HARDENING.md`**:
+  - **Rule A:** URI Path starts with `/cdn-app/` → Block when > ~120 requests / 1 minute per IP
+  - **Rules B–D:** throttle `storage.stockthemes.ai` harvest bundles + theme JSON crawl (+ optional apex HTML)
+  - (Purge-only API tokens get Auth error on WAF; use the dashboard or a WAF-scoped token)
 
 ## Deploy notes
 

@@ -30,6 +30,7 @@ import { factorProfileUiAllowed } from "@/lib/themeFactorProfile";
 import {
   themeChartPerformanceSeed,
   themeDetailLiveSeed,
+  themeDetailPublicSeed,
 } from "@/lib/themeDetailClientSeed";
 import type { ThemeThesisV0 } from "@/types/theme.detail.v0";
 import styles from "../../page.module.css";
@@ -209,22 +210,37 @@ export default async function ThemeDetailPage({ params }: Props) {
     getThemeFactorProfileCached(slug),
   ]);
   const detail = loaded?.detail;
-  const liveDetailSeed = detail ? themeDetailLiveSeed(detail) : undefined;
-  const chartPerformanceSeed = detail ? themeChartPerformanceSeed(detail) : undefined;
+  const dataBaseUrl = stockthemesPublicDataBase() ?? null;
+  // When CDN/Tier B is live, never serialize proprietary weights/returns into HTML/Flight.
+  const slimForCdn = Boolean(dataBaseUrl && detail);
+  const liveDetailSeed = detail
+    ? slimForCdn
+      ? themeDetailPublicSeed(detail)
+      : themeDetailLiveSeed(detail)
+    : undefined;
+  const chartPerformanceSeed =
+    detail && !slimForCdn ? themeChartPerformanceSeed(detail) : undefined;
   const rank10d =
     rank10dFromPayload(detail?.rank_10d) ??
     manifestRank10d ??
     (compareRes
       ? computeTheme10DRanks(slug, theme.group_slug, compareRes.bundle.rows)
       : null);
-  const dataBaseUrl = stockthemesPublicDataBase() ?? null;
-  const compositionMetaByTicker = buildCompositionMetaMap(detail?.constituents);
-  const treemapNodes = buildConstituentTreemapNodes(detail?.constituents);
+  const compositionMetaByTicker = buildCompositionMetaMap(
+    slimForCdn ? liveDetailSeed?.constituents : detail?.constituents,
+  );
+  const treemapNodes = buildConstituentTreemapNodes(
+    slimForCdn ? liveDetailSeed?.constituents : detail?.constituents,
+  );
   const spyPerf = await getSpyMarketPerfCached();
-  const totalMarketCapUsd =
-    detail?.constituents?.reduce((sum, c) => sum + (inferMarketCapUsd(c) ?? 0), 0) ?? 0;
+  // Aggregate mcap for hero chip only (not per-ticker weights). Prefer slim seed = 0 → hide.
+  const totalMarketCapUsd = slimForCdn
+    ? 0
+    : (detail?.constituents?.reduce((sum, c) => sum + (inferMarketCapUsd(c) ?? 0), 0) ?? 0);
   const hasTotalMarketCap = totalMarketCapUsd > 0;
-  const constituentTableModel = detail ? buildThemeConstituentTableModel(detail) : null;
+  const constituentTableModel = detail
+    ? buildThemeConstituentTableModel(slimForCdn ? liveDetailSeed! : detail)
+    : null;
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const themeUrl = absoluteUrl(`/themes/${slug}`);
   const dateModified = detail?.updated_at || detail?.as_of || manifest.as_of;
