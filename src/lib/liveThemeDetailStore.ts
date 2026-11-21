@@ -26,6 +26,54 @@ async function fetchMergedThemeDetailJson(
   }
 }
 
+const BASKET_FIELD_KEYS = [
+  "weight",
+  "market_cap_usd",
+  "current_market_cap_usd",
+  "market_cap",
+  "current_market_cap",
+  "marketCapUsd",
+  "marketCap",
+  "mcap_usd",
+  "mcap",
+] as const;
+
+/**
+ * Copy Tier B basket fields (weights / market caps) onto a slim Tier A seed.
+ * Price-returns sidecars and public theme JSON omit these after the slim cut.
+ */
+export function mergeThemeDetailBasketFields(
+  server: ThemeDetailV0,
+  live: ThemeDetailV0,
+): ThemeDetailV0 {
+  const liveByTicker = new Map(
+    (live.constituents || []).map((c) => [String(c.ticker || "").trim().toUpperCase(), c]),
+  );
+  let changed = false;
+  const constituents = (server.constituents || []).map((c) => {
+    const liveC = liveByTicker.get(String(c.ticker || "").trim().toUpperCase());
+    if (!liveC) return c;
+    const next: ThemeDetailConstituentV0 = { ...c };
+    let rowChanged = false;
+    for (const key of BASKET_FIELD_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(liveC, key)) continue;
+      const value = liveC[key as keyof ThemeDetailConstituentV0];
+      if (value == null) continue;
+      if (next[key as keyof ThemeDetailConstituentV0] !== value) {
+        Object.assign(next, { [key]: value });
+        rowChanged = true;
+      }
+    }
+    if (rowChanged) {
+      changed = true;
+      return next;
+    }
+    return c;
+  });
+  if (!changed) return server;
+  return { ...server, constituents };
+}
+
 export function mergeThemeDetailPriceReturns(
   server: ThemeDetailV0,
   live: ThemeDetailV0,
@@ -112,6 +160,8 @@ export function mergeThemeDetailLiveFields(
   const earningsSchedule = options.earningsSchedule !== false;
 
   let merged = prices ? mergeThemeDetailPriceReturns(server, live) : { ...server };
+  // Always overlay weights / mcaps when live has them (slim SSR seed has neither).
+  merged = mergeThemeDetailBasketFields(merged, live);
 
   if (earningsSchedule) {
     merged = mergeThemeDetailEarningsSchedule(merged, live);
@@ -293,6 +343,8 @@ export async function refreshLiveThemeDetail({
       earningsSchedule: scheduleSource ? false : mergeOptions?.earningsSchedule !== false,
     });
     if (scheduleSource) {
+      // Full theme+app fetch: restore basket fields omitted by price_returns sidecar.
+      merged = mergeThemeDetailBasketFields(merged, scheduleSource);
       merged = mergeThemeDetailEarningsSchedule(merged, scheduleSource);
       if (scheduleSource.has_ticker_notes === true) {
         merged = { ...merged, has_ticker_notes: true };

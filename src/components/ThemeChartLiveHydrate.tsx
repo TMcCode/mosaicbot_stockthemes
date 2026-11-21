@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Chart1yPanel } from "@/components/Chart1yPanel";
-import type { CompositionMeta } from "@/lib/constituentMeta";
+import { buildCompositionMetaMap, type CompositionMeta } from "@/lib/constituentMeta";
 import { isSuspiciousChartPerformanceCliff, sanitizeChartPerformanceForDisplay } from "@/lib/chartPerformanceSanity";
 import { fetchChartSidecar } from "@/lib/chartSidecar";
 import type { ChartPerformanceV0, ThemeChart1yV0 } from "@/types/chart.v0";
@@ -176,6 +176,17 @@ export function ThemeChartLiveHydrate({
     return Object.keys(out).length ? out : undefined;
   }, [liveDetail?.constituents, chartJsonFolder]);
   const liveDayReturnsKey = liveDayReturnsStructuralKey(liveDayReturnPctByTicker);
+
+  /**
+   * SSR seed strips market caps / weights (Tier A). Rebuild legend meta from the
+   * live Tier B merge so Composition doesn't stay stuck on "MCap n/a".
+   */
+  const resolvedCompositionMetaByTicker = useMemo(() => {
+    const liveMeta = buildCompositionMetaMap(liveDetail?.constituents);
+    if (!Object.keys(liveMeta).length) return compositionMetaByTicker;
+    if (!compositionMetaByTicker) return liveMeta;
+    return { ...compositionMetaByTicker, ...liveMeta };
+  }, [liveDetail?.constituents, compositionMetaByTicker]);
 
   /** Theme-level live 1D from price_returns sidecar (compare_returns) — chart sidecars can lag. */
   const liveThemeDayReturnPct = useMemo(() => {
@@ -394,7 +405,7 @@ export function ThemeChartLiveHydrate({
     <>
       <Chart1yPanel
         chart1y={chart1y}
-        compositionMetaByTicker={compositionMetaByTicker}
+        compositionMetaByTicker={resolvedCompositionMetaByTicker}
         performanceTitle={performanceTitle}
         compositionLegendShowSeriesBadge={compositionLegendShowSeriesBadge}
         benchmarkPerformance={benchmarkPerformance}
