@@ -41,7 +41,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
         role="menuitem"
         aria-busy={loading || undefined}
       >
-        Sign in
+        Sign in free
       </PrefetchIntentLink>
     );
   }
@@ -64,7 +64,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
       className={styles.authNav}
       aria-busy={loading || undefined}
     >
-      Sign in
+      Sign in free
     </PrefetchIntentLink>
   );
 }
