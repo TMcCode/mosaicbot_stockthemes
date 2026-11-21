@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { ReactNode } from "react";
 import Link from "next/link";
 
 import {
@@ -7,7 +8,11 @@ import {
   ABOUT_VISION_UPCOMING,
 } from "@/lib/aboutVisionCopy";
 import { HELLO_EMAIL, SUPPORT_EMAIL, mailtoHref } from "@/lib/contactEmails";
-import { ABOUT_FOUNDER_FEEDBACK, DEFAULT_HOME_INTRO } from "@/lib/aboutFounderCopy";
+import {
+  DEFAULT_HOME_INTRO,
+  FOUNDERS_X_HANDLE,
+  FOUNDERS_X_URL,
+} from "@/lib/aboutFounderCopy";
 import { SITE_PRODUCT_SUMMARY } from "@/lib/homeSiteCopy";
 import { getWebsiteContentCached } from "@/lib/getWebsiteContentCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
@@ -22,6 +27,58 @@ export const metadata: Metadata = buildPageMetadata({
   path: "/docs/about",
 });
 
+function linkifyIntroSegment(text: string, keyPrefix: string) {
+  const email = HELLO_EMAIL;
+  const handle = FOUNDERS_X_HANDLE;
+  const nodes: ReactNode[] = [];
+  let rest = text;
+  let n = 0;
+
+  while (rest.length > 0) {
+    const emailAt = rest.indexOf(email);
+    const handleAt = rest.indexOf(handle);
+    const nextAt =
+      emailAt === -1
+        ? handleAt
+        : handleAt === -1
+          ? emailAt
+          : Math.min(emailAt, handleAt);
+
+    if (nextAt === -1) {
+      nodes.push(rest);
+      break;
+    }
+
+    if (nextAt > 0) {
+      nodes.push(rest.slice(0, nextAt));
+    }
+
+    if (nextAt === emailAt) {
+      nodes.push(
+        <a key={`${keyPrefix}-email-${n++}`} href={`mailto:${email}`} style={{ fontWeight: 600 }}>
+          {email}
+        </a>,
+      );
+      rest = rest.slice(nextAt + email.length);
+    } else {
+      nodes.push(
+        <a
+          key={`${keyPrefix}-x-${n++}`}
+          href={FOUNDERS_X_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ fontWeight: 600 }}
+        >
+          {handle}
+        </a>,
+      );
+      rest = rest.slice(nextAt + handle.length);
+    }
+  }
+
+  return nodes;
+}
+
 export default async function DocsAboutPage() {
   const content = await getWebsiteContentCached();
   const introParagraphs = DEFAULT_HOME_INTRO
@@ -29,32 +86,6 @@ export default async function DocsAboutPage() {
     .map((p) => p.replace(/\s*\n\s*/g, " ").trim())
     .filter(Boolean);
   const themeBasketIntro = (content?.theme_basket_intro || "").trim() || SITE_PRODUCT_SUMMARY;
-
-  const renderIntroParagraph = (p: string, i: number) => {
-    const email = HELLO_EMAIL;
-    if (!p.includes(email)) {
-      return (
-        <p key={`about-${i}`} className={styles.introCopy}>
-          {p}
-        </p>
-      );
-    }
-    const parts = p.split(email);
-    return (
-      <p key={`about-${i}`} className={styles.introCopy}>
-        {parts.map((part, idx) => (
-          <span key={`about-${i}-${idx}`}>
-            {idx > 0 ? (
-              <a href={`mailto:${email}`} style={{ fontWeight: 600 }}>
-                {email}
-              </a>
-            ) : null}
-            {part}
-          </span>
-        ))}
-      </p>
-    );
-  };
 
   return (
     <article className={docsStyles.article}>
@@ -64,8 +95,11 @@ export default async function DocsAboutPage() {
         className={`${styles.introCopyWrap} ${styles.aboutProse} ${styles.aboutLead} ${styles.aboutBasketCard}`}
       >
         <h2 id="about-founder-note">Why I built stockthemes.ai</h2>
-        {introParagraphs.map((p, i) => renderIntroParagraph(p, i))}
-        <p className={styles.introCopy}>{ABOUT_FOUNDER_FEEDBACK}</p>
+        {introParagraphs.map((p, i) => (
+          <p key={`about-${i}`} className={styles.introCopy}>
+            {linkifyIntroSegment(p, `about-${i}`)}
+          </p>
+        ))}
       </div>
       <section
         className={`${styles.aboutProse} ${styles.aboutBasketCard}`}
