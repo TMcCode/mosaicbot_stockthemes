@@ -19,7 +19,6 @@ import {
   collectHomeWatchlistEnrichSlugs,
 } from "@/lib/buildWatchlistRadarEnrich";
 import { collapseFeedGroupFlippers } from "@/lib/collapseFeedGroupFlippers";
-import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getHomeFeedCached } from "@/lib/getHomeFeedCached";
 import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
 import { getManifestCached } from "@/lib/getManifestCached";
@@ -50,7 +49,6 @@ export async function HomeDeferredBand() {
   const [
     { manifest },
     homeFeedRes,
-    compareRes,
     radarRes,
     motionsRes,
     newsRes,
@@ -58,7 +56,6 @@ export async function HomeDeferredBand() {
   ] = await Promise.all([
     getManifestCached(),
     getHomeFeedCached().catch(() => null),
-    getCompareThemesCached(),
     getHomeRadarCached().catch(() => null),
     getThemesInMotionCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
@@ -107,24 +104,22 @@ export async function HomeDeferredBand() {
           homeNews,
         )
       : radarCompanyNames;
-  const exploreGroups = pickExploreGroups(manifest, compareRes?.bundle?.rows ?? []);
+  // Skip compare_themes (~1MB): explore still samples groups from manifest; 1M chips
+  // stay null until a dedicated slim enrich sidecar exists. Watchlist enrich keeps thesis.
+  const exploreGroups = pickExploreGroups(manifest, []);
   const feedThemeSlugs = homeFeedDisplay.flatMap((slot) => {
     const events = [slot.lead, ...(slot.siblings || [])];
     return events
       .map((e) => String(e.theme_slug || "").trim())
       .filter(Boolean);
   });
-  const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(
-    compareRes?.bundle ?? null,
-    homeThesisBySlug,
-    {
-      slugAllowlist: collectHomeWatchlistEnrichSlugs({
-        radar: homeRadar,
-        feedThemeSlugs,
-        thesisBySlug: homeThesisBySlug,
-      }),
-    },
-  );
+  const watchlistEnrichBySlug = buildWatchlistRadarEnrichBySlug(null, homeThesisBySlug, {
+    slugAllowlist: collectHomeWatchlistEnrichSlugs({
+      radar: homeRadar,
+      feedThemeSlugs,
+      thesisBySlug: homeThesisBySlug,
+    }),
+  });
 
   return (
     <>

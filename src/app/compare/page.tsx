@@ -3,7 +3,6 @@ import type { Metadata } from "next";
 import styles from "@/app/page.module.css";
 import { ComparePageClient } from "@/components/ComparePageClient";
 import { PageSurface } from "@/components/PageSurface";
-import { getCompareThemesCached } from "@/lib/getCompareThemesCached";
 import { getEtfBenchmarksCached } from "@/lib/getEtfBenchmarksCached";
 import { getFactorSpreadsCached } from "@/lib/getFactorSpreadsCached";
 import {
@@ -28,14 +27,14 @@ export const metadata: Metadata = buildPageMetadata({
 });
 
 export default async function ComparePage() {
-  const [{ manifest, source }, compareRes, benchmarksRes, factorSpreadsRes, spyPerf] =
-    await Promise.all([
-      getManifestCached(),
-      getCompareThemesCached(),
-      getEtfBenchmarksCached(),
-      getFactorSpreadsCached(),
-      getSpyMarketPerfCached(),
-    ]);
+  // Identity from manifest only — metrics hydrate via client compare_themes fetch
+  // (avoids shipping/parsing the ~1MB corpus in the RSC payload).
+  const [{ manifest, source }, benchmarksRes, factorSpreadsRes, spyPerf] = await Promise.all([
+    getManifestCached(),
+    getEtfBenchmarksCached(),
+    getFactorSpreadsCached(),
+    getSpyMarketPerfCached(),
+  ]);
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => {
       const slug = String(g.slug || "").trim();
@@ -48,27 +47,21 @@ export default async function ComparePage() {
       ] as const;
     }),
   );
-  const rows = (compareRes?.bundle.rows || []).map((r) => {
-    const slug = String(r.slug || "").trim();
-    const groupSlug = String(r.group_slug || "").trim();
+  const rows = (manifest.themes || []).map((t) => {
+    const slug = String(t.slug || "").trim();
+    const groupSlug = String(t.group_slug || "").trim();
     const groupMeta = groupSlug ? groupBySlug.get(groupSlug) : undefined;
     return {
       slug,
-      name: String(r.name || "").trim(),
-      groupSlug: r.group_slug ?? null,
-      groupName:
-        String(r.group_name || "").trim() || groupMeta?.name || "",
+      name: String(t.name || "").trim(),
+      groupSlug: t.group_slug ?? null,
+      groupName: groupMeta?.name || "",
       spySector: groupMeta?.spySector ?? normalizeCompareSpySector(null),
-      rank_visibility: r.rank_visibility ?? null,
-      canonical_theme: r.canonical_theme ?? null,
+      rank_visibility: t.rank_visibility ?? null,
+      canonical_theme: t.canonical_theme ?? null,
     };
   });
-  const columns = resolveCompareColumnOrder(
-    (compareRes?.bundle.rows || []).map((r) => ({
-      compare_returns: r.compare_returns ?? undefined,
-    })),
-    compareRes?.bundle.columns,
-  );
+  const columns = resolveCompareColumnOrder([], undefined);
   const benchmarkRows: CompareBenchmarkRow[] = (() => {
     const fromBundle = mapEtfBenchmarksToCompareRows(benchmarksRes?.bundle);
     if (fromBundle.length > 0) return fromBundle;

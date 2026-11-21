@@ -10,12 +10,12 @@
 | `themes/<slug>.json` | Public CDN `200` | ~5 KB each (~6–8 MB universe) | Low — Tier A (thesis + tickers, **no weights**) |
 | `themes/<slug>.app.v0.json` on `storage.stockthemes.ai` | `404` | — | OK — Tier B off public bucket |
 | `/cdn-app/themes/<slug>.app.v0.json` | `403` without Origin; `200` with `Origin: https://stockthemes.ai` | ~250–500 KB | Medium — Origin spoof still works; soft Function limit only |
-| `compare_themes.v0.json` | Public `200` | **~1.4 MB** | **High** — full multi-horizon return matrix for ~1.5k themes in one GET |
+| `compare_themes.v0.json` | Public `200` | **~0.9–1.0 MB** after slim (was ~1.4 MB) | **High** — multi-horizon return matrix; previews/ranks stripped (use `rank_10d.v0.json` / group JSON) |
 | `search_index.v0.json` | Public `200` | **~2.5 MB** | Medium — membership graph (ticker → theme_slugs) + aliases |
 | `manifest.json` | Public `200` | **~1.8 MB** | Low–medium — catalog + ranks + methodology prose |
-| Theme HTML `/themes/<slug>` | Public | ~140 KB | Medium — hero treemap still bakes **weights + 1Y %** into HTML |
+| Theme HTML `/themes/<slug>` | Public | ~140 KB | Low–medium — treemap weights hydrate via `/cdn-app` when CDN base is set |
 
-**Verdict:** Slim theme JSON + private Tier B sidecars are in place. The remaining “download the whole corpus cheaply” paths are (1) `compare_themes.v0.json`, (2) Origin-spoofed `/cdn-app` crawling, (3) HTML treemap weights at scale.
+**Verdict:** Slim theme JSON + private Tier B sidecars + no baked treemap weights are in place. Home/compare SSR no longer pull the full compare corpus. Remaining harvest paths: (1) public `compare_themes.v0.json` (still one-GET matrix), (2) Origin-spoofed `/cdn-app` crawling.
 
 Do **not** `Disallow: /themes` or noindex themes — that kills SEO without stopping scrapers.
 
@@ -54,9 +54,10 @@ Store as `CLOUDFLARE_WAF_API_TOKEN` (separate from purge-only `CLOUDFLARE_API_TO
 
 ## Code follow-ups (after dashboard rules)
 
-1. **Slim or gate `compare_themes.v0.json`** — keep home/compare UX via smaller public slices (`home_top_movers`, rank boards) or move full horizons to `/cdn-app/compare_themes.app.v0.json`.
-2. **Stop baking treemap weights into static theme HTML** — client-hydrate weights from `/cdn-app` like stock pages (Tier A HTML keeps tickers only).
+1. **Gate `compare_themes.v0.json` behind `/cdn-app`** (optional) — public matrix still harvestable; Origin-gated Tier B would raise the bar further.
+2. ~~Stop baking treemap weights into static theme HTML~~ — done (CDN hydrate).
 3. **Session / signed cookie for `/cdn-app`** — kill Origin spoof (larger change).
+4. ~~Slim public compare rows~~ — drop `tickers_preview` / `rank_10d` / membership timestamps from public upload; home uses `home_top_movers` instead of SSR compare.
 
 ## Verify after enabling rules
 
