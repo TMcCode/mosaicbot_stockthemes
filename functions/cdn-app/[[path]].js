@@ -27,7 +27,8 @@ const PRIVATE_PREFIX = "stockthemes_app/";
 
 /** Soft rate limit per isolate (best-effort; pair with CF Rate Limiting in dashboard). */
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX = 90;
+/** Generous for signed-in desk tabs + prefetch; dashboard rule is the hard guard. */
+const RATE_LIMIT_MAX = 180;
 const rateHits = new Map();
 
 function clientIp(request) {

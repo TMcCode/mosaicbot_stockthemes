@@ -6,7 +6,9 @@
  * This script upserts a single combined expression covering:
  *   - /cdn-app/*
  *   - storage harvest bundles + themes/*.json crawl
- *   - apex /themes/* HTML
+ *
+ * Intentionally does **not** rate-limit apex `/themes/*` HTML — Next prefetch +
+ * normal browsing blew past 30/10s and 1015'd real users.
  *
  *   CLOUDFLARE_WAF_API_TOKEN=… CLOUDFLARE_ZONE_ID=… npm run apply:corpus-rate-limits
  *
@@ -31,6 +33,7 @@ const API = "https://api.cloudflare.com/client/v4";
 
 const COMBINED = {
   description: "stockthemes corpus scrape guard",
+  // JSON / Tier B only — not HTML. Busy theme pages can easily exceed 30/10s.
   expression: [
     '(starts_with(http.request.uri.path, "/cdn-app/")',
     'or (http.host eq "storage.stockthemes.ai" and (',
@@ -41,16 +44,17 @@ const COMBINED = {
     'or http.request.uri.path eq "/radar_news.v0.json"',
     'or (starts_with(http.request.uri.path, "/themes/") and ends_with(http.request.uri.path, ".json"))',
     "))",
-    'or (http.host in {"stockthemes.ai" "www.stockthemes.ai"} and starts_with(http.request.uri.path, "/themes/"))',
     ")",
   ].join(" "),
-  action: "block",
+  // Challenge humans who burst; scrapers still pay. Prefer over hard block.
+  action: "managed_challenge",
   enabled: true,
   // Plan constraint: period must be 10 on many non-Enterprise zones.
+  // ~120/10s ≈ 12/s — room for signed-in desk sidecars + prefetch; still slows corpus scrapes.
   ratelimit: {
     characteristics: ["ip.src", "cf.colo.id"],
     period: 10,
-    requests_per_period: 30,
+    requests_per_period: 120,
     mitigation_timeout: 10,
     requests_to_origin: false,
   },

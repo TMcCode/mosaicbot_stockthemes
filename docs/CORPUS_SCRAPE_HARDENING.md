@@ -36,11 +36,13 @@ Many non-Enterprise zones allow only **1** rate-limit rule and period **10 secon
 | Field | Value |
 |-------|--------|
 | Name | `stockthemes corpus scrape guard` |
-| Covers | `/cdn-app/*`, storage harvest bundles + `themes/*.json`, apex `/themes/*` HTML |
-| Then | Block when **> 30 requests / 10 seconds** per IP |
+| Covers | `/cdn-app/*`, storage harvest bundles + `themes/*.json` only (**not** apex HTML) |
+| Then | Managed challenge when **> 120 requests / 10 seconds** per IP |
 | Mitigation | 10s |
 
-That replaces the older `/cdn-app`-only rule (20/10s). Soft limit inside `functions/cdn-app/[[path]].js` remains belt-and-suspenders.
+**Do not** include apex `/themes/*` HTML — Next.js link prefetch + normal browsing 1015’d real users at 30/10s. Soft limit inside `functions/cdn-app/[[path]].js` remains belt-and-suspenders.
+
+If you already applied the old rule, re-run `npm run apply:corpus-rate-limits` or edit the dashboard rule to match the table above.
 
 ## Token permissions (so CI can manage rules later)
 
