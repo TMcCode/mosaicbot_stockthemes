@@ -38,13 +38,6 @@ export function SiteNav() {
               </span>
             </button>
             <div className={styles.menuPanel} role="menu">
-              <PrefetchIntentLink href="/groups" className={styles.menuItem} role="menuitem">
-                All groups
-              </PrefetchIntentLink>
-              <PrefetchIntentLink href="/themes" className={styles.menuItem} role="menuitem">
-                All themes
-              </PrefetchIntentLink>
-              <div className={styles.menuDivider} role="separator" />
               <PrefetchIntentLink href="/compare" className={styles.menuItem} role="menuitem">
                 Theme returns table
               </PrefetchIntentLink>
@@ -59,6 +52,13 @@ export function SiteNav() {
               </PrefetchIntentLink>
               <PrefetchIntentLink href="/factors" className={styles.menuItem} role="menuitem">
                 Theme factor exposure
+              </PrefetchIntentLink>
+              <div className={styles.menuDivider} role="separator" />
+              <PrefetchIntentLink href="/groups" className={styles.menuItem} role="menuitem">
+                All groups
+              </PrefetchIntentLink>
+              <PrefetchIntentLink href="/themes" className={styles.menuItem} role="menuitem">
+                All themes
               </PrefetchIntentLink>
               <div className={styles.menuMobileAccount}>
                 <div className={styles.menuDivider} role="separator" />

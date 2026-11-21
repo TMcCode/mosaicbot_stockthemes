@@ -78,11 +78,15 @@ export function RadarWatchlistPanel() {
   if (!user) {
     return (
       <div className={styles.wrap}>
-        <p className={styles.lead}>Your watchlist</p>
-        <p className={styles.help}>Sign in to save themes and pick home cards.</p>
-        <Link href="/sign-in?next=%2Fradar%3Ftab%3Dwatchlist" className={styles.primaryLink}>
-          Sign in free
-        </Link>
+        <div className={styles.signInBox} aria-label="Sign in to save watchlist themes">
+          <p className={styles.signInTitle}>Sign in to save themes</p>
+          <p className={styles.help}>
+            Watchlist is available with a free account.
+          </p>
+          <Link href="/sign-in?next=%2Fradar%3Ftab%3Dwatchlist" className={styles.signInBtn}>
+            Sign in free
+          </Link>
+        </div>
       </div>
     );
   }

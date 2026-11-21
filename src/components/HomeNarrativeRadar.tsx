@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 
 import { ConstituentLogo } from "@/components/ConstituentLogo";
 import { RadarWatchlistPanel } from "@/components/RadarWatchlistPanel";
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { useWatchlist } from "@/components/WatchlistProvider";
 import type { HomeRadarCardV0, HomeRadarV0 } from "@/types/home_radar.v0";
@@ -808,6 +809,7 @@ export function HomeNarrativeRadar({
   initialNewsAsOf,
   refreshNewsOnMount = true,
 }: Props) {
+  const { configured: authConfigured, showAuthedUi } = useSupabaseAuth();
   const watchlist = useWatchlist();
   const [tab, setTab] = useState<TabKey>(initialTab);
   const [themeNamesBySlug, setThemeNamesBySlug] = useState<Record<string, string>>({});
@@ -1023,14 +1025,29 @@ export function HomeNarrativeRadar({
               ))}
             </RadarProgressiveGrid>
           ) : previewLimit > 0 ? (
-            <div className={styles.empty}>
-              {watchlist?.ready && watchlist.themeCount > 0
-                ? "No home cards selected yet — "
-                : "No watchlist themes yet — "}
-              <Link href="/radar?tab=watchlist" className={styles.signInLink}>
-                manage on Narrative Radar
-              </Link>
-            </div>
+            authConfigured && !showAuthedUi ? (
+              <div className={styles.watchlistCta} aria-label="Sign in to save watchlist themes">
+                <p className={styles.watchlistCtaTitle}>Sign in to save themes</p>
+                <p className={styles.watchlistCtaCopy}>
+                  Watchlist is available with a free account.
+                </p>
+                <Link
+                  href="/sign-in?next=%2Fradar%3Ftab%3Dwatchlist"
+                  className={styles.watchlistCtaBtn}
+                >
+                  Sign in free
+                </Link>
+              </div>
+            ) : (
+              <div className={styles.empty}>
+                {watchlist?.ready && watchlist.themeCount > 0
+                  ? "No home cards selected yet — "
+                  : "No watchlist themes yet — "}
+                <Link href="/radar?tab=watchlist" className={styles.signInLink}>
+                  manage on Narrative Radar
+                </Link>
+              </div>
+            )
           ) : null}
           {previewLimit <= 0 ? <RadarWatchlistPanel /> : null}
         </div>

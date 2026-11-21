@@ -7,6 +7,7 @@ import { authCallbackAbsoluteUrl } from "@/lib/authRedirect";
 import {
   getEnabledAuthOAuthProviders,
   type AuthOAuthProviderId,
+  type AuthOAuthProviderMeta,
 } from "@/lib/authOAuthProviders";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 
@@ -68,8 +69,16 @@ function OAuthIcon({ provider }: { provider: AuthOAuthProviderId }) {
   );
 }
 
+function sortProvidersPrimaryFirst(providers: AuthOAuthProviderMeta[]): AuthOAuthProviderMeta[] {
+  return [...providers].sort((a, b) => {
+    if (a.id === "google") return -1;
+    if (b.id === "google") return 1;
+    return 0;
+  });
+}
+
 export function SignInOAuthButtons({ returnPath, onError }: Props) {
-  const providers = getEnabledAuthOAuthProviders();
+  const providers = sortProvidersPrimaryFirst(getEnabledAuthOAuthProviders());
   const [busyId, setBusyId] = useState<AuthOAuthProviderId | null>(null);
 
   if (providers.length === 0) {
@@ -106,18 +115,21 @@ export function SignInOAuthButtons({ returnPath, onError }: Props) {
 
   return (
     <div className={signInStyles.oauthStack}>
-      {providers.map((provider) => (
-        <button
-          key={provider.id}
-          type="button"
-          className={signInStyles.oauthBtn}
-          disabled={busyId != null}
-          onClick={() => void signInWithProvider(provider.id)}
-        >
-          <OAuthIcon provider={provider.id} />
-          {busyId === provider.id ? "Redirecting…" : provider.label}
-        </button>
-      ))}
+      {providers.map((provider) => {
+        const isPrimary = provider.id === "google";
+        return (
+          <button
+            key={provider.id}
+            type="button"
+            className={`${signInStyles.oauthBtn}${isPrimary ? ` ${signInStyles.oauthBtnPrimary}` : ""}`}
+            disabled={busyId != null}
+            onClick={() => void signInWithProvider(provider.id)}
+          >
+            <OAuthIcon provider={provider.id} />
+            {busyId === provider.id ? "Redirecting…" : provider.label}
+          </button>
+        );
+      })}
     </div>
   );
 }

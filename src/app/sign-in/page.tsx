@@ -49,17 +49,21 @@ export default function SignInPage() {
     return (
       <PageSurface>
         <main className={styles.main}>
-          <div className={styles.intro}>
-            <p className={styles.eyebrow}>Account</p>
-            <h1>Sign in unavailable</h1>
-            <p className={styles.introCopy}>
-              Authentication is not configured for this deployment. Add{" "}
-              <code>NEXT_PUBLIC_SUPABASE_URL</code> and <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code>{" "}
-              to the build environment.
-            </p>
-            <Link href="/" className={styles.introCopy}>
-              ← Home
-            </Link>
+          <div className={signInStyles.shell}>
+            <div className={signInStyles.panel}>
+              <div className={signInStyles.header}>
+                <p className={signInStyles.eyebrow}>Account</p>
+                <h1 className={signInStyles.title}>Sign in unavailable</h1>
+                <p className={signInStyles.subtitle}>
+                  Authentication is not configured for this deployment. Add{" "}
+                  <code>NEXT_PUBLIC_SUPABASE_URL</code> and{" "}
+                  <code>NEXT_PUBLIC_SUPABASE_ANON_KEY</code> to the build environment.
+                </p>
+              </div>
+              <p className={signInStyles.metaLinks}>
+                <Link href="/">← Home</Link>
+              </p>
+            </div>
           </div>
         </main>
       </PageSurface>
@@ -70,7 +74,11 @@ export default function SignInPage() {
     return (
       <PageSurface>
         <main className={styles.main}>
-          <p className={styles.introCopy}>{user ? "Redirecting…" : "Loading…"}</p>
+          <div className={signInStyles.shell}>
+            <div className={signInStyles.panel}>
+              <p className={signInStyles.statusCopy}>{user ? "Redirecting…" : "Loading…"}</p>
+            </div>
+          </div>
         </main>
       </PageSurface>
     );
@@ -113,63 +121,61 @@ export default function SignInPage() {
   return (
     <PageSurface>
       <main className={styles.main}>
-        <div className={styles.intro}>
-          <p className={styles.eyebrow}>Sign in · Create account</p>
-          <h1>Add email to curate stockthemes.ai — up to {WATCHLIST_THEME_LIMIT} themes</h1>
-          <p className={styles.introCopy}>
-            <strong>New here?</strong> Use Google, GitHub, or a one-time email link — we&apos;ll{" "}
-            <strong>create your free account</strong> on first sign-in (no password).
-          </p>
-          <p className={styles.introCopy}>
-            <strong>Already use stockthemes?</strong> Same options sign you back in. Save up to{" "}
-            {WATCHLIST_THEME_LIMIT} themes and manage them on{" "}
-            <Link href="/radar?tab=watchlist">Watchlist</Link>.
-          </p>
-          <WatchlistLimitInterestNote includePlanLine className={styles.introCopy} />
+        <div className={signInStyles.shell}>
+          <div className={signInStyles.panel}>
+            <div className={signInStyles.header}>
+              <p className={signInStyles.eyebrow}>Sign in · Create account</p>
+              <h1 className={signInStyles.title}>Curate up to {WATCHLIST_THEME_LIMIT} themes</h1>
+              <p className={signInStyles.subtitle}>
+                Free account · no password. New here? We create your account on first sign-in.
+              </p>
+            </div>
 
-          {oauthProviders.length > 0 ? (
-            <>
-              <SignInOAuthButtons returnPath={returnPath} onError={setError} />
-              <div className={signInStyles.orDivider} role="presentation">
-                or email a link
-              </div>
-            </>
-          ) : null}
+            {oauthProviders.length > 0 ? (
+              <>
+                <SignInOAuthButtons returnPath={returnPath} onError={setError} />
+                <div className={signInStyles.orDivider} role="presentation">
+                  or email a link
+                </div>
+              </>
+            ) : null}
 
-          <form onSubmit={onSubmit} className={signInStyles.formBlock}>
-            <label htmlFor="sign-in-email">
-              <span className={styles.introCopy} style={{ display: "block", marginBottom: 6 }}>
+            <form onSubmit={onSubmit} className={signInStyles.formBlock}>
+              <label htmlFor="sign-in-email" className={signInStyles.fieldLabel}>
                 Email address
-              </span>
-              <input
-                id="sign-in-email"
-                type="email"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(ev) => setEmail(ev.target.value)}
-                placeholder="you@example.com"
-                disabled={busy}
-                className={signInStyles.emailInput}
-              />
-            </label>
-            <button type="submit" disabled={busy} className={signInStyles.submitBtn}>
-              {busy ? "Sending…" : "Email me a secure link"}
-            </button>
-          </form>
+              </label>
+              <div className={signInStyles.emailRow}>
+                <input
+                  id="sign-in-email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  value={email}
+                  onChange={(ev) => setEmail(ev.target.value)}
+                  placeholder="you@example.com"
+                  disabled={busy}
+                  className={signInStyles.emailInput}
+                />
+                <button type="submit" disabled={busy} className={signInStyles.submitBtn}>
+                  {busy ? "Sending…" : "Email link"}
+                </button>
+              </div>
+            </form>
 
-          {message ? (
-            <p className={`${styles.introCopy} ${signInStyles.messageOk}`}>{message}</p>
-          ) : null}
-          {error ? (
-            <p className={`${styles.introCopy} ${signInStyles.messageErr}`}>{error}</p>
-          ) : null}
+            {message ? <p className={signInStyles.messageOk}>{message}</p> : null}
+            {error ? <p className={signInStyles.messageErr}>{error}</p> : null}
 
-          <p className={styles.introCopy} style={{ marginTop: 24 }}>
-            <Link href="/privacy">Privacy</Link>
-            {" · "}
-            <Link href="/">Home</Link>
-          </p>
+            <div className={signInStyles.meta}>
+              <WatchlistLimitInterestNote includePlanLine className={signInStyles.metaNote} />
+              <p className={signInStyles.metaLinks}>
+                <Link href="/privacy">Privacy</Link>
+                <span className={signInStyles.metaSep} aria-hidden="true">
+                  ·
+                </span>
+                <Link href="/">Home</Link>
+              </p>
+            </div>
+          </div>
         </div>
       </main>
     </PageSurface>

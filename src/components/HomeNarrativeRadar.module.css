@@ -651,8 +651,7 @@
 
 /* `.intro p` in page.module.css is 18px — empty states must not use <p> inside intro,
    or must win with !important (module :global(.intro) never matches hashed .intro_xxx). */
-.empty,
-.watchlistCta {
+.empty {
   margin: 0;
   max-width: none;
   font-size: 11px !important;
@@ -667,11 +666,50 @@
   font-size: inherit !important;
 }
 
-.watchlistCta p {
-  margin: 0 0 8px;
-  font-size: inherit !important;
-  line-height: inherit !important;
+.watchlistCta {
+  margin: 2px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  max-width: 360px;
+}
+
+.watchlistCtaTitle {
+  margin: 0;
+  font-size: 12px !important;
+  font-weight: 650;
+  line-height: 1.25 !important;
+  color: var(--text-primary);
   max-width: none;
+}
+
+.watchlistCtaCopy {
+  margin: 4px 0 8px;
+  font-size: 10px !important;
+  line-height: 1.35 !important;
+  color: var(--text-secondary, #9aa8a6);
+  max-width: none;
+}
+
+.watchlistCtaBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 24px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 10px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.watchlistCtaBtn:hover {
+  filter: brightness(1.05);
 }
 
 .signInLink {
@@ -682,6 +720,15 @@
 
 .signInLink:hover {
   text-decoration: underline;
+}
+
+:global(.st-theme[data-theme="light"]) .watchlistCta {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .watchlistCtaBtn {
+  background: var(--accent-strong, #3b4da1);
+  color: var(--button-primary-fg, #ffffff);
 }
 
 .watchlistHint {

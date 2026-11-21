@@ -1,16 +1,62 @@
-.formBlock {
-  margin-top: 20px;
+.shell {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  padding: 8px 0 40px;
+}
+
+.panel {
+  width: 100%;
+  max-width: 420px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  max-width: 360px;
+  gap: 18px;
+  padding: 28px 28px 24px;
+  border-radius: 16px;
+  border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.12));
+  background: rgba(255, 255, 255, 0.03);
+  box-sizing: border-box;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.eyebrow {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-geist-sans);
+  font-size: 28px;
+  font-weight: 650;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary, #eaf2f0);
+  text-wrap: balance;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-secondary, #9aaba8);
+  text-wrap: pretty;
 }
 
 .oauthStack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  max-width: 360px;
+  gap: 10px;
+  width: 100%;
 }
 
 .oauthBtn {
@@ -19,7 +65,7 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  padding: 10px 14px;
+  padding: 11px 14px;
   border-radius: 10px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.14));
   background: rgba(255, 255, 255, 0.04);
@@ -30,12 +76,28 @@
   cursor: pointer;
   transition:
     background-color 0.15s ease,
-    border-color 0.15s ease;
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .oauthBtn:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.07);
   border-color: rgba(38, 252, 214, 0.35);
+}
+
+.oauthBtnPrimary {
+  padding: 13px 16px;
+  font-size: 15px;
+  background: #fff;
+  border-color: transparent;
+  color: #1f1f1f;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.oauthBtnPrimary:hover:not(:disabled) {
+  background: #f7f7f7;
+  border-color: transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .oauthBtn:disabled {
@@ -52,11 +114,11 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  max-width: 360px;
-  margin: 4px 0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  width: 100%;
+  margin: 2px 0;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted, #6e7d7b);
 }
@@ -69,9 +131,30 @@
   background: var(--button-secondary-border, rgba(255, 255, 255, 0.12));
 }
 
+.formBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.fieldLabel {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-secondary, #9aaba8);
+}
+
+.emailRow {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
 .emailInput {
   width: 100%;
-  padding: 10px 12px;
+  padding: 11px 12px;
   border-radius: 10px;
   border: 1px solid var(--nav-border, rgba(255, 255, 255, 0.14));
   background: rgba(255, 255, 255, 0.04);
@@ -81,14 +164,34 @@
   box-sizing: border-box;
 }
 
+.emailInput::placeholder {
+  color: var(--text-muted, #6e7d7b);
+}
+
+.emailInput:focus {
+  outline: none;
+  border-color: rgba(38, 252, 214, 0.55);
+  box-shadow: 0 0 0 3px rgba(38, 252, 214, 0.12);
+}
+
 .submitBtn {
   padding: 11px 16px;
   border-radius: 10px;
-  border: none;
-  background: var(--accent, #26fcd6);
-  color: #040506;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.14));
+  background: transparent;
+  color: var(--text-primary, #eaf2f0);
+  font-family: var(--font-geist-sans);
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(38, 252, 214, 0.35);
 }
 
 .submitBtn:disabled {
@@ -96,14 +199,111 @@
   opacity: 0.7;
 }
 
+.messageOk,
+.messageErr {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .messageOk {
-  margin-top: 16px;
   color: var(--accent, #26fcd6);
 }
 
 .messageErr {
-  margin-top: 16px;
   color: #f87171;
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+  padding-top: 16px;
+  border-top: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+}
+
+.metaNote {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.metaNote a {
+  color: var(--text-secondary, #9aaba8);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.metaLinks {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.metaLinks a {
+  color: var(--text-secondary, #9aaba8);
+  text-decoration: none;
+}
+
+.metaLinks a:hover {
+  color: var(--accent, #26fcd6);
+}
+
+.metaSep {
+  margin: 0 6px;
+  opacity: 0.55;
+}
+
+.statusCopy {
+  margin: 0;
+  font-size: 14px;
+  color: var(--text-secondary, #9aaba8);
+}
+
+@media (min-width: 640px) {
+  .shell {
+    padding: 28px 0 56px;
+    min-height: min(70vh, 720px);
+    align-items: center;
+  }
+
+  .panel {
+    padding: 36px 36px 28px;
+    gap: 20px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .emailRow {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .emailInput {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .submitBtn {
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+}
+
+:global(.st-theme[data-theme="light"]) .panel {
+  background: rgba(255, 255, 255, 0.72);
+  border-color: rgba(59, 77, 161, 0.1);
+  box-shadow:
+    0 1px 2px rgba(30, 28, 54, 0.04),
+    0 18px 40px rgba(30, 28, 54, 0.06);
+}
+
+:global(.st-theme[data-theme="light"]) .title {
+  color: var(--text-primary, #1e1c36);
 }
 
 :global(.st-theme[data-theme="light"]) .oauthBtn {
@@ -116,8 +316,38 @@
   background: rgba(59, 77, 161, 0.08);
 }
 
+:global(.st-theme[data-theme="light"]) .oauthBtnPrimary {
+  background: #fff;
+  border: 1px solid rgba(59, 77, 161, 0.14);
+  color: #1f1f1f;
+}
+
+:global(.st-theme[data-theme="light"]) .oauthBtnPrimary:hover:not(:disabled) {
+  background: #fafafa;
+  border-color: rgba(59, 77, 161, 0.22);
+}
+
 :global(.st-theme[data-theme="light"]) .emailInput {
-  background: rgba(255, 255, 255, 0.9);
+  background: #fff;
   border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
   color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .emailInput:focus {
+  border-color: rgba(38, 180, 160, 0.65);
+  box-shadow: 0 0 0 3px rgba(38, 180, 160, 0.12);
+}
+
+:global(.st-theme[data-theme="light"]) .submitBtn {
+  background: rgba(59, 77, 161, 0.04);
+  border-color: var(--button-secondary-border, rgba(59, 77, 161, 0.12));
+  color: var(--text-primary, #1e1c36);
+}
+
+:global(.st-theme[data-theme="light"]) .submitBtn:hover:not(:disabled) {
+  background: rgba(59, 77, 161, 0.08);
+}
+
+:global(.st-theme[data-theme="light"]) .meta {
+  border-top-color: rgba(59, 77, 161, 0.1);
 }
