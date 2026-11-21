@@ -2,6 +2,7 @@
 
 import { PrefetchIntentLink } from "@/components/PrefetchIntentLink";
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { useReturnToSignInHref } from "@/hooks/useReturnToSignInHref";
 
 import styles from "./SiteNav.module.css";
 
@@ -12,6 +13,7 @@ type Props = {
 
 export function SiteNavAuth({ variant = "inline" }: Props) {
   const { configured, loading, user } = useSupabaseAuth();
+  const signInHref = useReturnToSignInHref();
 
   if (!configured) {
     return null;
@@ -36,7 +38,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
     }
     return (
       <PrefetchIntentLink
-        href="/sign-in"
+        href={signInHref}
         className={styles.menuItem}
         role="menuitem"
         aria-busy={loading || undefined}
@@ -60,7 +62,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
 
   return (
     <PrefetchIntentLink
-      href="/sign-in"
+      href={signInHref}
       className={styles.authNav}
       aria-busy={loading || undefined}
     >

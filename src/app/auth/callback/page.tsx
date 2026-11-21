@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import styles from "@/app/page.module.css";
 import { PageSurface } from "@/components/PageSurface";
 
-import { authHardRedirect, resolveAuthNextPath } from "@/lib/authRedirect";
+import { authHardRedirect, buildSignInHref, resolveAuthNextPath } from "@/lib/authRedirect";
 import { getBrowserSupabase } from "@/lib/supabase/browserClient";
 import { exchangePkceCodeOnce } from "@/lib/supabase/exchangePkceCodeOnce";
 
@@ -44,6 +44,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, label: string): Promise
 
 export default function AuthCallbackPage() {
   const [error, setError] = useState<string | null>(null);
+  const [retryHref, setRetryHref] = useState("/sign-in");
 
   useEffect(() => {
     const supabase = getBrowserSupabase();
@@ -84,6 +85,8 @@ export default function AuthCallbackPage() {
     async function run() {
       try {
         const url = typeof window !== "undefined" ? new URL(window.location.href) : null;
+        const next = resolveAuthNextPath(url?.searchParams.get("next") ?? null);
+        setRetryHref(buildSignInHref(next));
         const oauthError = oauthErrorFromUrl(url);
         if (oauthError) {
           fail(oauthError);
@@ -91,7 +94,6 @@ export default function AuthCallbackPage() {
         }
 
         const code = url?.searchParams.get("code");
-        const next = resolveAuthNextPath(url?.searchParams.get("next") ?? null);
 
         if (code) {
           const { error: ex } = await withTimeout(
@@ -154,7 +156,7 @@ export default function AuthCallbackPage() {
               <h1 style={{ marginTop: 0 }}>Sign-in issue</h1>
               <p className={styles.introCopy}>{error}</p>
               <p className={styles.introCopy}>
-                <Link href="/sign-in">Try again</Link>
+                <Link href={retryHref}>Try again</Link>
                 {" · "}
                 <Link href="/">Home</Link>
               </p>

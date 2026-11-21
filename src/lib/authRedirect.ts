@@ -23,6 +23,24 @@ export function resolveAuthNextPath(raw: string | null | undefined): string {
   return sanitizeAuthNextPath(raw) ?? AUTH_DEFAULT_NEXT_PATH;
 }
 
+/** Paths that should not be used as post-sign-in return targets. */
+function isAuthSurfacePath(path: string): boolean {
+  const pathOnly = path.split("?")[0] || path;
+  return pathOnly === "/sign-in" || pathOnly === "/auth/callback" || pathOnly.startsWith("/auth/");
+}
+
+/**
+ * Build `/sign-in?next=…` from a same-origin app path (pathname + optional search).
+ * Safe for nav CTAs — no network, no Suspense.
+ */
+export function buildSignInHref(returnPath?: string | null): string {
+  const next = sanitizeAuthNextPath(returnPath);
+  if (!next || isAuthSurfacePath(next)) {
+    return "/sign-in";
+  }
+  return `/sign-in?next=${encodeURIComponent(next)}`;
+}
+
 /** App path including Next `basePath` (GitHub Pages). Browser-only. */
 export function authAppPath(path: string): string {
   const bp = (process.env.NEXT_PUBLIC_BASE_PATH ?? "").trim().replace(/\/$/, "");

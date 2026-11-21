@@ -5,6 +5,8 @@ import { useCallback, useState } from "react";
 
 import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { useWatchlist } from "@/components/WatchlistProvider";
+import { useReturnToSignInHref } from "@/hooks/useReturnToSignInHref";
+import { buildSignInHref } from "@/lib/authRedirect";
 
 import {
   WATCHLIST_THEME_LIMIT,
@@ -43,6 +45,7 @@ export function WatchlistStar({
   const titleStar = Boolean(inline && titleAdjacent);
   const { configured, user } = useOptionalSupabaseAuth();
   const watchlist = useWatchlist();
+  const returnToSignInHref = useReturnToSignInHref();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
 
@@ -74,7 +77,7 @@ export function WatchlistStar({
     return null;
   }
 
-  const signInHref = signInNext ? `/sign-in?next=${encodeURIComponent(signInNext)}` : "/sign-in";
+  const signInHref = signInNext ? buildSignInHref(signInNext) : returnToSignInHref;
 
   const wrapClass = [
     styles.wrap,

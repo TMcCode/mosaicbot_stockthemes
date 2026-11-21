@@ -259,6 +259,51 @@ jobs:
           wranglerVersion: "4.14.1"
           command: pages deploy out --project-name=stockthemes --commit-dirty=true
 
+      # A browser can request a new /_next/static/* file during the deploy cutover, before Pages
+      # serves it. Cloudflare then caches that 404 for a year (max-age=31536000) and every page
+      # that needs the file fails to hydrate. After deploy, fetch each built static file through
+      # the edge and purge any URL that is not 200. Needs CLOUDFLARE_ZONE_ID (secret/var) and a
+      # token with Zone > Cache Purge; skipped (warning only) when either is missing.
+      - name: Purge poisoned /_next/static 404s from Cloudflare edge
+        continue-on-error: true
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ZONE_ID: ${{ secrets.CLOUDFLARE_ZONE_ID || vars.CLOUDFLARE_ZONE_ID }}
+          SITE_ORIGIN: https://stockthemes.ai
+        run: |
+          set -uo pipefail
+          if [ -z "${CLOUDFLARE_ZONE_ID:-}" ]; then
+            echo "::warning::CLOUDFLARE_ZONE_ID not set — skipping edge purge of poisoned static 404s"
+            exit 0
+          fi
+          (cd out && find _next/static -type f \( -name '*.js' -o -name '*.css' \) | sort) > static_files.txt
+          echo "Checking $(wc -l < static_files.txt) static files via edge"
+          # Brief wait so the new deployment is live on the custom domain.
+          sleep 20
+          check() {
+            code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "${SITE_ORIGIN}/$1")
+            [ "$code" = "200" ] || echo "${SITE_ORIGIN}/$1"
+          }
+          export -f check
+          export SITE_ORIGIN
+          xargs -a static_files.txt -P 16 -I{} bash -c 'check "$@"' _ {} > bad_urls.txt
+          n=$(wc -l < bad_urls.txt | tr -d ' ')
+          if [ "$n" = "0" ]; then
+            echo "All static files return 200 at the edge — nothing to purge"
+            exit 0
+          fi
+          echo "Purging $n non-200 static URLs:"
+          cat bad_urls.txt
+          split -l 30 bad_urls.txt bad_chunk_
+          for f in bad_chunk_*; do
+            body=$(python3 -c 'import json,sys; print(json.dumps({"files":[l.strip() for l in open(sys.argv[1]) if l.strip()]}))' "$f")
+            curl -sS -X POST -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+              -H "Content-Type: application/json" \
+              "https://api.cloudflare.com/client/v4/zones/${CLOUDFLARE_ZONE_ID}/purge_cache" \
+              -d "$body" \
+              | python3 -c 'import json,sys; d=json.load(sys.stdin); print("purge success", d.get("success"), d.get("errors")); raise SystemExit(0 if d.get("success") else 1)'
+          done
+
       - name: Verify Tier B /cdn-app gate (stocks + themes)
         continue-on-error: true
         run: |
