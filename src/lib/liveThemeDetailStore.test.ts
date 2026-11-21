@@ -29,3 +29,16 @@ test("mergeThemeDetailLiveFields does not clear has_ticker_notes when live omits
   const merged = mergeThemeDetailLiveFields(server, live, { prices: false });
   assert.equal(merged.has_ticker_notes, true);
 });
+
+test("mergeThemeDetailLiveFields restores weight and market_cap_usd from Tier B live", () => {
+  const server = themeDetail({
+    constituents: [{ ticker: "AAPL", name: "Apple", weight: 1 }],
+  });
+  const live = themeDetail({
+    constituents: [{ ticker: "AAPL", weight: 0.12, market_cap_usd: 3.1e12 }],
+  });
+  const merged = mergeThemeDetailLiveFields(server, live, { prices: false });
+  assert.equal(merged.constituents[0]?.weight, 0.12);
+  assert.equal(merged.constituents[0]?.market_cap_usd, 3.1e12);
+  assert.equal(merged.constituents[0]?.name, "Apple");
+});
