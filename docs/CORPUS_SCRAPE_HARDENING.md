@@ -75,6 +75,17 @@ curl -sI "https://storage.stockthemes.ai/themes/ai-25-semiconductors.json"      
 #   "https://stockthemes.ai/cdn-app/themes/ai-25-semiconductors.app.v0.json"; done
 ```
 
+## PostHog (analytics noise)
+
+Scrapers that execute JS still inflate unique users / ~10s sessions. Client init in `src/lib/posthogClient.ts`:
+
+- Skips known bot / `navigator.webdriver` UAs
+- Waits for human engagement (pointer/key/scroll/touch/mousemove) or 12s visible dwell before `posthog.init`
+- `person_profiles: "identified_only"` so anonymous crawl traffic does not mint persons
+- Dev: no capture unless `NEXT_PUBLIC_POSTHOG_DEBUG=1`
+
+Dashboard tip: filter insights to session duration ≥ 30s or events after `$pageview` + interaction when comparing pre/post.
+
 ## Related
 
 - `docs/CDN_APP_TIER_B.md` — Function gate + private R2
