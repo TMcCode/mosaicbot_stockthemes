@@ -7,14 +7,24 @@ import type { ThemeDetailConstituentV0, ThemeDetailV0 } from "@/types/theme.deta
  *
  * Equal-weight placeholders keep the hero treemap layout stable until live merge;
  * they are not proprietary basket weights.
+ *
+ * ``market_cap_usd`` stays public so Composition legend / treemap sizing can paint
+ * before Tier B merge (mcap is not basket IP).
  */
 export function themeDetailPublicSeed(detail: ThemeDetailV0): ThemeDetailV0 {
-  const constituents: ThemeDetailConstituentV0[] = (detail.constituents || []).map((c) => ({
-    ticker: c.ticker,
-    name: c.name,
-    logo_url: c.logo_url,
-    weight: 1,
-  }));
+  const constituents: ThemeDetailConstituentV0[] = (detail.constituents || []).map((c) => {
+    const item: ThemeDetailConstituentV0 = {
+      ticker: c.ticker,
+      name: c.name,
+      logo_url: c.logo_url,
+      weight: 1,
+    };
+    const mcap = c.market_cap_usd;
+    if (typeof mcap === "number" && Number.isFinite(mcap) && mcap > 0) {
+      item.market_cap_usd = mcap;
+    }
+    return item;
+  });
   return {
     schema_version: detail.schema_version,
     slug: detail.slug,

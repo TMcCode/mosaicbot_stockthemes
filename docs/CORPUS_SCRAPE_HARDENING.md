@@ -7,7 +7,7 @@
 
 | Artifact | Anonymous access | Size (approx) | Risk |
 |----------|------------------|---------------|------|
-| `themes/<slug>.json` | Public CDN `200` | ~5 KB each (~6–8 MB universe) | Low — Tier A (thesis + tickers, **no weights**) |
+| `themes/<slug>.json` | Public CDN `200` | ~5–8 KB each (~6–10 MB universe) | Low — Tier A (thesis + tickers + mcap, **no weights**) |
 | `themes/<slug>.app.v0.json` on `storage.stockthemes.ai` | `404` | — | OK — Tier B off public bucket |
 | `/cdn-app/themes/<slug>.app.v0.json` | `403` without Origin; `200` with `Origin: https://stockthemes.ai` | ~250–500 KB | Medium — Origin spoof still works; soft Function limit only |
 | `compare_themes.v0.json` | Public `200` | **~0.9–1.0 MB** after slim (was ~1.4 MB) | **High** — multi-horizon return matrix; previews/ranks stripped (use `rank_10d.v0.json` / group JSON) |

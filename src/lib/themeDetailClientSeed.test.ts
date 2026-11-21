@@ -41,10 +41,11 @@ describe("themeDetailPublicSeed", () => {
     assert.equal(seed.constituents.length, 2);
     for (const c of seed.constituents) {
       assert.equal(c.weight, 1);
-      assert.equal(c.market_cap_usd, undefined);
       assert.equal(c.price_returns, undefined);
     }
     assert.equal(seed.constituents[0].ticker, "AAA");
     assert.equal(seed.constituents[0].name, "Alpha");
+    assert.equal(seed.constituents[0].market_cap_usd, 1e9);
+    assert.equal(seed.constituents[1].market_cap_usd, 2e9);
   });
 });
