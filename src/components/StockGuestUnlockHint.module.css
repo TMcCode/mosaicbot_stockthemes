@@ -1,0 +1,118 @@
+/* Vertically center in leftover stock-hero height (beside treemap). */
+.slot {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-height: 0;
+  width: 100%;
+}
+
+/* Same shell as ThemeGuestUnlockHint, slightly larger for the stock hero. */
+.box {
+  margin: 0;
+  padding: 11px 14px;
+  border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  max-width: 520px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+
+/* Beat `.intro p` (~18px) on stock hero. */
+.features {
+  margin: 0;
+  max-width: none;
+  font-size: 13px !important;
+  font-weight: 650;
+  line-height: 1.35 !important;
+  color: var(--text-primary, #e8edec);
+}
+
+.copy {
+  margin: 5px 0 0;
+  max-width: none;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  color: var(--text-muted, #6e7d7b);
+}
+
+.bullets {
+  margin: 6px 0 0;
+  padding: 0 0 0 1.15em;
+  list-style: disc;
+  font-size: 11px !important;
+  line-height: 1.45 !important;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.bullets li {
+  margin: 0;
+  padding: 0;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  max-width: none;
+}
+
+.bullets li + li {
+  margin-top: 2px;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: var(--accent, #26fcd6);
+  color: #032320;
+  font-size: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: filter 0.15s ease;
+}
+
+.btn:hover {
+  filter: brightness(1.05);
+}
+
+:global(.st-theme[data-theme="light"]) .box {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+:global(.st-theme[data-theme="light"]) .btn {
+  background: var(--accent-strong, #3b4da1);
+  color: var(--button-primary-fg, #ffffff);
+}
+
+@media (max-width: 640px) {
+  .slot {
+    flex: 0 0 auto;
+  }
+
+  .box {
+    padding: 8px 11px;
+  }
+
+  .features {
+    font-size: 12px !important;
+  }
+
+  .copy,
+  .bullets {
+    font-size: 10px !important;
+  }
+
+  .btn {
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}

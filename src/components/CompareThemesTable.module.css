@@ -46,6 +46,7 @@
   background: transparent;
   color: var(--text-muted);
   cursor: pointer;
+  text-decoration: none;
 }
 
 .downloadBtn:hover:not(:disabled) {

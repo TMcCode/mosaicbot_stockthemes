@@ -89,8 +89,8 @@ function ProtectedTablePrompt({ signInHref }: { signInHref: string }) {
     <div className={tableStyles.protectedPrompt} aria-label="Sign in required">
       <p className={tableStyles.protectedTitle}>Sign in to view this analysis</p>
       <p className={tableStyles.protectedCopy}>
-        Revenue, revenue revisions, quality and risk, and membership notes are available with a free
-        account.
+        Earnings returns, revenue, revisions, quality and risk, and membership notes are available
+        with a free account.
       </p>
       <Link href={signInHref} className={tableStyles.protectedSignIn}>
         Sign in free
@@ -197,17 +197,23 @@ export function ThemeConstituentsTable({
     quality_risk: false,
     notes: false,
   });
-  const { configured, loading: authLoading, user } = useSupabaseAuth();
-  const hasProtectedAccess = configured && !authLoading && Boolean(user);
-  const protectedLocked = !authLoading && !hasProtectedAccess;
+  const { configured, showAuthedUi } = useSupabaseAuth();
+  /** Optimistic: returning users unlock desk tabs before getSession settles. */
+  const hasProtectedAccess = configured && showAuthedUi;
+  const protectedLocked = configured && !showAuthedUi;
   const isProtectedView =
-    view === "revenue" || view === "revisions" || view === "quality_risk" || view === "notes";
+    view === "earnings" ||
+    view === "revenue" ||
+    view === "revisions" ||
+    view === "quality_risk" ||
+    view === "notes";
   const showReturns = view === "returns";
   const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
   const showRevisions = view === "revisions";
   const showQualityRisk = view === "quality_risk";
   const showNotes = view === "notes";
+  const showEarningsTable = showEarnings && hasProtectedAccess;
   const keepRevenueMounted = mountedPanels.revenue || showRevenue;
   const keepRevisionsMounted = mountedPanels.revisions || showRevisions;
   const keepQualityRiskMounted = mountedPanels.quality_risk || showQualityRisk;
@@ -395,7 +401,7 @@ export function ThemeConstituentsTable({
 
   const themeCompare = detail.compare_returns;
   const showThemeReturnRow =
-    (view === "returns" || view === "earnings") &&
+    (view === "returns" || showEarningsTable) &&
     hasThemeManualWeightReturns(themeCompare, priceReturnColumns, view, {
       detail,
       constituentRows,
@@ -452,10 +458,14 @@ export function ThemeConstituentsTable({
               type="button"
               className={showEarnings ? tableStyles.active : undefined}
               aria-pressed={showEarnings}
-              title="Returns around report dates and the current earnings quarter"
+              title={
+                protectedLocked
+                  ? "Sign in to view returns around report dates and the current earnings quarter"
+                  : "Returns around report dates and the current earnings quarter"
+              }
               onClick={() => setView("earnings")}
             >
-              Earnings Returns
+              Earnings Returns {protectedLocked ? <span aria-hidden="true">🔒</span> : null}
             </button>
             <button
               type="button"
@@ -514,10 +524,7 @@ export function ThemeConstituentsTable({
           </div>
         </HorizontalScrollArea>
       </div>
-      {isProtectedView && authLoading ? (
-        <p className={styles.muted}>Checking sign-in…</p>
-      ) : null}
-      {isProtectedView && !authLoading && !hasProtectedAccess ? (
+      {isProtectedView && protectedLocked ? (
         <ProtectedTablePrompt signInHref={signInHref} />
       ) : null}
       {hasProtectedAccess && slug && dataBaseUrl ? (
@@ -554,7 +561,7 @@ export function ThemeConstituentsTable({
           Quality and risk data is not available in this build.
         </p>
       ) : null}
-      {(showReturns || showEarnings || (showNotes && hasProtectedAccess)) ? (
+      {(showReturns || showEarningsTable || (showNotes && hasProtectedAccess)) ? (
       <div className={styles.tableWrap}>
         {showNotes && hasProtectedAccess && (!slug || !dataBaseUrl) ? (
           <p className={styles.muted}>Notes are not available in this build.</p>
@@ -581,7 +588,7 @@ export function ThemeConstituentsTable({
                   {showReturns && hasPriceReturns
                     ? priceReturnColumns.map((col) => priceHeader(col))
                     : null}
-                  {showEarnings
+                  {showEarningsTable
                     ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
                         <th key={col.id} scope="col" title={col.tooltip}>
                           {renderSortHead(col.id, col.label, col.tooltip)}
@@ -635,7 +642,7 @@ export function ThemeConstituentsTable({
                             );
                           })
                         : null}
-                      {showEarnings ? (
+                      {showEarningsTable ? (
                         <>
                           <td>{earnings.lastReportDateCell}</td>
                           <td>{earnings.reportDateCell}</td>
@@ -674,7 +681,7 @@ export function ThemeConstituentsTable({
                       <strong
                         className={tableStyles.themeReturnLabel}
                         title={
-                          showEarnings
+                          showEarningsTable
                             ? "Manual ThemeWgt mean of available constituent values (weights renormalized when some names are blank)"
                             : "Manual theme-weight return — same as Theme returns table and the performance chart"
                         }
@@ -690,7 +697,7 @@ export function ThemeConstituentsTable({
                           </td>
                         ))
                       : null}
-                    {showEarnings
+                    {showEarningsTable
                       ? CONSTITUENT_EARNINGS_COLUMNS.map((col) => (
                           <td key={col.id}>
                             <strong>{earningsThemeReturnPct(col.id)}</strong>
@@ -718,7 +725,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -761,7 +768,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -804,7 +811,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -847,7 +854,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -890,7 +897,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -929,7 +936,7 @@ export function ThemeConstituentsTable({
                         </td>
                       ))
                     : null}
-                  {showEarnings ? (
+                  {showEarningsTable ? (
                     <>
                       <td></td>
                       <td></td>
@@ -957,7 +964,7 @@ export function ThemeConstituentsTable({
           </div>
         </HorizontalScrollArea>
         <div className={styles.tableFooter}>
-          {showEarnings ? (
+          {showEarningsTable ? (
             <p className={styles.tableFootnote}>
               * Provisional value: before LstRpt% reaches its 2-day post-report lock window (BMO/AMC adjusted),
               EarningsPerf is calculated from current vs pre-report and then locks to final LstRpt%.

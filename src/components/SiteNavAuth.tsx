@@ -7,8 +7,12 @@ import { useReturnToSignInHref } from "@/hooks/useReturnToSignInHref";
 import styles from "./SiteNav.module.css";
 
 type Props = {
-  /** `menu` = Browse dropdown items (mobile). Default = inline links. */
-  variant?: "inline" | "menu";
+  /**
+   * `inline` = desktop Watchlist/Account or Sign in free.
+   * `menu` = Browse dropdown account items when signed in (mobile).
+   * `mobileGuest` = Sign in free left of Browse on phones (guests only).
+   */
+  variant?: "inline" | "menu" | "mobileGuest";
 };
 
 export function SiteNavAuth({ variant = "inline" }: Props) {
@@ -19,32 +23,35 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
     return null;
   }
 
-  if (variant === "menu") {
-    if (user) {
-      return (
-        <>
-          <PrefetchIntentLink
-            href="/radar?tab=watchlist"
-            className={styles.menuItem}
-            role="menuitem"
-          >
-            Watchlist
-          </PrefetchIntentLink>
-          <PrefetchIntentLink href="/account" className={styles.menuItem} role="menuitem">
-            Account
-          </PrefetchIntentLink>
-        </>
-      );
-    }
+  if (variant === "mobileGuest") {
+    if (user) return null;
     return (
       <PrefetchIntentLink
         href={signInHref}
-        className={styles.menuItem}
-        role="menuitem"
+        className={styles.authMobileGuestLink}
         aria-busy={loading || undefined}
       >
         Sign in free
       </PrefetchIntentLink>
+    );
+  }
+
+  if (variant === "menu") {
+    if (!user) return null;
+    return (
+      <>
+        <div className={styles.menuDivider} role="separator" />
+        <PrefetchIntentLink
+          href="/radar?tab=watchlist"
+          className={styles.menuItem}
+          role="menuitem"
+        >
+          Watchlist
+        </PrefetchIntentLink>
+        <PrefetchIntentLink href="/account" className={styles.menuItem} role="menuitem">
+          Account
+        </PrefetchIntentLink>
+      </>
     );
   }
 

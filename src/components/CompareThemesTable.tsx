@@ -11,6 +11,7 @@ import {
 } from "react";
 
 import pageStyles from "@/app/page.module.css";
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import {
   buildSelectedDateLookup,
   metricColumnHeaderTooltip,
@@ -71,6 +72,9 @@ export function CompareThemesTable({
   entityKind = "theme",
   toolbarStart,
 }: Props) {
+  const { configured, showAuthedUi } = useSupabaseAuth();
+  const csvLocked = configured && !showAuthedUi;
+  const signInHref = `/sign-in?next=${encodeURIComponent("/compare")}`;
   const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
@@ -153,6 +157,7 @@ export function CompareThemesTable({
   };
 
   const onDownload = () => {
+    if (csvLocked) return;
     downloadCompareThemesCsv(displayRows, columns, { entityKind });
   };
 
@@ -163,32 +168,59 @@ export function CompareThemesTable({
         <p className={styles.hint} style={{ fontSize: 8, lineHeight: 1.2, margin: 0, maxWidth: "none" }}>
           Click a header to sort. Shift+click adds secondary sort.
         </p>
-        <button
-          type="button"
-          className={styles.downloadBtn}
-          onClick={onDownload}
-          disabled={displayRows.length === 0}
-          title="Download filtered table as CSV"
-          aria-label="Download filtered table as CSV"
-        >
-          <svg
-            className={styles.downloadIcon}
-            viewBox="0 0 24 24"
-            width="13"
-            height="13"
-            aria-hidden="true"
-            focusable="false"
+        {csvLocked ? (
+          <Link
+            href={signInHref}
+            className={styles.downloadBtn}
+            title="Sign in to download filtered table as CSV"
+            aria-label="Sign in to download filtered table as CSV"
           >
-            <path
-              d="M12 3v10m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.75"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-        </button>
+            <svg
+              className={styles.downloadIcon}
+              viewBox="0 0 24 24"
+              width="13"
+              height="13"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M12 3v10m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </Link>
+        ) : (
+          <button
+            type="button"
+            className={styles.downloadBtn}
+            onClick={onDownload}
+            disabled={displayRows.length === 0}
+            title="Download filtered table as CSV"
+            aria-label="Download filtered table as CSV"
+          >
+            <svg
+              className={styles.downloadIcon}
+              viewBox="0 0 24 24"
+              width="13"
+              height="13"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path
+                d="M12 3v10m0 0 4-4m-4 4-4-4M5 17v2a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.75"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
+        )}
       </div>
 
       <div className={styles.scrollWrap} ref={scrollWrapRef}>

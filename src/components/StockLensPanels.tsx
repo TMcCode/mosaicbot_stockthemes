@@ -71,8 +71,8 @@ function ProtectedRevenuePrompt({ signInHref }: { signInHref: string }) {
     <div className={tableStyles.protectedPrompt} aria-label="Sign in required">
       <p className={tableStyles.protectedTitle}>Sign in to view this analysis</p>
       <p className={tableStyles.protectedCopy}>
-        Revenue, revenue revisions, quality and risk, and membership notes are available with a free
-        account.
+        Earnings returns, revenue, revisions, quality and risk, and membership notes are available
+        with a free account.
       </p>
       <Link href={signInHref} className={tableStyles.protectedSignIn}>
         Sign in free
@@ -265,8 +265,9 @@ export function StockLensPanels({
   const [revenueMounted, setRevenueMounted] = useState(false);
   const [qualityRiskMounted, setQualityRiskMounted] = useState(false);
   const [notesMounted, setNotesMounted] = useState(false);
-  const { configured, loading: authLoading, user } = useSupabaseAuth();
-  const hasProtectedAccess = configured && !authLoading && Boolean(user);
+  const { configured, showAuthedUi } = useSupabaseAuth();
+  /** Optimistic: returning users unlock desk tabs before getSession settles. */
+  const hasProtectedAccess = configured && showAuthedUi;
   const showPeriod = view === "period";
   const showEarnings = view === "earnings";
   const showRevenue = view === "revenue";
@@ -274,8 +275,7 @@ export function StockLensPanels({
   const showQualityRisk = view === "quality_risk";
   const showNotes = view === "notes";
   const protectedLocked =
-    (showRevenue || showRevisions || showQualityRisk || showNotes) &&
-    !authLoading &&
+    (showEarnings || showRevenue || showRevisions || showQualityRisk || showNotes) &&
     !hasProtectedAccess;
   const needsRevenueSidecar =
     hasProtectedAccess && (revenueMounted || showRevenue || showRevisions);
@@ -550,13 +550,18 @@ export function StockLensPanels({
                   type="button"
                   className={showEarnings ? tableStyles.active : undefined}
                   aria-pressed={showEarnings}
-                  title="Earnings returns for this ticker and membership themes"
+                  title={
+                    hasProtectedAccess
+                      ? "Earnings returns for this ticker and membership themes"
+                      : "Sign in to view earnings returns for this ticker and membership themes"
+                  }
                   onClick={() => {
                     setView("earnings");
                     setSorts(DEFAULT_SORTS);
                   }}
                 >
                   Earnings Returns
+                  {!hasProtectedAccess ? <span aria-hidden="true"> 🔒</span> : null}
                 </button>
                 <button
                   type="button"
@@ -573,9 +578,7 @@ export function StockLensPanels({
                   }}
                 >
                   Revenue
-                  {!hasProtectedAccess && !authLoading ? (
-                    <span aria-hidden="true"> 🔒</span>
-                  ) : null}
+                  {!hasProtectedAccess ? <span aria-hidden="true"> 🔒</span> : null}
                 </button>
                 <button
                   type="button"
@@ -592,9 +595,7 @@ export function StockLensPanels({
                   }}
                 >
                   Rev Revisions
-                  {!hasProtectedAccess && !authLoading ? (
-                    <span aria-hidden="true"> 🔒</span>
-                  ) : null}
+                  {!hasProtectedAccess ? <span aria-hidden="true"> 🔒</span> : null}
                 </button>
                 <button
                   type="button"
@@ -611,9 +612,7 @@ export function StockLensPanels({
                   }}
                 >
                   Quality & Risk
-                  {!hasProtectedAccess && !authLoading ? (
-                    <span aria-hidden="true"> 🔒</span>
-                  ) : null}
+                  {!hasProtectedAccess ? <span aria-hidden="true"> 🔒</span> : null}
                 </button>
                 <button
                   type="button"
@@ -630,9 +629,7 @@ export function StockLensPanels({
                   }}
                 >
                   Notes
-                  {!hasProtectedAccess && !authLoading ? (
-                    <span aria-hidden="true"> 🔒</span>
-                  ) : null}
+                  {!hasProtectedAccess ? <span aria-hidden="true"> 🔒</span> : null}
                 </button>
               </div>
             </HorizontalScrollArea>
@@ -816,7 +813,8 @@ export function StockLensPanels({
           {showPeriod && !showHeatmap && appReady ? (
             <p className={styles.liveHint}>Period returns are not available yet for this ticker.</p>
           ) : null}
-          {showEarnings ? (
+          {protectedLocked ? <ProtectedRevenuePrompt signInHref={signInHref} /> : null}
+          {showEarnings && hasProtectedAccess ? (
             <StockEarningsReturnsPanel
               ticker={ticker}
               themes={themes}
@@ -824,10 +822,6 @@ export function StockLensPanels({
               earningsTableStats={earningsTableStats}
             />
           ) : null}
-          {(showRevenue || showRevisions || showQualityRisk || showNotes) && authLoading ? (
-            <p className={styles.liveHint}>Checking sign-in…</p>
-          ) : null}
-          {protectedLocked ? <ProtectedRevenuePrompt signInHref={signInHref} /> : null}
           {showRevenue && hasProtectedAccess ? (
             <StockRevenuePanel
               ticker={ticker}

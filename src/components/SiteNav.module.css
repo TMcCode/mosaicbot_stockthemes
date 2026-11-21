@@ -304,6 +304,23 @@
   display: none;
 }
 
+/* Phones: Sign in free sits left of Browse (guests). Hidden on desktop. */
+.authMobileGuest {
+  display: none;
+}
+
+.authMobileGuestLink {
+  color: var(--nav-muted, #9aa8a6);
+  text-decoration: none;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: color 0.15s ease;
+}
+
+.authMobileGuestLink:hover {
+  color: var(--nav-accent, #26fcd6);
+}
+
 @media (max-width: 600px) {
   .wrap {
     padding: 6px 12px 0;
@@ -325,9 +342,19 @@
     margin-left: 0;
   }
 
-  /* Account/Watchlist live in Browse on phones — keep top row to logo · search · Browse · theme. */
+  /* Guests: Sign in free · Browse · theme. Signed-in: Watchlist/Account stay in Browse. */
   .authInline {
     display: none;
+  }
+
+  .authMobileGuest {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .authMobileGuestLink {
+    font-size: 12px;
   }
 
   .menuMobileAccount {

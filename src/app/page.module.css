@@ -251,9 +251,12 @@
   min-width: 0;
 }
 
-/* Beat `.heroMain { gap: 20px }` — chips sit tight under the ticker title. */
+/* Beat `.heroMain { gap: 20px }` — chips sit tight under the ticker title.
+   Fill stretched hero row so the guest unlock slot can sit lower (mid-column). */
 .heroMain.stockHeroTitleArea {
   gap: 6px;
+  height: 100%;
+  min-height: 0;
 }
 
 @media (min-width: 1101px) {

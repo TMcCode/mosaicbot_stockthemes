@@ -22,6 +22,7 @@ function unlockBullets(showThesis: boolean, showFactors: boolean): string[] {
   if (showFactors) {
     bullets.push("See factor exposure vs market, sector, and narrative");
   }
+  bullets.push("Open earnings returns, revenue, revisions, and quality & risk");
   bullets.push("Save themes and track them on My watchlist");
   return bullets;
 }
@@ -45,12 +46,10 @@ export function ThemeGuestUnlockHint({
   const features = [
     showThesis ? "Thesis" : null,
     showFactors ? "Factor Profile" : null,
+    "Earnings",
+    "Revenue",
     "Watchlist",
   ].filter(Boolean) as string[];
-
-  if (!showThesis && !showFactors) {
-    return null;
-  }
 
   const signInHref = `/sign-in?next=${encodeURIComponent(signInNext)}`;
   const bullets = unlockBullets(showThesis, showFactors);
@@ -63,7 +62,7 @@ export function ThemeGuestUnlockHint({
           Sign in free
         </Link>
       </div>
-      <p className={styles.copy}>Free — see the thesis, factors, and track this theme.</p>
+      <p className={styles.copy}>Free — unlock the analyst desk and track this theme.</p>
       <ul className={styles.bullets}>
         {bullets.map((item) => (
           <li key={item}>{item}</li>

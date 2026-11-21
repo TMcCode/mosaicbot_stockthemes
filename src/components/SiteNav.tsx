@@ -30,6 +30,16 @@ export function SiteNav() {
         </PrefetchIntentLink>
         <SiteNavSearch />
         <div className={styles.links}>
+          {/* Guests: Sign in free left of Browse on both mobile + desktop. */}
+          <div className={styles.authMobileGuest}>
+            <SiteNavAuth variant="mobileGuest" />
+          </div>
+          <div className={styles.authInline}>
+            <SiteNavAuth />
+          </div>
+          <span className={`${styles.sep} ${styles.authInline}`} aria-hidden="true">
+            ·
+          </span>
           <div className={styles.browseMenu}>
             <button type="button" className={styles.menuTrigger} aria-haspopup="menu" aria-expanded={false}>
               Browse
@@ -61,18 +71,11 @@ export function SiteNav() {
                 All themes
               </PrefetchIntentLink>
               <div className={styles.menuMobileAccount}>
-                <div className={styles.menuDivider} role="separator" />
                 <SiteNavAuth variant="menu" />
               </div>
             </div>
           </div>
-          <span className={`${styles.sep} ${styles.authInline}`} aria-hidden="true">
-            ·
-          </span>
-          <div className={styles.authInline}>
-            <SiteNavAuth />
-          </div>
-          <span className={`${styles.sep} ${styles.authInline}`} aria-hidden="true">
+          <span className={styles.sep} aria-hidden="true">
             ·
           </span>
           <ThemeToggle />
