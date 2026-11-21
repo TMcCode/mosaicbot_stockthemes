@@ -9,6 +9,8 @@ export type WebsiteContentV0 = {
   methodology_theme_construction?: string;
   methodology_weights?: string;
   methodology_performance_calculation?: string;
+  /** Purple dotted “Weighted themes” line / table row on stock pages. */
+  methodology_weighted_themes?: string;
   methodology_update_cadence?: string;
   methodology_limitations?: string;
 };

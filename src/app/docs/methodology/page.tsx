@@ -10,12 +10,12 @@ import styles from "../../page.module.css";
 export const metadata: Metadata = buildPageMetadata({
   title: "Methodology",
   description:
-    "How stockthemes.ai constructs theme baskets, assigns weights, calculates performance, and updates constituents.",
+    "How stockthemes.ai constructs theme baskets, assigns weights, calculates performance, builds stock-page Weighted themes overlays, and updates constituents.",
   path: "/docs/methodology",
 });
 
 const DEFAULT_METHODOLOGY_INTRO =
-  "This page describes the framework behind stockthemes.ai theme baskets and group-level views. It explains what gets included, how weights are represented, how returns are computed, and how often data can change.";
+  "This page describes the framework behind stockthemes.ai theme baskets and group-level views. It explains what gets included, how weights are represented, how returns are computed, how the stock-page Weighted themes line is built, and how often data can change.";
 const DEFAULT_METHODOLOGY_PURPOSE_SCOPE =
   "stockthemes.ai is a thematic intelligence product, not an index fund prospectus, portfolio recommendation, or execution venue. Theme baskets are research groupings of public equities tied to a specific narrative.";
 const DEFAULT_METHODOLOGY_THEME_CONSTRUCTION =
@@ -24,6 +24,8 @@ const DEFAULT_METHODOLOGY_WEIGHTS =
   "Theme detail pages include constituent weights used for exposure context and weighted aggregations. Weights are computed from the current theme constituent set and normalize to 100% within each theme basket.\n\nWeights are representation weights for analytical comparison across names within a theme. They are not trade instructions and are not intended to replicate a live investable product.";
 const DEFAULT_METHODOLOGY_PERFORMANCE_CALCULATION =
   "Performance shown across the site is derived from the underlying market data pipeline and normalized to common baselines for comparability. Theme and group pages may show multiple aggregation views (for example average, median, or weighted-average) depending on the endpoint and chart.\n\nReturn windows such as 1D, 10D, MTD, YTD, and period-specific ranges are calculated from the corresponding time-series snapshots used by the ETL process. Historical values can be refreshed if source corrections or late-arriving updates occur.";
+const DEFAULT_METHODOLOGY_WEIGHTED_THEMES =
+  "On stock pages, the light-purple dotted line labeled Weighted themes is a custom theme-exposure index for that ticker. It is not the stock’s own price path and not the S&P 500 (the separate gray dotted benchmark line).\n\nFor each ticker we take every theme it currently belongs to and its membership weight (ThemeWgt) in that theme, then normalize those weights so they sum to 100% across the ticker’s membership themes.\n\nPoint-in-time period returns (the Weighted themes row in stock tables) use Σ (w / Σw) × theme return for each horizon, renormalized over themes that have a value.\n\nThe chart series converts each membership theme’s indexed performance into daily returns, blends those daily returns with the same current weights (renormalizing on days when some themes are missing), then re-indexes the blend so the first plotted level is 100. Current membership weights are held constant over history—we do not reconstruct past theme membership or past ThemeWgt.\n\nOptional theme checkboxes add individual theme lines as solid overlays for comparison.";
 const DEFAULT_METHODOLOGY_UPDATE_CADENCE =
   "Constituent membership and metadata are reviewed on an ongoing basis and can update whenever new information materially changes thematic exposure. Market-driven snapshot files refresh on a recurring ETL cadence, including intraday updates during market hours and broader pipeline refresh cycles.\n\nData can be delayed and may be revised. The most recent build timestamp is published in manifest fields such as as_of and optional build identifiers.";
 const DEFAULT_METHODOLOGY_LIMITATIONS =
@@ -55,6 +57,8 @@ export default async function DocsMethodologyPage() {
   const performanceCalculation =
     (content?.methodology_performance_calculation || "").trim() ||
     DEFAULT_METHODOLOGY_PERFORMANCE_CALCULATION;
+  const weightedThemes =
+    (content?.methodology_weighted_themes || "").trim() || DEFAULT_METHODOLOGY_WEIGHTED_THEMES;
   const updateCadence =
     (content?.methodology_update_cadence || "").trim() || DEFAULT_METHODOLOGY_UPDATE_CADENCE;
   const limitations =
@@ -86,6 +90,11 @@ export default async function DocsMethodologyPage() {
       <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>
         <h2 id="performance-calculation">How performance is calculated</h2>
         {renderParagraphs(performanceCalculation)}
+      </section>
+
+      <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>
+        <h2 id="weighted-themes">Weighted themes on stock pages</h2>
+        {renderParagraphs(weightedThemes)}
       </section>
 
       <section className={`${styles.aboutProse} ${styles.aboutBasketCard}`}>

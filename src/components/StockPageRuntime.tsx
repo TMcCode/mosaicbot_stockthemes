@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { JsonLd } from "@/components/JsonLd";
 import { StockLensPanels } from "@/components/StockLensPanels";
+import { StockMembershipStack } from "@/components/StockMembershipStack";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
 import { StockThemeTreemap } from "@/components/StockThemeTreemap";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
@@ -303,6 +304,14 @@ export function StockPageRuntime({ ticker: rawTicker }: Props) {
                 {state.themeCount} theme{state.themeCount === 1 ? "" : "s"}
                 {state.asOf ? ` · as of ${state.asOf}` : null}
               </p>
+              {state.panelThemes.length > 0 ? (
+                <StockMembershipStack
+                  ticker={ticker}
+                  themes={state.panelThemes}
+                  dataBaseUrl={dataBaseUrl}
+                  hydrateTierB={Boolean(dataBaseUrl && !state.detailMissing)}
+                />
+              ) : null}
               {!dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}

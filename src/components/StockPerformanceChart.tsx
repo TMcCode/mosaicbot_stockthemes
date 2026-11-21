@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import {
   CrosshairMode,
   LineStyle,
@@ -53,7 +54,7 @@ const THEME_INDEX_ID = "__theme_index__";
 const THEME_INDEX_NAME = "Weighted themes";
 const THEME_INDEX_COLOR = "#c4b5fd";
 const THEME_INDEX_LEGEND_TIP =
-  "Weight-normalized blend of this ticker’s membership themes (current ThemeWgt held constant). Same series as the Weighted themes row in the table below.";
+  "Weight-normalized blend of this ticker’s membership themes (current ThemeWgt held constant). Same series as the Weighted themes row in the table below. See Methodology for the full formula.";
 const SPY_LEGEND_TIP = "S&P 500 total-return index, rebased to 100 at the start of the selected period.";
 const TICKER_LINE_COLOR = OVERLAY_CHART_PALETTE[0];
 const INTEGER_PRICE_FORMAT = { type: "price" as const, precision: 0, minMove: 1 };
@@ -542,14 +543,18 @@ export function StockPerformanceChart({
               </span>
             ) : null}
             {themeIndexPerf ? (
-              <span className={styles.titleLegendItem} title={THEME_INDEX_LEGEND_TIP}>
+              <Link
+                href="/docs/methodology#weighted-themes"
+                className={styles.titleLegendItem}
+                title={THEME_INDEX_LEGEND_TIP}
+              >
                 <span
                   className={styles.titleLegendSwatch}
                   style={{ borderColor: THEME_INDEX_COLOR }}
                   aria-hidden
                 />
                 Weighted theme returns
-              </span>
+              </Link>
             ) : null}
           </div>
         ) : null}

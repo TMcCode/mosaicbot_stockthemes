@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { JsonLd } from "@/components/JsonLd";
 import { StockLensPanels } from "@/components/StockLensPanels";
+import { StockMembershipStack } from "@/components/StockMembershipStack";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
 import { StockThemeTreemap } from "@/components/StockThemeTreemap";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
@@ -205,6 +206,14 @@ export default async function StockPage({ params }: Props) {
                 {themeCount} theme{themeCount === 1 ? "" : "s"}
                 {detail?.as_of ? ` · as of ${detail.as_of.slice(0, 10)}` : null}
               </p>
+              {panelThemes.length > 0 ? (
+                <StockMembershipStack
+                  ticker={ticker}
+                  themes={panelThemes}
+                  dataBaseUrl={dataBaseUrl || ""}
+                  hydrateTierB={Boolean(slimForCdn && detail)}
+                />
+              ) : null}
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}

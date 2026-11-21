@@ -40,6 +40,12 @@
   gap: 6px;
   white-space: nowrap;
   cursor: help;
+  color: inherit;
+  text-decoration: none;
+}
+
+.titleLegendItem:hover {
+  color: var(--text-secondary, #9aa8a6);
 }
 
 .titleLegendSwatch {

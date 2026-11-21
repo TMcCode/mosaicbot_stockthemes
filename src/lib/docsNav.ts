@@ -16,7 +16,7 @@ export const DOCS_NAV: DocsNavItem[] = [
   {
     href: "/docs/methodology",
     label: "Methodology",
-    summary: "Construction rules, weights, return math, refresh cadence, and limitations.",
+    summary: "Construction rules, weights, return math, stock Weighted themes, refresh cadence, and limitations.",
   },
   {
     href: "/docs/factors",
