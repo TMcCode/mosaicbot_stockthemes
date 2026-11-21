@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { JsonLd } from "@/components/JsonLd";
 import { StockGuestUnlockHint } from "@/components/StockGuestUnlockHint";
 import { StockLensPanels } from "@/components/StockLensPanels";
+import { StockMembershipChips } from "@/components/StockMembershipChips";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
 import { StockThemeTreemap } from "@/components/StockThemeTreemap";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
@@ -48,7 +49,6 @@ type RuntimeState =
       status: "ok";
       displayName: string;
       logoUrl: string | null;
-      themeCount: number;
       asOf: string | null;
       panelThemes: StockThemeMembershipPublicV0[] | StockThemeMembershipAppV0[];
       detailMissing: boolean;
@@ -210,7 +210,6 @@ export function StockPageRuntime({ ticker: rawTicker }: Props) {
         status: "ok",
         displayName,
         logoUrl: canonicalizeLogoUrl(detail?.logo_url),
-        themeCount: detail?.theme_count ?? panelThemes.length,
         asOf: detail?.as_of ? detail.as_of.slice(0, 10) : null,
         panelThemes,
         detailMissing: Boolean(dataBaseUrl && inIndex && !detail),
@@ -300,11 +299,8 @@ export function StockPageRuntime({ ticker: rawTicker }: Props) {
                   </span>
                 </span>
               </h1>
-              <p style={{ color: "var(--text-secondary, #888)", marginBottom: 0 }}>
-                {state.themeCount} theme{state.themeCount === 1 ? "" : "s"}
-                {state.asOf ? ` · as of ${state.asOf}` : null}
-              </p>
               <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
+              <StockMembershipChips ticker={ticker} themes={state.panelThemes} />
               {!dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}

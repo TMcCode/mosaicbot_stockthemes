@@ -251,6 +251,11 @@
   min-width: 0;
 }
 
+/* Beat `.heroMain { gap: 20px }` — chips sit tight under the ticker title. */
+.heroMain.stockHeroTitleArea {
+  gap: 6px;
+}
+
 @media (min-width: 1101px) {
   .heroTitle.heroTitleOneLine {
     white-space: nowrap;

@@ -5,6 +5,7 @@ import { notFound } from "next/navigation";
 import { JsonLd } from "@/components/JsonLd";
 import { StockGuestUnlockHint } from "@/components/StockGuestUnlockHint";
 import { StockLensPanels } from "@/components/StockLensPanels";
+import { StockMembershipChips } from "@/components/StockMembershipChips";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
 import { StockThemeTreemap } from "@/components/StockThemeTreemap";
 import { StockthemesDetailUnavailable } from "@/components/StockthemesDetailUnavailable";
@@ -151,7 +152,6 @@ export default async function StockPage({ params }: Props) {
     : ((detail as { theme_heatmap_columns?: string[] } | undefined)?.theme_heatmap_columns ?? []);
   const selectedDates = Array.isArray(manifest.selected_dates) ? manifest.selected_dates : [];
   const chartThemes = panelThemes.map((t) => ({ slug: t.slug, name: t.name }));
-  const themeCount = detail?.theme_count ?? panelThemes.length;
   const stockJsonMissing = Boolean(dataBaseUrl && inIndex && !detail);
 
   const pageUrl = absoluteUrl(stockPagePath(ticker));
@@ -202,11 +202,8 @@ export default async function StockPage({ params }: Props) {
                   </span>
                 </span>
               </h1>
-              <p style={{ color: "var(--text-secondary, #888)", marginBottom: 0 }}>
-                {themeCount} theme{themeCount === 1 ? "" : "s"}
-                {detail?.as_of ? ` · as of ${detail.as_of.slice(0, 10)}` : null}
-              </p>
               <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
+              <StockMembershipChips ticker={ticker} themes={panelThemes} />
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}
