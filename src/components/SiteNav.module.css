@@ -351,10 +351,16 @@
     display: flex;
     align-items: center;
     flex-shrink: 0;
+    gap: 8px;
   }
 
   .authMobileGuestLink {
     font-size: 12px;
+  }
+
+  /* Mobile: · sits after Sign in free, not after Browse. */
+  .sepBeforeTheme {
+    display: none;
   }
 
   .menuMobileAccount {

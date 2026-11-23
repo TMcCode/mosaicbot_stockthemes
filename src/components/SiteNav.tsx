@@ -75,7 +75,7 @@ export function SiteNav() {
               </div>
             </div>
           </div>
-          <span className={styles.sep} aria-hidden="true">
+          <span className={`${styles.sep} ${styles.sepBeforeTheme}`} aria-hidden="true">
             ·
           </span>
           <ThemeToggle />

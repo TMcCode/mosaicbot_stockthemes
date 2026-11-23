@@ -26,13 +26,18 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
   if (variant === "mobileGuest") {
     if (user) return null;
     return (
-      <PrefetchIntentLink
-        href={signInHref}
-        className={styles.authMobileGuestLink}
-        aria-busy={loading || undefined}
-      >
-        Sign in free
-      </PrefetchIntentLink>
+      <>
+        <PrefetchIntentLink
+          href={signInHref}
+          className={styles.authMobileGuestLink}
+          aria-busy={loading || undefined}
+        >
+          Sign in free
+        </PrefetchIntentLink>
+        <span className={styles.sep} aria-hidden="true">
+          ·
+        </span>
+      </>
     );
   }
 
