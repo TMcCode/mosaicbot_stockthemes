@@ -1,5 +1,17 @@
 /** Per-theme news feed published by MosaicBot (`news_radar/theme_news_feed.py`). */
 
+/** Other-outlet versions of the same storyline (baked; no nested ``also``). */
+export type ThemeNewsAlsoV0 = {
+  id: string;
+  url: string;
+  title: string;
+  source?: string | null;
+  date: string;
+  picked?: boolean;
+  on_site?: boolean;
+  tickers?: string[];
+};
+
 export type ThemeNewsItemV0 = {
   id: string;
   url: string;
@@ -13,6 +25,8 @@ export type ThemeNewsItemV0 = {
   on_site?: boolean;
   note?: string;
   tickers?: string[];
+  /** Same storyline, other outlets — flip with ‹ n/N › (bake-time cluster). */
+  also?: ThemeNewsAlsoV0[];
 };
 
 export type ThemeNewsIndexV0 = {

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { TableFooterBrandMark } from "@/components/TableFooterBrandMark";
 import { dedupeThemeNewsItems, fetchThemeNewsIndex, fetchThemeNewsMonth } from "@/lib/themeNews";
-import type { ThemeNewsIndexV0, ThemeNewsItemV0 } from "@/types/theme.news.v0";
+import type { ThemeNewsAlsoV0, ThemeNewsIndexV0, ThemeNewsItemV0 } from "@/types/theme.news.v0";
 
 import styles from "./ThemeNewsPanel.module.css";
 
@@ -15,6 +15,15 @@ type Props = {
 
 /** Visible rows at a time (compact constituents-style panel). */
 const PAGE = 5;
+
+type ViewStory = {
+  id: string;
+  url: string;
+  title: string;
+  source?: string | null;
+  date: string;
+  tickers?: string[];
+};
 
 /** Merge month rows into an already newest-first list; sort only when new rows arrive. */
 function mergeItems(a: ThemeNewsItemV0[], b: ThemeNewsItemV0[]): ThemeNewsItemV0[] {
@@ -42,10 +51,88 @@ function dayLabel(date: string): string {
   });
 }
 
+function clusterViews(item: ThemeNewsItemV0): ViewStory[] {
+  const head: ViewStory = {
+    id: item.id,
+    url: item.url,
+    title: item.title,
+    source: item.source,
+    date: item.date,
+    tickers: item.tickers,
+  };
+  const also = (item.also ?? []).filter(
+    (a): a is ThemeNewsAlsoV0 => Boolean(a?.id && a.url && a.title),
+  );
+  return [head, ...also];
+}
+
+function ThemeNewsStoryRow({ item }: { item: ThemeNewsItemV0 }) {
+  const versions = clusterViews(item);
+  const [idx, setIdx] = useState(0);
+  const total = versions.length;
+  const safeIdx = Math.min(Math.max(idx, 0), total - 1);
+  const view = versions[safeIdx] ?? versions[0]!;
+
+  const flipper =
+    total > 1 ? (
+      <div className={styles.flip} role="group" aria-label="Versions of this story">
+        <button
+          type="button"
+          className={styles.flipBtn}
+          aria-label="Previous version of this story"
+          onClick={() => setIdx(safeIdx - 1 < 0 ? total - 1 : safeIdx - 1)}
+        >
+          ‹
+        </button>
+        <span className={styles.flipCount} aria-live="polite">
+          {safeIdx + 1}/{total}
+        </span>
+        <button
+          type="button"
+          className={styles.flipBtn}
+          aria-label="Next version of this story"
+          onClick={() => setIdx(safeIdx + 1 >= total ? 0 : safeIdx + 1)}
+        >
+          ›
+        </button>
+      </div>
+    ) : null;
+
+  return (
+    <tr>
+      <td className={styles.colDate}>{view.date ? dayLabel(view.date) : "—"}</td>
+      <td className={styles.colStory}>
+        <div className={styles.storyCell}>
+          <a
+            className={styles.title}
+            href={view.url}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {view.title}
+          </a>
+          {/* Trailing fixed slot — arrows column-align across rows. */}
+          <div className={styles.flipSlot}>{flipper}</div>
+        </div>
+      </td>
+      <td
+        className={styles.colTickers}
+        title={view.tickers?.length ? view.tickers.join(" · ") : undefined}
+      >
+        {view.tickers?.length ? view.tickers.join(" · ") : "—"}
+      </td>
+      <td className={styles.colSource} title={view.source ?? undefined}>
+        {view.source || "—"}
+      </td>
+    </tr>
+  );
+}
+
 /**
  * Per-theme news — client-only, fetched after mount (parent should DeferRender).
  * Compact bordered table matching constituents; starts at 5 rows; hide if empty.
  * `index.latest` is already newest-first from ETL — no sort on first paint.
+ * Cluster flippers use bake-time ``also[]`` only (no client clustering).
  */
 export function ThemeNewsPanel({ slug, themeName }: Props) {
   const [index, setIndex] = useState<ThemeNewsIndexV0 | null>(null);
@@ -134,42 +221,7 @@ export function ThemeNewsPanel({ slug, themeName }: Props) {
           </thead>
           <tbody>
             {visible.map((item) => (
-              <tr key={item.id}>
-                <td className={styles.colDate}>{item.date ? dayLabel(item.date) : "—"}</td>
-                <td className={styles.colStory}>
-                  <div className={styles.storyCell}>
-                    <a
-                      className={styles.title}
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      {item.title}
-                    </a>
-                    {item.picked ? (
-                      <span
-                        className={styles.pick}
-                        title={
-                          item.on_site
-                            ? "Editorial pick · shown on Narrative Radar"
-                            : "Editorial pick"
-                        }
-                      >
-                        Pick
-                      </span>
-                    ) : null}
-                  </div>
-                </td>
-                <td
-                  className={styles.colTickers}
-                  title={item.tickers?.length ? item.tickers.join(" · ") : undefined}
-                >
-                  {item.tickers?.length ? item.tickers.join(" · ") : "—"}
-                </td>
-                <td className={styles.colSource} title={item.source ?? undefined}>
-                  {item.source || "—"}
-                </td>
-              </tr>
+              <ThemeNewsStoryRow key={item.id} item={item} />
             ))}
           </tbody>
         </table>

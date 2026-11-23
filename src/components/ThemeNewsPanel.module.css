@@ -106,23 +106,58 @@
   line-height: 1.3;
   color: var(--text-primary, #e8eaed);
   text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .title:hover {
   color: var(--accent, #26fcd6);
 }
 
-.pick {
+/* Trailing slot — arrows always sit in the same column at the end of the story cell. */
+.flipSlot {
+  flex: 0 0 2.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 1em;
+}
+
+/* One-line cluster flipper; Source stays in its own column (no duplicate). */
+.flip {
   flex: 0 0 auto;
-  font-size: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  user-select: none;
+}
+
+.flipBtn {
+  appearance: none;
+  border: none;
+  background: transparent;
+  padding: 0 3px;
+  margin: 0;
+  font: inherit;
+  font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 1px 5px;
-  border-radius: 999px;
-  border: 1px solid var(--accent, #26fcd6);
+  line-height: 1;
+  color: var(--text-muted, #7a8886);
+  cursor: pointer;
+}
+
+.flipBtn:hover {
   color: var(--accent, #26fcd6);
-  line-height: 1.2;
+}
+
+.flipCount {
+  font-size: 8px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-muted, #7a8886);
+  min-width: 1.6em;
+  text-align: center;
 }
 
 .footer {
@@ -198,14 +233,29 @@
     font-size: 13px;
   }
 
-  .colSource,
+  /* Tickers go; keep Source so outlet isn't duplicated under the story. */
   .colTickers {
     display: none;
+  }
+
+  .colSource {
+    width: 4.5rem;
+    font-size: 9px;
+  }
+
+  .colDate {
+    width: 2.75rem;
+    font-size: 9px;
   }
 
   .table th,
   .table td {
     padding: 4px 6px;
+  }
+
+  .flipBtn {
+    padding: 2px 5px;
+    font-size: 13px;
   }
 }
 

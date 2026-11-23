@@ -4,6 +4,7 @@ import {
 } from "@/lib/stockthemesCache";
 import { stockthemesBrowserSidecarFetchBase } from "@/lib/stockthemesPublicBase";
 import type {
+  ThemeNewsAlsoV0,
   ThemeNewsIndexV0,
   ThemeNewsItemV0,
   ThemeNewsMonthV0,
@@ -14,12 +15,61 @@ export function themeNewsRelPath(slug: string, file: string): string {
   return `stockcontext/themes/${encodeURIComponent(slug)}/news/${file}`;
 }
 
+function parseAlso(value: unknown): ThemeNewsAlsoV0[] | undefined {
+  if (!Array.isArray(value) || !value.length) return undefined;
+  const out: ThemeNewsAlsoV0[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") continue;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.id !== "string" || typeof r.url !== "string" || typeof r.title !== "string") {
+      continue;
+    }
+    const row: ThemeNewsAlsoV0 = {
+      id: r.id,
+      url: r.url,
+      title: r.title,
+      date: typeof r.date === "string" ? r.date : "",
+    };
+    if (typeof r.source === "string" && r.source) row.source = r.source;
+    if (r.picked) row.picked = true;
+    if (r.on_site) row.on_site = true;
+    if (Array.isArray(r.tickers)) {
+      const tickers = r.tickers.filter((t): t is string => typeof t === "string" && Boolean(t));
+      if (tickers.length) row.tickers = tickers.slice(0, 6);
+    }
+    out.push(row);
+  }
+  return out.length ? out : undefined;
+}
+
 function parseItems(value: unknown): ThemeNewsItemV0[] {
   if (!Array.isArray(value)) return [];
-  return value.filter(
-    (i): i is ThemeNewsItemV0 =>
-      Boolean(i) && typeof i.url === "string" && typeof i.title === "string" && Boolean(i.id),
-  );
+  const out: ThemeNewsItemV0[] = [];
+  for (const raw of value) {
+    if (!raw || typeof raw !== "object") continue;
+    const r = raw as Record<string, unknown>;
+    if (typeof r.id !== "string" || typeof r.url !== "string" || typeof r.title !== "string") {
+      continue;
+    }
+    const item: ThemeNewsItemV0 = {
+      id: r.id,
+      url: r.url,
+      title: r.title,
+      date: typeof r.date === "string" ? r.date : "",
+    };
+    if (typeof r.source === "string" && r.source) item.source = r.source;
+    if (r.picked) item.picked = true;
+    if (r.on_site) item.on_site = true;
+    if (typeof r.note === "string" && r.note) item.note = r.note;
+    if (Array.isArray(r.tickers)) {
+      const tickers = r.tickers.filter((t): t is string => typeof t === "string" && Boolean(t));
+      if (tickers.length) item.tickers = tickers.slice(0, 6);
+    }
+    const also = parseAlso(r.also);
+    if (also) item.also = also;
+    out.push(item);
+  }
+  return out;
 }
 
 const TITLE_STOP = new Set([
@@ -94,6 +144,30 @@ function normUrl(url: string): string {
   return url.trim().split("?")[0]!.split("#")[0]!.replace(/\/+$/, "").toLowerCase();
 }
 
+function mergeAlsoInto(into: ThemeNewsItemV0, donor: ThemeNewsItemV0): void {
+  const seen = new Set<string>([into.id, ...(into.also ?? []).map((a) => a.id)]);
+  const extras: ThemeNewsAlsoV0[] = [];
+  if (!seen.has(donor.id)) {
+    extras.push({
+      id: donor.id,
+      url: donor.url,
+      title: donor.title,
+      date: donor.date,
+      source: donor.source,
+      picked: donor.picked,
+      on_site: donor.on_site,
+      tickers: donor.tickers,
+    });
+    seen.add(donor.id);
+  }
+  for (const a of donor.also ?? []) {
+    if (seen.has(a.id)) continue;
+    extras.push(a);
+    seen.add(a.id);
+  }
+  if (extras.length) into.also = [...(into.also ?? []), ...extras];
+}
+
 /** Collapse same-day wire rewrites (WSJ Shares/Stock twins) until ETL republishes. */
 export function dedupeThemeNewsItems(items: ThemeNewsItemV0[]): ThemeNewsItemV0[] {
   const ranked = [...items].sort((a, b) => {
@@ -107,13 +181,17 @@ export function dedupeThemeNewsItems(items: ThemeNewsItemV0[]): ThemeNewsItemV0[
   for (const item of ranked) {
     const url = normUrl(item.url);
     const day = String(item.date ?? "").slice(0, 10);
-    const dup = kept.some((h) => {
+    const dupOf = kept.find((h) => {
       if (url && normUrl(h.url) === url) return true;
       if (!titlesNearDup(item.title, h.title)) return false;
       const keepDay = String(h.date ?? "").slice(0, 10);
       return !day || !keepDay || day === keepDay;
     });
-    if (!dup) kept.push(item);
+    if (dupOf) {
+      mergeAlsoInto(dupOf, item);
+      continue;
+    }
+    kept.push(item);
   }
   return kept.sort((a, b) => String(b.date ?? "").localeCompare(String(a.date ?? "")));
 }
