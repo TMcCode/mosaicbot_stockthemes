@@ -306,7 +306,7 @@ export function StockPageRuntime({ ticker: rawTicker }: Props) {
                 dataBaseUrl={dataBaseUrl || ""}
                 hydrateTierB={Boolean(dataBaseUrl && !state.detailMissing)}
               />
-              <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
+              <StockGuestUnlockHint signInNext={stockPagePath(ticker)} ticker={ticker} />
               <StockSignedInHeroHint
                 ticker={ticker}
                 themes={state.panelThemes}

@@ -12,7 +12,7 @@ export const DOCS_NAV: DocsNavItem[] = [
     href: "/docs/how-to",
     label: "How to use",
     summary:
-      "A practical loop: map themes in your stocks, keep a short watchlist, verify with returns, then read the desk.",
+      "Start with search: type a stock or theme, read the membership map, then watchlist and verify with returns.",
   },
   {
     href: "/docs/about",

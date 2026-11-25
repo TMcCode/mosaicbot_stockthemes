@@ -2,19 +2,19 @@ import Link from "next/link";
 
 import styles from "./HomeHeroGuide.module.css";
 
-/** Brief how-to copy under the homepage hero punchline. */
+/** Brief how-to copy under the homepage hero punchline (if mounted). */
 export function HomeHeroGuide() {
   return (
     <div className={styles.wrap}>
       <p>
-        Search above—enter a ticker to see which themes it sits in, or type a keyword to find a
-        theme and browse every constituent in the basket.
+        Type a stock you own or a theme keyword above — open the membership map, then dig into the
+        themes that matter.{" "}
+        <Link href="/docs/how-to">How to use</Link> walks the full loop.
       </p>
       <p>
-        Our{" "}
-        <Link href="#trending-themes">trending themes</Link> and{" "}
-        <Link href="#home-commentary">recent commentary</Link> below are a good place to start. We
-        determine the themes we like most and tend to them daily.
+        <Link href="#trending-themes">Trending themes</Link> and{" "}
+        <Link href="#home-commentary">recent commentary</Link> below are good next stops once you’ve
+        searched.
       </p>
     </div>
   );

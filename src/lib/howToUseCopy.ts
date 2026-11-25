@@ -1,4 +1,4 @@
-/** Rough draft for `/docs/how-to` — edit freely; not investment advice. */
+/** Copy for `/docs/how-to` — keep in sync with the home first-job language. */
 
 export type HowToSection = {
   id: string;
@@ -7,42 +7,50 @@ export type HowToSection = {
 };
 
 export const HOW_TO_INTRO =
-  "stockthemes.ai is a thematic investing toolkit: hand-built theme baskets, stock membership maps, performance tables, and editorial context. Use it to understand what is moving your names — and to check narratives against returns — not as a trade ticket. Nothing here is investment advice.";
+  "Start with a stock or theme you care about. Search opens the map of what you’re exposed to; sign in when you want the analyst desk and a theme watchlist. Nothing here is investment advice.";
 
 export const HOW_TO_SECTIONS: HowToSection[] = [
   {
-    id: "map-your-stocks",
-    title: "1. Find the themes inside your stocks",
+    id: "start-with-search",
+    title: "1. Type a stock or theme keyword",
     body: [
-      "Start with search. Type a ticker you own or follow, open the stock page, and scan which themes it sits in. That list is the map of “what story am I actually exposed to?”",
-      "Star the themes that matter for your process; ignore the rest. The goal is to stop treating a stock as one bet when it is several theme bets stacked.",
+      "On the home page, use search the same way the hero asks: enter a ticker you own or follow, or a theme keyword (robotics, data centers, semis…). That is the first job — not browsing every dashboard.",
+      "Stock pages show which themes the name sits in (chips + heatmap) for everyone, signed in or not. That list answers “what story am I actually exposed to?”",
+    ],
+  },
+  {
+    id: "map-your-stocks",
+    title: "2. Read the theme map, then open a theme",
+    body: [
+      "From a stock page, click a membership chip or a heatmap tile to open that theme. On the theme page you’ll see constituents, performance, and (when signed in) thesis, factors, earnings, revenue, and notes.",
+      "Guests get the map and returns context free. Sign in free when you want the analyst desk on that theme or ticker.",
     ],
   },
   {
     id: "watchlist-loop",
-    title: "2. Keep a short watchlist, then check it like a desk",
+    title: "3. Keep a short theme watchlist",
     body: [
-      "Do not track the whole universe. Keep a tight theme watchlist — the names you would actually trade, stress about, or need to explain.",
-      "Each session: glance Most talked about (or your watchlist when you use it) → open anything that moved → read news, thesis, and factors on that theme page. Aim for a repeatable ten-minute loop instead of doomscrolling.",
+      "Signed in, star the themes that matter for your process — not every basket in the catalog. Search “watchlist” to jump to My watchlist.",
+      "Each session: glance Most talked about or your watchlist → open anything that moved → read news, thesis, and factors on that theme. Aim for a short, repeatable loop.",
     ],
   },
   {
     id: "verify-performance",
-    title: "3. Separate “what’s working” from “what you like”",
+    title: "4. Separate “what’s working” from “what you like”",
     body: [
-      "Use the Theme returns table (and Top performers → 3M) to see what is actually leading. Cross-check Most talked about for breadth and revisions — conversation heat, not a buy list — not just a hot one-day print.",
-      "When you are signed in, filter compare to My Watchlist or Most talked about so you are ranking a focused set, not the entire catalog.",
+      "Use the Theme returns table to see what is actually leading. Cross-check Most talked about for breadth and revisions — conversation heat, not a buy list.",
+      "When signed in, filter compare to My Watchlist or Most talked about so you rank a focused set, not the entire catalog.",
     ],
   },
   {
     id: "desk-and-docs",
-    title: "4. Use the desk + docs so the process compounds",
+    title: "5. Use the desk + docs so the process compounds",
     body: [
-      "Read From the desk for the editorial pulse. Use methodology and factors docs when a chart looks too clean or a factor tilt surprises you.",
-      "The edge is the loop — map → watch → verify → size — repeated, not another tab of unread links.",
+      "Read From the desk for editorial pulse. Use methodology and factors docs when a chart looks too clean or a factor tilt surprises you.",
+      "The edge is the loop — search → map → watch → verify — repeated, not another tab of unread links.",
     ],
   },
 ];
 
 export const HOW_TO_FOOTNOTE =
-  "Videos and a shorter “first five minutes” walkthrough will land on this page next. Until then, this written loop is the intended way to use the site.";
+  "Home tagline: See the Forest for the Themes. First action: type a stock or theme keyword. Videos and a shorter walkthrough will land here next.";

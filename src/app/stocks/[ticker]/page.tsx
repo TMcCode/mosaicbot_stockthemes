@@ -209,7 +209,7 @@ export default async function StockPage({ params }: Props) {
                 dataBaseUrl={dataBaseUrl || ""}
                 hydrateTierB={Boolean(slimForCdn && detail)}
               />
-              <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
+              <StockGuestUnlockHint signInNext={stockPagePath(ticker)} ticker={ticker} />
               <StockSignedInHeroHint
                 ticker={ticker}
                 themes={panelThemes}

@@ -13,7 +13,7 @@ import styles from "../docs.module.css";
 export const metadata: Metadata = buildPageMetadata({
   title: "How to use stockthemes.ai",
   description:
-    "A practical loop for thematic investing on stockthemes.ai: map themes in your stocks, keep a short watchlist, verify with returns, then read the desk.",
+    "How to use stockthemes.ai: type a stock or theme in search, read the membership map, sign in for the desk and watchlist, then verify with returns.",
   path: "/docs/how-to",
 });
 

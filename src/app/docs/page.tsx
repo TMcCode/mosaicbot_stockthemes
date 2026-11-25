@@ -20,8 +20,8 @@ export default function DocsIndexPage() {
       <p className={styles.hubEyebrow}>Documentation</p>
       <h1 className={styles.hubTitle}>Docs</h1>
       <p className={styles.hubLead}>
-        How themes are built, how returns and factors work, where the product is headed, and what to
-        keep in mind when reading the site.
+        Start with How to use (search a stock or theme, read the map). Then methodology, factors,
+        about, and roadmap for how baskets are built and where the product is headed.
       </p>
       <ul className={styles.hubGrid}>
         {DOCS_NAV.map((item) => (
