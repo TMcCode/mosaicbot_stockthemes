@@ -25,17 +25,28 @@ function compareMetricsToReturns(
 /**
  * Stock-page hero treemap: membership themes sized by weight in each theme,
  * colored by that theme’s returns (inverse of theme-page constituent map).
+ *
+ * When Tier B weights are not hydrated yet, size every membership theme equally
+ * so the hero map still paints (same idea as themeDetailPublicSeed).
  */
 export function buildStockThemeTreemapNodes(
   themes: StockThemeMembershipAppV0[] | undefined,
 ): ConstituentTreemapNode[] {
   if (!themes?.length) return [];
+  const hasWeights = themes.some(
+    (t) => typeof t.weight === "number" && Number.isFinite(t.weight) && t.weight > 0,
+  );
   const nodes: ConstituentTreemapNode[] = [];
   for (const t of themes) {
     const slug = String(t.slug || "").trim();
     const name = String(t.name || "").trim();
-    const weight = typeof t.weight === "number" && Number.isFinite(t.weight) && t.weight > 0 ? t.weight : 0;
-    if (!slug || !name || weight <= 0) continue;
+    if (!slug || !name) continue;
+    const weight = hasWeights
+      ? typeof t.weight === "number" && Number.isFinite(t.weight) && t.weight > 0
+        ? t.weight
+        : 0
+      : 1;
+    if (weight <= 0) continue;
     nodes.push({
       ticker: slug,
       name,

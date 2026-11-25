@@ -23,15 +23,7 @@ import {
 import { buildSelectedDateLookup, metricColumnHeaderTooltip } from "@/lib/customDateColumnHelp";
 import { formatWeight } from "@/lib/formatWeight";
 import { normalizeGroupThemesColumnOrder } from "@/lib/groupThemesTable";
-import {
-  mergeStockDetailWithApp,
-  parseStockAppPayload,
-  stockAppBrowserPath,
-} from "@/lib/mergeStockApp";
-import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
+import { fetchStockAppBrowser, mergeStockDetailWithApp } from "@/lib/mergeStockApp";
 import { medianFinite } from "@/lib/compareReturnPlausible";
 import { withLiveThemeIndexCompare } from "@/lib/stockThemeLiveBlend";
 import { formatConstituentPct } from "@/lib/themeConstituentTableModel";
@@ -352,17 +344,11 @@ export function StockLensPanels({
       group_slug: t.group_slug,
       group_name: t.group_name,
     }));
-    const q = stockthemesBrowserCacheBusterQuery();
-    const url = `${stockAppBrowserPath(ticker)}?${q}`;
     void (async () => {
       try {
-        const res = await fetch(url, {
-          credentials: "omit",
-          cache: stockthemesBrowserFetchCache(),
-        });
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const app = parseStockAppPayload(await res.json());
+        const app = await fetchStockAppBrowser(ticker);
         if (cancelled) return;
+        if (!app) throw new Error("stock app missing");
         const publicShell: StockDetailV0 = {
           schema_version: 0,
           ticker,
@@ -373,9 +359,9 @@ export function StockLensPanels({
         setLiveThemes(merged.themes);
         setHeatmapColumns(merged.theme_heatmap_columns || heatmapColumnsProp);
         setThemeIndex(merged.theme_index ?? null);
-        setTickerEarnings(app?.earnings && typeof app.earnings === "object" ? app.earnings : null);
+        setTickerEarnings(app.earnings && typeof app.earnings === "object" ? app.earnings : null);
         setEarningsTableStats(
-          app?.earnings_table_stats && typeof app.earnings_table_stats === "object"
+          app.earnings_table_stats && typeof app.earnings_table_stats === "object"
             ? app.earnings_table_stats
             : null,
         );

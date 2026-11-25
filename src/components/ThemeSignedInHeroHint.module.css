@@ -1,0 +1,18 @@
+.slot {
+  margin: 6px 0 0;
+  max-width: 520px;
+}
+
+.deskHint {
+  margin: 0;
+  max-width: none;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  color: var(--text-muted, #6e7d7b);
+}
+
+@media (max-width: 640px) {
+  .deskHint {
+    font-size: 10px !important;
+  }
+}

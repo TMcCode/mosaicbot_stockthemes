@@ -1,23 +1,16 @@
 import { readdir, readFile } from "fs/promises";
 import path from "path";
 
-import {
-  mergeStockDetailWithApp,
-  parseStockAppPayload,
-  stockAppSidecarRel,
-  stockAppSidecarUrl,
-} from "@/lib/mergeStockApp";
+import { mergeStockDetailWithApp, parseStockAppPayload } from "@/lib/mergeStockApp";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { fetchPublicJsonText, invalidateDevDiskCache } from "@/lib/stockthemesBuildCache";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
-import type { StockAppV0 } from "@/types/stock.app.v0";
 import type { StockDetailV0 } from "@/types/stock.detail.v0";
 import {
   STOCK_PRICE_RETURNS_SIDECAR_SUFFIX,
   type StockPriceReturnsSidecarV0,
 } from "@/types/stock.price_returns.v0";
 import type { ConstituentPriceReturnsV0 } from "@/types/theme.detail.v0";
-import { stockTierBUrl } from "@/lib/stockTierB";
 
 const FIXTURE_DIR = path.join("public", "fixtures", "stocks");
 
@@ -30,22 +23,6 @@ function parseStockDetail(raw: string): StockDetailV0 {
     throw new Error("Invalid stock detail JSON: missing ticker or themes");
   }
   return data;
-}
-
-async function loadLiveStockApp(
-  ticker: string,
-  bypassDevCache: boolean,
-): Promise<StockAppV0 | null> {
-  const base = stockthemesPublicDataBase();
-  if (!base) return null;
-  const rel = stockAppSidecarRel(ticker);
-  const url = stockAppSidecarUrl(base, ticker);
-  try {
-    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache, optional: true });
-    return parseStockAppPayload(JSON.parse(raw));
-  } catch {
-    return null;
-  }
 }
 
 async function loadLiveStockDetail(
@@ -63,9 +40,9 @@ async function loadLiveStockDetail(
     return null;
   }
   try {
-    const publicDetail = parseStockDetail(raw);
-    const app = await loadLiveStockApp(ticker, bypassDevCache);
-    return mergeStockDetailWithApp(publicDetail, app);
+    // Tier A only. `.app` / price_returns live in private R2 (`/cdn-app`); probing
+    // stockthemes-public always 404s then retries CDN and adds seconds per navigation.
+    return parseStockDetail(raw);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[stockthemes] Invalid stock JSON for ${ticker} (${msg}).`);
@@ -82,22 +59,9 @@ function parseStockPriceReturns(data: unknown): StockPriceReturnsSidecarV0 | nul
   return data as StockPriceReturnsSidecarV0;
 }
 
-async function loadStockPriceReturns(
+async function loadFixtureStockPriceReturns(
   ticker: string,
-  bypassDevCache: boolean,
 ): Promise<ConstituentPriceReturnsV0 | null> {
-  const base = stockthemesPublicDataBase();
-  if (base) {
-    const rel = `stocks/${ticker}${STOCK_PRICE_RETURNS_SIDECAR_SUFFIX}`;
-    const url = stockTierBUrl(base, ticker, STOCK_PRICE_RETURNS_SIDECAR_SUFFIX);
-    try {
-      const raw = await fetchPublicJsonText(url, rel, { bypassDevCache });
-      const parsed = parseStockPriceReturns(JSON.parse(raw));
-      return parsed?.price_returns ?? null;
-    } catch {
-      return null;
-    }
-  }
   try {
     const raw = await readFile(
       path.join(process.cwd(), FIXTURE_DIR, `${ticker}${STOCK_PRICE_RETURNS_SIDECAR_SUFFIX}`),
@@ -118,7 +82,8 @@ export type StockDetailLoadResult = {
 };
 
 /**
- * Loads stocks/<ticker>.json (+ optional stocks/<ticker>.app.v0.json Tier B merge).
+ * Loads stocks/<ticker>.json. Live path is Tier A only; Tier B merges in the browser.
+ * Fixtures may still include local `.app` / price_returns sidecars.
  */
 export async function loadStockDetail(ticker: string): Promise<StockDetailLoadResult | null> {
   const key = String(ticker || "").trim();
@@ -126,15 +91,14 @@ export async function loadStockDetail(ticker: string): Promise<StockDetailLoadRe
 
   if (stockthemesPublicDataBase()) {
     let detail = await loadLiveStockDetail(key, false);
-    let priceReturns = await loadStockPriceReturns(key, false);
     if (!detail && process.env.NODE_ENV === "development") {
       await invalidateDevDiskCache(`stocks/${key}.json`);
-      await invalidateDevDiskCache(stockAppSidecarRel(key));
-      await invalidateDevDiskCache(`stocks/${key}${STOCK_PRICE_RETURNS_SIDECAR_SUFFIX}`);
       detail = await loadLiveStockDetail(key, true);
-      priceReturns = await loadStockPriceReturns(key, true);
     }
-    return detail ? { detail, priceReturns, source: "live" } : null;
+    // Client hydrates Tier B via `/cdn-app` (see StockMembershipChips / treemap / lens).
+    return detail
+      ? { detail: mergeStockDetailWithApp(detail, null), priceReturns: null, source: "live" }
+      : null;
   }
 
   const abs = path.join(process.cwd(), FIXTURE_DIR, `${key}.json`);
@@ -150,7 +114,7 @@ export async function loadStockDetail(ticker: string): Promise<StockDetailLoadRe
     } catch {
       /* optional fixture sidecar */
     }
-    const priceReturns = await loadStockPriceReturns(key, false);
+    const priceReturns = await loadFixtureStockPriceReturns(key);
     return { detail, priceReturns, source: "fixture" };
   } catch {
     return null;

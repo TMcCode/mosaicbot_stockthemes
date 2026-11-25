@@ -30,7 +30,11 @@ export async function loadMostTalkedAbout(): Promise<MostTalkedAboutLoadResult |
   if (base) {
     const url = `${base}/most_talked_about.v0.json`;
     try {
-      const raw = await fetchPublicJsonText(url, "most_talked_about.v0.json");
+      // Optional publish — without `optional`, every miss does R2 404 + CDN retry
+      // and can stall next-dev "Rendering…" for many seconds on home (and prefetch).
+      const raw = await fetchPublicJsonText(url, "most_talked_about.v0.json", {
+        optional: true,
+      });
       return { bundle: parseMostTalkedAbout(raw), source: "live" };
     } catch {
       return null;

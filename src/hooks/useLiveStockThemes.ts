@@ -13,9 +13,17 @@ import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
  */
 export function useLiveStockThemes<
   T extends { slug: string; compare_returns?: ThemeCompareReturnsV0 | null },
->(themes: T[]): { themes: T[]; liveCompare: boolean } {
-  const { compareBundle, liveCompare } = useLiveCompareBundles(null, null);
+>(themes: T[]): {
+  themes: T[];
+  liveCompare: boolean;
+  /** Live compare_themes bundle as_of (colors on the stock heatmap). */
+  liveTickerPerformanceAsOf: string | null;
+} {
+  const { compareBundle, liveCompare, liveTickerPerformanceAsOf } = useLiveCompareBundles(
+    null,
+    null,
+  );
   const rows = liveCompare ? compareBundle?.rows : null;
   const live = useMemo(() => overlayStockThemesWithLiveCompare(themes, rows), [themes, rows]);
-  return { themes: live, liveCompare };
+  return { themes: live, liveCompare, liveTickerPerformanceAsOf };
 }

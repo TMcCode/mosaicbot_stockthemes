@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 
 import { JsonLd } from "@/components/JsonLd";
 import { StockGuestUnlockHint } from "@/components/StockGuestUnlockHint";
+import { StockSignedInHeroHint } from "@/components/StockSignedInHeroHint";
 import { StockLensPanels } from "@/components/StockLensPanels";
 import { StockMembershipChips } from "@/components/StockMembershipChips";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
@@ -202,8 +203,19 @@ export default async function StockPage({ params }: Props) {
                   </span>
                 </span>
               </h1>
+              <StockMembershipChips
+                ticker={ticker}
+                themes={panelThemes}
+                dataBaseUrl={dataBaseUrl || ""}
+                hydrateTierB={Boolean(slimForCdn && detail)}
+              />
               <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
-              <StockMembershipChips ticker={ticker} themes={panelThemes} />
+              <StockSignedInHeroHint
+                ticker={ticker}
+                themes={panelThemes}
+                dataBaseUrl={dataBaseUrl || ""}
+                hydrateTierB={Boolean(slimForCdn && detail)}
+              />
               {!detail && !dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}

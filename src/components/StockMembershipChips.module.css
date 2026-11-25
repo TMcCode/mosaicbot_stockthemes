@@ -3,7 +3,9 @@
   flex-direction: column;
   gap: 5px;
   margin: 4px 0 0;
-  max-width: 420px;
+  /* Cap width so chips don’t become a tall wall and eat the unlock gap. */
+  width: 100%;
+  max-width: 520px;
 }
 
 /* Beat `.intro p` (~18px) on stock hero. */
@@ -26,7 +28,8 @@
 
 .chip {
   display: inline-flex;
-  align-items: center;
+  align-items: baseline;
+  gap: 5px;
   max-width: 100%;
   padding: 2px 7px;
   border-radius: 999px;
@@ -40,9 +43,41 @@
   text-wrap: pretty;
 }
 
+.chipName {
+  min-width: 0;
+}
+
+.chipWeight {
+  flex: 0 0 auto;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  color: var(--accent, #26fcd6);
+  opacity: 0.9;
+}
+
 .chip:hover {
   border-color: rgba(38, 252, 214, 0.4);
   background: rgba(38, 252, 214, 0.06);
+  color: var(--accent, #26fcd6);
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 7px;
+  border-radius: 999px;
+  border: 1px dashed var(--button-secondary-border, rgba(255, 255, 255, 0.18));
+  background: transparent;
+  color: var(--text-muted, #6e7d7b);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.35;
+  cursor: pointer;
+}
+
+.more:hover {
+  border-color: rgba(38, 252, 214, 0.35);
   color: var(--accent, #26fcd6);
 }
 
@@ -55,5 +90,19 @@
 :global(.st-theme[data-theme="light"]) .chip:hover {
   border-color: rgba(42, 152, 147, 0.45);
   background: rgba(42, 152, 147, 0.06);
+  color: var(--accent-strong, #2a9893);
+}
+
+:global(.st-theme[data-theme="light"]) .chipWeight {
+  color: var(--accent-strong, #2a9893);
+}
+
+:global(.st-theme[data-theme="light"]) .more {
+  border-color: rgba(59, 77, 161, 0.22);
+  color: var(--text-muted, #7a8296);
+}
+
+:global(.st-theme[data-theme="light"]) .more:hover {
+  border-color: rgba(42, 152, 147, 0.45);
   color: var(--accent-strong, #2a9893);
 }

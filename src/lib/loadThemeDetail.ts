@@ -4,13 +4,10 @@ import path from "path";
 import {
   mergeThemeDetailWithApp,
   parseThemeAppPayload,
-  themeAppSidecarRel,
-  themeAppSidecarUrl,
 } from "@/lib/mergeThemeApp";
 import { parseJsonPayload } from "@/lib/parseJsonPayload";
 import { fetchPublicJsonText, invalidateDevDiskCache } from "@/lib/stockthemesBuildCache";
 import { stockthemesPublicDataBase } from "@/lib/stockthemesPublicBase";
-import type { ThemeAppV0 } from "@/types/theme.app.v0";
 import type { ThemeDetailV0 } from "@/types/theme.detail.v0";
 
 const FIXTURE_DIR = path.join("public", "fixtures", "themes");
@@ -26,23 +23,10 @@ function parseThemeDetail(raw: string): ThemeDetailV0 {
   return data;
 }
 
-async function loadLiveThemeApp(
+async function loadLiveThemeDetail(
   slug: string,
   bypassDevCache: boolean,
-): Promise<ThemeAppV0 | null> {
-  const base = stockthemesPublicDataBase();
-  if (!base) return null;
-  const rel = themeAppSidecarRel(slug);
-  const url = themeAppSidecarUrl(base, slug);
-  try {
-    const raw = await fetchPublicJsonText(url, rel, { bypassDevCache, optional: true });
-    return parseThemeAppPayload(JSON.parse(raw));
-  } catch {
-    return null;
-  }
-}
-
-async function loadLiveThemeDetail(slug: string, bypassDevCache: boolean): Promise<ThemeDetailV0 | null> {
+): Promise<ThemeDetailV0 | null> {
   const base = stockthemesPublicDataBase();
   if (!base) return null;
   const rel = `themes/${slug}.json`;
@@ -54,9 +38,10 @@ async function loadLiveThemeDetail(slug: string, bypassDevCache: boolean): Promi
     return null;
   }
   try {
-    const publicDetail = parseThemeDetail(raw);
-    const app = await loadLiveThemeApp(slug, bypassDevCache);
-    return mergeThemeDetailWithApp(publicDetail, app);
+    // Tier A only. `.app` lives in private R2 (`/cdn-app`); probing
+    // stockthemes-public always 404s then retries CDN and adds seconds per navigation.
+    // Client hydrates via ThemeDetailRuntimeLoader / liveThemeDetailStore.
+    return parseThemeDetail(raw);
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     console.warn(`[stockthemes] Invalid theme JSON for ${slug} (${msg}).`);
@@ -71,14 +56,14 @@ export type ThemeDetailLoadResult = {
 };
 
 /**
- * Loads themes/<slug>.json (+ optional themes/<slug>.app.v0.json Tier B merge).
+ * Loads themes/<slug>.json. Live path is Tier A only; Tier B merges in the browser.
+ * Fixtures may still include a local `.app.v0.json` sidecar.
  */
 export async function loadThemeDetail(slug: string): Promise<ThemeDetailLoadResult | null> {
   if (stockthemesPublicDataBase()) {
     let detail = await loadLiveThemeDetail(slug, false);
     if (!detail && process.env.NODE_ENV === "development") {
       await invalidateDevDiskCache(`themes/${slug}.json`);
-      await invalidateDevDiskCache(themeAppSidecarRel(slug));
       detail = await loadLiveThemeDetail(slug, true);
     }
     return detail ? { detail, source: "live" } : null;

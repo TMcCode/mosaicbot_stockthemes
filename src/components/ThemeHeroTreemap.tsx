@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 
 import { BrandWatermark } from "@/components/BrandWatermark";
 import {
@@ -35,6 +35,77 @@ type Props = {
 
 function weightLabel(weight: number): string {
   return `${Math.max(0, weight).toFixed(1)}%`;
+}
+
+function minSideForLogo(wPct: number, hPct: number): boolean {
+  return Math.min(wPct, hPct) >= 10;
+}
+
+/** Fit theme/constituent labels to the layout cell so dense maps don’t overflow. */
+function densityForTile(
+  wPct: number,
+  hPct: number,
+  themeTile: boolean,
+): {
+  titlePx: number;
+  metaPx: number;
+  lines: number;
+  showReturn: boolean;
+  showWeight: boolean;
+  padPx: number;
+} {
+  const area = wPct * hPct;
+  const minSide = Math.min(wPct, hPct);
+  // Narrow strips: one ellipsis line beats mid-word wraps.
+  if (themeTile && wPct < 9) {
+    return {
+      titlePx: 7,
+      metaPx: 7,
+      lines: 1,
+      showReturn: false,
+      showWeight: false,
+      padPx: 2,
+    };
+  }
+  if (area >= 700 || minSide >= 20) {
+    return {
+      titlePx: themeTile ? 10 : 11,
+      metaPx: 9,
+      lines: themeTile ? 3 : 1,
+      showReturn: true,
+      showWeight: true,
+      padPx: themeTile ? 6 : 4,
+    };
+  }
+  if (area >= 320 || minSide >= 12) {
+    return {
+      titlePx: themeTile ? 9 : 10,
+      metaPx: 8,
+      lines: themeTile ? 2 : 1,
+      showReturn: true,
+      showWeight: minSide >= 14,
+      padPx: 4,
+    };
+  }
+  if (area >= 140 || minSide >= 8) {
+    return {
+      titlePx: themeTile ? 8 : 9,
+      metaPx: 7,
+      lines: 1,
+      showReturn: hPct >= 10,
+      showWeight: false,
+      padPx: 3,
+    };
+  }
+  // Tiny cells: name only (full stats stay on `title` tooltip).
+  return {
+    titlePx: themeTile ? 7 : 8,
+    metaPx: 7,
+    lines: 1,
+    showReturn: false,
+    showWeight: false,
+    padPx: 2,
+  };
 }
 
 export function ThemeHeroTreemap({
@@ -135,15 +206,19 @@ export function ThemeHeroTreemap({
               ? `${n.name} · ${periodLabel}: ${formatReturnPct(ret)} · weight ${weightLabel(n.weight)}`
               : `${n.name} · weight ${weightLabel(n.weight)}`;
           const isThemeTile = tileMode === "theme";
+          const density = densityForTile(width, height, isThemeTile);
+          const showLogo =
+            tileMode === "constituent" && Boolean(n.logo_url) && minSideForLogo(width, height);
           const inner = (
             <div
               className={
                 isThemeTile ? `${styles.cellInner} ${styles.cellInnerTheme}` : styles.cellInner
               }
+              style={{ padding: `${density.padPx}px` }}
             >
-              {tileMode === "constituent" && n.logo_url ? (
+              {showLogo ? (
                 // eslint-disable-next-line @next/next/no-img-element -- CDN logo URL from ETL when present
-                <img src={n.logo_url} alt="" className={styles.logo} loading="lazy" decoding="async" />
+                <img src={n.logo_url!} alt="" className={styles.logo} loading="lazy" decoding="async" />
               ) : null}
               <div
                 className={
@@ -151,13 +226,23 @@ export function ThemeHeroTreemap({
                 }
               >
                 {tileMode === "constituent" ? (
-                  <span className={styles.ticker}>{n.ticker}</span>
+                  <span className={styles.ticker} style={{ fontSize: density.titlePx }}>
+                    {n.ticker}
+                  </span>
                 ) : (
-                  <span className={`${styles.ticker} ${styles.themeTileLabel}`}>
+                  <span
+                    className={`${styles.ticker} ${styles.themeTileLabel}`}
+                    style={
+                      {
+                        fontSize: density.titlePx,
+                        WebkitLineClamp: density.lines,
+                      } as CSSProperties
+                    }
+                  >
                     {splitThemeDisplayName(n.name).title}
                   </span>
                 )}
-                {activePeriod != null ? (
+                {density.showReturn && activePeriod != null ? (
                   <span
                     className={
                       ret != null && ret > 0
@@ -166,11 +251,16 @@ export function ThemeHeroTreemap({
                           ? `${styles.returnPct} ${styles.returnPctDown}`
                           : `${styles.returnPct} ${styles.returnPctFlat}`
                     }
+                    style={{ fontSize: density.metaPx }}
                   >
                     {formatReturnPct(ret)}
                   </span>
                 ) : null}
-                <span className={styles.weightPct}>{weightLabel(n.weight)}</span>
+                {density.showWeight ? (
+                  <span className={styles.weightPct} style={{ fontSize: Math.max(7, density.metaPx - 1) }}>
+                    {weightLabel(n.weight)}
+                  </span>
+                ) : null}
               </div>
             </div>
           );

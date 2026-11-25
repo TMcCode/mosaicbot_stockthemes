@@ -1,17 +1,16 @@
-/* Vertically center in leftover stock-hero height (beside treemap). */
-.slot {
-  flex: 1 1 auto;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  min-height: 0;
+/* Pin to bottom of the stretched hero column (gap under chips, beside treemap). */
+.heroSlot {
+  flex: 0 0 auto;
+  margin-top: auto;
+  margin-bottom: 14px;
   width: 100%;
+  padding-top: 10px;
 }
 
 /* Same shell as ThemeGuestUnlockHint, slightly larger for the stock hero. */
 .box {
   margin: 0;
-  padding: 11px 14px;
+  padding: 7px 14px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.02);
@@ -94,8 +93,9 @@
 }
 
 @media (max-width: 640px) {
-  .slot {
-    flex: 0 0 auto;
+  .heroSlot {
+    margin-top: 8px;
+    padding-top: 0;
   }
 
   .box {

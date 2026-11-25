@@ -8,6 +8,10 @@ import type {
   StockThemeMembershipAppV0,
   StockThemeMembershipPublicV0,
 } from "@/types/stock.detail.v0";
+import {
+  stockthemesBrowserCacheBusterQuery,
+  stockthemesBrowserFetchCache,
+} from "@/lib/stockthemesCache";
 
 export function stockAppSidecarRel(ticker: string): string {
   return `stocks/${ticker}${STOCK_APP_SIDECAR_SUFFIX}`;
@@ -16,6 +20,56 @@ export function stockAppSidecarRel(ticker: string): string {
 /** Same-origin Pages Function — private R2 Tier B. */
 export function stockAppBrowserPath(ticker: string): string {
   return `/cdn-app/stocks/${encodeURIComponent(ticker)}${STOCK_APP_SIDECAR_SUFFIX}`;
+}
+
+const STOCK_APP_TTL_MS = 60_000;
+const stockAppInflight = new Map<string, Promise<StockAppV0 | null>>();
+const stockAppResolved = new Map<string, { at: number; app: StockAppV0 | null }>();
+
+function stockAppCacheKey(ticker: string): string {
+  return String(ticker || "").trim();
+}
+
+/**
+ * Shared browser fetch for `stocks/<T>.app.v0.json`.
+ * Dedupes in-flight + short TTL so chips / treemap / lens / chart share one request
+ * (dev cache-buster is per-call `Date.now()`, so without this each mount hits the network).
+ */
+export function fetchStockAppBrowser(ticker: string): Promise<StockAppV0 | null> {
+  const key = stockAppCacheKey(ticker);
+  if (!key) return Promise.resolve(null);
+
+  const cached = stockAppResolved.get(key);
+  if (cached && Date.now() - cached.at < STOCK_APP_TTL_MS) {
+    return Promise.resolve(cached.app);
+  }
+
+  const pending = stockAppInflight.get(key);
+  if (pending) return pending;
+
+  const q = stockthemesBrowserCacheBusterQuery();
+  const url = `${stockAppBrowserPath(key)}${q ? `?${q}` : ""}`;
+  const req = (async () => {
+    try {
+      const res = await fetch(url, {
+        credentials: "omit",
+        cache: stockthemesBrowserFetchCache(),
+      });
+      if (!res.ok) return null;
+      return parseStockAppPayload(await res.json());
+    } catch {
+      return null;
+    } finally {
+      stockAppInflight.delete(key);
+    }
+  })().then((app) => {
+    // Only cache hits — a transient 403/network miss must not blank the map for 60s.
+    if (app) stockAppResolved.set(key, { at: Date.now(), app });
+    return app;
+  });
+
+  stockAppInflight.set(key, req);
+  return req;
 }
 
 /**

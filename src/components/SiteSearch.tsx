@@ -4,10 +4,15 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
+import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { WatchlistStar } from "@/components/WatchlistStar";
 import { capturePostHog } from "@/lib/posthogClient";
 import { themeDisplayLabel } from "@/lib/rotationThemeLabel";
 import { collectSiteSearchHits, type SiteSearchHit } from "@/lib/siteSearchHits";
+import {
+  matchesWatchlistSearchQuery,
+  WATCHLIST_SEARCH_HREF,
+} from "@/lib/siteSearchWatchlistShortcut";
 import { navigateToStockPage } from "@/lib/stockPageNavigate";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
@@ -16,6 +21,8 @@ import styles from "./SiteSearch.module.css";
 
 /** Queries shorter than this don't get the "suggest a theme" link (still typing). */
 const SUGGEST_MIN_CHARS = 3;
+
+type SearchOption = { type: "watchlist" } | { type: "hit"; hit: SiteSearchHit };
 
 function suggestThemeHref(query: string): string {
   return `/account/suggest?theme=${encodeURIComponent(query.slice(0, 120))}`;
@@ -36,6 +43,8 @@ export function SiteSearch({
   autoFocus = false,
 }: SiteSearchProps = {}) {
   const router = useRouter();
+  const { configured, showAuthedUi } = useSupabaseAuth();
+  const signedIn = configured && showAuthedUi;
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const prefetchedHrefsRef = useRef<Set<string>>(new Set());
@@ -61,6 +70,16 @@ export function SiteSearch({
     return collectSiteSearchHits(engine.index, debounced);
   }, [engine, debounced]);
 
+  const showWatchlistShortcut =
+    signedIn && matchesWatchlistSearchQuery(debounced);
+
+  const options = useMemo((): SearchOption[] => {
+    const out: SearchOption[] = [];
+    if (showWatchlistShortcut) out.push({ type: "watchlist" });
+    for (const hit of hits) out.push({ type: "hit", hit });
+    return out;
+  }, [showWatchlistShortcut, hits]);
+
   useEffect(() => {
     function onDocMouseDown(ev: MouseEvent) {
       const el = wrapRef.current;
@@ -75,11 +94,11 @@ export function SiteSearch({
     return () => document.removeEventListener("mousedown", onDocMouseDown);
   }, [open]);
 
-  const cursor = hits.length > 0 ? Math.min(active, hits.length - 1) : 0;
+  const cursor = options.length > 0 ? Math.min(active, options.length - 1) : 0;
 
   const noResultsReportedRef = useRef<string | null>(null);
   useEffect(() => {
-    if (engine && debounced.trim() && hits.length === 0) {
+    if (engine && debounced.trim() && hits.length === 0 && !showWatchlistShortcut) {
       if (noResultsReportedRef.current !== debounced) {
         noResultsReportedRef.current = debounced;
         capturePostHog("search_no_results", { query: debounced });
@@ -87,7 +106,19 @@ export function SiteSearch({
     } else {
       noResultsReportedRef.current = null;
     }
-  }, [engine, debounced, hits]);
+  }, [engine, debounced, hits, showWatchlistShortcut]);
+
+  const goToWatchlist = useCallback(() => {
+    capturePostHog("search_result_clicked", {
+      query: query.trim(),
+      result_kind: "watchlist",
+      result_slug: "my",
+      result_name: "My watchlist",
+    });
+    router.push(WATCHLIST_SEARCH_HREF);
+    setOpen(false);
+    setQuery("");
+  }, [router, query]);
 
   const goToHit = useCallback(
     (h: SiteSearchHit) => {
@@ -117,14 +148,22 @@ export function SiteSearch({
     [router, query],
   );
 
+  const goToOption = useCallback(
+    (opt: SearchOption) => {
+      if (opt.type === "watchlist") goToWatchlist();
+      else goToHit(opt.hit);
+    },
+    [goToWatchlist, goToHit],
+  );
+
   const onKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (e.key === "Enter" && open && hits[cursor]) {
+      if (e.key === "Enter" && open && options[cursor]) {
         e.preventDefault();
-        goToHit(hits[cursor]);
+        goToOption(options[cursor]);
         return;
       }
-      if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp") && hits.length > 0) {
+      if (!open && (e.key === "ArrowDown" || e.key === "ArrowUp") && options.length > 0) {
         setOpen(true);
         return;
       }
@@ -138,14 +177,14 @@ export function SiteSearch({
       }
       if (e.key === "ArrowDown") {
         e.preventDefault();
-        setActive((i) => Math.min(i + 1, Math.max(0, hits.length - 1)));
+        setActive((i) => Math.min(i + 1, Math.max(0, options.length - 1)));
       }
       if (e.key === "ArrowUp") {
         e.preventDefault();
         setActive((i) => Math.max(i - 1, 0));
       }
     },
-    [cursor, goToHit, hits, open],
+    [cursor, goToOption, options, open],
   );
 
   const prefetchHref = useCallback(
@@ -181,9 +220,13 @@ export function SiteSearch({
     open &&
       (loadBusy ||
         loadError ||
-        hits.length > 0 ||
-        (debounced.trim() && engine && hits.length === 0)),
+        options.length > 0 ||
+        (debounced.trim() && engine && hits.length === 0 && !showWatchlistShortcut)),
   );
+
+  useEffect(() => {
+    if (showWatchlistShortcut) prefetchHref(WATCHLIST_SEARCH_HREF);
+  }, [showWatchlistShortcut, prefetchHref]);
 
   const index = engine?.index;
 
@@ -218,24 +261,51 @@ export function SiteSearch({
             <div className={styles.err} role="status">
               Search unavailable ({loadError}). Try again later or use All themes / All groups.
             </div>
-          ) : loadBusy && !index ? (
-            <div className={styles.meta} role="status">
-              Loading search…
-            </div>
-          ) : index && debounced.trim() && hits.length === 0 ? (
-            <div className={styles.empty} role="status">
-              No matches for “{suggestQuery}”.
-              {suggestLink ? <> {suggestLink}</> : null}
-            </div>
-          ) : index && hits.length > 0 ? (
+          ) : options.length > 0 ? (
             <>
-              <div className={styles.meta}>
-                Data as of {new Date(index.as_of).toLocaleString(undefined, { dateStyle: "medium" })}
-              </div>
+              {index ? (
+                <div className={styles.meta}>
+                  Data as of {new Date(index.as_of).toLocaleString(undefined, { dateStyle: "medium" })}
+                </div>
+              ) : null}
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-                {hits.map((h, i) => (
-                  <li key={h.key} role="presentation">
-                    {h.kind === "ticker" ? (
+                {options.map((opt, i) =>
+                  opt.type === "watchlist" ? (
+                  <li key="nav:watchlist" role="presentation">
+                    <Link
+                      href={WATCHLIST_SEARCH_HREF}
+                      className={styles.row}
+                      prefetch={false}
+                      onMouseEnter={() => prefetchHref(WATCHLIST_SEARCH_HREF)}
+                      onFocus={() => prefetchHref(WATCHLIST_SEARCH_HREF)}
+                      style={{
+                        background: i === cursor ? "rgba(38, 252, 214, 0.08)" : undefined,
+                      }}
+                      role="option"
+                      aria-selected={i === cursor}
+                      onClick={() => {
+                        capturePostHog("search_result_clicked", {
+                          query: query.trim(),
+                          result_kind: "watchlist",
+                          result_slug: "my",
+                          result_name: "My watchlist",
+                        });
+                        setOpen(false);
+                        setQuery("");
+                      }}
+                    >
+                      <div className={styles.rowTitle}>
+                        <span className={styles.badge}>Page</span>
+                        My watchlist
+                      </div>
+                      <div className={styles.rowSub}>Open your saved themes</div>
+                    </Link>
+                  </li>
+                  ) : (
+                  <li key={opt.hit.key} role="presentation">
+                    {(() => {
+                      const h = opt.hit;
+                      return h.kind === "ticker" ? (
                       <div
                         className={styles.rowWithAction}
                         style={{
@@ -378,14 +448,25 @@ export function SiteSearch({
                           </div>
                         ) : null}
                       </Link>
-                    )}
+                    );
+                    })()}
                   </li>
-                ))}
+                  ),
+                )}
               </ul>
               {suggestLink ? (
                 <div className={styles.suggestFooter}>Can’t find it? {suggestLink}</div>
               ) : null}
             </>
+          ) : loadBusy && !index ? (
+            <div className={styles.meta} role="status">
+              Loading search…
+            </div>
+          ) : debounced.trim() ? (
+            <div className={styles.empty} role="status">
+              No matches for “{suggestQuery}”.
+              {suggestLink ? <> {suggestLink}</> : null}
+            </div>
           ) : null}
         </div>
       ) : null}

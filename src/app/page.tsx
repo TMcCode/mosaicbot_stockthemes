@@ -3,6 +3,7 @@ import { Suspense } from "react";
 
 import { HomeDeferredBand } from "@/components/HomeDeferredBand";
 import { HomeExplorePathsSlot } from "@/components/HomeExplorePathsSlot";
+import { HomeHeroSignInHint } from "@/components/HomeHeroSignInHint";
 import { HomeHeroStats } from "@/components/HomeHeroStats";
 import { HomeMoversBand } from "@/components/HomeMoversBand";
 import { JsonLd } from "@/components/JsonLd";
@@ -93,6 +94,7 @@ export default function Home() {
             <Suspense fallback={null}>
               <HomeHeroStats />
             </Suspense>
+            <HomeHeroSignInHint />
 
             <div className={`${styles.heroSearchStack} ${styles.heroFullBleed}`}>
               <p className={styles.introPunchlineHow}>

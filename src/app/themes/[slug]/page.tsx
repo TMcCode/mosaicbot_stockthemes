@@ -16,6 +16,7 @@ import { ThemeHeroTreemapLive } from "@/components/ThemeHeroTreemapLive";
 import { ThemeDetailRuntimeLoader } from "@/components/ThemeDetailRuntimeLoader";
 import { ThemeFactorProfile } from "@/components/ThemeFactorProfile";
 import { ThemeGuestUnlockHint } from "@/components/ThemeGuestUnlockHint";
+import { ThemeSignedInHeroHint } from "@/components/ThemeSignedInHeroHint";
 import { ThemeHeroFactorSlot } from "@/components/ThemeHeroFactorSlot";
 import { ThemeThesisBleedSlot } from "@/components/ThemeThesisBleedSlot";
 import { LazyThemeNewsPanel } from "@/components/LazyThemeNewsPanel";
@@ -324,6 +325,11 @@ export default async function ThemeDetailPage({ params }: Props) {
                 />
                 <ThemeGuestUnlockHint
                   signInNext={`/themes/${slug}`}
+                  showThesis={showThesis}
+                  showFactors={showFactors}
+                />
+                <ThemeSignedInHeroHint
+                  hasHeroIntro={Boolean(heroIntro)}
                   showThesis={showThesis}
                   showFactors={showFactors}
                 />

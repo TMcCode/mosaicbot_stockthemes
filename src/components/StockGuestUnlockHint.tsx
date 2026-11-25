@@ -13,11 +13,10 @@ type Props = {
 const FEATURES = ["Earnings", "Revenue", "Rev Revisions", "Quality & Risk", "Notes"] as const;
 
 const BULLETS = [
-  "See earnings returns around report dates vs membership themes",
-  "See analyst revenue growth estimates and valuation ratios",
-  "Track CQ / CY / NY revenue estimate revisions",
-  "Compare quality and risk across membership themes",
-  "Read why this ticker sits in each theme",
+  "Earnings returns around report dates vs membership themes",
+  "Revenue growth, valuation, and CQ / CY / NY estimate revisions",
+  "Quality and risk across membership themes",
+  "Notes on why this ticker sits in each theme",
 ] as const;
 
 /**
@@ -33,7 +32,7 @@ export function StockGuestUnlockHint({ signInNext }: Props) {
   const signInHref = `/sign-in?next=${encodeURIComponent(signInNext)}`;
 
   return (
-    <div className={styles.slot}>
+    <div className={styles.heroSlot}>
       <div className={styles.box} aria-label="Sign in to unlock stock analysis">
         <div className={styles.row}>
           <p className={styles.features}>{FEATURES.join(" · ")}</p>

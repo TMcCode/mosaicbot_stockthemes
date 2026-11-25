@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { JsonLd } from "@/components/JsonLd";
 import { StockGuestUnlockHint } from "@/components/StockGuestUnlockHint";
+import { StockSignedInHeroHint } from "@/components/StockSignedInHeroHint";
 import { StockLensPanels } from "@/components/StockLensPanels";
 import { StockMembershipChips } from "@/components/StockMembershipChips";
 import { StockPerformanceChart } from "@/components/StockPerformanceChart";
@@ -299,8 +300,19 @@ export function StockPageRuntime({ ticker: rawTicker }: Props) {
                   </span>
                 </span>
               </h1>
+              <StockMembershipChips
+                ticker={ticker}
+                themes={state.panelThemes}
+                dataBaseUrl={dataBaseUrl || ""}
+                hydrateTierB={Boolean(dataBaseUrl && !state.detailMissing)}
+              />
               <StockGuestUnlockHint signInNext={stockPagePath(ticker)} />
-              <StockMembershipChips ticker={ticker} themes={state.panelThemes} />
+              <StockSignedInHeroHint
+                ticker={ticker}
+                themes={state.panelThemes}
+                dataBaseUrl={dataBaseUrl || ""}
+                hydrateTierB={Boolean(dataBaseUrl && !state.detailMissing)}
+              />
               {!dataBaseUrl ? (
                 <StockthemesDetailUnavailable kind="stock" slug={ticker} />
               ) : null}

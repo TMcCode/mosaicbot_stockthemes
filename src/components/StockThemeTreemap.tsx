@@ -8,15 +8,8 @@ import {
   buildStockThemeTreemapNodes,
 } from "@/lib/buildStockThemeTreemapNodes";
 import { pickDefaultTreemapPeriod } from "@/lib/buildConstituentTreemapNodes";
-import {
-  mergeStockDetailWithApp,
-  parseStockAppPayload,
-  stockAppBrowserPath,
-} from "@/lib/mergeStockApp";
-import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
+import { formatTickerPerformanceAsOf } from "@/lib/formatSiteDataPublished";
+import { fetchStockAppBrowser, mergeStockDetailWithApp } from "@/lib/mergeStockApp";
 import type {
   StockDetailV0,
   StockThemeMembershipAppV0,
@@ -30,6 +23,7 @@ type Props = {
   themes: StockThemeMembershipPublicV0[] | StockThemeMembershipAppV0[];
   /** When true, fetch Tier B `.app` for weights + theme returns. */
   hydrateTierB?: boolean;
+  /** Fallback when live compare / Tier B as_of are not available yet. */
   asOfLabel?: string | null;
 };
 
@@ -46,9 +40,11 @@ export function StockThemeTreemap({
   const [themes, setThemes] = useState<StockThemeMembershipAppV0[]>(() =>
     themesProp.map((t) => ({ ...t })),
   );
+  const [appPerfAsOf, setAppPerfAsOf] = useState<string | null>(null);
 
   useEffect(() => {
     setThemes(themesProp.map((t) => ({ ...t })));
+    setAppPerfAsOf(null);
     if (!clientTierB || !dataBaseUrl) return;
     let cancelled = false;
     const shell: StockDetailV0 = {
@@ -63,19 +59,14 @@ export function StockThemeTreemap({
       })),
     };
     void (async () => {
-      try {
-        const q = stockthemesBrowserCacheBusterQuery();
-        const path = `${stockAppBrowserPath(ticker)}${q ? `?${q}` : ""}`;
-        const res = await fetch(path, { cache: stockthemesBrowserFetchCache() });
-        if (!res.ok || cancelled) return;
-        const raw: unknown = await res.json();
-        const app = parseStockAppPayload(raw);
-        if (!app || cancelled) return;
-        const merged = mergeStockDetailWithApp(shell, app);
-        if (!cancelled) setThemes(merged.themes);
-      } catch {
-        /* keep shell */
-      }
+      const app = await fetchStockAppBrowser(ticker);
+      if (!app || cancelled) return;
+      const merged = mergeStockDetailWithApp(shell, app);
+      if (cancelled) return;
+      setThemes(merged.themes);
+      const perf =
+        app.ticker_performance_as_of?.trim() || app.as_of?.trim() || null;
+      setAppPerfAsOf(perf);
     })();
     return () => {
       cancelled = true;
@@ -83,9 +74,16 @@ export function StockThemeTreemap({
     // eslint-disable-next-line react-hooks/exhaustive-deps -- themeShellKey stands in for themesProp
   }, [clientTierB, dataBaseUrl, ticker, themeShellKey]);
 
-  const { themes: liveThemes } = useLiveStockThemes(themes);
+  const { themes: liveThemes, liveTickerPerformanceAsOf } = useLiveStockThemes(themes);
   const nodes = useMemo(() => buildStockThemeTreemapNodes(liveThemes), [liveThemes]);
   const defaultPeriod = useMemo(() => pickDefaultTreemapPeriod(nodes), [nodes]);
+
+  const caption = useMemo(() => {
+    // Colors follow live compare_themes when present; caption must match.
+    const iso = liveTickerPerformanceAsOf || appPerfAsOf;
+    if (iso) return formatTickerPerformanceAsOf(iso);
+    return asOfLabel?.trim() || null;
+  }, [liveTickerPerformanceAsOf, appPerfAsOf, asOfLabel]);
 
   if (!nodes.length) return null;
 
@@ -95,7 +93,7 @@ export function StockThemeTreemap({
       themeName={displayName}
       tileMode="theme"
       defaultReturnPeriod={defaultPeriod}
-      asOfLabel={asOfLabel}
+      asOfLabel={caption}
     />
   );
 }

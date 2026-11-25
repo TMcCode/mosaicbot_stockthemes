@@ -71,7 +71,8 @@
 }
 
 /* Stats float in the right rail (when visible) so they don’t stretch the row and push search down.
-   Descendant selector (not >) — Suspense may sit between .heroGrid and the <ul>. */
+   Descendant selector (not >) — Suspense may sit between .heroGrid and the <ul>.
+   min-height keeps search clear of the absolute 4-card rail. */
 @media (min-width: 601px) {
   .heroGrid {
     position: relative;
@@ -81,6 +82,7 @@
 
   .heroGrid .heroMain {
     padding-right: 236px; /* 220px stats + gutter */
+    min-height: 168px; /* just enough to clear the absolute stats rail */
   }
 
   .heroGrid .statGridHero {
@@ -89,6 +91,10 @@
     right: 0;
     margin-top: 0;
     z-index: 1;
+  }
+
+  .heroGrid > .heroSearchStack.heroFullBleed {
+    margin-top: 8px;
   }
 }
 
@@ -170,9 +176,12 @@
   margin-bottom: 4px;
 }
 
-/* Beat `.heroMain { gap: 20px }` — same element carries both classes. */
-.heroMain.themeHeroTitleArea {
+/* Beat `.heroMain { gap: 20px }` — same element carries both classes.
+   No home stats gutter — treemap is a real grid column. */
+.heroMain.themeHeroTitleArea,
+.heroGrid .heroMain.themeHeroTitleArea {
   gap: 10px;
+  padding-right: 0;
 }
 
 .heroMain.themeHeroTitleArea .heroTitleWithStar {
@@ -274,11 +283,14 @@
 }
 
 /* Beat `.heroMain { gap: 20px }` — chips sit tight under the ticker title.
-   Fill stretched hero row so the guest unlock slot can sit lower (mid-column). */
-.heroMain.stockHeroTitleArea {
+   Stretch to treemap height so unlock can pin into the leftover gap.
+   Drop home-page stats gutter (`.heroGrid .heroMain { padding-right: 236px }`). */
+.heroMain.stockHeroTitleArea,
+.heroGrid .heroMain.stockHeroTitleArea {
   gap: 6px;
   height: 100%;
   min-height: 0;
+  padding-right: 0;
 }
 
 @media (min-width: 1101px) {

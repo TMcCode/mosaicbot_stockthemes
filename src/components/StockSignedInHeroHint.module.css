@@ -1,0 +1,58 @@
+/* Same pin as guest unlock — fills the gap under chips when signed in. */
+.heroSlot {
+  flex: 0 0 auto;
+  margin-top: auto;
+  margin-bottom: 14px;
+  width: 100%;
+  padding-top: 10px;
+  max-width: 520px;
+}
+
+.whatTheyDo {
+  margin: 0;
+  max-width: none;
+  font-size: 13px !important;
+  font-weight: 500;
+  line-height: 1.4 !important;
+  color: var(--text-primary, #e8edec);
+}
+
+.membership {
+  margin: 6px 0 0;
+  max-width: none;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  color: var(--text-secondary, #9aa8a6);
+}
+
+.membershipStrong {
+  color: var(--text-primary, #e8edec);
+  font-weight: 600;
+}
+
+.deskHint {
+  margin: 6px 0 0;
+  max-width: none;
+  font-size: 11px !important;
+  line-height: 1.4 !important;
+  color: var(--text-muted, #6e7d7b);
+}
+
+@media (max-width: 640px) {
+  .heroSlot {
+    margin-top: 8px;
+    padding-top: 0;
+  }
+
+  .whatTheyDo {
+    font-size: 12px !important;
+  }
+
+  .membership {
+    font-size: 11px !important;
+  }
+
+  .deskHint {
+    font-size: 10px !important;
+  }
+}

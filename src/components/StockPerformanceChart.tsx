@@ -31,16 +31,12 @@ import {
   type OverlayChartPeriod,
 } from "@/lib/chartPeriodControls";
 import { fetchSpyBenchmarkPerformance } from "@/lib/fetchSpyBenchmark";
-import { parseStockAppPayload, stockAppBrowserPath } from "@/lib/mergeStockApp";
+import { fetchStockAppBrowser } from "@/lib/mergeStockApp";
 import {
   OVERLAY_BENCHMARK_COLOR,
   OVERLAY_CHART_PALETTE,
 } from "@/lib/overlayChartPalette";
 import { sliceAndRebaseIndexedPerformance } from "@/lib/sliceIndexedChart";
-import {
-  stockthemesBrowserCacheBusterQuery,
-  stockthemesBrowserFetchCache,
-} from "@/lib/stockthemesCache";
 import { chartViewHeight } from "@/lib/chartViewHeight";
 import type { ChartPerformanceV0 } from "@/types/chart.v0";
 import type { ManifestSelectedDateV0 } from "@/types/manifest.v0";
@@ -192,16 +188,10 @@ export function StockPerformanceChart({
     let stale = false;
     setLoadState("loading");
     setThemeIndexPerf(null);
-    const appUrl = `${stockAppBrowserPath(ticker)}?${stockthemesBrowserCacheBusterQuery()}`;
     Promise.all([
       fetchChartSidecar("ticker", ticker),
       fetchSpyBenchmarkPerformance(),
-      fetch(appUrl, { credentials: "omit", cache: stockthemesBrowserFetchCache() })
-        .then(async (res) => {
-          if (!res.ok) return null;
-          return parseStockAppPayload(await res.json());
-        })
-        .catch(() => null),
+      fetchStockAppBrowser(ticker),
     ])
       .then(([tickerSidecar, spy, app]) => {
         if (stale) return;
