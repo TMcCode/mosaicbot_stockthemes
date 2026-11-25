@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
@@ -74,13 +75,14 @@ export default function RootLayout({
       <head>
         <link rel="preconnect" href={STOCKTHEMES_PUBLIC_BASE_URL} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={STOCKTHEMES_PUBLIC_BASE_URL} />
-        {/* Blocking theme boot in <head> — avoid next/script in <body> (React 19 client script warning). */}
-        <script
-          id="stockthemes-theme-boot"
-          dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }}
-        />
       </head>
       <body>
+        {/* beforeInteractive → injected in <head>; avoids React 19 raw <script> warning. */}
+        <Script
+          id="stockthemes-theme-boot"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }}
+        />
         {/* <AdSenseGlobalScript /> */}
         <NewsletterRuntimeProvider beehiivApiConfigured={beehiivApiConfigured}>
           <SupabaseAuthProvider>

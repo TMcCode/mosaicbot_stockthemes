@@ -28,7 +28,6 @@ import {
   formatReturnPct,
   returnTileBackground,
 } from "@/lib/treemapLayout";
-import { densityForTile } from "@/lib/treemapTileDensity";
 import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
 import type { ManifestGroupSummaryV0, ManifestThemeSummaryV0 } from "@/types/manifest.v0";
 
@@ -43,15 +42,42 @@ type Props = {
   sectorSpdrReturns?: HeatmapSectorSpdrReturns;
 };
 
-/** Market map keeps return % on mid-size cells (hero thresholds hide almost all). */
+/**
+ * Local copy of treemap density (avoids stale HMR on new shared module).
+ * Keeps return % whenever a second line still fits on this dense market map.
+ */
 function densityForMarketHeatmapTile(wPct: number, hPct: number) {
-  const base = densityForTile(wPct, hPct, true);
+  const area = wPct * hPct;
+  const minSide = Math.min(wPct, hPct);
+  let titlePx = 7;
+  let metaPx = 7;
+  let lines = 1;
+  let padPx = 2;
+  if (wPct < 9) {
+    // narrow strip
+  } else if (area >= 700 || minSide >= 20) {
+    titlePx = 10;
+    metaPx = 9;
+    lines = 3;
+    padPx = 6;
+  } else if (area >= 320 || minSide >= 12) {
+    titlePx = 9;
+    metaPx = 8;
+    lines = 2;
+    padPx = 4;
+  } else if (area >= 140 || minSide >= 8) {
+    titlePx = 8;
+    metaPx = 7;
+    lines = 1;
+    padPx = 3;
+  }
   const showReturn = wPct >= 5 && hPct >= 7;
   return {
-    ...base,
+    titlePx,
+    metaPx: showReturn ? Math.max(metaPx, 7) : metaPx,
+    lines: showReturn ? Math.min(lines, 2) : lines,
     showReturn,
-    metaPx: showReturn ? Math.max(base.metaPx, 7) : base.metaPx,
-    lines: showReturn ? Math.min(base.lines, 2) : base.lines,
+    padPx,
   };
 }
 
