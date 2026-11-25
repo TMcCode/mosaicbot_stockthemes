@@ -26,6 +26,11 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: #040506;
+}
+
+html[data-theme="light"] body {
+  background: #ebe9f2;
 }
 
 * {

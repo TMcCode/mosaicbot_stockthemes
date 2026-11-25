@@ -144,11 +144,11 @@
 
 @media (max-width: 600px) {
   .strip {
-    margin-top: 8px;
+    margin-top: 6px;
   }
 
   .label {
-    margin-bottom: 6px;
+    margin-bottom: 4px;
     font-size: 9px;
     letter-spacing: 0.05em;
     opacity: 0.85;
@@ -156,11 +156,14 @@
 
   .page {
     flex-direction: column;
-    gap: 6px;
+    align-items: stretch;
+    gap: 0;
   }
 
   .page .chip {
-    flex: 1 1 100%;
+    /* Don't grow into empty carousel height — one compact chip per page. */
+    flex: 0 0 auto;
+    width: 100%;
     max-width: 100%;
     min-width: 0;
     font-size: 11.5px;
@@ -180,7 +183,7 @@
   }
 
   .dots {
-    margin-top: 7px;
+    margin-top: 4px;
     gap: 4px;
   }
 

@@ -37,6 +37,12 @@ export const metadata: Metadata = {
   },
   description: SITE_TAGLINE,
   applicationName: "stockthemes.ai",
+  /* Keeps iOS Safari top chrome solid dark instead of frosted over page glow. */
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#040506" },
+    { media: "(prefers-color-scheme: light)", color: "#ebe9f2" },
+    { color: STOCKTHEMES_DEFAULT_THEME === "light" ? "#ebe9f2" : "#040506" },
+  ],
   openGraph: {
     title: "stockthemes.ai",
     description: SITE_TAGLINE,

@@ -5,6 +5,10 @@
   padding: 6px 16px 0;
   font-family: var(--font-geist-sans);
   font-size: 14px;
+  /* Opaque always — mobile Safari was frosting a transparent bar over page glow. */
+  background: var(--background, #040506);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 @media (min-width: 601px) {
@@ -14,7 +18,7 @@
     left: 0;
     right: 0;
     z-index: 50;
-    background: var(--background);
+    background: var(--background, #040506);
   }
 
   .desktopOffset {
@@ -324,6 +328,9 @@
 @media (max-width: 600px) {
   .wrap {
     padding: 6px 12px 0;
+    /* Solid fill into the status-bar overlap so iOS doesn’t paint liquid-glass. */
+    background: var(--background, #040506);
+    background-clip: padding-box;
   }
 
   .row {

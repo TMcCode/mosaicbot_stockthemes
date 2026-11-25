@@ -149,8 +149,8 @@ export function HomeExplorePaths({
     [paths],
   );
 
-  // Stable page size across SSR → hydrate (no mobile remount that shifts Trending under a tap).
-  const visible = Math.max(1, visibleCount || DEFAULT_VISIBLE);
+  // Desktop: 3 chips per snap page. Mobile: 1 — avoids a tall scroller gap under short pages.
+  const visible = Math.max(1, isMobile ? 1 : visibleCount || DEFAULT_VISIBLE);
   const chunks = useMemo(() => chunkPaths(cleaned, visible), [cleaned, visible]);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

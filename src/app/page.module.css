@@ -2467,9 +2467,9 @@ a.secondary {
 
 @media (max-width: 600px) {
   .explorePathsFallback {
-    margin-top: 8px;
-    /* label + 3 stacked chips + dots (stable page size on phone). */
-    min-height: 132px;
+    margin-top: 6px;
+    /* label + 1 chip + dots */
+    min-height: 52px;
   }
 }
 
@@ -2530,7 +2530,7 @@ a.secondary {
   }
 
   .heroSearch {
-    padding: 12px 12px 10px;
+    padding: 10px 12px 8px;
     border-color: rgba(38, 252, 214, 0.48);
     box-shadow:
       0 0 0 1px rgba(255, 255, 255, 0.05) inset,
