@@ -70,6 +70,28 @@
   align-items: start;
 }
 
+/* Stats float in the right rail (when visible) so they don’t stretch the row and push search down.
+   Descendant selector (not >) — Suspense may sit between .heroGrid and the <ul>. */
+@media (min-width: 601px) {
+  .heroGrid {
+    position: relative;
+    grid-template-columns: minmax(0, 1fr);
+    column-gap: 0;
+  }
+
+  .heroGrid .heroMain {
+    padding-right: 236px; /* 220px stats + gutter */
+  }
+
+  .heroGrid .statGridHero {
+    position: absolute;
+    top: 8px;
+    right: 0;
+    margin-top: 0;
+    z-index: 1;
+  }
+}
+
 /* Theme detail desktop (= GitHub): title+factor | treemap, thesis full-bleed under.
    Mobile (≤1100px) stacks title → thesis → map → factor via `.themeHeroAreas`. */
 .heroGridThemeDetail {
@@ -297,10 +319,43 @@
   }
 }
 
+/* H1 + forest line stacked tight (beats .heroMain 20px gap). */
+.heroTitleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.introPunchlineForest {
+  margin: 0;
+  font-size: clamp(18px, 2.1vw, 24px);
+  line-height: 1.25;
+  font-weight: 650;
+  color: var(--text-primary);
+  max-width: 920px;
+  text-wrap: balance;
+}
+
+/* Quiet how-to immediately above the search card — always one line.
+   Beat `.intro p` (18px) with higher specificity. */
+.intro p.introPunchlineHow {
+  margin: 0;
+  max-width: none;
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 450;
+  font-style: italic;
+  text-wrap: nowrap;
+  white-space: nowrap;
+  color: var(--text-secondary);
+}
+
 .heroMain {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 12px;
   min-width: 0;
   max-width: 100%;
 }
@@ -507,7 +562,7 @@
 .statGridHero {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   list-style: none;
   margin: 0;
   padding: 0;
@@ -516,23 +571,20 @@
   justify-self: end;
 }
 
-@media (min-width: 1101px) {
-  .statGridHero {
-    margin-top: 36px;
-  }
-}
 
 .statGridHero .statCard {
-  padding: 8px 10px;
+  padding: 5px 10px;
 }
 
 .statGridHero .statCard strong {
-  font-size: 18px;
+  font-size: 17px;
+  line-height: 1.1;
 }
 
 .statGridHero .statCard span {
   font-size: 11px;
-  line-height: 1.3;
+  line-height: 1.2;
+  margin-bottom: 1px;
 }
 
 .statGridHero .statMarketCap span {
@@ -2105,7 +2157,8 @@ a.secondary {
 
   .main {
     border-radius: 14px;
-    padding: 24px 18px;
+    /* Slightly tighter right pad so hero how-to can sit on one line. */
+    padding: 24px 10px 24px 18px;
   }
 
   .intro {
@@ -2152,6 +2205,18 @@ a.secondary {
     line-height: 1.4;
     font-weight: 450;
     text-wrap: pretty;
+  }
+
+  .introPunchlineForest {
+    font-size: 14px;
+    line-height: 1.4;
+    font-weight: 600;
+    text-wrap: pretty;
+  }
+
+  .intro p.introPunchlineHow {
+    font-size: 10px;
+    line-height: 1.3;
   }
 
   .introMore {
@@ -2403,14 +2468,14 @@ a.secondary {
 
 .heroGrid > .heroSearch.heroFullBleed,
 .heroGrid > .heroSearchStack.heroFullBleed {
-  margin-top: 14px;
+  margin-top: 4px;
 }
 
 /* Utility strip sits tight above the search card. */
 .heroSearchStack {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   width: 100%;
   min-width: 0;
 }
@@ -2445,7 +2510,11 @@ a.secondary {
 
   .heroGrid > .heroSearch.heroFullBleed,
   .heroGrid > .heroSearchStack.heroFullBleed {
-    margin-top: 12px;
+    margin-top: 4px;
+  }
+
+  .heroSearchStack {
+    gap: 4px;
   }
 
   .heroSearch {

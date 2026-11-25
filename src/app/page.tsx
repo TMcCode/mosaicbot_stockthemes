@@ -4,7 +4,6 @@ import { Suspense } from "react";
 import { HomeDeferredBand } from "@/components/HomeDeferredBand";
 import { HomeExplorePathsSlot } from "@/components/HomeExplorePathsSlot";
 import { HomeHeroStats } from "@/components/HomeHeroStats";
-import { HomeHeroUtilityStrip } from "@/components/HomeHeroUtilityStrip";
 import { HomeMoversBand } from "@/components/HomeMoversBand";
 import { JsonLd } from "@/components/JsonLd";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
@@ -73,22 +72,22 @@ export default function Home() {
                   stockthemes.ai
                 </span>
               </div>
-              <div className={styles.heroTitleRow}>
-                <h1
-                  className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
-                >
-                  Themes that move stocks
-                </h1>
-                {/* Mobile only: brand row is hidden there, so show the animated mark beside the title. */}
-                <div className={styles.heroTitleLogoMobile}>
-                  <HeroAnimatedLogo />
+              <div className={styles.heroTitleBlock}>
+                <div className={styles.heroTitleRow}>
+                  <h1
+                    className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
+                  >
+                    Your Thematic Investor Toolkit
+                  </h1>
+                  {/* Mobile only: brand row is hidden there, so show the animated mark beside the title. */}
+                  <div className={styles.heroTitleLogoMobile}>
+                    <HeroAnimatedLogo />
+                  </div>
                 </div>
+                <p className={styles.introPunchlineForest}>
+                  See the Forest for the Themes
+                </p>
               </div>
-              <p className={styles.introPunchline}>
-                <span className={styles.introPunchlineLine}>
-                  Type a stock you own, or a keyword, to map the themes underneath.
-                </span>
-              </p>
             </div>
 
             <Suspense fallback={null}>
@@ -96,7 +95,9 @@ export default function Home() {
             </Suspense>
 
             <div className={`${styles.heroSearchStack} ${styles.heroFullBleed}`}>
-              <HomeHeroUtilityStrip />
+              <p className={styles.introPunchlineHow}>
+                Type a stock or theme keyword below.
+              </p>
               <div className={styles.heroSearch}>
                 <span className={styles.heroSearchLabel}>Stock or theme</span>
                 <LazySiteSearch
