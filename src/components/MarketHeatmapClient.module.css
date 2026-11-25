@@ -1,3 +1,8 @@
+.shell {
+  width: 100%;
+  min-width: 0;
+}
+
 .toolbar {
   display: flex;
   flex-direction: column;
@@ -209,11 +214,83 @@
   width: 100%;
   min-height: 520px;
   height: min(72vh, 680px);
+  aspect-ratio: auto;
   border-radius: 12px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   background: rgba(0, 0, 0, 0.18);
   box-sizing: border-box;
   overflow: hidden;
+}
+
+/* Desktop: pack chrome, grow map — same full-width map, taller viewport share. */
+@media (min-width: 901px) {
+  .heroMain {
+    gap: 6px;
+  }
+
+  /* Beat page `.intro h1` so the title doesn’t eat the map. */
+  .shell h1.title {
+    font-size: 34px;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+  }
+
+  .shell p.lead {
+    margin-top: 2px;
+    font-size: 15px;
+    line-height: 1.35;
+    font-weight: 500;
+    max-width: 640px;
+    color: var(--text-primary, #e8edec);
+  }
+
+  .statsLine {
+    margin: 2px 0 0;
+    font-size: 12px;
+  }
+
+  .toolbar {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 18px;
+    margin: 8px 0 10px;
+  }
+
+  .toolbarRow {
+    gap: 6px 10px;
+  }
+
+  .searchWrap {
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    flex: 1 1 200px;
+    max-width: 280px;
+  }
+
+  .searchInput {
+    padding: 5px 9px;
+    font-size: 12px;
+  }
+
+  .toggle button {
+    padding: 4px 9px;
+    font-size: 11px;
+  }
+
+  .map {
+    /* Leave room for nav + compact chrome; keep a readable floor/ceiling. */
+    min-height: 620px;
+    height: clamp(620px, calc(100dvh - 200px), 980px);
+  }
+
+  .asOf {
+    margin: 4px 0 0;
+    font-size: 9px;
+    line-height: 1.2;
+    opacity: 0.7;
+  }
 }
 
 .mapExpanded {
@@ -329,7 +406,7 @@
 
 .asOf {
   margin: 6px 0 0;
-  font-size: 11px;
+  font-size: 10px;
   text-align: right;
   color: var(--text-muted, #6e7d7b);
 }

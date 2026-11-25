@@ -332,9 +332,9 @@ export function MarketHeatmapClient({
   }, [filteredTiles]);
 
   return (
-    <>
+    <div className={styles.shell}>
       <div className={pageStyles.heroGrid}>
-        <div className={pageStyles.heroMain}>
+        <div className={`${pageStyles.heroMain} ${styles.heroMain}`}>
           <p className={pageStyles.eyebrow}>{eyebrow}</p>
           <h1 className={styles.title}>Market heatmap</h1>
           <p className={styles.lead}>
@@ -531,6 +531,6 @@ export function MarketHeatmapClient({
           </div>
         </>
       )}
-    </>
+    </div>
   );
 }
