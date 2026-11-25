@@ -441,14 +441,15 @@ export function ComparePageClient({
                     <span className={styles.toggleLabelShort}>No supporting</span>
                   </label>
                 ) : null}
+                {/* Mobile: start a new row for My Watchlist + Top Picks. */}
+                <span className={styles.watchlistToggleBreak} aria-hidden="true" />
                 <label className={styles.benchmarkToggle}>
                   <input
                     type="checkbox"
                     checked={myWatchlistOnly}
                     onChange={(e) => setMyWatchlistOnly(e.target.checked)}
                   />
-                  <span className={styles.toggleLabelFull}>My Watchlist</span>
-                  <span className={styles.toggleLabelShort}>Mine</span>
+                  <span>My Watchlist</span>
                 </label>
                 <label className={styles.benchmarkToggle}>
                   <input
@@ -456,7 +457,6 @@ export function ComparePageClient({
                     checked={topPicksOnly}
                     onChange={(e) => setTopPicksOnly(e.target.checked)}
                   />
-                  {/* Same label at all breakpoints (no short/full swap). */}
                   <span>Top Picks</span>
                 </label>
               </div>
