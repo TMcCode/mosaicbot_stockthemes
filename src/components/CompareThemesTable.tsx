@@ -48,6 +48,10 @@ type Props = {
   selectedDates?: ManifestSelectedDateV0[];
   entityKind?: "theme" | "group";
   toolbarStart?: ReactNode;
+  /** Deep-link primary sort (e.g. `?sort=3M`). Falls back to 10D. */
+  initialSortKey?: string | null;
+  /** Primary sort key only (ignores shift+click secondary sorts). */
+  onPrimarySortKeyChange?: (key: string) => void;
 };
 
 function isBenchmarkRow(row: DisplayRow): row is CompareBenchmarkRow {
@@ -64,6 +68,15 @@ function fmtPct(v?: number): string {
 const ROWS_INITIAL = 120;
 const ROWS_BATCH = 200;
 
+function resolveInitialSortKey(
+  initialSortKey: string | null | undefined,
+  columns: string[],
+): string {
+  const key = String(initialSortKey || "").trim();
+  if (key && (key === "Theme" || columns.includes(key))) return key;
+  return "10D";
+}
+
 export function CompareThemesTable({
   benchmarkRows = [],
   rows,
@@ -71,16 +84,33 @@ export function CompareThemesTable({
   selectedDates,
   entityKind = "theme",
   toolbarStart,
+  initialSortKey = null,
+  onPrimarySortKeyChange,
 }: Props) {
   const { configured, showAuthedUi } = useSupabaseAuth();
   const csvLocked = configured && !showAuthedUi;
   const signInHref = `/sign-in?next=${encodeURIComponent("/compare")}`;
-  const [sorts, setSorts] = useState<SortState[]>([{ key: "10D", dir: "desc" }]);
+  const [sorts, setSorts] = useState<SortState[]>(() => [
+    { key: resolveInitialSortKey(initialSortKey, columns), dir: "desc" },
+  ]);
+  const appliedUrlSortRef = useRef<string | null>(
+    initialSortKey ? resolveInitialSortKey(initialSortKey, columns) : null,
+  );
+
+  // Apply deep-link sort once columns are ready (bundle may hydrate after mount).
+  useEffect(() => {
+    const key = String(initialSortKey || "").trim();
+    if (!key) return;
+    if (key !== "Theme" && !columns.includes(key)) return;
+    if (appliedUrlSortRef.current === key) return;
+    appliedUrlSortRef.current = key;
+    setSorts([{ key, dir: "desc" }]);
+    onPrimarySortKeyChange?.(key);
+  }, [initialSortKey, columns, onPrimarySortKeyChange]);
   const selectedDateByKey = useMemo(
     () => buildSelectedDateLookup(selectedDates),
     [selectedDates],
   );
-
   const displayRows = useMemo(() => {
     const out: DisplayRow[] = [...benchmarkRows, ...rows];
     // Precompute sort keys once — Array.sort comparisons call the comparator
@@ -145,13 +175,20 @@ export function CompareThemesTable({
       setSorts((prev) => {
         const idx = prev.findIndex((s) => s.key === key);
         const nextDir = idx >= 0 && prev[idx].dir === "desc" ? "asc" : "desc";
-        if (!shiftKey) return [{ key, dir: nextDir }];
-        if (idx >= 0) {
+        let next: SortState[];
+        if (!shiftKey) {
+          next = [{ key, dir: nextDir }];
+        } else if (idx >= 0) {
           const copy = [...prev];
           copy[idx] = { key, dir: nextDir };
-          return copy;
+          next = copy;
+        } else {
+          next = [...prev, { key, dir: nextDir }];
         }
-        return [...prev, { key, dir: nextDir }];
+        // Summary follows primary sort only — notify parent without a mount effect.
+        const primary = next[0]?.key;
+        if (primary) onPrimarySortKeyChange?.(primary);
+        return next;
       });
     });
   };

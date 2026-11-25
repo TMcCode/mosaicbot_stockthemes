@@ -3,10 +3,9 @@
 import Link from "next/link";
 
 import {
-  COMPARE_SUMMARY_PERIODS,
   computeComparePeriodSummary,
+  compareSummaryMetricLabel,
   type CompareGroupExtreme,
-  type CompareSummaryPeriod,
 } from "@/lib/comparePeriodSummary";
 import { trendingReturnHeatStyle } from "@/lib/trendingPerfHeat";
 import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
@@ -24,9 +23,8 @@ type Row = {
 
 type Props = {
   rows: Row[];
-  period: CompareSummaryPeriod;
-  onPeriodChange: (period: CompareSummaryPeriod) => void;
-  availablePeriods: CompareSummaryPeriod[];
+  /** Compare table metric column (follows primary sort). */
+  metricColumn: string;
   entityKind?: "theme" | "group";
 };
 
@@ -116,48 +114,22 @@ function ExtremeLine({
 
 export function CompareSummaryPanel({
   rows,
-  period,
-  onPeriodChange,
-  availablePeriods,
+  metricColumn,
   entityKind = "theme",
 }: Props) {
-  const periods = COMPARE_SUMMARY_PERIODS.filter((p) => availablePeriods.includes(p.key));
-  const activePeriod = periods.some((p) => p.key === period)
-    ? period
-    : (periods[0]?.key ?? "10D");
-
-  const summary = computeComparePeriodSummary(rows, activePeriod);
+  const summary = computeComparePeriodSummary(rows, metricColumn);
 
   const medianHeat =
     summary.median != null && Number.isFinite(summary.median)
       ? trendingReturnHeatStyle(summary.median)
       : undefined;
 
-  const periodLabel = periods.find((p) => p.key === activePeriod)?.label ?? activePeriod;
+  const periodLabel = compareSummaryMetricLabel(summary.period);
 
   return (
     <aside className={styles.panel} aria-label={`Filtered ${entityKind} return summary`}>
       <div>
-        <span className={styles.toolbarLabel}>Summary</span>
-        {periods.length > 1 ? (
-          <div
-            className={styles.toggle}
-            role="group"
-            aria-label="Return period for summary stats"
-          >
-            {periods.map(({ key, label }) => (
-              <button
-                key={key}
-                type="button"
-                className={activePeriod === key ? styles.toggleActive : undefined}
-                aria-pressed={activePeriod === key}
-                onClick={() => onPeriodChange(key)}
-              >
-                {label}%
-              </button>
-            ))}
-          </div>
-        ) : null}
+        <span className={styles.toolbarLabel}>Summary · {periodLabel}</span>
       </div>
 
       <div className={styles.headlineBlock}>

@@ -1,6 +1,14 @@
-import { valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
+import { COMPARE_SUMMARY_DEFAULT_METRIC } from "@/lib/compareSummaryMetricColumn";
+import { compareColumnHeader, valueForTrendingColumn } from "@/lib/trendingCompareMetrics";
 import type { ThemeCompareReturnsV0 } from "@/types/theme.detail.v0";
 
+export {
+  COMPARE_SUMMARY_DEFAULT_METRIC,
+  isCompareNameSortKey,
+  resolveCompareSummaryMetricColumn,
+} from "@/lib/compareSummaryMetricColumn";
+
+/** @deprecated Summary follows any metric column; kept for older call sites. */
 export const COMPARE_SUMMARY_PERIODS = [
   { key: "1D", label: "1D" },
   { key: "10D", label: "10D" },
@@ -9,6 +17,7 @@ export const COMPARE_SUMMARY_PERIODS = [
   { key: "YTD", label: "YTD" },
 ] as const;
 
+/** @deprecated Use string metric column keys. */
 export type CompareSummaryPeriod = (typeof COMPARE_SUMMARY_PERIODS)[number]["key"];
 
 const FLAT_EPS = 0.5;
@@ -28,7 +37,8 @@ export type CompareGroupExtreme = {
 };
 
 export type ComparePeriodSummary = {
-  period: CompareSummaryPeriod;
+  /** Metric column key (e.g. 10D, LstRpt %, custom SelectedDate). */
+  period: string;
   filteredCount: number;
   withDataCount: number;
   median: number | null;
@@ -58,11 +68,11 @@ function median(values: number[]): number | null {
   return (sorted[mid - 1] + sorted[mid]) / 2;
 }
 
-function groupMedians(rows: SummaryRow[], period: CompareSummaryPeriod): CompareGroupExtreme[] {
+function groupMedians(rows: SummaryRow[], metricColumn: string): CompareGroupExtreme[] {
   const byGroup = new Map<string, { values: number[]; slug: string }>();
   for (const row of rows) {
     const group = String(row.groupName || "").trim() || "Other";
-    const v = valueForTrendingColumn(period, row.compareReturns ?? undefined, {}, row.name);
+    const v = valueForTrendingColumn(metricColumn, row.compareReturns ?? undefined, {}, row.name);
     if (v == null || !Number.isFinite(v)) continue;
     let bucket = byGroup.get(group);
     if (!bucket) {
@@ -86,8 +96,9 @@ function groupMedians(rows: SummaryRow[], period: CompareSummaryPeriod): Compare
 
 export function computeComparePeriodSummary(
   rows: SummaryRow[],
-  period: CompareSummaryPeriod,
+  metricColumn: string,
 ): ComparePeriodSummary {
+  const period = String(metricColumn || "").trim() || COMPARE_SUMMARY_DEFAULT_METRIC;
   const entries: { row: SummaryRow; value: number }[] = [];
   for (const row of rows) {
     const value = valueForTrendingColumn(period, row.compareReturns ?? undefined, {}, row.name);
@@ -132,6 +143,12 @@ export function computeComparePeriodSummary(
   };
 }
 
+/** Short label for summary chrome (no trailing % — callers add it). */
+export function compareSummaryMetricLabel(metricColumn: string): string {
+  return compareColumnHeader(metricColumn);
+}
+
+/** @deprecated Summary no longer uses a fixed period allowlist. */
 export function availableCompareSummaryPeriods(columns: string[]): CompareSummaryPeriod[] {
   return COMPARE_SUMMARY_PERIODS.filter((p) => columns.includes(p.key)).map((p) => p.key);
 }

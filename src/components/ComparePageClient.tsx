@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
 import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
@@ -13,9 +13,11 @@ import { useWatchlist } from "@/components/WatchlistProvider";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useLazyCompareGroups } from "@/hooks/useCompareReturnsData";
+import { useTopPicksSlugs } from "@/hooks/useTopPicksSlugs";
 import {
-  availableCompareSummaryPeriods,
-  type CompareSummaryPeriod,
+  COMPARE_SUMMARY_DEFAULT_METRIC,
+  isCompareNameSortKey,
+  resolveCompareSummaryMetricColumn,
 } from "@/lib/comparePeriodSummary";
 import {
   resolveCompareDisplayColumns,
@@ -69,10 +71,6 @@ type Props = {
   groupSectorByName: Record<string, string>;
   sectorOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
-  /** Editor sheet Top Picks — precomputed theme slugs from ETL. */
-  topPickThemeSlugs?: string[];
-  /** Editor sheet Top Picks — precomputed group slugs from ETL. */
-  topPickGroupSlugs?: string[];
 };
 
 export function ComparePageClient({
@@ -85,8 +83,6 @@ export function ComparePageClient({
   groupSectorByName,
   sectorOptions,
   selectedDates,
-  topPickThemeSlugs = [],
-  topPickGroupSlugs = [],
 }: Props) {
   const { user, showAuthedUi } = useOptionalSupabaseAuth();
   const watchlist = useWatchlist();
@@ -155,28 +151,56 @@ export function ComparePageClient({
   const [excludeSupportingThemes, setExcludeSupportingThemes] = useState(true);
   const [myWatchlistOnly, setMyWatchlistOnly] = useState(false);
   const [topPicksOnly, setTopPicksOnly] = useState(false);
+  const [urlSortKey, setUrlSortKey] = useState<string | null>(null);
+  // Only fetch when Top Picks is on — never compete with compare_themes hydrate.
+  const {
+    themeSlugs: topPickThemeSlugs,
+    groupSlugs: topPickGroupSlugs,
+    ready: topPicksReady,
+  } = useTopPicksSlugs(topPicksOnly);
   const topPickThemeSet = useMemo(() => toSlugSet(topPickThemeSlugs), [topPickThemeSlugs]);
   const topPickGroupSet = useMemo(() => toSlugSet(topPickGroupSlugs), [topPickGroupSlugs]);
   const signInHref = "/sign-in?next=%2Fcompare";
   const signedIn = Boolean(user) || showAuthedUi;
-  const availablePeriods = useMemo(
-    () => availableCompareSummaryPeriods(visibleColumns),
-    [visibleColumns],
+  const [primarySortKey, setPrimarySortKey] = useState(COMPARE_SUMMARY_DEFAULT_METRIC);
+  const [lastMetricSortKey, setLastMetricSortKey] = useState(COMPARE_SUMMARY_DEFAULT_METRIC);
+
+  const onPrimarySortKeyChange = useCallback((key: string) => {
+    setPrimarySortKey(key);
+    if (!isCompareNameSortKey(key)) {
+      setLastMetricSortKey(key);
+    }
+  }, []);
+
+  const summaryMetricColumn = useMemo(
+    () =>
+      resolveCompareSummaryMetricColumn(primarySortKey, lastMetricSortKey, visibleColumns),
+    [primarySortKey, lastMetricSortKey, visibleColumns],
   );
-  const [summaryPeriod, setSummaryPeriod] = useState<CompareSummaryPeriod>(() => {
-    if (availablePeriods.includes("10D")) return "10D";
-    return availablePeriods[0] ?? "10D";
-  });
 
   useEffect(() => {
-    const applyUrlView = () => {
-      const value = new URLSearchParams(window.location.search).get("view");
-      setViewMode(value === "groups" ? "groups" : "themes");
+    const truthy = (raw: string | null) => {
+      const v = String(raw || "")
+        .trim()
+        .toLowerCase();
+      return v === "1" || v === "true" || v === "yes";
+    };
+    const applyUrlParams = () => {
+      const sp = new URLSearchParams(window.location.search);
+      setViewMode(sp.get("view") === "groups" ? "groups" : "themes");
+      setMyWatchlistOnly(truthy(sp.get("my")));
+      setTopPicksOnly(truthy(sp.get("picks")));
+      const sort = String(sp.get("sort") || "").trim();
+      setUrlSortKey(sort || null);
+      if (sort && !isCompareNameSortKey(sort)) {
+        setPrimarySortKey(sort);
+        setLastMetricSortKey(sort);
+      }
       setUrlViewResolved(true);
     };
-    applyUrlView();
-    window.addEventListener("popstate", applyUrlView);
-    return () => window.removeEventListener("popstate", applyUrlView);
+    applyUrlParams();
+    window.addEventListener("popstate", applyUrlParams);
+    return () => window.removeEventListener("popstate", applyUrlParams);
   }, []);
 
   const selectView = (next: ViewMode) => {
@@ -209,7 +233,8 @@ export function ComparePageClient({
     }
     return resolveCompareWatchlistSlugFilter({
       myWatchlist: myWatchlistOnly && signedIn,
-      topPicks: topPicksOnly,
+      // Wait for fetch so an empty set doesn't flash "no matches".
+      topPicks: topPicksOnly && topPicksReady,
       viewMode,
       myThemeSlugs: watchlist?.themeKeys ?? new Set(),
       topPickThemeSlugs: topPickThemeSet,
@@ -220,6 +245,7 @@ export function ComparePageClient({
     myWatchlistOnly,
     signedIn,
     topPicksOnly,
+    topPicksReady,
     viewMode,
     watchlist?.themeKeys,
     topPickThemeSet,
@@ -353,9 +379,7 @@ export function ComparePageClient({
         {activeBundleReady ? (
           <CompareSummaryPanel
             rows={filtered}
-            period={summaryPeriod}
-            onPeriodChange={setSummaryPeriod}
-            availablePeriods={availablePeriods}
+            metricColumn={summaryMetricColumn}
             entityKind={viewMode === "groups" ? "group" : "theme"}
           />
         ) : (
@@ -393,6 +417,8 @@ export function ComparePageClient({
             columns={visibleColumns}
             selectedDates={selectedDates}
             entityKind={viewMode === "groups" ? "group" : "theme"}
+            initialSortKey={urlSortKey}
+            onPrimarySortKeyChange={onPrimarySortKeyChange}
             toolbarStart={
               <div className={styles.referenceToggles}>
                 {benchmarkRows.length > 0 ? (
