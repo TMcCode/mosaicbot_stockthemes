@@ -13,7 +13,12 @@ import {
   matchesWatchlistSearchQuery,
   WATCHLIST_SEARCH_HREF,
 } from "@/lib/siteSearchWatchlistShortcut";
+import {
+  SEARCH_TICKER_THEME_PREVIEW,
+  sliceTickerThemesForSearch,
+} from "@/lib/siteSearchTickerThemes";
 import { navigateToStockPage } from "@/lib/stockPageNavigate";
+import { stockPagePath } from "@/lib/stockPagePath";
 import { useSiteSearchEngine } from "@/lib/useSiteSearchEngine";
 import { WATCHLIST_TICKERS_UI_ENABLED } from "@/lib/watchlist/features";
 
@@ -21,6 +26,29 @@ import styles from "./SiteSearch.module.css";
 
 /** Queries shorter than this don't get the "suggest a theme" link (still typing). */
 const SUGGEST_MIN_CHARS = 3;
+
+/** Matches site desktop breakpoint (home hero can show full membership). */
+const DESKTOP_MQ = "(min-width: 901px)";
+
+/** Hero desktop = all themes; nav + mobile = compact preview. */
+function useTickerThemePreviewLimit(variant: "nav" | "hero"): number | null {
+  const [heroDesktop, setHeroDesktop] = useState(false);
+
+  useEffect(() => {
+    if (variant !== "hero") {
+      setHeroDesktop(false);
+      return;
+    }
+    const mq = window.matchMedia(DESKTOP_MQ);
+    const apply = () => setHeroDesktop(mq.matches);
+    apply();
+    mq.addEventListener("change", apply);
+    return () => mq.removeEventListener("change", apply);
+  }, [variant]);
+
+  if (variant === "hero" && heroDesktop) return null;
+  return SEARCH_TICKER_THEME_PREVIEW;
+}
 
 type SearchOption = { type: "watchlist" } | { type: "hit"; hit: SiteSearchHit };
 
@@ -48,6 +76,7 @@ export function SiteSearch({
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
   const prefetchedHrefsRef = useRef<Set<string>>(new Set());
+  const tickerThemeLimit = useTickerThemePreviewLimit(variant);
   const { engine, loadBusy, loadError, ensureLoaded: beginLoad } = useSiteSearchEngine();
 
   const [query, setQuery] = useState("");
@@ -331,31 +360,63 @@ export function SiteSearch({
                             {h.ref.theme_slugs.length === 0 ? (
                               "No theme links"
                             ) : (
-                              <>
-                                Themes:{" "}
-                                {h.ref.theme_slugs.map((slug, j) => (
-                                  <span key={slug}>
-                                    {j > 0 ? " · " : ""}
-                                    <Link
-                                      href={`/themes/${encodeURIComponent(slug)}`}
-                                      className={styles.themeLink}
-                                      prefetch={false}
-                                      onMouseEnter={() =>
-                                        prefetchHref(`/themes/${encodeURIComponent(slug)}`)
-                                      }
-                                      onFocus={() =>
-                                        prefetchHref(`/themes/${encodeURIComponent(slug)}`)
-                                      }
-                                      onClick={() => {
-                                        setOpen(false);
-                                        setQuery("");
-                                      }}
-                                    >
-                                      {themeDisplayLabel(h.ref.theme_names?.[j] ?? slug)}
-                                    </Link>
-                                  </span>
-                                ))}
-                              </>
+                              (() => {
+                                const stockHref = stockPagePath(h.ref.ticker);
+                                const { shown, moreCount } = sliceTickerThemesForSearch(
+                                  h.ref.theme_slugs,
+                                  h.ref.theme_names,
+                                  tickerThemeLimit,
+                                );
+                                return (
+                                  <>
+                                    Themes:{" "}
+                                    {shown.map((item, j) => (
+                                      <span key={item.slug}>
+                                        {j > 0 ? " · " : ""}
+                                        <Link
+                                          href={`/themes/${encodeURIComponent(item.slug)}`}
+                                          className={styles.themeLink}
+                                          prefetch={false}
+                                          onMouseEnter={() =>
+                                            prefetchHref(
+                                              `/themes/${encodeURIComponent(item.slug)}`,
+                                            )
+                                          }
+                                          onFocus={() =>
+                                            prefetchHref(
+                                              `/themes/${encodeURIComponent(item.slug)}`,
+                                            )
+                                          }
+                                          onClick={() => {
+                                            setOpen(false);
+                                            setQuery("");
+                                          }}
+                                        >
+                                          {themeDisplayLabel(item.name)}
+                                        </Link>
+                                      </span>
+                                    ))}
+                                    {moreCount > 0 ? (
+                                      <>
+                                        {" · "}
+                                        <Link
+                                          href={stockHref}
+                                          className={styles.themeLink}
+                                          prefetch={false}
+                                          onMouseEnter={() => prefetchHref(stockHref)}
+                                          onFocus={() => prefetchHref(stockHref)}
+                                          onClick={() => {
+                                            setOpen(false);
+                                            setQuery("");
+                                          }}
+                                        >
+                                          +{moreCount} more
+                                        </Link>
+                                      </>
+                                    ) : null}
+                                  </>
+                                );
+                              })()
                             )}
                           </div>
                         </div>

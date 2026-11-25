@@ -231,15 +231,6 @@
   font-size: 13px;
 }
 
-.mapExpanded .cellName {
-  font-size: 12px;
-  line-height: 1.25;
-}
-
-.mapExpanded .returnPct {
-  font-size: 11px;
-}
-
 .sectorLabel {
   position: absolute;
   display: flex;
@@ -301,15 +292,17 @@
 }
 
 .cellName {
-  display: block;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
   font-size: 9px;
   font-weight: 600;
   line-height: 1.2;
   text-align: center;
   color: var(--text-primary, #e8ece9);
-  overflow: hidden;
   word-break: break-word;
-  hyphens: auto;
+  overflow-wrap: anywhere;
+  max-width: 100%;
 }
 
 .returnPct {

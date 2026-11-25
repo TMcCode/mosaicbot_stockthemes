@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type CSSProperties } from "react";
 import { createPortal } from "react-dom";
 
 import pageStyles from "@/app/page.module.css";
@@ -28,6 +28,7 @@ import {
   formatReturnPct,
   returnTileBackground,
 } from "@/lib/treemapLayout";
+import { densityForTile } from "@/lib/treemapTileDensity";
 import type { CompareThemesRowV0 } from "@/types/compare_themes.v0";
 import type { ManifestGroupSummaryV0, ManifestThemeSummaryV0 } from "@/types/manifest.v0";
 
@@ -41,6 +42,18 @@ type Props = {
   compareRows: CompareThemesRowV0[];
   sectorSpdrReturns?: HeatmapSectorSpdrReturns;
 };
+
+/** Market map keeps return % on mid-size cells (hero thresholds hide almost all). */
+function densityForMarketHeatmapTile(wPct: number, hPct: number) {
+  const base = densityForTile(wPct, hPct, true);
+  const showReturn = wPct >= 5 && hPct >= 7;
+  return {
+    ...base,
+    showReturn,
+    metaPx: showReturn ? Math.max(base.metaPx, 7) : base.metaPx,
+    lines: showReturn ? Math.min(base.lines, 2) : base.lines,
+  };
+}
 
 function returnPctClass(ret: number | null | undefined): string {
   if (ret != null && ret > 0) return `${styles.returnPct} ${styles.returnPctUp}`;
@@ -151,6 +164,7 @@ function HeatmapTreemap({
         const t = r.tile;
         const ret = activePeriod != null ? (t.returns[activePeriod] ?? null) : null;
         const label = themeDisplayLabel(t.name);
+        const density = densityForMarketHeatmapTile(r.w, r.h);
         const title =
           periodLabel
             ? `${label} · ${t.sector} · ${periodLabel}: ${formatReturnPct(ret)}`
@@ -166,12 +180,25 @@ function HeatmapTreemap({
               width: `${r.w}%`,
               height: `${r.h}%`,
               background: returnTileBackground(ret),
+              padding: `${density.padPx}px`,
             }}
             title={title}
           >
-            <span className={styles.cellName}>{label}</span>
-            {activePeriod != null ? (
-              <span className={returnPctClass(ret)}>{formatReturnPct(ret)}</span>
+            <span
+              className={styles.cellName}
+              style={
+                {
+                  fontSize: density.titlePx,
+                  WebkitLineClamp: density.lines,
+                } as CSSProperties
+              }
+            >
+              {label}
+            </span>
+            {density.showReturn && activePeriod != null ? (
+              <span className={returnPctClass(ret)} style={{ fontSize: density.metaPx }}>
+                {formatReturnPct(ret)}
+              </span>
             ) : null}
           </Link>
         );

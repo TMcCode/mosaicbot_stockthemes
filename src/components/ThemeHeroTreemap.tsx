@@ -16,6 +16,7 @@ import {
   returnTileBackground,
   type TreemapLayoutNode,
 } from "@/lib/treemapLayout";
+import { densityForTile } from "@/lib/treemapTileDensity";
 import { splitThemeDisplayName } from "@/lib/rotationThemeLabel";
 
 import styles from "./ThemeHeroTreemap.module.css";
@@ -39,73 +40,6 @@ function weightLabel(weight: number): string {
 
 function minSideForLogo(wPct: number, hPct: number): boolean {
   return Math.min(wPct, hPct) >= 10;
-}
-
-/** Fit theme/constituent labels to the layout cell so dense maps don’t overflow. */
-function densityForTile(
-  wPct: number,
-  hPct: number,
-  themeTile: boolean,
-): {
-  titlePx: number;
-  metaPx: number;
-  lines: number;
-  showReturn: boolean;
-  showWeight: boolean;
-  padPx: number;
-} {
-  const area = wPct * hPct;
-  const minSide = Math.min(wPct, hPct);
-  // Narrow strips: one ellipsis line beats mid-word wraps.
-  if (themeTile && wPct < 9) {
-    return {
-      titlePx: 7,
-      metaPx: 7,
-      lines: 1,
-      showReturn: false,
-      showWeight: false,
-      padPx: 2,
-    };
-  }
-  if (area >= 700 || minSide >= 20) {
-    return {
-      titlePx: themeTile ? 10 : 11,
-      metaPx: 9,
-      lines: themeTile ? 3 : 1,
-      showReturn: true,
-      showWeight: true,
-      padPx: themeTile ? 6 : 4,
-    };
-  }
-  if (area >= 320 || minSide >= 12) {
-    return {
-      titlePx: themeTile ? 9 : 10,
-      metaPx: 8,
-      lines: themeTile ? 2 : 1,
-      showReturn: true,
-      showWeight: minSide >= 14,
-      padPx: 4,
-    };
-  }
-  if (area >= 140 || minSide >= 8) {
-    return {
-      titlePx: themeTile ? 8 : 9,
-      metaPx: 7,
-      lines: 1,
-      showReturn: hPct >= 10,
-      showWeight: false,
-      padPx: 3,
-    };
-  }
-  // Tiny cells: name only (full stats stay on `title` tooltip).
-  return {
-    titlePx: themeTile ? 7 : 8,
-    metaPx: 7,
-    lines: 1,
-    showReturn: false,
-    showWeight: false,
-    padPx: 2,
-  };
 }
 
 export function ThemeHeroTreemap({
