@@ -49,6 +49,69 @@
   padding-inline: 20px;
 }
 
+/* `/docs/how-to` — local styles only (no home `page.module.css`). */
+.howToEyebrow {
+  margin: 0 0 8px;
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.howToEyebrow a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.howToEyebrow a:hover {
+  color: var(--accent);
+}
+
+.howToLead,
+.howToCopy {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-secondary);
+  text-wrap: pretty;
+}
+
+.howToLead {
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+.howToCopy a,
+.howToLead a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  font-weight: 500;
+}
+
+.howToCopy a:hover,
+.howToLead a:hover {
+  color: var(--text-primary);
+}
+
+.howToCard {
+  margin-top: 12px;
+  border: 1px solid var(--button-secondary-border);
+  border-radius: 18px;
+  padding: 18px 20px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(38, 252, 214, 0.08) 0%, rgba(38, 252, 214, 0) 55%),
+    var(--surface-card);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.howToCard h2 {
+  scroll-margin-top: 80px;
+}
+
 /* Section titles inside cards — keep quieter than the page H1.
    Beat page `.aboutProse h2` (32px) with equal/higher specificity via `.article h2`. */
 .article h2 {

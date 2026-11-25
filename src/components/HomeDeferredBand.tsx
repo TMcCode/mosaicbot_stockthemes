@@ -24,6 +24,7 @@ import { getHomeRadarCached } from "@/lib/getHomeRadarCached";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getRadarNewsCached } from "@/lib/getRadarNewsCached";
 import { getSearchIndexCached } from "@/lib/getSearchIndexCached";
+import { getMostTalkedAboutCached } from "@/lib/getMostTalkedAboutCached";
 import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
 import { filterFeedEventsWithThesisText } from "@/lib/hydrateFeedThesis";
 import { loadNewsletterPosts } from "@/lib/loadNewsletterPosts";
@@ -51,6 +52,7 @@ export async function HomeDeferredBand() {
     homeFeedRes,
     radarRes,
     motionsRes,
+    mostTalkedRes,
     newsRes,
     newsletterRes,
   ] = await Promise.all([
@@ -58,11 +60,18 @@ export async function HomeDeferredBand() {
     getHomeFeedCached().catch(() => null),
     getHomeRadarCached().catch(() => null),
     getThemesInMotionCached().catch(() => null),
+    getMostTalkedAboutCached().catch(() => null),
     getRadarNewsCached().catch(() => null),
     loadNewsletterPosts().catch(() => null),
   ]);
 
-  const motionsHomepage = slimMotionsRows(motionsRes?.bundle?.homepage, 10);
+  // Prefer sheet-ordered Most talked about (baked with Motions); fall back to Motions homepage.
+  const mostTalkedHomepage = slimMotionsRows(
+    mostTalkedRes?.bundle?.homepage?.length
+      ? mostTalkedRes.bundle.homepage
+      : motionsRes?.bundle?.homepage,
+    10,
+  );
   const themeByName = new Map(manifest.themes.map((t) => [t.name, t]));
   const etlFeed =
     homeFeedRes?.bundle?.events ??
@@ -137,7 +146,7 @@ export async function HomeDeferredBand() {
         themeMetaBySlug={themeMetaBySlug}
       />
 
-      <LazyHomeThemesInMotionTable rows={motionsHomepage} />
+      <LazyHomeThemesInMotionTable rows={mostTalkedHomepage} />
 
       <div className={styles.homeFeedStack}>
         <div className={styles.directoryGrid}>

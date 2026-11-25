@@ -9,6 +9,12 @@ export type DocsNavItem = {
 
 export const DOCS_NAV: DocsNavItem[] = [
   {
+    href: "/docs/how-to",
+    label: "How to use",
+    summary:
+      "A practical loop: map themes in your stocks, keep a short watchlist, verify with returns, then read the desk.",
+  },
+  {
     href: "/docs/about",
     label: "About",
     summary: "Why stockthemes.ai exists, how theme baskets are built, and where the product is headed.",

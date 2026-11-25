@@ -1,58 +1,6 @@
-import Link from "next/link";
-import type { Metadata } from "next";
+import { permanentRedirect } from "next/navigation";
 
-import { DeferRender } from "@/components/DeferRender";
-import { HomeHighlightedThemes } from "@/components/HomeHighlightedThemes";
-import { HomeThemesInMotionTable } from "@/components/HomeThemesInMotionTable";
-import { PageSurface } from "@/components/PageSurface";
-import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
-import { getThemesInMotionCached } from "@/lib/getThemesInMotionCached";
-import { slimMotionsRows } from "@/lib/slimMotionsRows";
-import { buildPageMetadata } from "@/lib/seoMetadata";
-import styles from "../page.module.css";
-
-export const metadata: Metadata = buildPageMetadata({
-  title: "Themes in Motion",
-  description:
-    "Themes that are moving right now — ranked daily on returns, revisions, and breadth.",
-  path: "/themes-in-motion",
-});
-
-export default async function ThemesInMotionPage() {
-  const [motionsRes, spyPerf] = await Promise.all([
-    getThemesInMotionCached().catch(() => null),
-    getSpyMarketPerfCached().catch(() => null),
-  ]);
-  const pool = slimMotionsRows(
-    motionsRes?.bundle?.pool?.length ? motionsRes.bundle.pool : motionsRes?.bundle?.homepage,
-  );
-
-  return (
-    <PageSurface>
-      <main className={styles.main}>
-        <div className={styles.intro}>
-          <p className={styles.eyebrow}>
-            <Link href="/">← Home</Link>
-            {" · "}
-            <Link href="/compare">Full returns table</Link>
-          </p>
-          <h1 className={styles.heroTitle}>Themes in Motion</h1>
-          <p className={styles.introPunchline}>
-            Themes heating up right now — ranked daily on returns, revisions, and how broad the
-            move is, with a few editor picks held in place. Home shows the top 10; this page has
-            the full list.
-          </p>
-          <HomeThemesInMotionTable rows={pool} maxRows={Number.POSITIVE_INFINITY} />
-          <DeferRender minHeight={460} rootMargin="200px 0px">
-            <HomeHighlightedThemes
-              items={pool
-                .filter((d) => d.slug)
-                .map((d) => ({ slug: d.slug, name: d.name }))}
-              benchmarkPerformance={spyPerf?.benchmarkPerformance}
-            />
-          </DeferRender>
-        </div>
-      </main>
-    </PageSurface>
-  );
+/** Legacy URL — renamed to `/most-talked-about` (conversation heat, not a long book). */
+export default function ThemesInMotionRedirectPage() {
+  permanentRedirect("/most-talked-about");
 }

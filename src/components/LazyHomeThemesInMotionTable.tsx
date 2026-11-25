@@ -15,14 +15,14 @@ const HomeThemesInMotionTableDynamic = dynamic(
     loading: () => (
       <section
         aria-busy="true"
-        aria-label="Loading Themes in Motion"
+        aria-label="Loading Most talked about"
         style={{ minHeight: 280 }}
       />
     ),
   },
 );
 
-/** Code-split Themes in Motion table off the main home client chunk. */
+/** Code-split Most talked about table off the main home client chunk. */
 export function LazyHomeThemesInMotionTable(props: Props) {
   return <HomeThemesInMotionTableDynamic {...props} />;
 }

@@ -5,12 +5,11 @@ import "./globals.css";
 // import { AdSenseGlobalScript } from "@/components/AdSenseGlobalScript";
 import { BackToTop } from "@/components/BackToTop";
 import { NewsletterRuntimeProvider } from "@/components/NewsletterRuntimeProvider";
-import { SiteFooter } from "@/components/SiteFooter";
+import { SiteFooterAsOf } from "@/components/SiteFooterAsOf";
 import { SiteNav } from "@/components/SiteNav";
 import { SupabaseAuthProvider } from "@/components/SupabaseAuthProvider";
 import { WatchlistProvider } from "@/components/WatchlistProvider";
 import { ThemeRoot } from "@/components/ThemeRoot";
-import { getManifestCached } from "@/lib/getManifestCached";
 import { openGraphImageAsset } from "@/lib/seoMetadata";
 import { siteBaseUrl } from "@/lib/siteUrl";
 import { STOCKTHEMES_PUBLIC_BASE_URL } from "@/lib/stockthemesStorageConfig";
@@ -54,7 +53,7 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
@@ -64,10 +63,6 @@ export default async function RootLayout({
   const beehiivApiConfigured =
     !staticPagesBuild &&
     Boolean(process.env.BEEHIIV_API_KEY?.trim() && process.env.BEEHIIV_PUBLICATION_ID?.trim());
-
-  // Share cached manifest with page RSCs — do not probe optional
-  // manifest_meta.v0.json here (unpublished → multi-second R2+CDN 404s per request).
-  const { manifest } = await getManifestCached();
 
   return (
     <html
@@ -94,7 +89,8 @@ export default async function RootLayout({
                 <BackToTop />
                 <SiteNav />
                 {children}
-                <SiteFooter dataAsOf={manifest.as_of} />
+                {/* Manifest as_of only for footer — stream so light pages (docs) are not blocked. */}
+                <SiteFooterAsOf />
               </ThemeRoot>
             </WatchlistProvider>
           </SupabaseAuthProvider>

@@ -4,6 +4,7 @@ import { Suspense } from "react";
 import { HomeDeferredBand } from "@/components/HomeDeferredBand";
 import { HomeExplorePathsSlot } from "@/components/HomeExplorePathsSlot";
 import { HomeHeroStats } from "@/components/HomeHeroStats";
+import { HomeHeroUtilityStrip } from "@/components/HomeHeroUtilityStrip";
 import { HomeMoversBand } from "@/components/HomeMoversBand";
 import { JsonLd } from "@/components/JsonLd";
 import { LazySiteSearch } from "@/components/LazySiteSearch";
@@ -76,7 +77,7 @@ export default function Home() {
                 <h1
                   className={`${styles.heroTitle} ${styles.heroTitleOneLine} ${styles.heroTitleRollIn}`}
                 >
-                  Your Thematic Investing Toolkit
+                  Themes that move stocks
                 </h1>
                 {/* Mobile only: brand row is hidden there, so show the animated mark beside the title. */}
                 <div className={styles.heroTitleLogoMobile}>
@@ -85,11 +86,7 @@ export default function Home() {
               </div>
               <p className={styles.introPunchline}>
                 <span className={styles.introPunchlineLine}>
-                  Understand the thematic crosswinds moving your stocks.
-                </span>
-                <span className={styles.introPunchlineLine}>
-                  News, data, factor drivers, and theses built on an expert research process that
-                  updates as new information arrives.
+                  Type a stock you own, or a keyword, to map the themes underneath.
                 </span>
               </p>
             </div>
@@ -98,15 +95,18 @@ export default function Home() {
               <HomeHeroStats />
             </Suspense>
 
-            <div className={`${styles.heroSearch} ${styles.heroFullBleed}`}>
-              <span className={styles.heroSearchLabel}>Find a theme or ticker</span>
-              <LazySiteSearch
-                variant="hero"
-                placeholder="Type a theme, industry, idea, or ticker…"
-              />
-              <Suspense fallback={<HomeExplorePathsFallback />}>
-                <HomeExplorePathsSlot />
-              </Suspense>
+            <div className={`${styles.heroSearchStack} ${styles.heroFullBleed}`}>
+              <HomeHeroUtilityStrip />
+              <div className={styles.heroSearch}>
+                <span className={styles.heroSearchLabel}>Stock or theme</span>
+                <LazySiteSearch
+                  variant="hero"
+                  placeholder="e.g. NVDA, robotics, data centers…"
+                />
+                <Suspense fallback={<HomeExplorePathsFallback />}>
+                  <HomeExplorePathsSlot />
+                </Suspense>
+              </div>
             </div>
           </div>
 

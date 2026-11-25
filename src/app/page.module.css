@@ -2401,8 +2401,18 @@ a.secondary {
   min-height: 140px;
 }
 
-.heroGrid > .heroSearch.heroFullBleed {
+.heroGrid > .heroSearch.heroFullBleed,
+.heroGrid > .heroSearchStack.heroFullBleed {
   margin-top: 14px;
+}
+
+/* Utility strip sits tight above the search card. */
+.heroSearchStack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
 }
 
 /* Theme thesis under title+treemap row — full hero width. */
@@ -2433,7 +2443,8 @@ a.secondary {
     display: none;
   }
 
-  .heroGrid > .heroSearch.heroFullBleed {
+  .heroGrid > .heroSearch.heroFullBleed,
+  .heroGrid > .heroSearchStack.heroFullBleed {
     margin-top: 12px;
   }
 

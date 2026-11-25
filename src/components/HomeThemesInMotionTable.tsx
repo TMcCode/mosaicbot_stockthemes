@@ -30,21 +30,29 @@ type Props = {
   rows: ThemesInMotionRowV0[];
   /** Homepage shows 10; view-all can pass a larger cap (or Infinity). */
   maxRows?: number;
+  /** Home only — hide on `/most-talked-about` where this link is a no-op. */
+  showViewAll?: boolean;
 };
 
-export function HomeThemesInMotionTable({ rows, maxRows = 10 }: Props) {
+export function HomeThemesInMotionTable({
+  rows,
+  maxRows = 10,
+  showViewAll = true,
+}: Props) {
   const shown = maxRows === Number.POSITIVE_INFINITY ? rows : rows.slice(0, maxRows);
   return (
-    <section className={styles.section} aria-labelledby="themes-in-motion-heading">
+    <section className={styles.section} aria-labelledby="most-talked-about-heading">
       <div className={styles.head}>
-        <h2 id="themes-in-motion-heading" className={styles.title}>
-          Themes in Motion
+        <h2 id="most-talked-about-heading" className={styles.title}>
+          Most talked about
         </h2>
-        <div className={styles.links}>
-          <Link href="/themes-in-motion" className={styles.link}>
-            View all →
-          </Link>
-        </div>
+        {showViewAll ? (
+          <div className={styles.links}>
+            <Link href="/most-talked-about" className={styles.link}>
+              View all →
+            </Link>
+          </div>
+        ) : null}
       </div>
       <p className={styles.scrollHint}>Swipe for more metrics</p>
       <div className={styles.tableWrap}>
