@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 
 import pageStyles from "@/app/page.module.css";
@@ -7,6 +8,8 @@ import { CompareSummaryPanel } from "@/components/CompareSummaryPanel";
 import { CompareColumnsDropdown } from "@/components/CompareColumnsDropdown";
 import { CompareThemesTable } from "@/components/CompareThemesTable";
 import { CheckboxMultiSelectDropdown } from "@/components/CheckboxMultiSelectDropdown";
+import { useOptionalSupabaseAuth } from "@/components/SupabaseAuthProvider";
+import { useWatchlist } from "@/components/WatchlistProvider";
 import { useLiveCompareBundles } from "@/hooks/useLiveCompareBundles";
 import { useSessionVisibleColumns } from "@/hooks/useSessionVisibleColumns";
 import { useLazyCompareGroups } from "@/hooks/useCompareReturnsData";
@@ -25,6 +28,11 @@ import {
   COMPARE_SECTOR_UNMAPPED,
 } from "@/lib/compareSectorFilter";
 import { filterCompareRows } from "@/lib/filterCompareRows";
+import {
+  filterRowsBySlugSet,
+  resolveCompareWatchlistSlugFilter,
+  toSlugSet,
+} from "@/lib/filterCompareWatchlist";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { isShortThemeName } from "@/lib/shortThemeChart";
@@ -61,6 +69,10 @@ type Props = {
   groupSectorByName: Record<string, string>;
   sectorOptions: string[];
   selectedDates?: ManifestSelectedDateV0[];
+  /** Editor sheet Top Picks — precomputed theme slugs from ETL. */
+  topPickThemeSlugs?: string[];
+  /** Editor sheet Top Picks — precomputed group slugs from ETL. */
+  topPickGroupSlugs?: string[];
 };
 
 export function ComparePageClient({
@@ -73,7 +85,11 @@ export function ComparePageClient({
   groupSectorByName,
   sectorOptions,
   selectedDates,
+  topPickThemeSlugs = [],
+  topPickGroupSlugs = [],
 }: Props) {
+  const { user, showAuthedUi } = useOptionalSupabaseAuth();
+  const watchlist = useWatchlist();
   const [viewMode, setViewMode] = useState<ViewMode>("themes");
   const [urlViewResolved, setUrlViewResolved] = useState(false);
   const {
@@ -137,6 +153,12 @@ export function ComparePageClient({
   const [showFactorSpreads, setShowFactorSpreads] = useState(false);
   const [excludeShort, setExcludeShort] = useState(false);
   const [excludeSupportingThemes, setExcludeSupportingThemes] = useState(true);
+  const [myWatchlistOnly, setMyWatchlistOnly] = useState(false);
+  const [topPicksOnly, setTopPicksOnly] = useState(false);
+  const topPickThemeSet = useMemo(() => toSlugSet(topPickThemeSlugs), [topPickThemeSlugs]);
+  const topPickGroupSet = useMemo(() => toSlugSet(topPickGroupSlugs), [topPickGroupSlugs]);
+  const signInHref = "/sign-in?next=%2Fcompare";
+  const signedIn = Boolean(user) || showAuthedUi;
   const availablePeriods = useMemo(
     () => availableCompareSummaryPeriods(visibleColumns),
     [visibleColumns],
@@ -180,6 +202,31 @@ export function ComparePageClient({
     [selectedGroups, visibleGroupOptions],
   );
 
+  const watchlistSlugFilter = useMemo(() => {
+    // Guest + Mine only → empty set (prompt sign-in) instead of accidentally showing all rows.
+    if (myWatchlistOnly && !signedIn && !topPicksOnly) {
+      return new Set<string>();
+    }
+    return resolveCompareWatchlistSlugFilter({
+      myWatchlist: myWatchlistOnly && signedIn,
+      topPicks: topPicksOnly,
+      viewMode,
+      myThemeSlugs: watchlist?.themeKeys ?? new Set(),
+      topPickThemeSlugs: topPickThemeSet,
+      topPickGroupSlugs: topPickGroupSet,
+      themeRowsForGroupMembership: rowsWithLiveCompare,
+    });
+  }, [
+    myWatchlistOnly,
+    signedIn,
+    topPicksOnly,
+    viewMode,
+    watchlist?.themeKeys,
+    topPickThemeSet,
+    topPickGroupSet,
+    rowsWithLiveCompare,
+  ]);
+
   const filteredThemes = useMemo(() => {
     let base = filterCompareRows(rowsWithLiveCompare, {
       groupOptions: visibleGroupOptions,
@@ -195,6 +242,9 @@ export function ComparePageClient({
     if (excludeSupportingThemes) {
       base = base.filter((row) => !isSupportingThemeRankVisibility(row.rank_visibility));
     }
+    if (viewMode === "themes") {
+      base = filterRowsBySlugSet(base, watchlistSlugFilter);
+    }
     return base;
   }, [
     rowsWithLiveCompare,
@@ -204,6 +254,8 @@ export function ComparePageClient({
     selectedSectors,
     excludeShort,
     excludeSupportingThemes,
+    viewMode,
+    watchlistSlugFilter,
   ]);
   const filteredGroups = useMemo(() => {
     let base = filterCompareRows(groupRows, {
@@ -217,11 +269,17 @@ export function ComparePageClient({
     if (excludeShort) {
       base = base.filter((row) => !isShortThemeName(row.name));
     }
+    if (viewMode === "groups") {
+      base = filterRowsBySlugSet(base, watchlistSlugFilter);
+    }
     return base;
-  }, [groupRows, sectorOptions, selectedSectors, excludeShort]);
+  }, [groupRows, sectorOptions, selectedSectors, excludeShort, viewMode, watchlistSlugFilter]);
   const filtered = viewMode === "groups" ? filteredGroups : filteredThemes;
   const activeBundleReady =
     viewMode === "groups" ? Boolean(groupBundle) : Boolean(liveCompareBundle);
+  const watchlistEmpty =
+    activeBundleReady && Boolean(watchlistSlugFilter) && filtered.length === 0;
+  const myWatchlistNeedsSignIn = myWatchlistOnly && !signedIn;
 
   const tableBenchmarkRows = useMemo(() => {
     const out: CompareBenchmarkRow[] = [];
@@ -314,6 +372,21 @@ export function ComparePageClient({
       </div>
       <section className={pageStyles.compareSectionTight}>
         {activeBundleReady ? (
+          <>
+            {myWatchlistNeedsSignIn ? (
+              <p className={pageStyles.muted} style={{ marginBottom: 10 }}>
+                <Link href={signInHref}>Sign in</Link> to filter by your watchlist.
+              </p>
+            ) : null}
+            {watchlistEmpty && !myWatchlistNeedsSignIn ? (
+              <p className={pageStyles.muted} style={{ marginBottom: 10 }}>
+                {myWatchlistOnly && topPicksOnly
+                  ? "No themes match My Watchlist or Top Picks with the current filters."
+                  : myWatchlistOnly
+                    ? "No saved themes match the current filters."
+                    : "No Top Picks match the current filters."}
+              </p>
+            ) : null}
           <CompareThemesTable
             benchmarkRows={tableBenchmarkRows}
             rows={filtered}
@@ -368,9 +441,28 @@ export function ComparePageClient({
                     <span className={styles.toggleLabelShort}>No supporting</span>
                   </label>
                 ) : null}
+                <label className={styles.benchmarkToggle}>
+                  <input
+                    type="checkbox"
+                    checked={myWatchlistOnly}
+                    onChange={(e) => setMyWatchlistOnly(e.target.checked)}
+                  />
+                  <span className={styles.toggleLabelFull}>My Watchlist</span>
+                  <span className={styles.toggleLabelShort}>Mine</span>
+                </label>
+                <label className={styles.benchmarkToggle}>
+                  <input
+                    type="checkbox"
+                    checked={topPicksOnly}
+                    onChange={(e) => setTopPicksOnly(e.target.checked)}
+                  />
+                  {/* Same label at all breakpoints (no short/full swap). */}
+                  <span>Top Picks</span>
+                </label>
               </div>
             }
           />
+          </>
         ) : (
           <p className={pageStyles.muted} aria-live="polite">
             {viewMode === "groups"

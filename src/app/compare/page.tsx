@@ -16,6 +16,7 @@ import {
 } from "@/lib/compareSectorFilter";
 import { getManifestCached } from "@/lib/getManifestCached";
 import { getSpyMarketPerfCached } from "@/lib/getSpyMarketPerf";
+import { getTopPicksCached } from "@/lib/getTopPicksCached";
 import { buildPageMetadata } from "@/lib/seoMetadata";
 import { catalogEyebrowText } from "@/lib/stockthemesBuildHints";
 import { resolveCompareColumnOrder } from "@/lib/trendingCompareMetrics";
@@ -29,12 +30,14 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function ComparePage() {
   // Identity from manifest only — metrics hydrate via client compare_themes fetch
   // (avoids shipping/parsing the ~1MB corpus in the RSC payload).
-  const [{ manifest, source }, benchmarksRes, factorSpreadsRes, spyPerf] = await Promise.all([
-    getManifestCached(),
-    getEtfBenchmarksCached(),
-    getFactorSpreadsCached(),
-    getSpyMarketPerfCached(),
-  ]);
+  const [{ manifest, source }, benchmarksRes, factorSpreadsRes, spyPerf, topPicksRes] =
+    await Promise.all([
+      getManifestCached(),
+      getEtfBenchmarksCached(),
+      getFactorSpreadsCached(),
+      getSpyMarketPerfCached(),
+      getTopPicksCached(),
+    ]);
   const groupBySlug = new Map(
     (manifest.groups || []).map((g) => {
       const slug = String(g.slug || "").trim();
@@ -105,6 +108,8 @@ export default async function ComparePage() {
             groupSectorByName={Object.fromEntries(groupSectorByName)}
             sectorOptions={sectorOptions}
             selectedDates={manifest.selected_dates}
+            topPickThemeSlugs={topPicksRes?.bundle.theme_slugs ?? []}
+            topPickGroupSlugs={topPicksRes?.bundle.group_slugs ?? []}
           />
         </div>
       </main>
