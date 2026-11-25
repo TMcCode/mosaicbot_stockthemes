@@ -405,10 +405,10 @@ export function ComparePageClient({
             {watchlistEmpty && !myWatchlistNeedsSignIn ? (
               <p className={pageStyles.muted} style={{ marginBottom: 10 }}>
                 {myWatchlistOnly && topPicksOnly
-                  ? "No themes match My Watchlist or Top Picks with the current filters."
+                  ? "No themes match My Watchlist or Most talked about with the current filters."
                   : myWatchlistOnly
                     ? "No saved themes match the current filters."
-                    : "No Top Picks match the current filters."}
+                    : "No talked-about themes match the current filters."}
               </p>
             ) : null}
           <CompareThemesTable
@@ -467,7 +467,7 @@ export function ComparePageClient({
                     <span className={styles.toggleLabelShort}>No supporting</span>
                   </label>
                 ) : null}
-                {/* Mobile: start a new row for My Watchlist + Top Picks. */}
+                {/* Mobile: start a new row for My Watchlist + Most talked about. */}
                 <span className={styles.watchlistToggleBreak} aria-hidden="true" />
                 <label className={styles.benchmarkToggle}>
                   <input
@@ -477,13 +477,17 @@ export function ComparePageClient({
                   />
                   <span>My Watchlist</span>
                 </label>
-                <label className={styles.benchmarkToggle}>
+                <label
+                  className={styles.benchmarkToggle}
+                  title="Themes most discussed lately — not a performance call"
+                >
                   <input
                     type="checkbox"
                     checked={topPicksOnly}
                     onChange={(e) => setTopPicksOnly(e.target.checked)}
                   />
-                  <span>Top Picks</span>
+                  <span className={styles.toggleLabelFull}>Most talked about</span>
+                  <span className={styles.toggleLabelShort}>Talked about</span>
                 </label>
               </div>
             }

@@ -4,7 +4,7 @@ export type TopPicksThemeV0 = {
   group_slug?: string | null;
 };
 
-/** Sheet-backed editor Top Picks for /compare (theme + group slug sets). */
+/** Sheet-backed “Most talked about” set for /compare (theme + group slug sets). */
 export type TopPicksV0 = {
   schema_version: 0;
   as_of: string;
