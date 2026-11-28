@@ -16,7 +16,7 @@ type Props = {
 };
 
 export function SiteNavAuth({ variant = "inline" }: Props) {
-  const { configured, loading, user } = useSupabaseAuth();
+  const { configured, user } = useSupabaseAuth();
   const signInHref = useReturnToSignInHref();
 
   if (!configured) {
@@ -27,11 +27,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
     if (user) return null;
     return (
       <>
-        <PrefetchIntentLink
-          href={signInHref}
-          className={styles.authMobileGuestLink}
-          aria-busy={loading || undefined}
-        >
+        <PrefetchIntentLink href={signInHref} className={styles.authMobileGuestLink}>
           Sign in free
         </PrefetchIntentLink>
         <span className={styles.sep} aria-hidden="true">
@@ -73,11 +69,7 @@ export function SiteNavAuth({ variant = "inline" }: Props) {
   }
 
   return (
-    <PrefetchIntentLink
-      href={signInHref}
-      className={styles.authNav}
-      aria-busy={loading || undefined}
-    >
+    <PrefetchIntentLink href={signInHref} className={styles.authNav}>
       Sign in free
     </PrefetchIntentLink>
   );

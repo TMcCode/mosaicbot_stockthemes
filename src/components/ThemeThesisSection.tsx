@@ -18,9 +18,8 @@ type MobileTab = "thesis" | "bull" | "bear" | "factors";
 const MOBILE_THESIS_DECK_MQ = "(max-width: 1100px)";
 
 function useMobileThesisDeck(): boolean {
-  const [mobile, setMobile] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia(MOBILE_THESIS_DECK_MQ).matches : false,
-  );
+  // SSR + first client paint must match (always false); sync real MQ after mount.
+  const [mobile, setMobile] = useState(false);
   useEffect(() => {
     const mq = window.matchMedia(MOBILE_THESIS_DECK_MQ);
     const sync = () => setMobile(mq.matches);

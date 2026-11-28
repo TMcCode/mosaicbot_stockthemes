@@ -7,7 +7,7 @@ import { HomeHeroSignInHint } from "@/components/HomeHeroSignInHint";
 import { HomeHeroStats } from "@/components/HomeHeroStats";
 import { HomeMoversBand } from "@/components/HomeMoversBand";
 import { JsonLd } from "@/components/JsonLd";
-import { LazySiteSearch } from "@/components/LazySiteSearch";
+import { HeroSiteSearch } from "@/components/HeroSiteSearch";
 import { PageSurface } from "@/components/PageSurface";
 import { buildHomePageJsonLd } from "@/lib/homePageJsonLd";
 import { homeSiteJsonDescription } from "@/lib/homeSiteCopy";
@@ -102,10 +102,7 @@ export default function Home() {
               </p>
               <div className={styles.heroSearch}>
                 <span className={styles.heroSearchLabel}>Stock or theme</span>
-                <LazySiteSearch
-                  variant="hero"
-                  placeholder="e.g. NVDA, robotics, data centers…"
-                />
+                <HeroSiteSearch placeholder="e.g. NVDA, robotics, data centers…" />
                 <Suspense fallback={<HomeExplorePathsFallback />}>
                   <HomeExplorePathsSlot />
                 </Suspense>

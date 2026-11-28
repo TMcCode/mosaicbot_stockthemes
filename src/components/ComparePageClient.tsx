@@ -36,6 +36,7 @@ import {
   toSlugSet,
 } from "@/lib/filterCompareWatchlist";
 import type { CompareBenchmarkRow } from "@/lib/compareBenchmarkRows";
+import { formatSiteDataPublished } from "@/lib/formatSiteDataPublished";
 import { mergeComparePageRows } from "@/lib/mergeLiveCompareData";
 import { isShortThemeName } from "@/lib/shortThemeChart";
 import { isSupportingThemeRankVisibility } from "@/lib/supportingTheme";
@@ -62,6 +63,8 @@ type ViewMode = "themes" | "groups";
 
 type Props = {
   eyebrow: string;
+  /** Manifest (or SSR) publish time — live compare/group bundle as_of wins when loaded. */
+  dataAsOf?: string | null;
   benchmarkRows: CompareBenchmarkRow[];
   factorSpreadRows?: CompareBenchmarkRow[];
   rows: Row[];
@@ -75,6 +78,7 @@ type Props = {
 
 export function ComparePageClient({
   eyebrow,
+  dataAsOf = null,
   benchmarkRows,
   factorSpreadRows = [],
   rows,
@@ -306,6 +310,11 @@ export function ComparePageClient({
   const watchlistEmpty =
     activeBundleReady && Boolean(watchlistSlugFilter) && filtered.length === 0;
   const myWatchlistNeedsSignIn = myWatchlistOnly && !signedIn;
+  const liveAsOfIso =
+    (viewMode === "groups" ? groupBundle?.as_of : liveCompareBundle?.as_of) ||
+    dataAsOf ||
+    null;
+  const dataAsOfLabel = liveAsOfIso ? formatSiteDataPublished(liveAsOfIso) : null;
 
   const tableBenchmarkRows = useMemo(() => {
     const out: CompareBenchmarkRow[] = [];
@@ -325,6 +334,12 @@ export function ComparePageClient({
             calendar, and earnings horizons—plus custom date windows. Filter the universe; click a column to sort,
             shift-click for a secondary sort.
           </p>
+          {dataAsOfLabel ? (
+            <p className={pageStyles.compareDataAsOf}>
+              Last updated{" "}
+              <time dateTime={liveAsOfIso || undefined}>{dataAsOfLabel}</time>
+            </p>
+          ) : null}
           <div className={styles.metaRow}>
             <div className={styles.viewToggle} role="group" aria-label="Compare themes or groups">
               <button

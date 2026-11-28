@@ -2,8 +2,8 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  flex: 1 1 auto;
-  min-height: 380px;
+  flex: 0 1 auto;
+  min-height: 400px;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -95,10 +95,12 @@
 
 .map {
   position: relative;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   width: 100%;
-  min-height: 340px;
-  max-height: 480px;
+  /* Fixed taller map so dense themes don’t scrunch tiles; no flex-stretch void. */
+  height: 380px;
+  min-height: 380px;
+  max-height: 380px;
   border-radius: 12px;
   border: 1px solid var(--button-secondary-border, rgba(255, 255, 255, 0.12));
   background: rgba(0, 0, 0, 0.18);
@@ -110,7 +112,7 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1 1 auto;
+  flex: 0 1 auto;
   min-width: 0;
   width: 100%;
 }

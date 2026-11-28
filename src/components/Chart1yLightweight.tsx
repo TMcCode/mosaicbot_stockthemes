@@ -1403,9 +1403,7 @@ export function Chart1yLightweight({
   }, []);
 
   /** Phone layout (≤640): cadence above chart, wrap legend, etc. Desktop stays pre-mobile. */
-  const [isPhone, setIsPhone] = useState(() =>
-    typeof window !== "undefined" ? window.matchMedia("(max-width: 640px)").matches : false,
-  );
+  const [isPhone, setIsPhone] = useState(false);
 
   useEffect(() => {
     const mq = window.matchMedia("(max-width: 640px)");

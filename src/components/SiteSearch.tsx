@@ -2,7 +2,15 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 
 import { useSupabaseAuth } from "@/components/SupabaseAuthProvider";
 import { WatchlistStar } from "@/components/WatchlistStar";
@@ -75,6 +83,7 @@ export function SiteSearch({
   const signedIn = configured && showAuthedUi;
   const listId = useId();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
   const prefetchedHrefsRef = useRef<Set<string>>(new Set());
   const tickerThemeLimit = useTickerThemePreviewLimit(variant);
   const { engine, loadBusy, loadError, ensureLoaded: beginLoad } = useSiteSearchEngine();
@@ -83,6 +92,11 @@ export function SiteSearch({
   const [debounced, setDebounced] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
+
+  useLayoutEffect(() => {
+    if (!autoFocus) return;
+    inputRef.current?.focus();
+  }, [autoFocus]);
 
   useEffect(() => {
     const t = window.setTimeout(() => {
@@ -245,11 +259,13 @@ export function SiteSearch({
       </Link>
     ) : null;
 
+  // Don't flash "Loading search…" on empty focus — index warms in the background.
+  // Show the busy state only once the user has typed (or we have results/errors).
   const showPanel = Boolean(
     open &&
-      (loadBusy ||
-        loadError ||
+      (loadError ||
         options.length > 0 ||
+        (loadBusy && debounced.trim()) ||
         (debounced.trim() && engine && hits.length === 0 && !showWatchlistShortcut)),
   );
 
@@ -262,6 +278,7 @@ export function SiteSearch({
   return (
     <div className={variant === "hero" ? `${styles.wrap} ${styles.wrapHero}` : styles.wrap} ref={wrapRef}>
       <input
+        ref={inputRef}
         type="search"
         className={variant === "hero" ? `${styles.input} ${styles.inputHero}` : styles.input}
         placeholder={placeholder}
@@ -282,7 +299,6 @@ export function SiteSearch({
         onKeyDown={onKeyDown}
         autoComplete="off"
         enterKeyHint="search"
-        autoFocus={autoFocus}
       />
       {showPanel ? (
         <div id={listId} className={styles.panel} role="listbox" aria-label="Search results">

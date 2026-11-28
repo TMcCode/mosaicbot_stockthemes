@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, type ComponentType } from "react";
 
+import { loadSearchIndexBrowser } from "@/lib/searchIndexBrowser";
+
 import styles from "./SiteSearch.module.css";
 
 type LazySiteSearchProps = {
@@ -29,6 +31,10 @@ function loadSiteSearch(): Promise<SiteSearchComp> {
     });
   }
   return siteSearchLoad;
+}
+
+function warmSearchIndex() {
+  void loadSearchIndexBrowser().catch(() => {});
 }
 
 function SearchStub({
@@ -59,22 +65,28 @@ function SearchStub({
 }
 
 /**
- * Defers the SiteSearch chunk until idle / first intent.
+ * Defers the SiteSearch chunk until idle / first intent (nav only).
+ * Homepage hero must use HeroSiteSearch — a readonly stub → async swap
+ * drops the mobile user-gesture and forces a second tap.
+ *
  * Critical: keep the stub mounted until the real component is ready — swapping to an
- * empty dynamic slot on pointerdown lets the tap fall through onto Trending themes.
+ * empty dynamic slot on pointerdown lets the tap fall through onto page content.
  */
 export function LazySiteSearch({
   placeholder = "Search…",
   variant = "nav",
 }: LazySiteSearchProps = {}) {
   const isProd = process.env.NODE_ENV === "production";
-  const [Comp, setComp] = useState<SiteSearchComp | null>(() => cachedSiteSearch);
+  // Always start null so SSR HTML matches the first client paint. Reading
+  // `cachedSiteSearch` here caused hydration errors after the chunk warmed.
+  const [Comp, setComp] = useState<SiteSearchComp | null>(null);
   const [autoFocus, setAutoFocus] = useState(false);
   const idleHandleRef = useRef<number | null>(null);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const reveal = (focus: boolean) => {
     if (focus) setAutoFocus(true);
+    warmSearchIndex();
     void loadSiteSearch().then((C) => {
       setComp(() => C);
     });
@@ -82,6 +94,12 @@ export function LazySiteSearch({
 
   useEffect(() => {
     if (Comp) return;
+
+    // Already loaded in this tab — swap in after mount (no SSR mismatch).
+    if (cachedSiteSearch) {
+      setComp(() => cachedSiteSearch);
+      return;
+    }
 
     if (!isProd) {
       reveal(false);

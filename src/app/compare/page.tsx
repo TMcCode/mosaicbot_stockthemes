@@ -98,6 +98,7 @@ export default async function ComparePage() {
         <div className={styles.intro}>
           <ComparePageClient
             eyebrow={catalogEyebrowText("Theme returns table", source)}
+            dataAsOf={manifest.as_of}
             benchmarkRows={benchmarkRows}
             factorSpreadRows={factorSpreadRows}
             rows={rows}

@@ -101,10 +101,11 @@
 /* Theme detail desktop (= GitHub): title+factor | treemap, thesis full-bleed under.
    Mobile (≤1100px) stacks title → thesis → map → factor via `.themeHeroAreas`. */
 .heroGridThemeDetail {
-  /* Slightly tighter gutter; give the map a bit more width so it sits closer to the title/lede. */
+  /* Slightly tighter gutter; give the map a bit more width so it sits closer to the title/lede.
+     `start` — don't stretch the treemap rail to match a tall Factor Profile. */
   grid-template-columns: minmax(0, 1fr) minmax(420px, 1.05fr);
   gap: 12px 10px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .heroGridThemeDetail > .themeHeroRail {
@@ -121,8 +122,33 @@
   z-index: 2;
 }
 
+/* Nudge the summary rail below the title/eyebrow so it sits with the filters. */
+@media (min-width: 1101px) {
+  .heroGridCompare > :not(.heroMainCompare) {
+    margin-top: 36px;
+  }
+}
+
 .heroMainCompare {
   gap: 12px;
+}
+
+/* Theme returns (/compare): keep the blurb compact so the table stays above the fold. */
+.heroMainCompare .introLead {
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 450;
+  color: var(--text-secondary);
+  max-width: 720px;
+}
+
+/* Beat `.intro p` (~18px) — tiny publish stamp under the compare lede. */
+.intro p.compareDataAsOf {
+  margin: 2px 0 0;
+  font-size: 9px;
+  line-height: 1.3;
+  font-weight: 400;
+  color: var(--text-muted);
 }
 
 .compareHeroFilters {
@@ -144,11 +170,11 @@
   isolation: isolate;
 }
 
-/* Desktop: pull checkbox/table block slightly into empty space under the filter row
-   (left column is shorter than the summary panel). */
+/* Keep a small gap under the hero; do not pull the table up into the summary
+   (summary is intentionally nudged down on desktop). */
 @media (min-width: 1101px) {
   .compareSectionTight {
-    margin-top: -12px;
+    margin-top: 4px;
   }
 }
 
@@ -159,16 +185,19 @@
   width: 100%;
   min-width: 0;
   max-width: 100%;
-  min-height: 100%;
-  align-self: stretch;
 }
 
 .themeHeroAreas {
+  /* Rail sits beside title only — do NOT span into the factor row. Spanning
+     left an empty band under the guest unlock box (map ended, factor cell
+     empty, chart still pushed down). Factor stacks under title on the left. */
   grid-template-areas:
     "title rail"
-    "factor rail"
+    "factor ."
     "thesis thesis";
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  align-items: start;
 }
 
 .themeHeroAreas > .themeHeroTitleArea {
@@ -203,14 +232,11 @@
 }
 
 .heroGridThemeDetail .heroFactorSlot {
-  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   min-height: 0;
-  height: 100%;
   width: 100%;
   max-width: 720px;
-  align-self: stretch;
 }
 
 .heroGridGroupDetail .heroSummarySlot {
@@ -879,8 +905,8 @@
   min-width: 0;
   align-self: stretch;
   overflow-x: clip;
-  /* Pull toward hero/treemap — .intro gap is 22px; chart section used to add more. */
-  margin-top: -10px;
+  /* Pull toward hero — .intro gap is 22px; sit tight under treemap caption. */
+  margin-top: -24px;
   --chart-panel-section-margin-top: 0;
 }
 
@@ -2191,16 +2217,26 @@ a.secondary {
     line-height: 1.08;
   }
 
+  /* Compare title is long — keep it one line when possible. */
+  .heroMainCompare h1 {
+    font-size: 24px;
+    line-height: 1.12;
+    letter-spacing: -0.02em;
+  }
+
   .intro p {
     font-size: 16px;
   }
 
-  /* Theme returns (/compare): keep the blurb compact so the table stays above the fold. */
   .heroMainCompare .introLead {
-    font-size: 11px !important;
+    font-size: 12px !important;
     line-height: 1.35 !important;
     font-weight: 400 !important;
     max-width: none;
+  }
+
+  .intro p.compareDataAsOf {
+    font-size: 8px;
   }
 
   .heroMainCompare {
